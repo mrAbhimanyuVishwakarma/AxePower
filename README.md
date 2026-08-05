@@ -1,6 +1,11 @@
 # AxePower
 One-click laptop power optimizer.
 
+<img width="961" height="631" alt="image" src="https://github.com/user-attachments/assets/c9e3be08-5052-4928-992d-b5ce54540ea0" />
+
+<img width="961" height="631" alt="image" src="https://github.com/user-attachments/assets/b849cb73-f24f-4ecc-a6c4-99beadd0ae67" />
+
+
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
