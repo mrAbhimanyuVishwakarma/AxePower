@@ -1,0 +1,114 @@
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using AxePower.Core.Models;
+
+namespace AxePower.Core.Services;
+
+public class SettingsService
+{
+    private readonly string _settingsFilePath;
+    private readonly string _settingsBackupFilePath;
+    private readonly string _settingsTempFilePath;
+    private readonly LogService _logService;
+    private AppSettings _currentSettings = new();
+
+    public string SettingsDirectory { get; }
+
+    public SettingsService(LogService logService)
+    {
+        _logService = logService;
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        SettingsDirectory = Path.Combine(localAppData, "AxePower");
+        Directory.CreateDirectory(SettingsDirectory);
+        
+        _settingsFilePath = Path.Combine(SettingsDirectory, "settings.json");
+        _settingsBackupFilePath = Path.Combine(SettingsDirectory, "settings.backup.json");
+        _settingsTempFilePath = Path.Combine(SettingsDirectory, "settings.temp.json");
+    }
+
+    public AppSettings GetSettings()
+    {
+        return _currentSettings.Clone();
+    }
+
+    public void LoadSettings()
+    {
+        if (TryLoadFile(_settingsFilePath, out var settings))
+        {
+            _currentSettings = settings;
+            _logService.LogInfo("Settings loaded successfully.");
+            return;
+        }
+
+        if (TryLoadFile(_settingsBackupFilePath, out var backupSettings))
+        {
+            _currentSettings = backupSettings;
+            _logService.LogWarning("Settings loaded from backup.");
+            SaveSettings(_currentSettings);
+            return;
+        }
+
+        _logService.LogInfo("Settings file not found or invalid. Using default settings.");
+        SaveSettings(new AppSettings());
+    }
+
+    private bool TryLoadFile(string path, out AppSettings settings)
+    {
+        settings = null!;
+        try
+        {
+            if (File.Exists(path))
+            {
+                var json = File.ReadAllText(path);
+                var loaded = JsonSerializer.Deserialize<AppSettings>(json, new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } });
+                if (loaded != null)
+                {
+                    settings = loaded;
+                    return true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError($"Failed to load settings from {path}.", ex);
+        }
+        return false;
+    }
+
+    public void SaveSettings(AppSettings settings)
+    {
+        try
+        {
+            _currentSettings = settings.Clone();
+            var json = JsonSerializer.Serialize(_currentSettings, new JsonSerializerOptions 
+            { 
+                WriteIndented = true,
+                Converters = { new JsonStringEnumConverter() }
+            });
+            
+            // Atomic write
+            File.WriteAllText(_settingsTempFilePath, json);
+            
+            if (File.Exists(_settingsFilePath))
+            {
+                File.Replace(_settingsTempFilePath, _settingsFilePath, _settingsBackupFilePath, true);
+            }
+            else
+            {
+                File.Move(_settingsTempFilePath, _settingsFilePath);
+            }
+            
+            _logService.LogInfo("Settings saved successfully.");
+            
+            OnSettingsChanged?.Invoke(this, _currentSettings);
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to save settings.", ex);
+        }
+    }
+
+    public event EventHandler<AppSettings>? OnSettingsChanged;
+}

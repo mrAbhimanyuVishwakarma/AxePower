@@ -1,0 +1,82 @@
+using System.Text.Json.Serialization;
+
+namespace AxePower.Core.Models;
+
+public class AppSettings
+{
+    [JsonPropertyName("schemaVersion")]
+    public int SchemaVersion { get; set; } = 1;
+
+    [JsonPropertyName("autoSwitchEnabled")]
+    public bool AutoSwitchEnabled { get; set; } = true;
+
+    [JsonPropertyName("applyExpectedModeOnStartup")]
+    public bool ApplyExpectedModeOnStartup { get; set; } = true;
+
+    [JsonPropertyName("pluggedInMode")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public PowerMode PluggedInMode { get; set; } = PowerMode.Beast;
+
+    [JsonPropertyName("unpluggedMode")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public PowerMode UnpluggedMode { get; set; } = PowerMode.Eco;
+
+    [JsonPropertyName("lowBatteryRuleEnabled")]
+    public bool LowBatteryRuleEnabled { get; set; } = true;
+
+    [JsonPropertyName("lowBatteryThresholdPercent")]
+    public int LowBatteryThresholdPercent { get; set; } = 30;
+
+    [JsonPropertyName("lowBatteryMode")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public PowerMode LowBatteryMode { get; set; } = PowerMode.Eco;
+
+    [JsonPropertyName("switchDelaySeconds")]
+    public int SwitchDelaySeconds { get; set; } = 5;
+
+    [JsonPropertyName("showNotifications")]
+    public bool ShowNotifications { get; set; } = true;
+
+    [JsonPropertyName("startWithWindows")]
+    public bool StartWithWindows { get; set; } = false;
+
+    [JsonPropertyName("startMinimised")]
+    public bool StartMinimised { get; set; } = false;
+
+    [JsonPropertyName("closeBehaviour")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public CloseBehaviour CloseBehaviour { get; set; } = CloseBehaviour.MinimiseToTray;
+
+    [JsonPropertyName("theme")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public AppTheme Theme { get; set; } = AppTheme.System;
+
+    [JsonPropertyName("reduceMotion")]
+    public bool ReduceMotion { get; set; } = false;
+
+    [JsonPropertyName("suspendBackgroundAppsOnBattery")]
+    public bool SuspendBackgroundAppsOnBattery { get; set; } = true;
+
+    public AppSettings Clone()
+    {
+        return new AppSettings
+        {
+            SchemaVersion = this.SchemaVersion,
+            AutoSwitchEnabled = this.AutoSwitchEnabled,
+            ApplyExpectedModeOnStartup = this.ApplyExpectedModeOnStartup,
+            PluggedInMode = this.PluggedInMode,
+            UnpluggedMode = this.UnpluggedMode,
+            LowBatteryRuleEnabled = this.LowBatteryRuleEnabled,
+            LowBatteryThresholdPercent = this.LowBatteryThresholdPercent,
+            LowBatteryMode = this.LowBatteryMode,
+            SwitchDelaySeconds = this.SwitchDelaySeconds,
+            ShowNotifications = this.ShowNotifications,
+            StartWithWindows = this.StartWithWindows,
+            StartMinimised = this.StartMinimised,
+            CloseBehaviour = this.CloseBehaviour,
+            Theme = this.Theme,
+            ReduceMotion = this.ReduceMotion,
+            SuspendBackgroundAppsOnBattery = this.SuspendBackgroundAppsOnBattery
+        };
+    }
+}

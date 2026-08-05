@@ -1,0 +1,178 @@
+{
+  "version": 4,
+  "targets": {
+    "net8.0": {
+      "Microsoft.Win32.SystemEvents/10.0.10": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "assetType": "runtime",
+            "rid": "win"
+          }
+        }
+      }
+    },
+    "net8.0/win-x64": {
+      "Microsoft.Win32.SystemEvents/10.0.10": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.Win32.SystemEvents/10.0.10": {
+      "sha512": "IY0lTfC2uVwTizjtGgQ03ViwyXGQ9lMDblzB889/HyguAZJ2J8pRrjPown8h2eJe8WFc8nh+BUEsEPkshzizYQ==",
+      "type": "package",
+      "path": "microsoft.win32.systemevents/10.0.10",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Win32.SystemEvents.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Win32.SystemEvents.targets",
+        "lib/net10.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net10.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/net462/Microsoft.Win32.SystemEvents.dll",
+        "lib/net462/Microsoft.Win32.SystemEvents.xml",
+        "lib/net8.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net8.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/net9.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net9.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/netstandard2.0/Microsoft.Win32.SystemEvents.xml",
+        "microsoft.win32.systemevents.10.0.10.nupkg.sha512",
+        "microsoft.win32.systemevents.nuspec",
+        "runtimes/win/lib/net10.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net10.0/Microsoft.Win32.SystemEvents.xml",
+        "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.xml",
+        "runtimes/win/lib/net9.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net9.0/Microsoft.Win32.SystemEvents.xml",
+        "useSharedDesignerContext.txt"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "Microsoft.Win32.SystemEvents >= 10.0.10"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Core\\AxePower.Core.csproj",
+      "projectName": "AxePower.Core",
+      "projectPath": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Core\\AxePower.Core.csproj",
+      "packagesPath": "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Core\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\Abhimanyu Vishwakarm\\AppData\\Roaming\\NuGet\\NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "framework": "net8.0",
+          "targetAlias": "net8.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.300"
+    },
+    "frameworks": {
+      "net8.0": {
+        "framework": "net8.0",
+        "targetAlias": "net8.0",
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": {
+            "target": "Package",
+            "version": "[10.0.10, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.29, 8.0.29]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.29, 8.0.29]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[8.0.29, 8.0.29]"
+          }
+        ],
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.302/PortableRuntimeIdentifierGraph.json"
+      }
+    },
+    "runtimes": {
+      "win-x64": {
+        "#import": []
+      }
+    }
+  }
+}

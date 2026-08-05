@@ -1,0 +1,12 @@
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.App.exe
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.App.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.App.deps.json
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.App.runtimeconfig.json
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.App.pdb
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\CommunityToolkit.Mvvm.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\Hardcodet.NotifyIcon.Wpf.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\Microsoft.Win32.SystemEvents.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.Core.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.Core.pdb

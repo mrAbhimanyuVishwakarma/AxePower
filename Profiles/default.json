@@ -1,0 +1,8 @@
+{
+  "autoSwitch": true,
+  "pluggedInMode": "UltimatePerformance",
+  "pluggedOutMode": "BatterySaver",
+  "showNotification": true,
+  "startWithWindows": false,
+  "switchDelaySeconds": 5
+}
