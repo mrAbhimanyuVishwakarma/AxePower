@@ -43,3 +43,16 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-wi
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Views\AutoSwitchView.g.cs
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Views\BatteryView.g.cs
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Views\BatteryView.baml
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\System.CodeDom.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\System.Diagnostics.EventLog.Messages.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\System.Diagnostics.EventLog.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\System.Management.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\System.ServiceProcess.ServiceController.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Resources\Themes\DarkTheme.baml
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Resources\Themes\GlassTheme.baml
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Resources\Themes\LightTheme.baml
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Resources\Themes\TransparentTheme.baml
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Views\GameModeView.baml
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Views\GameModeView.g.cs
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Windows\GameScannerWindow.g.cs
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-windows\win-x64\Windows\GameScannerWindow.baml

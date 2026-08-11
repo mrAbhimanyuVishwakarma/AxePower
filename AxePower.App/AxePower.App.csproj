@@ -17,6 +17,10 @@
     <Resource Include="Resources\AxePower_white.ico" />
     <Resource Include="Resources\logo.png" />
     <Resource Include="Resources\banner.png" />
+    <Resource Include="Resources\icon_saver.png" />
+    <Resource Include="Resources\icon_beast.png" />
+    <Resource Include="Resources\icon_smart.png" />
+    <Resource Include="Resources\Gamemode2.png" />
   </ItemGroup>
 
   <ItemGroup>

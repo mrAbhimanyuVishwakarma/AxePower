@@ -12,8 +12,9 @@
             <RowDefinition Height="76"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="40,32,40,24">
-            <Grid.ColumnDefinitions>
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="40,32,40,24">
+                <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="320"/>
             </Grid.ColumnDefinitions>
@@ -21,14 +22,14 @@
             <!-- Main Area (Left) -->
             <StackPanel Grid.Column="0" Margin="0,0,32,0">
                 <!-- Header -->
-                <TextBlock Text="Smart Auto Switch" Foreground="{StaticResource PrimaryTextBrush}" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                <TextBlock Text="Automatically change performance modes based on your power conditions." Foreground="{StaticResource SecondaryTextBrush}" FontSize="15" Margin="0,0,0,32"/>
+                <TextBlock Text="Smart Auto Switch" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock Text="Automatically change performance modes based on your power conditions." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" Margin="0,0,0,32"/>
 
                 <!-- Rules list -->
                 <StackPanel>
                     
                     <!-- When plugged in -->
-                    <Border Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
+                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -38,13 +39,13 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                <Ellipse Fill="{StaticResource BeastBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource BeastBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource BeastBrush}" Opacity="0.1"/>
+                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource BeastBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="When plugged in" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
-                                <TextBlock Text="Use maximum performance&#x0a;when connected to power." Foreground="{StaticResource SecondaryTextBrush}" FontSize="13"/>
+                                <TextBlock Text="When plugged in" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
+                                <TextBlock Text="Use maximum performance&#x0a;when connected to power." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                             </StackPanel>
                             
                             <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedInMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -53,7 +54,7 @@
                     </Border>
                     
                     <!-- When unplugged -->
-                    <Border Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
+                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -63,13 +64,13 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                <Ellipse Fill="{StaticResource EcoBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource EcoBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/> <!-- Note: icon might differ -->
+                                <Ellipse Fill="{DynamicResource EcoBrush}" Opacity="0.1"/>
+                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource EcoBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/> <!-- Note: icon might differ -->
                             </Grid>
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="When unplugged" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
-                                <TextBlock Text="Optimize efficiency&#x0a;when running on battery." Foreground="{StaticResource SecondaryTextBrush}" FontSize="13"/>
+                                <TextBlock Text="When unplugged" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
+                                <TextBlock Text="Optimize efficiency&#x0a;when running on battery." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                             </StackPanel>
                             
                             <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding UnpluggedMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -78,7 +79,7 @@
                     </Border>
 
                     <!-- When battery below 30% -->
-                    <Border Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
+                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -88,13 +89,13 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                <Ellipse Fill="{StaticResource WarningBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xEBAA;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource WarningBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.1"/>
+                                <TextBlock Text="&#xEBAA;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="When battery below 30%" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
-                                <TextBlock Text="Extend battery life by&#x0a;switching to Eco Mode." Foreground="{StaticResource SecondaryTextBrush}" FontSize="13"/>
+                                <TextBlock Text="When battery below 30%" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
+                                <TextBlock Text="Extend battery life by&#x0a;switching to Eco Mode." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                             </StackPanel>
                             
                             <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding LowBatteryMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -103,7 +104,7 @@
                     </Border>
                     
                     <!-- Custom rule -->
-                    <Border Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
+                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
                         <StackPanel>
                             <Grid Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
@@ -114,13 +115,13 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                    <Ellipse Fill="{StaticResource AccentBrush}" Opacity="0.1"/>
-                                    <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.1"/>
+                                    <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Grid>
                                 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="Custom rule (Optional)" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Create a schedule or custom condition&#x0a;that fits your workflow." Foreground="{StaticResource SecondaryTextBrush}" FontSize="13"/>
+                                    <TextBlock Text="Custom rule (Optional)" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Create a schedule or custom condition that fits your workflow." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 
                                 <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" VerticalAlignment="Center" Margin="0,0,16,0">
@@ -129,7 +130,7 @@
                                 <CheckBox Grid.Column="3" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding CustomRuleEnabled}" VerticalAlignment="Center"/>
                             </Grid>
                             
-                            <Border Background="{StaticResource WindowSecondaryBackgroundBrush}" CornerRadius="8" Padding="16">
+                            <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="8" Padding="16">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -138,26 +139,26 @@
                                     </Grid.ColumnDefinitions>
                                     
                                     <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="&#xE162;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE162;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <StackPanel>
-                                            <TextBlock Text="Weekdays" Foreground="{StaticResource PrimaryTextBrush}" FontSize="13"/>
-                                            <TextBlock Text="Mon – Fri" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                            <TextBlock Text="Weekdays" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                            <TextBlock Text="Mon – Fri" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                         </StackPanel>
                                     </StackPanel>
                                     
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <StackPanel>
-                                            <TextBlock Text="9:00 AM – 5:00 PM" Foreground="{StaticResource PrimaryTextBrush}" FontSize="13"/>
-                                            <TextBlock Text="Work hours" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                            <TextBlock Text="9:00 AM – 5:00 PM" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                            <TextBlock Text="Work hours" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                         </StackPanel>
                                     </StackPanel>
                                     
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <StackPanel>
-                                            <TextBlock Text="Smart Mode" Foreground="{StaticResource PrimaryTextBrush}" FontSize="13"/>
-                                            <TextBlock Text="Balanced performance" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                            <TextBlock Text="Smart Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                            <TextBlock Text="Balanced performance" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Grid>
@@ -165,7 +166,7 @@
                         </StackPanel>
                     </Border>
                     
-                    <TextBlock Text="ⓘ Rules are evaluated in order. The first matching rule will be applied." Foreground="{StaticResource SecondaryTextBrush}" FontSize="12" Margin="0,16,0,0"/>
+                    <!-- Rules list end -->
 
                 </StackPanel>
             </StackPanel>
@@ -174,10 +175,10 @@
             <StackPanel Grid.Column="1">
                 
                 <!-- Summary Card -->
-                <Border Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,0,24">
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,0,24">
                     <StackPanel>
-                        <TextBlock Text="Auto Switch Summary" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                        <TextBlock Text="Here's how AxePower will respond:" Foreground="{StaticResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24"/>
+                        <TextBlock Text="Auto Switch Summary" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
+                        <TextBlock Text="Here's how AxePower will respond:" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24"/>
                         
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
@@ -187,14 +188,14 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{StaticResource BeastBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource BeastBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource BeastBrush}" Opacity="0.1"/>
+                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource BeastBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="When plugged in" Foreground="{StaticResource PrimaryTextBrush}" FontSize="13"/>
-                                <TextBlock Text="Switch to Beast Mode" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBlock Text="When plugged in" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                <TextBlock Text="Switch to Beast Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource BeastBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource BeastBrush}" VerticalAlignment="Center"/>
                         </Grid>
                         
                         <Grid Margin="0,0,0,16">
@@ -205,14 +206,14 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{StaticResource EcoBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource EcoBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource EcoBrush}" Opacity="0.1"/>
+                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource EcoBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="When unplugged" Foreground="{StaticResource PrimaryTextBrush}" FontSize="13"/>
-                                <TextBlock Text="Switch to Eco Mode" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBlock Text="When unplugged" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                <TextBlock Text="Switch to Eco Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource EcoBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource EcoBrush}" VerticalAlignment="Center"/>
                         </Grid>
                         
                         <Grid Margin="0,0,0,16">
@@ -223,14 +224,14 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{StaticResource WarningBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xEBAA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource WarningBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.1"/>
+                                <TextBlock Text="&#xEBAA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="When battery below 30%" Foreground="{StaticResource PrimaryTextBrush}" FontSize="13"/>
-                                <TextBlock Text="Switch to Eco Mode" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBlock Text="When battery below 30%" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                <TextBlock Text="Switch to Eco Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource EcoBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource EcoBrush}" VerticalAlignment="Center"/>
                         </Grid>
                         
                         <Grid>
@@ -241,22 +242,22 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{StaticResource AccentBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.1"/>
+                                <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Custom schedule" Foreground="{StaticResource PrimaryTextBrush}" FontSize="13"/>
-                                <TextBlock Text="Weekdays, 9:00 AM – 5:00 PM&#x0a;Switch to Smart Mode" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                <TextBlock Text="Custom schedule" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
+                                <TextBlock Text="Weekdays, 9:00 AM – 5:00 PM&#x0a;Switch to Smart Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource SmartBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SmartBrush}" VerticalAlignment="Center"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
                 <!-- General Options Card -->
-                <Border Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
                     <StackPanel>
-                        <TextBlock Text="General Options" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,16"/>
+                        <TextBlock Text="General Options" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,16"/>
                         
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
@@ -264,8 +265,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Show notifications" Foreground="{StaticResource PrimaryTextBrush}" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Show notifications" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" VerticalAlignment="Center"/>
                             <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}" VerticalAlignment="Center"/>
                         </Grid>
                         
@@ -275,28 +276,18 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Start with Windows" Foreground="{StaticResource PrimaryTextBrush}" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Start with Windows" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" VerticalAlignment="Center"/>
                             <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
             </StackPanel>
-        </Grid>
-
-        <!-- Centered Apply Changes Button (Overflowing the bottom bar) -->
-        <Button Grid.Row="1" Style="{StaticResource PrimaryButtonStyle}" 
-                Command="{Binding SaveSettingsCommand}" 
-                Margin="0,-38,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Padding="32,16" Background="#222" BorderBrush="#444" BorderThickness="1" Panel.ZIndex="10">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="✓" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Apply Changes" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Button>
-
+            </Grid>
+        </ScrollViewer>
         <!-- Bottom Status Region -->
-        <Border Grid.Row="1" Background="{StaticResource WindowSecondaryBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="1" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
             <Grid Margin="32,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -304,25 +295,34 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
+                <Button Grid.Column="1" Style="{StaticResource PrimaryButtonStyle}" 
+                        Command="{Binding SaveSettingsCommand}" 
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="32,8" Background="#222" BorderBrush="#444" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✓" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Apply Changes" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Grid Width="32" Height="32" Margin="0,0,16,0">
-                        <Ellipse Fill="{StaticResource ElevatedCardBackgroundBrush}" Stroke="{StaticResource CardBorderBrush}" StrokeThickness="1" />
-                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
+                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Auto switch enabled" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
-                        <TextBlock Text="AxePower is monitoring your power conditions." Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                        <TextBlock Text="Auto switch enabled" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
+                        <TextBlock Text="AxePower is monitoring your power conditions." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                     </StackPanel>
                 </StackPanel>
                 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource SidebarButtonStyle}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                    <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Help" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SidebarButtonStyle}" Padding="16,8" Height="32">
+                    <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Padding="16,8" Height="32">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Check for updates" FontSize="13" VerticalAlignment="Center"/>

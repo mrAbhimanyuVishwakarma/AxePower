@@ -20,6 +20,7 @@ public class AutoSwitchService : IDisposable
     
     private bool? _lastPluggedInState = null;
     private bool _inLowBatteryState = false;
+    private bool _isPaused = false;
 
     public AutoSwitchService(
         BatteryService batteryService,
@@ -92,6 +93,11 @@ public class AutoSwitchService : IDisposable
 
     public async Task EvaluatePowerStateAsync()
     {
+        if (_isPaused)
+        {
+            return;
+        }
+
         var settings = _settingsService.GetSettings();
         if (!settings.AutoSwitchEnabled)
         {
@@ -207,8 +213,21 @@ public class AutoSwitchService : IDisposable
     public void Dispose()
     {
         Stop();
+        _transitionLock.Dispose();
         _serviceCts?.Dispose();
         _transitionCts?.Dispose();
-        _transitionLock.Dispose();
+    }
+
+    public void Pause()
+    {
+        _isPaused = true;
+        _logService.LogInfo("AutoSwitchService is now paused (e.g. by Game Mode).");
+    }
+
+    public void Resume()
+    {
+        _isPaused = false;
+        _logService.LogInfo("AutoSwitchService is now resumed.");
+        EvaluatePowerStateAsync().ConfigureAwait(false);
     }
 }

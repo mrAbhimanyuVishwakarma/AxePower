@@ -4,5 +4,6 @@ public enum PowerMode
 {
     Eco,
     Smart,
-    Beast
+    Beast,
+    GameMode
 }

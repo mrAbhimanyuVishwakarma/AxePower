@@ -20,11 +20,21 @@ public partial class AboutViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenGitHub()
+    private void OpenHelp()
     {
         Process.Start(new ProcessStartInfo
         {
-            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower",
+            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower/blob/main/README.md",
+            UseShellExecute = true
+        });
+    }
+
+    [RelayCommand]
+    private void CheckForUpdates()
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
             UseShellExecute = true
         });
     }

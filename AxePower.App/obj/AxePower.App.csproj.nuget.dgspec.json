@@ -122,15 +122,15 @@
           "C:\\Users\\Abhimanyu Vishwakarm\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net8.0-windows"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "framework": "net8.0",
-            "targetAlias": "net8.0",
+          "net8.0-windows": {
+            "framework": "net8.0-windows7.0",
+            "targetAlias": "net8.0-windows",
             "projectReferences": {}
           }
         },
@@ -147,11 +147,19 @@
         "SdkAnalysisLevel": "10.0.300"
       },
       "frameworks": {
-        "net8.0": {
-          "framework": "net8.0",
-          "targetAlias": "net8.0",
+        "net8.0-windows": {
+          "framework": "net8.0-windows7.0",
+          "targetAlias": "net8.0-windows",
           "dependencies": {
             "Microsoft.Win32.SystemEvents": {
+              "target": "Package",
+              "version": "[10.0.10, )"
+            },
+            "System.Management": {
+              "target": "Package",
+              "version": "[10.0.10, )"
+            },
+            "System.ServiceProcess.ServiceController": {
               "target": "Package",
               "version": "[10.0.10, )"
             }
