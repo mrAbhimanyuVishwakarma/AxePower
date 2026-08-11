@@ -10,9 +10,13 @@ AxePower is a modern Windows desktop application that automatically optimizes yo
 
 ## Screenshots
 
-<img width="961" height="631" alt="image" src="https://github.com/user-attachments/assets/c9e3be08-5052-4928-992d-b5ce54540ea0" />
 
-<img width="961" height="631" alt="image" src="https://github.com/user-attachments/assets/b849cb73-f24f-4ecc-a6c4-99beadd0ae67" />
+<img width="962" height="635" alt="axepower_1" src="https://github.com/user-attachments/assets/5470c462-4d65-4724-8901-d96b0653a24e" />
+<img width="965" height="633" alt="axepower_5" src="https://github.com/user-attachments/assets/c4e8b1cf-8928-40b1-b8bd-488e90b95e18" />
+<img width="1280" height="686" alt="axepower_4" src="https://github.com/user-attachments/assets/c9c10e66-af99-49fd-9799-3b4500128aea" />
+<img width="1280" height="685" alt="axepower_3" src="https://github.com/user-attachments/assets/2aee1cb0-2826-4058-97ae-9f7f7c26ee11" />
+<img width="1278" height="682" alt="axepower_6" src="https://github.com/user-attachments/assets/ecfc0936-3066-4b62-906d-6e8113eebb3c" />
+
 
 ## Features
 - **Three Power Modes**: Quick toggle between Eco Mode (Battery Saver), Smart Mode (Balanced), and Beast Mode (Ultimate Performance).
