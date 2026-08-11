@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "HXN+zmJ7Sac=",
+  "dgSpecHash": "Rx5wQ4vmc9Y=",
   "success": true,
   "projectFilePath": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.App\\AxePower.App.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,10 @@
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\8.0.0\\microsoft.extensions.dependencyinjection.8.0.0.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.win32.systemevents\\10.0.10\\microsoft.win32.systemevents.10.0.10.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.codedom\\10.0.10\\system.codedom.10.0.10.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.10\\system.diagnostics.eventlog.10.0.10.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.management\\10.0.10\\system.management.10.0.10.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.10\\system.serviceprocess.servicecontroller.10.0.10.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.29\\microsoft.netcore.app.ref.8.0.29.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.29\\microsoft.windowsdesktop.app.ref.8.0.29.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.29\\microsoft.aspnetcore.app.ref.8.0.29.nupkg.sha512",

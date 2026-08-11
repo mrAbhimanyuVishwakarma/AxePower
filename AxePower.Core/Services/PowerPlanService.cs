@@ -91,6 +91,7 @@ public class PowerPlanService
         {
             PowerMode.Eco => PowerInterop.EnumerateSchemes().Contains(PowerSaverGuid) ? PowerSaverGuid : FindSchemeByKeyword("Power saver"),
             PowerMode.Beast => await EnsureUltimatePerformanceExistsAsync(),
+            PowerMode.GameMode => await EnsureUltimatePerformanceExistsAsync(),
             _ => PowerInterop.EnumerateSchemes().Contains(BalancedGuid) ? BalancedGuid : FindSchemeByKeyword("Balanced")
         };
 

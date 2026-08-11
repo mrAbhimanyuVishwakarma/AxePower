@@ -8,5 +8,10 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-wi
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\Microsoft.Extensions.DependencyInjection.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\Microsoft.Win32.SystemEvents.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\System.CodeDom.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\System.Diagnostics.EventLog.Messages.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\System.Diagnostics.EventLog.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\System.Management.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\System.ServiceProcess.ServiceController.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.Core.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.Core.pdb

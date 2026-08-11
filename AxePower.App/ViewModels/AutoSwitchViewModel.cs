@@ -49,7 +49,9 @@ public partial class AutoSwitchViewModel : ObservableObject
     [ObservableProperty]
     private bool _lowBatteryEnabled = true;
 
-    public AutoSwitchViewModel(SettingsService settingsService, NotificationService notificationService)
+    public AutoSwitchViewModel(
+        SettingsService settingsService, 
+        NotificationService notificationService)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
@@ -84,5 +86,25 @@ public partial class AutoSwitchViewModel : ObservableObject
 
         _settingsService.SaveSettings(settings);
         _notificationService.Show("Auto Switch settings saved successfully.");
+    }
+
+    [RelayCommand]
+    private void OpenHelp()
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower/blob/main/README.md",
+            UseShellExecute = true
+        });
+    }
+
+    [RelayCommand]
+    private void CheckForUpdates()
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
+            UseShellExecute = true
+        });
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using AxePower.Core.Services;
+using AxePower.App.Services;
 using AxePower.App.ViewModels;
 
 namespace AxePower.App;
@@ -42,6 +43,9 @@ public partial class App : Application
         var settingsService = Services.GetRequiredService<SettingsService>();
         settingsService.LoadSettings();
 
+        var themeService = Services.GetRequiredService<ThemeService>();
+        themeService.ApplyTheme(settingsService.GetSettings().Theme);
+
         var startupService = Services.GetRequiredService<StartupService>();
         startupService.Initialize();
 
@@ -50,6 +54,9 @@ public partial class App : Application
 
         var autoSwitchService = Services.GetRequiredService<AutoSwitchService>();
         autoSwitchService.Start();
+
+        var appMonitorService = Services.GetRequiredService<AppMonitorService>();
+        appMonitorService.Start();
 
         var mainWindow = Services.GetRequiredService<MainWindow>();
         
@@ -75,11 +82,17 @@ public partial class App : Application
         services.AddSingleton<StartupService>();
         services.AddSingleton<AutoSwitchService>();
         services.AddSingleton<AppKillerService>();
+        services.AddSingleton<TimeoutService>();
+        services.AddSingleton<AppMonitorService>();
+        services.AddSingleton<GameScannerService>();
+        services.AddSingleton<ThemeService>();
+        services.AddSingleton<SystemServiceOptimizer>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<AutoSwitchViewModel>();
+        services.AddTransient<GameModeViewModel>();
         services.AddTransient<BatteryViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<LogsViewModel>();
@@ -150,6 +163,9 @@ public partial class App : Application
         {
             var autoSwitchService = Services.GetService<AutoSwitchService>();
             autoSwitchService?.Stop();
+
+            var appMonitorService = Services.GetService<AppMonitorService>();
+            appMonitorService?.Stop();
         }
         _instanceMutex?.ReleaseMutex();
         _instanceMutex?.Dispose();

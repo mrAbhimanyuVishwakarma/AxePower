@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace AxePower.Core.Models;
@@ -57,6 +58,18 @@ public class AppSettings
     [JsonPropertyName("suspendBackgroundAppsOnBattery")]
     public bool SuspendBackgroundAppsOnBattery { get; set; } = true;
 
+    [JsonPropertyName("appRulesEnabled")]
+    public bool AppRulesEnabled { get; set; } = false;
+
+    [JsonPropertyName("appRules")]
+    public List<AppRule> AppRules { get; set; } = new();
+
+    [JsonPropertyName("gameBoosterEnabled")]
+    public bool GameBoosterEnabled { get; set; } = false;
+
+    [JsonPropertyName("appsToClose")]
+    public List<string> AppsToClose { get; set; } = new();
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -76,7 +89,11 @@ public class AppSettings
             CloseBehaviour = this.CloseBehaviour,
             Theme = this.Theme,
             ReduceMotion = this.ReduceMotion,
-            SuspendBackgroundAppsOnBattery = this.SuspendBackgroundAppsOnBattery
+            SuspendBackgroundAppsOnBattery = this.SuspendBackgroundAppsOnBattery,
+            AppRulesEnabled = this.AppRulesEnabled,
+            AppRules = new List<AppRule>(this.AppRules),
+            GameBoosterEnabled = this.GameBoosterEnabled,
+            AppsToClose = new List<string>(this.AppsToClose)
         };
     }
 }

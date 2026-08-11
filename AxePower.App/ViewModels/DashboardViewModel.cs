@@ -192,4 +192,24 @@ public partial class DashboardViewModel : ObservableObject
             AppsSuspended = true;
         }
     }
+
+    [RelayCommand]
+    private void OpenHelp()
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower/blob/main/README.md",
+            UseShellExecute = true
+        });
+    }
+
+    [RelayCommand]
+    private void CheckForUpdates()
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
+            UseShellExecute = true
+        });
+    }
 }

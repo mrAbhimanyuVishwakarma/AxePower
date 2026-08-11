@@ -35,7 +35,7 @@
                     <TextBlock Grid.Column="2" Text="Message" Style="{StaticResource SecondaryText}" FontWeight="SemiBold"/>
                 </Grid>
                 
-                <Border Grid.Row="0" Height="1" Background="{StaticResource DividerBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
+                <Border Grid.Row="0" Height="1" Background="{DynamicResource DividerBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
 
                 <ListBox Grid.Row="1" ItemsSource="{Binding Logs}" Background="Transparent" BorderThickness="0" Margin="0,8,0,0"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
@@ -49,10 +49,10 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="{StaticResource SurfaceHoverBrush}" />
+                                                <Setter TargetName="border" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="{StaticResource SurfaceHoverBrush}" />
+                                                <Setter TargetName="border" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -87,13 +87,13 @@
                                     <TextBlock Text="{Binding Level}" FontSize="11" FontWeight="Bold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Level}" Value="ERROR">
-                                                        <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Level}" Value="WARN">
-                                                        <Setter Property="Foreground" Value="{StaticResource WarningBrush}"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -103,11 +103,11 @@
                                 
                                 <!-- Timestamp -->
                                 <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='MM/dd/yyyy HH:mm:ss'}" 
-                                           Foreground="{StaticResource SecondaryTextBrush}" FontSize="12" FontFamily="Consolas" VerticalAlignment="Center"/>
+                                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontFamily="Consolas" VerticalAlignment="Center"/>
                                 
                                 <!-- Message -->
                                 <TextBlock Grid.Column="2" Text="{Binding Message}" 
-                                           Foreground="{StaticResource PrimaryTextBrush}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                           Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

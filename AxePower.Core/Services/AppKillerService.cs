@@ -13,6 +13,7 @@ public class AppKillerService
     private static extern int NtResumeProcess(IntPtr processHandle);
 
     private readonly System.Collections.Generic.List<int> _suspendedProcessIds = new();
+    private readonly System.Collections.Generic.List<string> _killedAppPaths = new();
 
     public int SuspendBackgroundApps()
     {
@@ -80,5 +81,82 @@ public class AppKillerService
         }
         _suspendedProcessIds.Clear();
         return resumedCount;
+    }
+
+    public int KillBackgroundApps(System.Collections.Generic.List<string> appsToClose)
+    {
+        if (appsToClose == null || !appsToClose.Any()) return 0;
+        
+        int killedCount = 0;
+        var currentProcess = Process.GetCurrentProcess();
+        var currentSessionId = currentProcess.SessionId;
+        
+        var processes = Process.GetProcesses();
+        foreach (var process in processes)
+        {
+            try
+            {
+                if (process.Id == currentProcess.Id)
+                    continue;
+
+                if (process.SessionId != currentSessionId)
+                    continue;
+
+                if (appsToClose.Contains(process.ProcessName, StringComparer.OrdinalIgnoreCase) || 
+                    appsToClose.Contains(process.ProcessName + ".exe", StringComparer.OrdinalIgnoreCase))
+                {
+                    string path = null;
+                    try
+                    {
+                        path = process.MainModule?.FileName;
+                    }
+                    catch
+                    {
+                        // Access denied on MainModule, ignore path saving
+                    }
+
+                    process.Kill();
+                    killedCount++;
+
+                    if (!string.IsNullOrEmpty(path) && !_killedAppPaths.Contains(path, StringComparer.OrdinalIgnoreCase))
+                    {
+                        _killedAppPaths.Add(path);
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore processes we can't access
+            }
+        }
+        
+        return killedCount;
+    }
+
+    public int RestartBackgroundApps()
+    {
+        int restartedCount = 0;
+        foreach (var path in _killedAppPaths)
+        {
+            try
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = path,
+                        UseShellExecute = true,
+                        WindowStyle = ProcessWindowStyle.Normal
+                    });
+                    restartedCount++;
+                }
+            }
+            catch
+            {
+                // Could not restart
+            }
+        }
+        _killedAppPaths.Clear();
+        return restartedCount;
     }
 }

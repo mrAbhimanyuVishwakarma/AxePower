@@ -12,24 +12,24 @@
             <RowDefinition Height="76"/>
         </Grid.RowDefinitions>
         
-        <ScrollViewer Grid.Row="0" Margin="40,32,40,24" VerticalScrollBarVisibility="Auto">
+        <Grid Grid.Row="0" Margin="40,32,40,24">
             <StackPanel HorizontalAlignment="Center" Margin="0,48,0,0">
                 
                 <Grid Width="120" Height="120" Margin="0,0,0,24">
-                    <Ellipse Fill="#222" Stroke="{StaticResource DividerBrush}" StrokeThickness="1"/>
-                    <Image Source="pack://application:,,,/Resources/app.ico" Width="64" Height="64"/>
+                    <Ellipse Fill="#222" Stroke="{DynamicResource DividerBrush}" StrokeThickness="1"/>
+                    <Image Source="pack://application:,,,/Resources/AxePower_white.ico" Width="64" Height="64"/>
                     <!-- Fallback icon if app.ico doesn't render perfectly -->
-                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
                 </Grid>
                 
-                <TextBlock Text="AxePower" FontSize="36" FontWeight="Bold" Foreground="{StaticResource PrimaryTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                <TextBlock Text="Intelligent power management for Windows." Foreground="{StaticResource SecondaryTextBrush}" FontSize="15" HorizontalAlignment="Center" Margin="0,0,0,32"/>
+                <TextBlock Text="AxePower" FontSize="36" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Intelligent power management for Windows." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" HorizontalAlignment="Center" Margin="0,0,0,32"/>
 
-                <TextBlock Foreground="{StaticResource SecondaryTextBrush}" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,4">
+                <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,4">
                     <Run Text="Version "/>
                     <Run Text="{Binding Version}"/>
                 </TextBlock>
-                <TextBlock Text="Created by Abhimanyu Vishwakarma" Foreground="{StaticResource SecondaryTextBrush}" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,48"/>
+                <TextBlock Text="Created by Abhimanyu Vishwakarma" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,48"/>
                 
                 <Grid Width="700">
                     <Grid.ColumnDefinitions>
@@ -39,24 +39,24 @@
                     </Grid.ColumnDefinitions>
                     
                     <!-- Check for Updates -->
-                    <Border Grid.Column="0" Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
+                    <Border Grid.Column="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
                         <StackPanel>
-                            <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource PrimaryTextBrush}" Margin="0,0,0,16"/>
-                            <TextBlock Text="Check for Updates" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                            <TextBlock Text="You are running the latest version." Foreground="{StaticResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24"/>
+                            <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,16"/>
+                            <TextBlock Text="Check for Updates" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
+                            <TextBlock Text="You are running the latest version." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24"/>
                             
-                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Check Now" Padding="24,10" HorizontalAlignment="Left"/>
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Content="Check Now" Padding="24,10" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Help & Support -->
-                    <Border Grid.Column="2" Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
+                    <Border Grid.Column="2" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
                         <StackPanel>
-                            <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource PrimaryTextBrush}" Margin="0,0,0,16"/>
-                            <TextBlock Text="Help &amp; Support" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                            <TextBlock Text="View documentation, report issues, or suggest features." Foreground="{StaticResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24" TextWrapping="Wrap"/>
+                            <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,16"/>
+                            <TextBlock Text="Help &amp; Support" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
+                            <TextBlock Text="View documentation, report issues, or suggest features." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24" TextWrapping="Wrap"/>
                             
-                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenGitHubCommand}" Padding="24,10" HorizontalAlignment="Left">
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="24,10" HorizontalAlignment="Left">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="GitHub Repository" VerticalAlignment="Center"/>
                                     <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center"/>
@@ -67,6 +67,6 @@
                 </Grid>
                 
             </StackPanel>
-        </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

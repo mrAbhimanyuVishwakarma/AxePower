@@ -20,6 +20,7 @@ public partial class MainViewModel : ObservableObject
 
     public DashboardViewModel DashboardVm { get; }
     public AutoSwitchViewModel AutoSwitchVm { get; }
+    public GameModeViewModel GameModeVm { get; }
     public BatteryViewModel BatteryVm { get; }
     public SettingsViewModel SettingsVm { get; }
     public LogsViewModel LogsVm { get; }
@@ -27,6 +28,7 @@ public partial class MainViewModel : ObservableObject
 
     public Style? DashboardActiveStyle => GetStyleForView(DashboardVm);
     public Style? AutoSwitchActiveStyle => GetStyleForView(AutoSwitchVm);
+    public Style? GameModeActiveStyle => GetStyleForView(GameModeVm);
     public Style? BatteryActiveStyle => GetStyleForView(BatteryVm);
     public Style? LogsActiveStyle => GetStyleForView(LogsVm);
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
@@ -35,6 +37,7 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(
         DashboardViewModel dashboardVm, 
         AutoSwitchViewModel autoSwitchVm,
+        GameModeViewModel gameModeVm,
         BatteryViewModel batteryVm,
         SettingsViewModel settingsVm, 
         LogsViewModel logsVm,
@@ -43,6 +46,7 @@ public partial class MainViewModel : ObservableObject
     {
         DashboardVm = dashboardVm;
         AutoSwitchVm = autoSwitchVm;
+        GameModeVm = gameModeVm;
         BatteryVm = batteryVm;
         SettingsVm = settingsVm;
         LogsVm = logsVm;
@@ -67,6 +71,7 @@ public partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(DashboardActiveStyle));
         OnPropertyChanged(nameof(AutoSwitchActiveStyle));
+        OnPropertyChanged(nameof(GameModeActiveStyle));
         OnPropertyChanged(nameof(BatteryActiveStyle));
         OnPropertyChanged(nameof(LogsActiveStyle));
         OnPropertyChanged(nameof(SettingsActiveStyle));
@@ -81,6 +86,7 @@ public partial class MainViewModel : ObservableObject
         {
             "Dashboard" => DashboardVm,
             "AutoSwitch" => AutoSwitchVm,
+            "GameMode" => GameModeVm,
             "Battery" => BatteryVm,
             "Settings" => SettingsVm,
             "Logs" => LogsVm,

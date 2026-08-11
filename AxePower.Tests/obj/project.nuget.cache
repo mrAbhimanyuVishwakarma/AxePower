@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "TQhF/Eoolm8=",
+  "dgSpecHash": "n45izAMP6uM=",
   "success": true,
   "projectFilePath": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Tests\\AxePower.Tests.csproj",
   "expectedPackageFiles": [
@@ -17,9 +17,12 @@
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.win32.systemevents\\10.0.10\\microsoft.win32.systemevents.10.0.10.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\moq\\4.20.70\\moq.4.20.70.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.codedom\\10.0.10\\system.codedom.10.0.10.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.collections.immutable\\8.0.0\\system.collections.immutable.8.0.0.nupkg.sha512",
-    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.diagnostics.eventlog\\6.0.0\\system.diagnostics.eventlog.6.0.0.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.10\\system.diagnostics.eventlog.10.0.10.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.management\\10.0.10\\system.management.10.0.10.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.reflection.metadata\\8.0.0\\system.reflection.metadata.8.0.0.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.10\\system.serviceprocess.servicecontroller.10.0.10.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\xunit\\2.9.3\\xunit.2.9.3.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\xunit.abstractions\\2.0.3\\xunit.abstractions.2.0.3.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\xunit.analyzers\\1.18.0\\xunit.analyzers.1.18.0.nupkg.sha512",

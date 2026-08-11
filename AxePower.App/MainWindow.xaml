@@ -8,8 +8,8 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         mc:Ignorable="d"
         Title="AxePower" Height="840" Width="1280" MinWidth="1024" MinHeight="720"
-        WindowStyle="None" AllowsTransparency="True" ResizeMode="CanResize"
-        Background="{StaticResource WindowBackgroundBrush}"
+        WindowStyle="SingleBorderWindow" AllowsTransparency="False" ResizeMode="CanResize"
+        Background="{DynamicResource WindowBackgroundBrush}"
         WindowStartupLocation="CenterScreen"
         Icon="/Resources/AxePower_white.ico">
         
@@ -23,6 +23,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:AutoSwitchViewModel}">
             <views:AutoSwitchView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:GameModeViewModel}">
+            <views:GameModeView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:BatteryViewModel}">
             <views:BatteryView />
@@ -40,7 +43,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
 
-    <Grid Background="{StaticResource WindowBackgroundBrush}">
+    <Grid Background="{DynamicResource WindowBackgroundBrush}">
         <!-- Subtle Glow Effects -->
         <Ellipse Width="800" Height="800" Margin="-200,-300,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Opacity="0.1" IsHitTestVisible="False">
             <Ellipse.Fill>
@@ -62,7 +65,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
-            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Background="{StaticResource SidebarBackgroundBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="112"/>
@@ -73,7 +76,7 @@
                     <!-- Branding -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="40,30,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
                         <Image Source="/Resources/AxePower_white.ico" Width="52" Height="52" />
-                        <TextBlock Text="AxePower" VerticalAlignment="Center" Foreground="{StaticResource PrimaryTextBrush}" FontSize="24" FontWeight="SemiBold" Margin="14,0,0,0" />
+                        <TextBlock Text="AxePower" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="24" FontWeight="SemiBold" Margin="14,0,0,0" />
                     </StackPanel>
                     
                     <!-- Navigation -->
@@ -85,20 +88,20 @@
                                 <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        
-                        <!-- Power Modes (Dashboard shortcut for now) -->
-                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Power Modes" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
 
                         <!-- Auto Switch -->
                         <Button Style="{Binding AutoSwitchActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="AutoSwitch">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Auto Switch" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Game Mode -->
+                        <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Game Mode" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         
@@ -131,33 +134,22 @@
 
             <!-- Title Bar Region -->
             <Grid Grid.Row="0" Grid.Column="1">
-                <!-- Battery Status Pill -->
-                <Border HorizontalAlignment="Center" VerticalAlignment="Center" Width="300" Height="80" CornerRadius="18" Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1" WindowChrome.IsHitTestVisibleInChrome="True" DataContext="{Binding BatteryVm}" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                    <!-- Add subtle glow if charging -->
-                    <Grid>
-                        <Ellipse Width="150" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.15" IsHitTestVisible="False">
-                            <Ellipse.Fill>
-                                <RadialGradientBrush>
-                                    <GradientStop Color="#00C853" Offset="0"/>
-                                    <GradientStop Color="Transparent" Offset="1"/>
-                                </RadialGradientBrush>
-                            </Ellipse.Fill>
-                        </Ellipse>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="&#xEBA6;" FontFamily="Segoe MDL2 Assets" FontSize="36" Foreground="{StaticResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,20,0"/>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding BatteryPercentage}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryTextBrush}" Margin="0,0,0,2"/>
-                                <TextBlock Text="{Binding PowerSource}" FontSize="12" Foreground="{StaticResource SuccessBrush}"/>
-                            </StackPanel>
+                <!-- Battery Status Pill (Figma style: small, left aligned) -->
+                <Border HorizontalAlignment="Left" VerticalAlignment="Center" Margin="40,0,0,0" Padding="16,8" CornerRadius="12" Background="#111418" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" WindowChrome.IsHitTestVisibleInChrome="True" DataContext="{Binding BatteryVm}" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xEBA6;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding BatteryPercentage}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,0"/>
+                            <TextBlock Text="{Binding PowerSource}" FontSize="11" Foreground="{DynamicResource SuccessBrush}"/>
                         </StackPanel>
-                    </Grid>
+                    </StackPanel>
                 </Border>
 
                 <!-- Window Controls -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button Content="—" FontFamily="Segoe UI" Foreground="{StaticResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="MinimizeButton_Click"/>
-                    <Button Content="◻" FontFamily="Segoe UI" Foreground="{StaticResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="16" Click="MaximizeButton_Click"/>
-                    <Button Content="✕" FontFamily="Segoe UI" Foreground="{StaticResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="CloseButton_Click">
+                    <Button Content="—" FontFamily="Segoe UI" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="MinimizeButton_Click"/>
+                    <Button Content="◻" FontFamily="Segoe UI" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="16" Click="MaximizeButton_Click"/>
+                    <Button Content="✕" FontFamily="Segoe UI" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="CloseButton_Click">
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Style.Triggers>
@@ -173,19 +165,15 @@
             </Grid>
 
             <!-- Main Content -->
-            <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <Grid Width="1040" Height="728">
-                    <ContentControl Content="{Binding CurrentView}" Margin="0" />
-                </Grid>
-            </Viewbox>
+            <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding CurrentView}" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 
             <!-- Notification Snackbar -->
             <Border Grid.Row="1" Grid.Column="1" 
                     VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                    Background="{StaticResource ElevatedCardBackgroundBrush}" BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1"
+                    Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                     CornerRadius="12" Padding="20,12" Margin="0,0,0,32"
                     Visibility="{Binding IsNotificationVisible, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="{Binding NotificationMessage}" Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding NotificationMessage}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" />
             </Border>
 
             <!-- Tray Icon -->
