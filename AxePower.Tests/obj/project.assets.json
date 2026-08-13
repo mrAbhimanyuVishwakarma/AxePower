@@ -645,11 +645,11 @@
           "build/net8.0/xunit.runner.visualstudio.props": {}
         }
       },
-      "AxePower.App/1.0.0": {
+      "AxePower.App/1.2.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
-          "AxePower.Core": "1.0.0",
+          "AxePower.Core": "1.2.0",
           "CommunityToolkit.Mvvm": "8.2.2",
           "Hardcodet.NotifyIcon.Wpf": "2.0.1",
           "Microsoft.Extensions.DependencyInjection": "8.0.0"
@@ -664,7 +664,7 @@
           "Microsoft.WindowsDesktop.App.WPF"
         ]
       },
-      "AxePower.Core/1.0.0": {
+      "AxePower.Core/1.2.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
@@ -1579,12 +1579,12 @@
         "xunit.runner.visualstudio.nuspec"
       ]
     },
-    "AxePower.App/1.0.0": {
+    "AxePower.App/1.2.0": {
       "type": "project",
       "path": "../AxePower.App/AxePower.App.csproj",
       "msbuildProject": "../AxePower.App/AxePower.App.csproj"
     },
-    "AxePower.Core/1.0.0": {
+    "AxePower.Core/1.2.0": {
       "type": "project",
       "path": "../AxePower.Core/AxePower.Core.csproj",
       "msbuildProject": "../AxePower.Core/AxePower.Core.csproj"
@@ -1592,8 +1592,8 @@
   },
   "projectFileDependencyGroups": {
     "net8.0-windows": [
-      "AxePower.App >= 1.0.0",
-      "AxePower.Core >= 1.0.0",
+      "AxePower.App >= 1.2.0",
+      "AxePower.Core >= 1.2.0",
       "Microsoft.NET.Test.Sdk >= 17.14.1",
       "Moq >= 4.20.70",
       "coverlet.collector >= 6.0.4",

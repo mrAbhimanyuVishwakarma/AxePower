@@ -53,7 +53,7 @@ namespace AxePower.App.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/AxePower.App;component/views/batteryview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/AxePower.App;V1.2.0.0;component/views/batteryview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\BatteryView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

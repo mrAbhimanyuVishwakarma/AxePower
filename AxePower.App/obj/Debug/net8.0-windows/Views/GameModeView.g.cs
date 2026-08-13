@@ -52,7 +52,7 @@ namespace AxePower.App.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/AxePower.App;component/views/gamemodeview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/AxePower.App;V1.2.0.0;component/views/gamemodeview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\GameModeView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -112,13 +112,24 @@ public partial class SettingsViewModel : ObservableObject
     public IEnumerable<AppTheme> AvailableThemes => Enum.GetValues(typeof(AppTheme)).Cast<AppTheme>();
     public IEnumerable<CloseBehaviour> AvailableCloseBehaviours => Enum.GetValues(typeof(CloseBehaviour)).Cast<CloseBehaviour>();
 
+    private readonly UpdateService? _updateService;
+
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.2.0";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]
+    private string _lastCheckedTime = "Not checked yet";
+
+    public string LastCheckedDisplay => LastCheckedTime == "Not checked yet" ? "Not checked yet" : LastCheckedTime;
+
     public SettingsViewModel(
         SettingsService settingsService,
         NotificationService notificationService,
         TimeoutService timeoutService,
         ThemeService themeService,
         DisplayService displayService,
-        PowerPlanService powerPlanService)
+        PowerPlanService powerPlanService,
+        UpdateService updateService)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
@@ -126,6 +137,7 @@ public partial class SettingsViewModel : ObservableObject
         _themeService = themeService;
         _displayService = displayService;
         _powerPlanService = powerPlanService;
+        _updateService = updateService;
         _currentSettings = _settingsService.GetSettings();
         _selectedTheme = _currentSettings.Theme;
 
@@ -233,12 +245,30 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CheckForUpdates()
+    private async Task CheckForUpdatesAsync()
     {
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        LastCheckedTime = DateTime.Now.ToString("MMM dd, yyyy • h:mm tt");
+        if (_updateService == null)
         {
-            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
-            UseShellExecute = true
-        });
+            _notificationService.Show("Already Updated");
+            return;
+        }
+
+        try
+        {
+            var result = await _updateService.CheckForUpdatesAsync();
+            if (result.HasUpdate)
+            {
+                _notificationService.Show($"🚀 New update available: v{result.LatestVersion}! Check About page.");
+            }
+            else
+            {
+                _notificationService.Show("Already Updated");
+            }
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show("Failed to check for updates: " + ex.Message);
+        }
     }
 }

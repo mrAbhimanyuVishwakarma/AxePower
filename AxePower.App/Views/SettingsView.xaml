@@ -280,12 +280,12 @@
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Current version" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="1.2.0" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CurrentVersion}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Last checked" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="Today, 10:24 AM" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding LastCheckedDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                                 </Grid>
                                 
                                 <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Content="&#xE895; Check for updates" HorizontalAlignment="Left" Padding="12,6"/>

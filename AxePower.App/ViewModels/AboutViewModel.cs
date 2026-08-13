@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,19 +19,35 @@ public partial class AboutViewModel : ObservableObject
     private CancellationTokenSource? _downloadCts;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ReleaseVersionWithDate))]
     private string _version = "1.2.0";
 
     [ObservableProperty]
     private string _runtime = ".NET 8.0";
 
     [ObservableProperty]
-    private string _lastCheckedTime = "Today, " + DateTime.Now.ToString("h:mm tt");
+    [NotifyPropertyChangedFor(nameof(ReleaseVersionWithDate))]
+    private string _releaseDate = string.Empty;
+
+    public string ReleaseVersionWithDate => string.IsNullOrWhiteSpace(ReleaseDate) ? $"Version {Version}" : $"Version {Version} • {ReleaseDate}";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]
+    private string _lastCheckedTime = "Not checked yet";
+
+    public string LastCheckedDisplay => LastCheckedTime == "Not checked yet" ? "Not checked yet" : $"Last checked: {LastCheckedTime}";
 
     [ObservableProperty]
     private string _updateStatusTitle = "AxePower is up to date";
 
     [ObservableProperty]
     private string _checkButtonText = "Check for updates";
+
+    [ObservableProperty]
+    private string _systemCompatibility = string.Empty;
+
+    [ObservableProperty]
+    private string _licenseUser = Environment.UserName;
 
     [ObservableProperty]
     private bool _isPrivacyPolicyOpen;
@@ -76,6 +93,43 @@ public partial class AboutViewModel : ObservableObject
     {
         var assembly = Assembly.GetExecutingAssembly();
         Version = assembly.GetName().Version?.ToString(3) ?? "1.2.0";
+
+        try
+        {
+            var path = Environment.ProcessPath ?? assembly.Location;
+            if (File.Exists(path))
+            {
+                ReleaseDate = File.GetLastWriteTime(path).ToString("MMM dd, yyyy");
+            }
+            else
+            {
+                ReleaseDate = DateTime.Now.ToString("MMM dd, yyyy");
+            }
+        }
+        catch
+        {
+            ReleaseDate = DateTime.Now.ToString("MMM dd, yyyy");
+        }
+
+        // Live OS & Hardware Detection
+        try
+        {
+            var osName = Environment.OSVersion.Version.Major switch
+            {
+                10 when Environment.OSVersion.Version.Build >= 22000 => "Windows 11",
+                10 => "Windows 10",
+                _ => "Windows " + Environment.OSVersion.Version.Major
+            };
+            var arch = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
+            var cores = Environment.ProcessorCount;
+            SystemCompatibility = $"{osName} (Build {Environment.OSVersion.Version.Build}) • {arch} • {cores} Cores • Optimized for laptops";
+        }
+        catch
+        {
+            SystemCompatibility = "Windows 10 / 11 • 64-bit • Intel & AMD supported • Optimized for laptops";
+        }
+
+        LicenseUser = string.IsNullOrWhiteSpace(Environment.UserName) ? "Local User" : Environment.UserName;
     }
 
     public AboutViewModel(
@@ -125,7 +179,7 @@ public partial class AboutViewModel : ObservableObject
 
         IsCheckingForUpdate = true;
         CheckButtonText = "Checking...";
-        LastCheckedTime = "Today, " + DateTime.Now.ToString("h:mm tt");
+        LastCheckedTime = DateTime.Now.ToString("MMM dd, yyyy • h:mm tt");
 
         if (_updateService == null)
         {
@@ -141,6 +195,11 @@ public partial class AboutViewModel : ObservableObject
         {
             var result = await _updateService.CheckForUpdatesAsync();
             IsCheckingForUpdate = false;
+
+            if (result.PublishedAt.HasValue)
+            {
+                ReleaseDate = result.PublishedAt.Value.ToString("MMM dd, yyyy");
+            }
 
             if (result.HasUpdate)
             {

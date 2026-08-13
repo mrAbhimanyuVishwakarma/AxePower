@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AxePower")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.2.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.2.0+0be2894cacd7f90186f3058083fc02697b1eb333")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.2.0+b609a3df6a80797a7b0a883795fc23593de2de15")]
 [assembly: System.Reflection.AssemblyProductAttribute("AxePower")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AxePower.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.2.0.0")]
