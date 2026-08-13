@@ -86,6 +86,7 @@ public class UpdateService
                     DownloadUrl = bestAssetUrl ?? release.HtmlUrl,
                     AssetName = assetName,
                     FileSizeBytes = sizeBytes,
+                    PublishedAt = release.PublishedAt,
                     ReleaseUrl = release.HtmlUrl ?? "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases"
                 };
             }
@@ -236,6 +237,7 @@ public class UpdateCheckResult
     public string? DownloadUrl { get; set; }
     public string? AssetName { get; set; }
     public long FileSizeBytes { get; set; }
+    public DateTime? PublishedAt { get; set; }
     public string ReleaseUrl { get; set; } = string.Empty;
 }
 
@@ -252,6 +254,9 @@ public class GitHubReleaseResponse
 
     [JsonPropertyName("html_url")]
     public string? HtmlUrl { get; set; }
+
+    [JsonPropertyName("published_at")]
+    public DateTime? PublishedAt { get; set; }
 
     [JsonPropertyName("assets")]
     public List<GitHubAsset> Assets { get; set; } = new();

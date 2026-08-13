@@ -6,9 +6,9 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v8.0": {
-      "AxePower.App/1.0.0": {
+      "AxePower.App/1.2.0": {
         "dependencies": {
-          "AxePower.Core": "1.0.0",
+          "AxePower.Core": "1.2.0",
           "CommunityToolkit.Mvvm": "8.2.2",
           "Hardcodet.NotifyIcon.Wpf": "2.0.1",
           "Microsoft.Extensions.DependencyInjection": "8.0.0"
@@ -136,7 +136,7 @@
           }
         }
       },
-      "AxePower.Core/1.0.0": {
+      "AxePower.Core/1.2.0": {
         "dependencies": {
           "Microsoft.Win32.SystemEvents": "10.0.10",
           "System.Management": "10.0.10",
@@ -144,15 +144,15 @@
         },
         "runtime": {
           "AxePower.Core.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
+            "assemblyVersion": "1.2.0.0",
+            "fileVersion": "1.2.0.0"
           }
         }
       }
     }
   },
   "libraries": {
-    "AxePower.App/1.0.0": {
+    "AxePower.App/1.2.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -220,7 +220,7 @@
       "path": "system.serviceprocess.servicecontroller/10.0.10",
       "hashPath": "system.serviceprocess.servicecontroller.10.0.10.nupkg.sha512"
     },
-    "AxePower.Core/1.0.0": {
+    "AxePower.Core/1.2.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

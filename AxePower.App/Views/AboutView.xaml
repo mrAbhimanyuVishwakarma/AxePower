@@ -230,7 +230,7 @@
                                 <TextBlock Grid.Column="0" Text="&#xE782;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#3B82F6" VerticalAlignment="Center" Margin="0,0,16,0"/>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock Text="System compatibility" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                    <TextBlock Text="Windows 10 (1809) or later  •  64-bit  •  Intel &amp; AMD supported  •  Optimized for laptops" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding SystemCompatibility}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -250,7 +250,7 @@
                                 </Grid>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Center">
-                                    <TextBlock Text="Version 1.2.0 • May 20, 2025" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding ReleaseVersionWithDate}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                                     <Border Background="#063E23" BorderBrush="#059669" BorderThickness="1" CornerRadius="8" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
                                         <TextBlock Text="Latest" Foreground="#34D399" FontSize="10.5" FontWeight="SemiBold"/>
                                     </Border>
@@ -360,7 +360,7 @@
 
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="Licensed to" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="AxePower Pro User" FontSize="13" FontWeight="SemiBold" Foreground="#60A5FA" Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding LicenseUser, StringFormat='AxePower Pro ({0})'}" FontSize="13" FontWeight="SemiBold" Foreground="#60A5FA" Margin="0,2,0,0"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1">
@@ -384,7 +384,7 @@
                         </Border>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="{Binding UpdateStatusTitle}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock Text="{Binding LastCheckedTime, StringFormat='Last checked: {0}'}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="{Binding LastCheckedDisplay}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </StackPanel>
 
