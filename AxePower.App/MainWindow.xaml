@@ -84,7 +84,7 @@
                         <!-- Dashboard -->
                         <Button Style="{Binding DashboardActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <Image Source="/Resources/icons/Dashboards.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -100,7 +100,7 @@
                         <!-- Game Mode -->
                         <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <Image Source="/Resources/icons/GameMode.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 <TextBlock Text="Game Mode" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -108,7 +108,7 @@
                         <!-- Battery -->
                         <Button Style="{Binding BatteryActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Battery">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xEBA6;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <Image Source="/Resources/icons/battery.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 <TextBlock Text="Battery" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -122,13 +122,94 @@
                         </Button>
                     </StackPanel>
                     
-                    <!-- About -->
-                    <Button Grid.Row="2" Style="{Binding AboutActiveStyle}" Margin="0,0,0,24" WindowChrome.IsHitTestVisibleInChrome="True" Command="{Binding NavigateCommand}" CommandParameter="About">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="About" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                    <!-- Bottom Actions: MSI Afterburner, Update PC & About -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,24" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <!-- MSI Afterburner with Credit Info (i) -->
+                        <Grid>
+                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenMsiAfterburnerCommand}" ToolTip="Open MSI Afterburner (minimized) with hardware monitoring">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Resources/icons/MSI Afterburner.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <TextBlock Text="MSI Afterburner" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding OpenMsiCreditCommand}" 
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
+                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
+                                    ToolTip="Credit to - MSI" WindowChrome.IsHitTestVisibleInChrome="True">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="Transparent" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Opacity" Value="1.0"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Update PC -->
+                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding UpdateDriversCommand}" ToolTip="Check &amp; update Windows, GPU drivers, and system packages">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Update PC" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Debloat with Credit Info (i) -->
+                        <Grid>
+                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding DebloatCommand}" ToolTip="Launch Win11Debloat by Raphire">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Debloat" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding OpenDebloatCreditCommand}" 
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
+                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
+                                    ToolTip="Credit to - Raphire" WindowChrome.IsHitTestVisibleInChrome="True">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="Transparent" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Opacity" Value="1.0"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- About -->
+                        <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="About">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="About" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -147,6 +228,7 @@
 
                 <!-- Window Controls -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Content="&#xE718;" FontFamily="Segoe MDL2 Assets" ToolTip="Minimize to System Tray" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="13" Click="MinimizeToTrayButton_Click"/>
                     <Button Content="—" FontFamily="Segoe UI" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="MinimizeButton_Click"/>
                     <Button Content="◻" FontFamily="Segoe UI" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="16" Click="MaximizeButton_Click"/>
                     <Button Content="✕" FontFamily="Segoe UI" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="CloseButton_Click">
@@ -179,15 +261,63 @@
             <!-- Tray Icon -->
             <tb:TaskbarIcon x:Name="AppTrayIcon"
                             IconSource="/Resources/AxePower_white.ico"
-                            ToolTipText="AxePower">
+                            ToolTipText="AxePower"
+                            TrayMouseDoubleClick="AppTrayIcon_TrayMouseDoubleClick">
                 <tb:TaskbarIcon.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Eco Mode" Command="{Binding DashboardVm.SelectModeCommand}" CommandParameter="Eco"/>
-                        <MenuItem Header="Smart Mode" Command="{Binding DashboardVm.SelectModeCommand}" CommandParameter="Smart"/>
-                        <MenuItem Header="Beast Mode" Command="{Binding DashboardVm.SelectModeCommand}" CommandParameter="Beast"/>
+                    <ContextMenu MinWidth="180" Background="Transparent" BorderThickness="0">
+                        <ContextMenu.Template>
+                            <ControlTemplate TargetType="ContextMenu">
+                                <Border Background="#FFFFFF" BorderBrush="#D0D4DC" BorderThickness="1" CornerRadius="8" Padding="4,4">
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                </Border>
+                            </ControlTemplate>
+                        </ContextMenu.Template>
+                        <ContextMenu.Resources>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Height" Value="34"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+                                            <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="6" Margin="2,1" Padding="10,0">
+                                                <Grid VerticalAlignment="Center">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="26"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{TemplateBinding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#4B5563" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                                    <TextBlock Grid.Column="1" Text="{TemplateBinding Header}" Foreground="#111827" FontSize="13" FontFamily="Segoe UI, Segoe UI Variable, Arial" FontWeight="Medium" VerticalAlignment="Center" Margin="4,0,8,0"/>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#F3F4F6"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#E5E7EB"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                            <Style TargetType="Separator">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Separator">
+                                            <Border Height="1" Background="#E5E7EB" Margin="6,4"/>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ContextMenu.Resources>
+                        <MenuItem Header="Eco Mode" Icon="&#xE706;" Command="{Binding DashboardVm.SelectModeCommand}" CommandParameter="Eco"/>
+                        <MenuItem Header="Smart Mode" Icon="&#xE72C;" Command="{Binding DashboardVm.SelectModeCommand}" CommandParameter="Smart"/>
+                        <MenuItem Header="Beast Mode" Icon="&#xE7FC;" Command="{Binding DashboardVm.SelectModeCommand}" CommandParameter="Beast"/>
                         <Separator/>
-                        <MenuItem Header="Open AxePower" Click="OpenApp_Click"/>
-                        <MenuItem Header="Exit" Click="ExitApp_Click"/>
+                        <MenuItem Header="Open AxePower" Icon="&#xE8A7;" Click="OpenApp_Click"/>
+                        <MenuItem Header="Exit" Icon="&#xE711;" Click="ExitApp_Click"/>
                     </ContextMenu>
                 </tb:TaskbarIcon.ContextMenu>
             </tb:TaskbarIcon>

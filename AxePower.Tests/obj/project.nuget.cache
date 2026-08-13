@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "n45izAMP6uM=",
+  "dgSpecHash": "VTHEudhGuTc=",
   "success": true,
   "projectFilePath": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Tests\\AxePower.Tests.csproj",
   "expectedPackageFiles": [
@@ -31,9 +31,9 @@
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\xunit.extensibility.core\\2.9.3\\xunit.extensibility.core.2.9.3.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\xunit.extensibility.execution\\2.9.3\\xunit.extensibility.execution.2.9.3.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\xunit.runner.visualstudio\\3.1.4\\xunit.runner.visualstudio.3.1.4.nupkg.sha512",
-    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.29\\microsoft.netcore.app.ref.8.0.29.nupkg.sha512",
-    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.29\\microsoft.windowsdesktop.app.ref.8.0.29.nupkg.sha512",
-    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.29\\microsoft.aspnetcore.app.ref.8.0.29.nupkg.sha512"
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.30\\microsoft.netcore.app.ref.8.0.30.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.30\\microsoft.windowsdesktop.app.ref.8.0.30.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.30\\microsoft.aspnetcore.app.ref.8.0.30.nupkg.sha512"
   ],
   "logs": []
 }

@@ -183,7 +183,7 @@
           }
         }
       },
-      "AxePower.Core/1.0.0": {
+      "AxePower.Core/1.2.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
@@ -354,7 +354,7 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
-      "AxePower.Core/1.0.0": {
+      "AxePower.Core/1.2.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
@@ -657,7 +657,7 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "AxePower.Core/1.0.0": {
+    "AxePower.Core/1.2.0": {
       "type": "project",
       "path": "../AxePower.Core/AxePower.Core.csproj",
       "msbuildProject": "../AxePower.Core/AxePower.Core.csproj"
@@ -665,7 +665,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0-windows": [
-      "AxePower.Core >= 1.0.0",
+      "AxePower.Core >= 1.2.0",
       "CommunityToolkit.Mvvm >= 8.2.2",
       "Hardcodet.NotifyIcon.Wpf >= 2.0.1",
       "Microsoft.Extensions.DependencyInjection >= 8.0.0"
@@ -675,7 +675,7 @@
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\": {}
   },
   "project": {
-    "version": "1.0.0",
+    "version": "1.2.0",
     "restore": {
       "projectUniqueName": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.App\\AxePower.App.csproj",
       "projectName": "AxePower.App",
@@ -713,7 +713,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "10.0.400"
     },
     "frameworks": {
       "net8.0-windows": {
@@ -747,19 +747,19 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[8.0.29, 8.0.29]"
+            "version": "[8.0.30, 8.0.30]"
           },
           {
             "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[8.0.29, 8.0.29]"
+            "version": "[8.0.30, 8.0.30]"
           },
           {
             "name": "Microsoft.NETCore.App.Ref",
-            "version": "[8.0.29, 8.0.29]"
+            "version": "[8.0.30, 8.0.30]"
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[8.0.29, 8.0.29]"
+            "version": "[8.0.30, 8.0.30]"
           }
         ],
         "frameworkReferences": {
@@ -770,7 +770,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.302/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400/PortableRuntimeIdentifierGraph.json"
       }
     },
     "runtimes": {

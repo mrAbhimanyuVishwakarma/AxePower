@@ -50,9 +50,12 @@
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Temperature unit" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}">
-                                        <ComboBoxItem Content="Celsius (°C)" IsSelected="True"/>
-                                    </ComboBox>
+                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableTemperatureUnits}" SelectedItem="{Binding SelectedTemperatureUnit}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Display refresh rate" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableRefreshRates}" SelectedItem="{Binding SelectedRefreshRate}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

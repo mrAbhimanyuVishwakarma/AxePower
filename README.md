@@ -1,92 +1,192 @@
-# AxePower
-One-click laptop power optimizer.
+# AxePower: Intelligent Power Management & Gaming Optimizer for Windows
 
+<div align="center">
 
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
-![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
+![Platform](https://img.shields.io/badge/Platform-Windows%2010%20(1809+)%20%7C%20Windows%2011-0078D4?logo=windows&logoColor=white)
+![Framework](https://img.shields.io/badge/Framework-.NET%208%20WPF-512BD4?logo=dotnet&logoColor=white)
+![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
+![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
+![Version](https://img.shields.io/badge/Version-1.2.0-blueviolet)
 
-AxePower is a modern Windows desktop application that automatically optimizes your laptop's power plan based on your charger's connection status. Built with C#, WPF, and .NET 8 featuring a premium Fluent Dark UI.
+**Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
-## Screenshots
+[Download Latest Release](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Report Issue](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues) • [Developer Profile](https://github.com/mrAbhimanyuVishwakarma)
 
+</div>
 
-<img width="962" height="635" alt="axepower_1" src="https://github.com/user-attachments/assets/5470c462-4d65-4724-8901-d96b0653a24e" />
-<img width="965" height="633" alt="axepower_5" src="https://github.com/user-attachments/assets/c4e8b1cf-8928-40b1-b8bd-488e90b95e18" />
-<img width="1280" height="686" alt="axepower_4" src="https://github.com/user-attachments/assets/c9c10e66-af99-49fd-9799-3b4500128aea" />
-<img width="1280" height="685" alt="axepower_3" src="https://github.com/user-attachments/assets/2aee1cb0-2826-4058-97ae-9f7f7c26ee11" />
-<img width="1278" height="682" alt="axepower_6" src="https://github.com/user-attachments/assets/ecfc0936-3066-4b62-906d-6e8113eebb3c" />
+---
 
+## 🚀 Key Features
 
-## Features
-- **Three Power Modes**: Quick toggle between Eco Mode (Battery Saver), Smart Mode (Balanced), and Beast Mode (Ultimate Performance).
-- **Smart Auto Switch**: Automatically detects when you plug/unplug your laptop and applies your preferred power mode silently in the background.
-- **Customizable Switch Delay**: Add a delay before switching plans to prevent rapid toggling if your charger connection is loose.
-- **Safe & Secure**: Does not alter registry or critical Windows services blindly. Safely modifies standard Windows Power Plans using `powercfg`.
-- **System Logs**: Keep track of mode switches and any background activities.
-- **Premium UI**: Designed with glassmorphic cards, modern rounded aesthetics, and fluid interaction feedback inspired by Windows 11 Fluent Design.
+- ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, and **Beast** modes tailored for battery savings or extreme performance.
+- 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
+- 🎮 **Game Booster & Scanner**: Automatically detects foreground gaming sessions, forces Beast Mode, and suspends heavy background processes to eliminate frame drops.
+- 🔋 **Battery Optimization & Health Insights**: Real-time battery discharge tracking, estimated time remaining, charge cycle health, and trend insights.
+- 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
+- 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and on-screen statistics *(Credit to MSI)*.
+- 🔄 **Update PC Utility**: Elevated one-click driver and Windows update management via Windows Package Manager / USOClient.
+- 🚀 **GitHub Releases Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads with live progress bars, and seamlessly updates the app.
+- 🗔 **Fluent Dark UI & System Tray**: Modern Windows 11 Fluent Dark interface with custom rounded tray context menu and minimize-to-tray capability.
+- 🔒 **100% Local & Privacy-First**: Zero telemetry, zero analytics tracking, and zero remote data collection.
 
-## Tech Stack
-- **Language**: C# 12
-- **Framework**: .NET 8 WPF
-- **Architecture**: MVVM (Model-View-ViewModel) using CommunityToolkit.Mvvm
-- **Installation**: Inno Setup
+---
 
-## Project Structure
-- `AxePower.App/`: WPF application, Views (Dashboard, Settings, Logs), and ViewModels.
-- `AxePower.Core/`: Business logic, Services (`AutoSwitchService`, `PowerPlanService`), and Models.
-- `Installer/`: Inno Setup script for building the `.exe` installer.
+## 🏛️ High-Level Architecture
 
-## Installation Steps
-1. Download the latest `AxePowerSetup.exe` from the Releases page.
-2. Run the installer and follow the prompt (it will create a Start Menu and optional Desktop shortcut).
-3. Open AxePower and configure your Smart Auto Switch preferences.
+AxePower is built on a Domain-Driven Design (DDD) layered architecture using `CommunityToolkit.Mvvm`:
 
-## How to Use
-1. Open **AxePower**.
-2. **Dashboard**: View your battery percentage, trend, and quickly apply a power mode.
-3. **Settings**: Enable "Auto Switch", set your desired behavior for when the laptop is plugged in, unplugged, or on low battery.
-4. **Logs**: Check the logs to see the history of power mode switches.
-5. **System Tray**: Right-click the AxePower icon in your taskbar tray for quick mode switches.
+```mermaid
+flowchart TD
+    subgraph Presentation Layer [AxePower.App]
+        Views[WPF Views & Fluent XAML]
+        VMs[CommunityToolkit MVVM ViewModels]
+        Tray[Hardcodet System Tray & ContextMenu]
+        DI[Microsoft.Extensions.DependencyInjection]
+        
+        Views <--> VMs
+        VMs --> DI
+        Tray --> VMs
+    end
 
-## Safety Note
-AxePower uses standard Windows `powercfg` commands. It does not delete user files or make risky registry changes. If a command fails, it will safely fall back to the Windows 'Balanced' plan.
+    subgraph Core Business Layer [AxePower.Core]
+        OS_SVC[Orchestration Services]
+        HW_INT[Hardware & Native Integrations]
+        DATA[Configuration & Logging]
+        UPD[Auto-Update Service]
+        
+        OS_SVC --> HW_INT
+        OS_SVC --> DATA
+        UPD --> GitHubAPI[(GitHub Releases API)]
+    end
 
-## Troubleshooting
-- **Cannot switch to Beast Mode**: If your laptop does not support Ultimate Performance out of the box, AxePower will attempt to create it. If it fails, it will fall back to Smart Mode.
-- **Auto Switch not working**: Ensure "Enable Auto Switch" is checked in Settings, and check the Logs for any errors.
+    VMs --> Core Business Layer
 
-## Build Instructions
-1. Ensure you have the [.NET 8 SDK](https://dotnet.microsoft.com/download) installed.
-2. Clone this repository.
-3. To run locally:
-   ```bash
-   dotnet run --project AxePower.App
-   ```
-4. To generate a release build:
-   ```bash
-   dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-contained false
-   ```
+    OS_SVC --> AutoSwitch[AutoSwitchService]
+    OS_SVC --> AppMonitor[AppMonitorService]
+    OS_SVC --> GameScanner[GameScannerService]
+    OS_SVC --> Debloat[DebloatService]
+    OS_SVC --> DriverUpdate[DriverUpdateService]
+    OS_SVC --> Msi[MsiAfterburnerService]
 
-## Creating the Installer
-1. Install [Inno Setup](https://jrsoftware.org/isinfo.php).
-2. Open `Installer/AxePowerSetup.iss` in Inno Setup Studio.
-3. Compile (Ctrl+F9). The installer will be in `Installer/Output`.
+    HW_INT --> PowerCfg[PowerPlanService (powercfg)]
+    HW_INT --> Battery[BatteryService (Win32 API)]
+    HW_INT --> Display[DisplayService (ChangeDisplaySettingsEx)]
+    HW_INT --> AppKiller[AppKillerService (Process/NT Suspend)]
 
-## Version History
-- **v1.0.0**: Initial MVP Release. Added Dashboard, 3 modes, Auto switch, Settings, and Logs.
+    DATA --> Settings[SettingsService (Encrypted JSON)]
+    DATA --> Log[LogService]
+```
 
-## AI Assistant / Developer Context
-If you are an AI assistant (like ChatGPT, Claude, or Gemini) analyzing this repository to help the user code, please adhere to these project constraints and architectural patterns:
+---
 
-- **Architecture**: Strict MVVM pattern. The UI (`AxePower.App`) uses WPF and `CommunityToolkit.Mvvm`. Business logic and state (`AxePower.Core`) are completely decoupled from UI.
-- **Dependency Injection**: Services (e.g., `PowerPlanService`, `AutoSwitchService`, `BatteryService`, `AppKillerService`) are registered as Singletons in `App.xaml.cs`. ViewModels are Transient and constructor-injected with these services.
-- **Technology Stack**: .NET 8, C# 12 (use modern language features like primary constructors, pattern matching, records), and WPF. Null-safety is enabled.
-- **State & Configuration**: `SettingsService` handles JSON-based persistence of `AppSettings`. `LogService` records background activities. 
-- **System Interactions**: Modifying power plans is done via wrapping Windows `powercfg.exe` in `CommandRunner` for safety, avoiding direct registry edits.
-- **UI Design**: The app uses modern Fluent Dark UI with rounded corners. Avoid legacy WPF UI elements. Rely on existing styles defined in `Resources/Styles.xaml`.
-- **Project Structure**:
-  - `AxePower.Core/Services/`: Background operations, system monitors (Battery, Powercfg).
-  - `AxePower.Core/Models/`: Data structures (`AppSettings`, `PowerMode`, etc.).
-  - `AxePower.App/ViewModels/`: Presentation logic, relies heavily on `[ObservableProperty]` and `[RelayCommand]` source generators.
-  - `AxePower.App/Views/`: XAML definitions, bound exclusively to ViewModels.
+## 🖥️ User Interface & Navigation
+
+AxePower provides a centralized desktop hub with a dedicated sidebar:
+
+| Section | Icon | Purpose |
+| :--- | :---: | :--- |
+| **Dashboard** | 📊 | Real-time system monitoring, power mode switching (Eco, Smart, Beast), and battery metrics. |
+| **Auto Switch** | 🔄 | Configure automated rules for AC (Plugged In) and DC (Battery) states and dynamic refresh rate switching. |
+| **Game Mode** | 🎮 | Manage background app suspension and automatic game process detection. |
+| **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends. |
+| **Settings** | ⚙️ | Application preferences, startup toggles, and notification settings. |
+| **Logs** | 📝 | Real-time diagnostic logging and error tracking. |
+| **Update PC** | 🔄 | Elevated hardware driver and Windows update launcher. |
+| **Debloat** | 🧹 | Win11Debloat PowerShell utility launcher *(with attribution tooltip)*. |
+| **MSI Afterburner** | 📈 | Dedicated GPU overclocking and OSD launcher *(with attribution tooltip)*. |
+| **About** | ℹ️ | Version information, developer profile, release notes, and integrated GitHub Auto-Updater. |
+
+---
+
+## 🛠️ Auto-Update Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant AboutView as AboutView / MainView
+    participant Vm as AboutViewModel
+    participant Svc as UpdateService
+    participant GH as GitHub Releases API
+    participant OS as Windows Shell
+
+    User->>AboutView: Click "Check for updates" (or silent on startup)
+    AboutView->>Vm: CheckForUpdatesCommand
+    Vm->>Svc: CheckForUpdatesAsync()
+    Svc->>GH: GET /repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest
+    GH-->>Svc: Latest Release JSON (v1.2.1, Assets: Setup.exe)
+    Svc-->>Vm: UpdateCheckResult (HasUpdate = true)
+    Vm->>AboutView: Display "Update Available" Modal Dialog
+    
+    User->>AboutView: Click "Update Now"
+    AboutView->>Vm: DownloadAndApplyUpdateCommand
+    Vm->>Svc: DownloadUpdateAsync(DownloadUrl, progress)
+    loop Stream Download Chunks
+        Svc->>Vm: Report progress (0% -> 100%)
+        Vm->>AboutView: Update ProgressBar & Percentage
+    end
+    Svc-->>Vm: Downloaded to %TEMP%\AxePower_Update\Setup.exe
+    Vm->>Svc: ApplyUpdate(installerPath)
+    Svc->>OS: Process.Start("Setup.exe")
+    Vm->>OS: Application.Current.Shutdown()
+```
+
+---
+
+## 💻 Development & Build Guide
+
+### Prerequisites
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (or Visual Studio 2022 v17.8+)
+- Windows 10 (Build 1809+) or Windows 11 (64-bit)
+
+### Running Locally
+```bash
+# Clone the repository
+git clone https://github.com/mrAbhimanyuVishwakarma/AxePower.git
+cd AxePower
+
+# Restore and build the solution
+dotnet build
+
+# Run the WPF application
+dotnet run --project AxePower.App/AxePower.App.csproj
+```
+
+### Running Unit Tests
+```bash
+dotnet test
+```
+
+### Publishing a Release Build
+```bash
+dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false
+```
+
+### Creating the Inno Setup Installer
+1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
+2. Open `Installer/AxePowerSetup.iss`.
+3. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-Setup.exe`.
+
+---
+
+## 📜 Third-Party Credits & Acknowledgements
+
+AxePower proudly integrates with and acknowledges tools created by the open-source and enthusiast community:
+
+- **[Win11Debloat](https://github.com/Raphire/Win11Debloat)**: Windows debloating and telemetry optimization scripts created by **Raphire**.
+- **[MSI Afterburner & RTSS](https://www.msi.com/Landing/afterburner/graphics-cards)**: Hardware statistics and GPU monitoring by **MSI** and **Alexey Nicolaychuk (Guru3D / RivaTuner)**.
+- **[Hardcodet WPF TaskbarNotification](https://github.com/hardcodet/wpf-notifyicon)**: System tray icon integration for WPF by **Philipp Sumi**.
+- **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)**: Modern, high-performance MVVM library by the **.NET Foundation & Microsoft**.
+- **Windows Package Manager (`winget`) & USOClient**: Package and driver update orchestration by **Microsoft Corporation**.
+
+> *Notice: All trademarks, product names, and brand logos belong to their respective owners. AxePower functions as an independent, open-source orchestration companion. If you are an author or copyright holder of any included component and have questions, concerns, or requests for modification/removal, please open an issue and we will gladly accommodate.*
+
+---
+
+## 👤 Author & Support
+
+- **Developed by**: [Abhimanyu Vishwakarma](https://github.com/mrAbhimanyuVishwakarma)
+- **Official Download Repo**: [AxePower_Download](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download)
+- **Issue Tracker & Support**: [GitHub Issues](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
+
+*If you find AxePower helpful, please consider starring the repository on GitHub!*

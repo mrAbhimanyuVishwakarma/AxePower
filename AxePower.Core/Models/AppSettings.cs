@@ -67,6 +67,13 @@ public class AppSettings
     [JsonPropertyName("gameBoosterEnabled")]
     public bool GameBoosterEnabled { get; set; } = false;
 
+    [JsonPropertyName("displayRefreshRate")]
+    public int DisplayRefreshRate { get; set; } = 0; // 0 = Auto (synchronized with power mode), > 0 = manual override in Hz
+
+    [JsonPropertyName("temperatureUnit")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TemperatureUnit TemperatureUnit { get; set; } = TemperatureUnit.Celsius;
+
     [JsonPropertyName("appsToClose")]
     public List<string> AppsToClose { get; set; } = new();
 
@@ -93,6 +100,8 @@ public class AppSettings
             AppRulesEnabled = this.AppRulesEnabled,
             AppRules = new List<AppRule>(this.AppRules),
             GameBoosterEnabled = this.GameBoosterEnabled,
+            DisplayRefreshRate = this.DisplayRefreshRate,
+            TemperatureUnit = this.TemperatureUnit,
             AppsToClose = new List<string>(this.AppsToClose)
         };
     }

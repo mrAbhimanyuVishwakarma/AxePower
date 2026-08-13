@@ -10,6 +10,8 @@ namespace AxePower.Core.Services;
 public class PowerPlanService
 {
     private readonly LogService _logService;
+    private readonly DisplayService _displayService;
+    private readonly SettingsService _settingsService;
     
     // Standard Windows GUIDs
     public static readonly Guid BalancedGuid = new("381b4222-f694-41f0-9685-ff5bb260df2e");
@@ -17,9 +19,11 @@ public class PowerPlanService
     public static readonly Guid HighPerformanceGuid = new("8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c");
     public static readonly Guid UltimatePerformanceTemplateGuid = new("e9a42b02-d5df-448d-aa00-03f14749eb61");
 
-    public PowerPlanService(LogService logService)
+    public PowerPlanService(LogService logService, DisplayService displayService, SettingsService settingsService)
     {
         _logService = logService;
+        _displayService = displayService;
+        _settingsService = settingsService;
     }
 
     public Task<PowerMode> GetActivePowerModeAsync()
@@ -135,12 +139,28 @@ public class PowerPlanService
                 if (active == targetGuid.Value)
                 {
                     _logService.LogInfo($"Successfully applied and verified power mode {mode} via powercfg.");
-                    return true;
+                    success = true;
                 }
             }
-            _logService.LogError($"Failed to apply mode {mode} even with powercfg.");
+            if (!success) 
+            {
+                _logService.LogError($"Failed to apply mode {mode} even with powercfg.");
+            }
         }
 
-        return false;
+        if (success)
+        {
+            var settings = _settingsService.GetSettings();
+            if (settings.DisplayRefreshRate > 0)
+            {
+                _displayService.SetRefreshRate(settings.DisplayRefreshRate);
+            }
+            else
+            {
+                _displayService.SetSmartRefreshRate(mode == PowerMode.Eco);
+            }
+        }
+
+        return success;
     }
 }
