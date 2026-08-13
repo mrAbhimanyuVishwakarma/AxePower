@@ -39,6 +39,16 @@ public partial class MainWindow : Window
     }
 
 
+    private void MinimizeToTrayButton_Click(object sender, RoutedEventArgs e)
+    {
+        this.Hide();
+    }
+
+    private void AppTrayIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
+    {
+        OpenApp_Click(sender, e);
+    }
+
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
     {
         this.WindowState = WindowState.Minimized;

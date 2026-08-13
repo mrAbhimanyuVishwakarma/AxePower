@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using AxePower.Core.Services;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
+using AxePower.App.Helpers;
 
 namespace AxePower.App;
 
@@ -20,6 +21,9 @@ public partial class App : Application
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
+        // Initialize smooth proportional touchpad & mouse wheel scrolling globally
+        TouchpadScrollHelper.Initialize();
+
         // Handle CLI arguments early
         if (e.Args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
         {
@@ -87,6 +91,11 @@ public partial class App : Application
         services.AddSingleton<GameScannerService>();
         services.AddSingleton<ThemeService>();
         services.AddSingleton<SystemServiceOptimizer>();
+        services.AddSingleton<DisplayService>();
+        services.AddSingleton<DriverUpdateService>();
+        services.AddSingleton<MsiAfterburnerService>();
+        services.AddSingleton<DebloatService>();
+        services.AddSingleton<UpdateService>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -107,8 +116,11 @@ public partial class App : Application
     private void RunSelfTest()
     {
         Console.WriteLine("AxePower Self-Test Running...");
-        // Here we could resolve services and run tests
-        // For simplicity, return 0 for success
+        var sp = ConfigureServices();
+        var ds = sp.GetRequiredService<DisplayService>();
+        var current = ds.GetCurrentRefreshRate();
+        var rates = ds.GetSupportedRefreshRates();
+        Console.WriteLine($"DisplayService Initialized: Current {current} Hz, Supported [{string.Join(", ", rates)} Hz]");
         Environment.ExitCode = 0;
     }
 

@@ -4,69 +4,555 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="728" d:DesignWidth="1040">
-             
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="76"/>
-        </Grid.RowDefinitions>
-        
-        <Grid Grid.Row="0" Margin="40,32,40,24">
-            <StackPanel HorizontalAlignment="Center" Margin="0,48,0,0">
-                
-                <Grid Width="120" Height="120" Margin="0,0,0,24">
-                    <Ellipse Fill="#222" Stroke="{DynamicResource DividerBrush}" StrokeThickness="1"/>
-                    <Image Source="pack://application:,,,/Resources/AxePower_white.ico" Width="64" Height="64"/>
-                    <!-- Fallback icon if app.ico doesn't render perfectly -->
-                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
-                </Grid>
-                
-                <TextBlock Text="AxePower" FontSize="36" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                <TextBlock Text="Intelligent power management for Windows." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" HorizontalAlignment="Center" Margin="0,0,0,32"/>
+             d:DesignHeight="780" d:DesignWidth="1100">
 
-                <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,4">
-                    <Run Text="Version "/>
-                    <Run Text="{Binding Version}"/>
-                </TextBlock>
-                <TextBlock Text="Created by Abhimanyu Vishwakarma" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,48"/>
-                
-                <Grid Width="700">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="24"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Check for Updates -->
-                    <Border Grid.Column="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
-                        <StackPanel>
-                            <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,16"/>
-                            <TextBlock Text="Check for Updates" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                            <TextBlock Text="You are running the latest version." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24"/>
-                            
-                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Content="Check Now" Padding="24,10" HorizontalAlignment="Left"/>
-                        </StackPanel>
-                    </Border>
-                    
-                    <!-- Help & Support -->
-                    <Border Grid.Column="2" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
-                        <StackPanel>
-                            <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,16"/>
-                            <TextBlock Text="Help &amp; Support" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                            <TextBlock Text="View documentation, report issues, or suggest features." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,24" TextWrapping="Wrap"/>
-                            
-                            <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="24,10" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="GitHub Repository" VerticalAlignment="Center"/>
-                                    <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-                
+    <Grid>
+        <!-- Main Content Area -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="64"/>
+            </Grid.RowDefinitions>
+
+            <!-- Page Title Header -->
+            <StackPanel Grid.Row="0" Margin="40,24,40,16">
+                <TextBlock Text="About AxePower" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Learn more about AxePower and what drives us." FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0"/>
             </StackPanel>
+
+            <!-- Scrollable Content Grid -->
+            <ScrollViewer Grid.Row="1" Margin="40,0,40,16" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <Grid Margin="0,0,12,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.35*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- LEFT COLUMN -->
+                    <StackPanel Grid.Column="0">
+                        <!-- Hero Card -->
+                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Main Icon -->
+                                    <Border Grid.Column="0" Width="80" Height="80" CornerRadius="40" Background="#141A23" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,20,0" VerticalAlignment="Top">
+                                        <Image Source="/Resources/AxePower_white.ico" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    </Border>
+
+                                    <!-- Product Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="AxePower" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                            <Border Background="#0C345C" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="Pro" Foreground="#60A5FA" FontSize="11" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="Version " Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Version}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
+                                            
+                                            <!-- Up to Date Badge -->
+                                            <Border Background="#063E23" BorderBrush="#059669" BorderThickness="1" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource InverseBoolToVis}}">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="✓" Foreground="#34D399" FontSize="10" FontWeight="Bold" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="Up to date" Foreground="#34D399" FontSize="11" FontWeight="SemiBold"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Update Available Badge -->
+                                            <Border Background="#0C345C" BorderBrush="#2563EB" BorderThickness="1" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="🚀" FontSize="10" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="Update available" Foreground="#60A5FA" FontSize="11" FontWeight="SemiBold"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <TextBlock Text="AxePower intelligently optimizes your system's power usage to deliver the perfect balance between performance, battery life, and cooling—automatically." 
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" LineHeight="19"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Developer Section -->
+                                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,20,0,16"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <Button Command="{Binding OpenDeveloperCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <TextBlock Text="Developed by Abhimanyu Vishwakarma" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <TextBlock Text="Built with performance and efficiency in mind." FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Core Features Card -->
+                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,16,0,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,18" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE781;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#3B82F6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Core features" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Item 1: Intelligent Power Modes -->
+                                    <Grid Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#0C3423" Margin="0,0,12,0" VerticalAlignment="Top">
+                                            <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="#10B981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Intelligent power modes" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Eco, Smart, and Beast modes for every scenario." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Item 2: Battery Optimization -->
+                                    <Grid Grid.Row="0" Grid.Column="2" Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#0C3423" Margin="0,0,12,0" VerticalAlignment="Top">
+                                            <TextBlock Text="&#xEBA6;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="#10B981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Battery optimization" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Maximize battery life with smart adjustments." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Item 3: Smart Auto Switch -->
+                                    <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#122538" Margin="0,0,12,0" VerticalAlignment="Top">
+                                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Smart Auto Switch" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Automatically adapts to how and when you work." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Item 4: Real-time insights -->
+                                    <Grid Grid.Row="1" Grid.Column="2" Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#281A38" Margin="0,0,12,0" VerticalAlignment="Top">
+                                            <TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="#A855F7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Real-time insights" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Track performance, battery, and trends." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Item 5: Advanced thermal control -->
+                                    <Grid Grid.Row="2" Grid.Column="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#38210C" Margin="0,0,12,0" VerticalAlignment="Top">
+                                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="#F59E0B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Advanced thermal control" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Keeps your system cool under pressure." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Item 6: Efficient by design -->
+                                    <Grid Grid.Row="2" Grid.Column="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8" Background="#38300C" Margin="0,0,12,0" VerticalAlignment="Top">
+                                            <TextBlock Text="&#xE781;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="#EAB308" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Efficient by design" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Lightweight, fast, and built for Windows." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- System Compatibility Card -->
+                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20,16" Margin="0,16,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#xE782;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#3B82F6" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="System compatibility" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Windows 10 (1809) or later  •  64-bit  •  Intel &amp; AMD supported  •  Optimized for laptops" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- RIGHT COLUMN -->
+                    <StackPanel Grid.Column="2">
+                        <!-- Release Notes Card -->
+                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,14">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Release notes" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Button Command="{Binding ViewAllReleasesCommand}" Content="View all" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="#3B82F6" FontSize="12.5" FontWeight="Medium" Cursor="Hand"/>
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Center">
+                                    <TextBlock Text="Version 1.2.0 • May 20, 2025" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                    <Border Background="#063E23" BorderBrush="#059669" BorderThickness="1" CornerRadius="8" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Latest" Foreground="#34D399" FontSize="10.5" FontWeight="SemiBold"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Margin="0,0,0,18">
+                                    <TextBlock Text="• Improved Smart Auto Switch accuracy" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Added battery trend insights" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Enhanced Eco Mode efficiency" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• General performance and stability improvements" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+
+                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ViewAllReleasesCommand}" Padding="0,10" HorizontalAlignment="Stretch">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="View release notes" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Support Card -->
+                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,16,0,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE7F6;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Support" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Visit Website -->
+                                <Button Command="{Binding VisitWebsiteCommand}" Background="Transparent" BorderThickness="0" Padding="0,6" Cursor="Hand" HorizontalContentAlignment="Stretch">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="itemBorder" Background="Transparent" CornerRadius="8" Padding="6,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="Visit website" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                        <TextBlock Text="Explore features, guides, and more." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="itemBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,6,0,6"/>
+
+                                <!-- Contact Support -->
+                                <Button Command="{Binding ContactSupportCommand}" Background="Transparent" BorderThickness="0" Padding="0,6" Cursor="Hand" HorizontalContentAlignment="Stretch">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="itemBorder" Background="Transparent" CornerRadius="8" Padding="6,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="&#xE715;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="Contact support" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                        <TextBlock Text="We're here to help." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="itemBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- License Card -->
+                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24,18" Margin="0,16,0,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="License" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Licensed to" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <TextBlock Text="AxePower Pro User" FontSize="13" FontWeight="SemiBold" Foreground="#60A5FA" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="License type" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <TextBlock Text="Pro" FontSize="13" FontWeight="SemiBold" Foreground="#34D399" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+
+            <!-- Bottom Status & Updates Bar -->
+            <Border Grid.Row="2" Background="#0C1016" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="40,0">
+                <Grid VerticalAlignment="Center">
+                    <!-- Left: Up to date Status -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <Border Width="26" Height="26" CornerRadius="13" Background="#063E23" BorderBrush="#059669" BorderThickness="1" Margin="0,0,12,0" VerticalAlignment="Center">
+                            <TextBlock Text="✓" Foreground="#34D399" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UpdateStatusTitle}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="{Binding LastCheckedTime, StringFormat='Last checked: {0}'}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Center: Check for Updates Button -->
+                    <Button HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding CheckForUpdatesCommand}" Cursor="Hand" IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="chkBorder" Background="#141A24" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="18" Padding="20,8">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding CheckButtonText}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="chkBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                        <Setter TargetName="chkBorder" Property="BorderBrush" Value="#3B82F6"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <!-- Right: Help and Privacy Policy -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Command="{Binding OpenHelpCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand" Margin="0,0,16,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Help" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding OpenPrivacyPolicyCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Privacy Policy" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Update Available & Download Modal Dialog -->
+        <Grid Background="#D0000000" Visibility="{Binding IsUpdateModalOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="#13171F" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Width="640" MaxHeight="560" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Modal Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="36" Height="36" CornerRadius="18" Background="#0C345C" Margin="0,0,12,0" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="New Update Available!" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="{Binding LatestVersionTag, StringFormat='AxePower v{0}'}" FontSize="12.5" Foreground="#60A5FA" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <Button Command="{Binding DismissUpdateModalCommand}" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" Cursor="Hand" Padding="6"/>
+                    </Grid>
+
+                    <!-- Modal Body: Release Notes -->
+                    <Grid Grid.Row="1" Margin="0,0,0,20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="{Binding ReleaseTitle, StringFormat='Release: {0}'}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8"/>
+
+                        <Border Grid.Row="1" Background="#181E28" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <TextBlock Text="{Binding ReleaseNotes}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19"/>
+                            </ScrollViewer>
+                        </Border>
+
+                        <!-- Live Download Progress Section -->
+                        <Border Grid.Row="2" Margin="0,14,0,0" Visibility="{Binding IsDownloadingUpdate, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="{Binding DownloadStatusText}" FontSize="12" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Left"/>
+                                    <TextBlock Text="{Binding DownloadProgress, StringFormat='{}{0:0}%'}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <ProgressBar Value="{Binding DownloadProgress}" Maximum="100" Height="8" Foreground="#3B82F6" Background="#1E2633" BorderThickness="0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Modal Footer -->
+                    <Grid Grid.Row="2">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Remind Later" Command="{Binding DismissUpdateModalCommand}" Margin="0,0,10,0" Padding="18,8" IsEnabled="{Binding IsDownloadingUpdate, Converter={StaticResource InverseBool}}"/>
+                            <Button Style="{StaticResource PrimaryButtonStyle}" Content="Update Now" Command="{Binding DownloadAndApplyUpdateCommand}" Padding="24,8" IsEnabled="{Binding IsDownloadingUpdate, Converter={StaticResource InverseBool}}"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Privacy Policy & Credits Modal Dialog -->
+        <Grid Background="#D0000000" Visibility="{Binding IsPrivacyPolicyOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="#13171F" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Width="680" MaxHeight="600" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Modal Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,18">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#3B82F6" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Privacy Policy &amp; Software Credits" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Command="{Binding ClosePrivacyPolicyCommand}" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" Cursor="Hand" Padding="6"/>
+                    </Grid>
+
+                    <!-- Modal Body -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20">
+                        <StackPanel Margin="0,0,8,0">
+                            <!-- Privacy First Section -->
+                            <TextBlock Text="1. Privacy &amp; Data Security" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
+                            <TextBlock Text="AxePower is designed with absolute privacy at its core. The application does not collect, record, track, or transmit any personal data, usage telemetry, or identifiers to external servers. All power configurations, profile automations, and hardware adjustments execute 100% locally on your machine." 
+                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,16"/>
+
+                            <!-- Credits & Acknowledgements Section -->
+                            <TextBlock Text="2. Third-Party Software &amp; Open Source Credits" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
+                            <TextBlock Text="AxePower incorporates and coordinates with incredible utilities crafted by the open-source and enthusiast community:" 
+                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            
+                            <Border Background="#181E28" CornerRadius="10" Padding="14" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Text="• MSI Afterburner &amp; RTSS — Hardware statistics, monitoring and overlay engine. Credit to MSI and Guru3D (Alexey Nicolaychuk)." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Win11Debloat — PowerShell debloating and telemetry optimization scripts. Credit to Raphire (https://github.com/Raphire/Win11Debloat)." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Windows Package Manager (Winget) &amp; USOClient — Software and driver update capabilities by Microsoft Corporation." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Hardcodet.Wpf.TaskbarNotification — Windows system tray integration by Philipp Sumi." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• CommunityToolkit.Mvvm — High performance MVVM architecture by the .NET Community &amp; Microsoft." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Disclaimer & Notice -->
+                            <TextBlock Text="3. Disclaimer &amp; Authorship Inquiries" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
+                            <TextBlock Text="All brand names, trademarks, and third-party software products mentioned remain the exclusive property of their respective copyright holders. AxePower functions as an independent, non-commercial power management companion." 
+                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,6"/>
+                            <TextBlock Text="If you are the author or developer of any referenced software and have questions, concerns, or would like specific items or references modified or removed, please contact us or open an issue on GitHub. We are fully committed to respecting creator rights and will promptly accommodate your request." 
+                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,16"/>
+
+                            <!-- Support Us -->
+                            <TextBlock Text="4. Support the Project" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
+                            <TextBlock Text="If you enjoy using AxePower and would like to support development, consider giving us a star on GitHub or contributing to the codebase!" 
+                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Modal Footer -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="Close" Command="{Binding ClosePrivacyPolicyCommand}" Padding="28,8"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

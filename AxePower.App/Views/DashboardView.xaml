@@ -70,17 +70,17 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xEBA6;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource EcoBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/battery_eco.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Best battery life" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xE9CA;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource EcoBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/thermostat_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Lower temps" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xE995;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource EcoBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/volume_eco.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Whisper quiet" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                         </StackPanel>
@@ -113,17 +113,17 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource SmartBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/performance_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Balanced performance" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xEBA6;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource SmartBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/battery_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Optimized battery" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                             <Grid Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xE9CA;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource SmartBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/thermostat_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Smart fan control" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                         </StackPanel>
@@ -159,17 +159,17 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BeastBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/performance_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Top performance" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xE9CA;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BeastBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/thermometer_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Aggressive cooling" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BeastBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <Image Grid.Column="0" Source="/Resources/icons/bolt_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Higher power usage" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                         </StackPanel>

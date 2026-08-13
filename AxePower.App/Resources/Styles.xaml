@@ -381,5 +381,34 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- Modern Fluent Dark ToolTip Style -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="#1E232A" />
+        <Setter Property="Foreground" Value="#F3F4F6" />
+        <Setter Property="BorderBrush" Value="#374151" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
+        <Setter Property="HasDropShadow" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="#1E232A"
+                            BorderBrush="#374151"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter TextElement.Foreground="#F3F4F6"
+                                          TextElement.FontSize="12.5"
+                                          TextElement.FontFamily="{StaticResource PrimaryFontFamily}"
+                                          VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     
 </ResourceDictionary>

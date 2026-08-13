@@ -8,6 +8,10 @@ namespace AxePower.App.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly NotificationService _notificationService;
+    private readonly DriverUpdateService _driverUpdateService;
+    private readonly MsiAfterburnerService _msiAfterburnerService;
+    private readonly DebloatService _debloatService;
+    private readonly UpdateService _updateService;
 
     [ObservableProperty]
     private object? _currentView;
@@ -42,7 +46,11 @@ public partial class MainViewModel : ObservableObject
         SettingsViewModel settingsVm, 
         LogsViewModel logsVm,
         AboutViewModel aboutVm,
-        NotificationService notificationService)
+        NotificationService notificationService,
+        DriverUpdateService driverUpdateService,
+        MsiAfterburnerService msiAfterburnerService,
+        DebloatService debloatService,
+        UpdateService updateService)
     {
         DashboardVm = dashboardVm;
         AutoSwitchVm = autoSwitchVm;
@@ -52,10 +60,41 @@ public partial class MainViewModel : ObservableObject
         LogsVm = logsVm;
         AboutVm = aboutVm;
         _notificationService = notificationService;
+        _driverUpdateService = driverUpdateService;
+        _msiAfterburnerService = msiAfterburnerService;
+        _debloatService = debloatService;
+        _updateService = updateService;
 
         _currentView = DashboardVm;
 
         _notificationService.OnShowNotification += (s, msg) => ShowNotification(msg);
+
+        // Silent background update check after startup
+        _ = CheckUpdateInBackgroundAsync();
+    }
+
+    private async System.Threading.Tasks.Task CheckUpdateInBackgroundAsync()
+    {
+        await System.Threading.Tasks.Task.Delay(3500);
+        try
+        {
+            var result = await _updateService.CheckForUpdatesAsync();
+            if (result.HasUpdate)
+            {
+                AboutVm.IsUpdateAvailable = true;
+                AboutVm.LatestVersionTag = result.LatestVersion;
+                AboutVm.ReleaseTitle = result.ReleaseTitle;
+                AboutVm.ReleaseNotes = result.ReleaseNotes;
+                AboutVm.DownloadUrl = result.DownloadUrl;
+                AboutVm.AssetName = result.AssetName;
+                AboutVm.ReleaseUrl = result.ReleaseUrl;
+                _notificationService.Show($"🚀 AxePower v{result.LatestVersion} update is available!");
+            }
+        }
+        catch
+        {
+            // Ignore background check failures
+        }
     }
 
     private Style? GetStyleForView(object viewVm)
@@ -93,6 +132,94 @@ public partial class MainViewModel : ObservableObject
             "About" => AboutVm,
             _ => DashboardVm
         };
+    }
+
+    [RelayCommand]
+    private async Task OpenMsiAfterburner()
+    {
+        _notificationService.Show("Opening MSI Afterburner (minimized)...");
+        var result = await _msiAfterburnerService.LaunchOrInstallAsync();
+        switch (result)
+        {
+            case MsiAfterburnerLaunchResult.Launched:
+                _notificationService.Show("MSI Afterburner launched in background (minimized).");
+                break;
+            case MsiAfterburnerLaunchResult.AlreadyRunning:
+                _notificationService.Show("MSI Afterburner is already running.");
+                break;
+            case MsiAfterburnerLaunchResult.InstalledAndLaunched:
+                _notificationService.Show("MSI Afterburner installed & configured with monitoring preset.");
+                break;
+            case MsiAfterburnerLaunchResult.Failed:
+                _notificationService.Show("Could not launch or install MSI Afterburner.");
+                break;
+        }
+    }
+
+    [RelayCommand]
+    private void UpdateDrivers()
+    {
+        var result = _driverUpdateService.LaunchDriverAndSystemUpdate();
+        switch (result)
+        {
+            case DriverUpdateLaunchResult.StartedNew:
+                _notificationService.Show("Update PC started in background (minimized).");
+                break;
+            case DriverUpdateLaunchResult.FocusedExisting:
+                _notificationService.Show("Update PC is already running. Showing active window.");
+                break;
+            case DriverUpdateLaunchResult.CancelledByUser:
+                _notificationService.Show("Update PC administrator request was cancelled.");
+                break;
+            case DriverUpdateLaunchResult.Failed:
+                _notificationService.Show("Failed to launch Update PC.");
+                break;
+        }
+    }
+
+    [RelayCommand]
+    private void Debloat()
+    {
+        _notificationService.Show("Opening Win11Debloat by Raphire...");
+        bool launched = _debloatService.LaunchDebloatUtility();
+        if (!launched)
+        {
+            _notificationService.Show("Debloat utility was cancelled or failed to start.");
+        }
+    }
+
+    [RelayCommand]
+    private void OpenDebloatCredit()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://github.com/Raphire/Win11Debloat.git",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show("Failed to open credit link: " + ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenMsiCredit()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://www.msi.com/Landing/afterburner/graphics-cards",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show("Failed to open MSI site: " + ex.Message);
+        }
     }
 
     private async void ShowNotification(string message)

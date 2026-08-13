@@ -12,6 +12,7 @@
             
             <BooleanToVisibilityConverter x:Key="BoolToVis" />
             <localConverters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+            <localConverters:InverseBooleanConverter x:Key="InverseBool" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "/DBeDHZ0lSk=",
+  "dgSpecHash": "KKz+XtLqKnA=",
   "success": true,
   "projectFilePath": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Core\\AxePower.Core.csproj",
   "expectedPackageFiles": [
@@ -9,9 +9,9 @@
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.10\\system.diagnostics.eventlog.10.0.10.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.management\\10.0.10\\system.management.10.0.10.nupkg.sha512",
     "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.10\\system.serviceprocess.servicecontroller.10.0.10.nupkg.sha512",
-    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.29\\microsoft.netcore.app.ref.8.0.29.nupkg.sha512",
-    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.29\\microsoft.windowsdesktop.app.ref.8.0.29.nupkg.sha512",
-    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.29\\microsoft.aspnetcore.app.ref.8.0.29.nupkg.sha512"
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.30\\microsoft.netcore.app.ref.8.0.30.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.30\\microsoft.windowsdesktop.app.ref.8.0.30.nupkg.sha512",
+    "C:\\Users\\Abhimanyu Vishwakarm\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.30\\microsoft.aspnetcore.app.ref.8.0.30.nupkg.sha512"
   ],
   "logs": []
 }
