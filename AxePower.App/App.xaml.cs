@@ -121,6 +121,7 @@ public partial class App : Application
         services.AddSingleton<DriverUpdateService>();
         services.AddSingleton<MsiAfterburnerService>();
         services.AddSingleton<DebloatService>();
+        services.AddSingleton<AndroidControlService>();
         services.AddSingleton<UpdateService>();
 
         // Uninstaller Pro — Core Services

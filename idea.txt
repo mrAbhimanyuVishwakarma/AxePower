@@ -1,2 +1,3 @@
 1. system stats like steam or msi and system info 
-2. in the about section of the app view release notes open axepower website - "" build installer v1.3  then update the readme readme release and log 
+2. 
+2. add one more item here "Phone Control" and usethe latest version https://github.com/Genymobile/scrcpy.git 

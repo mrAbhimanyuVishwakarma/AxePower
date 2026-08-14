@@ -81,28 +81,57 @@
                                     </StackPanel>
                                 </Grid>
 
-                                <!-- Developer Section -->
+                                <!-- Developer & Website Section -->
                                 <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,20,0,16"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,14,0" VerticalAlignment="Center">
-                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
+                                    <!-- Developer Column -->
+                                    <Grid Grid.Column="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <Button Command="{Binding OpenDeveloperCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand">
-                                            <Button.Template>
-                                                <ControlTemplate TargetType="Button">
-                                                    <TextBlock Text="Developed by Abhimanyu Vishwakarma" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                                </ControlTemplate>
-                                            </Button.Template>
-                                        </Button>
-                                        <TextBlock Text="Built with performance and efficiency in mind." FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
-                                    </StackPanel>
+                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,14,0" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <Button Command="{Binding OpenDeveloperCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <TextBlock Text="Developed by Abhimanyu Vishwakarma" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <TextBlock Text="Built with performance and efficiency in mind." FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Website Link Button -->
+                                    <Button Grid.Column="1" Command="{Binding VisitWebsiteCommand}" Background="Transparent" BorderThickness="0" Padding="0" VerticalAlignment="Center" Cursor="Hand" ToolTip="Visit https://axepower.vercel.app/">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="siteBtn" Background="#0C345C" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="10" Padding="12,7" Margin="10,0,0,0">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#60A5FA" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="axepower.vercel.app" FontSize="12" FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#60A5FA" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="siteBtn" Property="Background" Value="#1E40AF"/>
+                                                        <Setter TargetName="siteBtn" Property="BorderBrush" Value="#3B82F6"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -358,14 +387,16 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
+                                    <!-- Licensed To Column -->
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="Licensed to" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="{Binding LicenseUser, StringFormat='AxePower Pro ({0})'}" FontSize="13" FontWeight="SemiBold" Foreground="#60A5FA" Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding LicenseUser}" FontSize="13" FontWeight="SemiBold" Foreground="#60A5FA" Margin="0,3,0,0" ToolTip="{Binding LicenseUser}"/>
                                     </StackPanel>
 
+                                    <!-- License Type Column -->
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="License type" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="Pro" FontSize="13" FontWeight="SemiBold" Foreground="#34D399" Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding LicenseType}" FontSize="13" FontWeight="SemiBold" Foreground="#34D399" Margin="0,3,0,0"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>

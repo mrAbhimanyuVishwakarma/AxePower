@@ -7,31 +7,52 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.2.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.3.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
-[Official Website](https://axepower.com) • [Download Latest Release](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Report Issue](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues) • [Developer Profile](https://github.com/mrAbhimanyuVishwakarma)
+[Official Website](https://axepower.vercel.app/) • [Download Latest Release](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Report Issue](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues) • [Developer Profile](https://github.com/mrAbhimanyuVishwakarma)
 
 </div>
 
----
-
 ## 🚀 Key Features
 
-- ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, and **Beast** modes tailored for battery savings or extreme performance.
-- 📱 **Android Companion Sync**: Direct local Wi-Fi and USB peer-to-peer remote monitoring, mode switching, and game launching from your phone.
+- ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, **Beast**, and **Game** modes tailored for battery savings or extreme performance.
+- ⚙️ **Smart Performance Defaults**: Out-of-the-box defaults set to **Smart Mode** for both AC and Battery power, with custom dropdown configuration in Settings.
+- 🔄 **Remember Last Selected Mode**: Optional toggle to persist and automatically restore your last manually selected power mode across application restarts.
+- 📱 **Android Control (scrcpy)**: Ultra-low latency screen mirroring and full keyboard/mouse control for Android devices via USB or Wi-Fi *(Credit to Genymobile)*.
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
 - 🎮 **Game Booster & Scanner**: Automatically detects foreground gaming sessions, forces Beast Mode, and suspends heavy background processes to eliminate frame drops.
-- 🔋 **Battery Optimization & Health Insights**: Real-time battery discharge tracking, estimated time remaining, charge cycle health, and trend insights.
+- 🔋 **Battery Diagnostics & Health**: Real-time 3x battery indicator, discharge tracking, estimated time remaining, charge cycle health, and trend insights.
+- 🗑️ **Uninstaller Pro**: Deep application discovery, batch uninstallation, and verified leftover registry/filesystem cleaner with safety backups.
 - 🔄 **Update PC Utility**: Elevated one-click driver and Windows update management via Windows Package Manager / USOClient.
 - 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
-- 🗑️ **Uninstaller Pro**: Complete native uninstaller engine supporting Win32, MSI, AppX/MSIX, and WinGet applications with confidence-scored leftover scanning, registry backup, and safety guards.
-- 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and on-screen statistics *(Credit to MSI)*.
+- 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
+- 📖 **Interactive Tool Help & Guides**: Comprehensive in-app modal guides for all sidebar tools and `? Help` buttons with step-by-step instructions, shortcuts, and direct Readme links.
 - 🚀 **GitHub Releases Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads with live progress bars, and seamlessly updates the app.
 - 🌐 **Modern Product Website**: Clean, dark, responsive single-page product website with dynamic zero-config GitHub release installer auto-discovery.
 - 🗔 **Fluent Dark UI & System Tray**: Modern Windows 11 Fluent Dark interface with custom rounded tray context menu and minimize-to-tray capability.
 - 🔒 **100% Local & Privacy-First**: Zero telemetry, zero analytics tracking, and zero remote data collection.
+
+---
+
+## 🖥️ User Interface & Navigation
+
+AxePower provides a centralized desktop hub with a dedicated sidebar:
+
+| Section | Icon | Purpose |
+| :--- | :---: | :--- |
+| **Dashboard** | 📊 | Real-time system monitoring, power mode switching (Eco, Smart, Beast, Game Mode), and live battery metrics. |
+| **Auto Switch** | 🔄 | Configure automated rules for AC (Plugged In) and DC (Battery) states and dynamic refresh rate switching. |
+| **Game Mode** | 🎮 | Manage background app suspension and automatic game process detection with custom cyber lion badge. |
+| **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends with custom icon cards. |
+| **Settings** | ⚙️ | Application preferences, performance defaults, startup toggles, and notification settings. |
+| **📱 Android Control** | 📱 | Direct Android device mirroring and control with built-in guide modal *(Credit to Genymobile)*. |
+| **📊 MSI Afterburner** | ✈️ | Dedicated GPU overclocking and OSD launcher with built-in guide modal *(Credit to MSI)*. |
+| **🗑️ Uninstaller Pro** | 🗑️ | Comprehensive app discovery, batch uninstallation, and leftover cleaner *(Credit to AxePower)*. |
+| **🔄 Update PC** | 🔄 | Elevated hardware driver and Windows update launcher with built-in guide modal *(Credit to Microsoft)*. |
+| **🧹 Debloat** | ⚡ | Win11Debloat PowerShell utility launcher with built-in guide modal *(Credit to Raphire)*. |
+| **About** | ℹ️ | Device license info, version notes, and integrated GitHub Auto-Updater. |
 
 ---
 
@@ -184,6 +205,7 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 AxePower proudly integrates with and acknowledges tools created by the open-source and enthusiast community:
 
+- **[scrcpy](https://github.com/Genymobile/scrcpy)**: High-performance Android screen mirroring and control engine by **Genymobile**.
 - **[Win11Debloat](https://github.com/Raphire/Win11Debloat)**: Windows debloating and telemetry optimization scripts created by **Raphire**.
 - **[MSI Afterburner & RTSS](https://www.msi.com/Landing/afterburner/graphics-cards)**: Hardware statistics and GPU monitoring by **MSI** and **Alexey Nicolaychuk (Guru3D / RivaTuner)**.
 - **[Hardcodet WPF TaskbarNotification](https://github.com/hardcodet/wpf-notifyicon)**: System tray icon integration for WPF by **Philipp Sumi**.

@@ -31,6 +31,7 @@ public class DependencyInjectionTests
         services.AddSingleton<DriverUpdateService>();
         services.AddSingleton<MsiAfterburnerService>();
         services.AddSingleton<DebloatService>();
+        services.AddSingleton<AndroidControlService>();
         services.AddSingleton<UpdateService>();
 
         // Uninstaller Pro — Core Services

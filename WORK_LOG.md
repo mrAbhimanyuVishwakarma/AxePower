@@ -68,6 +68,92 @@ AxePower/
   - High-contrast, deep obsidian typography in Light Mode for maximum readability across all cards, tags, and buttons.
   - Persistent preference stored in `localStorage` with automatic system theme fallback.
   - Zero layout shift or theme flash on page load.
+- **Desktop Application Integration (`AxePower.App`)**:
+  - **Official Website Integration**:
+    - Added dedicated **`axepower.vercel.app ↗`** interactive button directly in the **Hero Card** of the **About** section next to the developer credit.
+    - Updated `VisitWebsiteCommand` and `ViewAllReleasesCommand` in [`AboutViewModel.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/ViewModels/AboutViewModel.cs) to open the official AxePower website: **`https://axepower.vercel.app/`**.
+    - Clicking the website button, **"View release notes"**, or **"Visit website"** from the in-app **About** page opens `https://axepower.vercel.app/` directly in the default browser.
+  - **License Card Updated**:
+    - **Licensed to**: Automatically reads and displays the active Windows device name via **`Environment.MachineName`** (e.g. your PC's desktop name).
+    - **License type**: Set to **`AxePower Pro`** in clear emerald green text.
+  - **Game Mode Icon Modernization**:
+    - Replaced the GameMode header badge with the purple cybernetic lion crest (`Gamemode.png`) in `GameModeView.xaml` and `AppWebsite`.
+    - Set the **left sidebar navigation** Game Mode icon to the clean white `controller.png` in [`MainWindow.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/MainWindow.xaml) to maintain perfect visual consistency with all other white sidebar icons.
+    - Replaced the card icons in `GameModeView.xaml`:
+      - **Game Mode & App Switch**: Updated to `Resources/icons/controller.png` with blue backdrop.
+      - **Game Booster (Background Apps)**: Updated to `Resources/icons/boost.png` with warning accent backdrop.
+      - **System Services Optimizer**: Updated icon foreground to pure crisp white (`#FFFFFF`) matching the modern Game Mode styling.
+  - **Auto Switch Icon Modernization (`AutoSwitchView.xaml`)**:
+    - **Rule Cards & Summary Left**:
+      - `When plugged in`: `Resources/icons/power.png` (plug icon)
+      - `When unplugged`: `Resources/icons/poweroff.png` (unplugged icon)
+      - `When battery below 30%`: `Resources/icons/battery_below30.png` (low battery level icon)
+      - `Custom schedule`: `Resources/icons/custom.png` (custom palette icon)
+    - **Summary Right Trailing Badges**:
+      - `Switch to Beast Mode`: `Resources/icons/performance_beast.png`
+      - `Switch to Eco Mode (Unplugged)`: `Resources/icons/tick.png`
+      - `Switch to Eco Mode (Low Battery)`: `Resources/icons/tick.png`
+      - `Switch to Smart Mode`: `Resources/icons/bolt_beast.png`
+  - **Battery View Icon Modernization (`BatteryView.xaml`)**:
+    - **Battery Health**: `Resources/icons/batteryhealth.png`
+    - **Estimated Time Remaining**: `Resources/icons/timeremaining.png`
+    - **Charge Level**: `Resources/icons/battery.png`
+    - **Charge Cycles**: `Resources/icons/chargecycle.png`
+    - **Temperature**: `Resources/icons/thermometer_beast.png`
+    - **Current Power Usage**: `Resources/icons/bolt_beast.png`
+  - **Header Battery Status Pill Scaled (3x Prominent Size)**:
+    - Expanded the header battery status pill in [`MainWindow.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/MainWindow.xaml):
+      - **3x Vector Battery Shell**: Scaled to `68x32px` with a `3.5px` border stroke and `14px` positive terminal notch.
+      - **Expanded Fill Range**: Scaled live charge bar from `0` to `55px` in [`BatteryViewModel.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/ViewModels/BatteryViewModel.cs).
+      - **Bold Prominent Typography**: Increased font size to `20px` bold for crystal-clear readability across all displays.
+      - **Pill Cushioning**: Generous `24x14px` padding with `16px` rounded corners.
+  - **Sidebar Tools Reordering & Android Control Integration**:
+    - Arranged bottom tools in [`MainWindow.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/MainWindow.xaml) strictly in requested order:
+      1. **Android Control** (`scrcpy` live mirroring & control)
+      2. **MSI Afterburner** (hardware monitoring & tuning)
+      3. **Uninstaller Pro** (deep uninstall & leftover cleaning)
+      4. **Update PC** (system driver & package updates)
+      5. **Debloat** (Win11Debloat by Raphire)
+      6. **About** (device license & updates)
+    - Created **[`AndroidControlService.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.Core/Services/AndroidControlService.cs)**:
+      - Automatically detects or downloads the latest official Windows 64-bit release of [scrcpy](https://github.com/Genymobile/scrcpy.git) from GitHub.
+      - Launches scrcpy directly to mirror and control connected Android devices.
+      - Restores/focuses active instance if already running.
+  - **In-App Interactive Tool Help & Guide System (`MainWindow.xaml`, `MainViewModel.cs`, `ToolInstructionItem.cs`)**:
+    - Replaced generic external browser navigation on `(i)` icons with a unified in-app Fluent modal guide overlay.
+    - Added dedicated instruction sets for all 5 sidebar tools (**Android Control**, **MSI Afterburner**, **Uninstaller Pro**, **Update PC**, **Debloat**):
+      - **Overview Card**: Concise description of tool capabilities and operating mechanism.
+      - **How To Use (Step-by-Step)**: Clear, numbered walkthrough on prerequisite setup and operation.
+      - **Pro Tips & Shortcuts**: Key keyboard shortcuts, performance guidelines, and safety practices.
+      - **Direct Readme Link**: Dedicated `📖 Readme` button pointing to `https://github.com/mrAbhimanyuVishwakarma/AxePower_Download#readme`.
+      - **Official Source / Repo**: Direct link to the open-source repository or vendor website.
+      - **One-Click Tool Launcher**: Directly launch or navigate to the tool right from the guide modal.
+  - **Standardized Architecture for Adding Future Tools**:
+    - Whenever a new tool is introduced to AxePower in the future, follow this strict protocol:
+      1. **Service Layer**: Implement service in `AxePower.Core/Services/<ToolName>Service.cs` with auto-download or elevation handling.
+      2. **Dependency Injection**: Register singleton in `AxePower.App/App.xaml.cs` and in `AxePower.Tests/Uninstaller/DependencyInjectionTests.cs`.
+      3. **ViewModel**: Inject service into `MainViewModel.cs` and add `Open<ToolName>Command`.
+      4. **In-App Guide**: Append a new `ToolInstructionItem` entry in `MainViewModel.InitializeToolGuides()` containing complete step-by-step instructions, tips, credit, and links.
+      5. **Sidebar XAML**: Place the tool button in `MainWindow.xaml` with an `(i)` button bound to `Command="{Binding OpenToolHelpCommand}" CommandParameter="<ToolId>"`.
+      6. **Documentation**: Update `README.md`, `RELEASE_README.md`, and `WORK_LOG.md`.
+  - **Performance Defaults & "Start with Last Selected Power Mode" Support**:
+    - Set out-of-the-box performance defaults in `AppSettings.cs` to **Smart Mode** for both `UnpluggedMode` (battery) and `PluggedInMode` (AC plugged in).
+    - Upgraded **Performance Defaults** in [`SettingsView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/SettingsView.xaml) to fully interactive ComboBoxes with custom styled icons and colors:
+      - **Default mode on battery**: `Eco Mode`, `Smart Mode`, `Beast Mode`, `Game Mode` (defaults to Smart).
+      - **Default mode when plugged in**: `Eco Mode`, `Smart Mode`, `Beast Mode`, `Game Mode` (defaults to Smart).
+      - **Fan mode on battery**: `Smart`, `Eco (Quiet)`, `Beast (Turbo)`.
+    - Bound and implemented **"Start with last selected power mode"** toggle in [`SettingsView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/SettingsView.xaml):
+      - When toggled ON: Tracks and remembers the last manually chosen power mode from the Dashboard/Tray menu (persisted in `settings.json` under `LastSelectedPowerMode`).
+      - On application startup: If enabled, immediately restores and applies `LastSelectedPowerMode` and synchronizes AutoSwitch hardware state without overriding user's selection until a subsequent power event.
+    - Upgraded all footer/header **"? Help"** buttons across the application ([`DashboardView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/DashboardView.xaml), [`AutoSwitchView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/AutoSwitchView.xaml), [`SettingsView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/SettingsView.xaml), [`AboutView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/AboutView.xaml)) to trigger the interactive in-app **Tool Instructions & Guide Modal**.
+  - **Release v1.3.0 & Inno Setup Compilation**:
+    - Bumped project version to `1.3.0` across [`AxePower.Core.csproj`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.Core/AxePower.Core.csproj), [`AxePower.App.csproj`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/AxePower.App.csproj), [`UpdateService.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.Core/Services/UpdateService.cs), and [`SettingsViewModel.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/ViewModels/SettingsViewModel.cs).
+    - Executed `dotnet publish -c Release -r win-x64` to compile standalone win-x64 binaries.
+    - Compiled Inno Setup installer script [`Installer/AxePower.iss`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/Installer/AxePower.iss) generating **`Installer/Output/AxePower-v1.3-Setup.exe`** (10.59 MB).
+  - **Verification**:
+    - `dotnet build -c Release` succeeded (0 errors, 0 warnings).
+    - `dotnet test -c Release` passed all 76 unit tests.
+    - `AxePower-v1.3-Setup.exe` generated successfully with LZMA solid compression.
 - **Direct Installer Auto-Discovery**:
   - `initLatestRelease()` in `script.js` dynamically queries `https://api.github.com/repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest`.
   - Automatically isolates the Windows `.exe` installer without hardcoding version numbers.

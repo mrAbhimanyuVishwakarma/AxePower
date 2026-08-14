@@ -10,13 +10,13 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("AxePower.App")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("AxePower")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ba690787c94c693ae47197bfc8dfd13522e6370e")]
-[assembly: System.Reflection.AssemblyProductAttribute("AxePower.App")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.3.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.3.0+898313837362cd5d1893bbf139a83521d63112e9")]
+[assembly: System.Reflection.AssemblyProductAttribute("AxePower")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AxePower.App")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.3.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
 

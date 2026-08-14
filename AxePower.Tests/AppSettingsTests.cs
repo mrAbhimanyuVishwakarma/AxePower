@@ -13,8 +13,10 @@ public class AppSettingsTests
 
         Assert.True(settings.AutoSwitchEnabled);
         Assert.True(settings.ShowNotifications);
-        Assert.Equal(PowerMode.Beast, settings.PluggedInMode);
-        Assert.Equal(PowerMode.Eco, settings.UnpluggedMode);
+        Assert.Equal(PowerMode.Smart, settings.PluggedInMode);
+        Assert.Equal(PowerMode.Smart, settings.UnpluggedMode);
+        Assert.False(settings.StartWithLastSelectedMode);
+        Assert.Equal(PowerMode.Smart, settings.LastSelectedPowerMode);
         Assert.Equal(30, settings.LowBatteryThresholdPercent);
         Assert.Equal(AppTheme.System, settings.Theme);
     }
@@ -26,7 +28,10 @@ public class AppSettingsTests
         {
             AutoSwitchEnabled = false,
             LowBatteryThresholdPercent = 50,
-            SwitchDelaySeconds = 15
+            SwitchDelaySeconds = 15,
+            StartWithLastSelectedMode = true,
+            LastSelectedPowerMode = PowerMode.Beast,
+            FanModeOnBattery = "Eco (Quiet)"
         };
 
         var cloned = original.Clone();
@@ -35,5 +40,8 @@ public class AppSettingsTests
         Assert.Equal(original.AutoSwitchEnabled, cloned.AutoSwitchEnabled);
         Assert.Equal(original.LowBatteryThresholdPercent, cloned.LowBatteryThresholdPercent);
         Assert.Equal(original.SwitchDelaySeconds, cloned.SwitchDelaySeconds);
+        Assert.True(cloned.StartWithLastSelectedMode);
+        Assert.Equal(PowerMode.Beast, cloned.LastSelectedPowerMode);
+        Assert.Equal("Eco (Quiet)", cloned.FanModeOnBattery);
     }
 }

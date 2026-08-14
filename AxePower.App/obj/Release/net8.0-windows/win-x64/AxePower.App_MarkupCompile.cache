@@ -1,5 +1,5 @@
 ﻿AxePower.App
-1.2.0.0
+1.3.0.0
 
 winexe
 C#
@@ -10,11 +10,11 @@ none
 false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\App.xaml
-14211295029
+15-235459696
 
-24-396030505
+29-1589601568
 2141352590033
-MainWindow.xaml;Resources\Styles.xaml;Resources\Themes\DarkTheme.xaml;Resources\Themes\GlassTheme.xaml;Resources\Themes\LightTheme.xaml;Resources\Themes\TransparentTheme.xaml;Views\AboutView.xaml;Views\AutoSwitchView.xaml;Views\BatteryView.xaml;Views\DashboardView.xaml;Views\GameModeView.xaml;Views\LogsView.xaml;Views\SettingsView.xaml;Windows\GameScannerWindow.xaml;
+MainWindow.xaml;Resources\Styles.xaml;Resources\Themes\DarkTheme.xaml;Resources\Themes\GlassTheme.xaml;Resources\Themes\LightTheme.xaml;Resources\Themes\TransparentTheme.xaml;Views\AboutView.xaml;Views\AutoSwitchView.xaml;Views\BatteryView.xaml;Views\DashboardView.xaml;Views\GameModeView.xaml;Views\LogsView.xaml;Views\SettingsView.xaml;Views\UninstallerView.xaml;Windows\GameScannerWindow.xaml;
 
 False
 

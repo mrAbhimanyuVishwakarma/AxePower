@@ -36,7 +36,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
-                            <Image Grid.Column="0" Source="pack://application:,,,/Resources/Gamemode2.png" Width="72" Height="72" Margin="0,0,24,0" VerticalAlignment="Center" Stretch="Uniform"/>
+                            <Image Grid.Column="0" Source="/Resources/Gamemode.png" Width="72" Height="72" Margin="0,0,24,0" VerticalAlignment="Center" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Manual Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="18" Margin="0,0,0,4"/>
@@ -83,8 +83,8 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                    <Ellipse Fill="{DynamicResource PrimaryBlueBrush}" Opacity="0.1"/>
-                                    <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Ellipse Fill="{DynamicResource PrimaryBlueBrush}" Opacity="0.15"/>
+                                    <Image Source="/Resources/icons/controller.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 </Grid>
                                 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -121,7 +121,7 @@
                                     <!-- Added Items -->
                                     <ItemsControl ItemsSource="{Binding AppRules}">
                                         <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
+                                             <DataTemplate>
                                                 <Grid Margin="0,0,0,8">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
@@ -153,8 +153,8 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                    <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.1"/>
-                                    <TextBlock Text="&#xEDA2;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.15"/>
+                                    <Image Source="/Resources/icons/boost.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 </Grid>
                                 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -229,8 +229,8 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.1"/>
-                                    <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                    <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Grid>
                                 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -310,7 +310,7 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Grid Width="32" Height="32" Margin="0,0,16,0">
                         <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
-                        <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource PrimaryBlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Game Mode Status" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>

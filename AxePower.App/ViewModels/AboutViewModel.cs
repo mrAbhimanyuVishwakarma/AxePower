@@ -47,7 +47,10 @@ public partial class AboutViewModel : ObservableObject
     private string _systemCompatibility = string.Empty;
 
     [ObservableProperty]
-    private string _licenseUser = Environment.UserName;
+    private string _licenseUser = Environment.MachineName;
+
+    [ObservableProperty]
+    private string _licenseType = "AxePower Pro";
 
     [ObservableProperty]
     private bool _isPrivacyPolicyOpen;
@@ -129,7 +132,8 @@ public partial class AboutViewModel : ObservableObject
             SystemCompatibility = "Windows 10 / 11 • 64-bit • Intel & AMD supported • Optimized for laptops";
         }
 
-        LicenseUser = string.IsNullOrWhiteSpace(Environment.UserName) ? "Local User" : Environment.UserName;
+        LicenseUser = string.IsNullOrWhiteSpace(Environment.MachineName) ? "This PC" : Environment.MachineName;
+        LicenseType = "AxePower Pro";
     }
 
     public AboutViewModel(
@@ -151,7 +155,7 @@ public partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void VisitWebsite()
     {
-        OpenUrl("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download");
+        OpenUrl("https://axepower.vercel.app/");
     }
 
     [RelayCommand]
@@ -163,13 +167,20 @@ public partial class AboutViewModel : ObservableObject
     [RelayCommand]
     private void ViewAllReleases()
     {
-        OpenUrl("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases");
+        OpenUrl("https://axepower.vercel.app/");
     }
 
     [RelayCommand]
     private void OpenHelp()
     {
-        OpenUrl("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download#readme");
+        if (System.Windows.Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
+        {
+            mainVm.OpenToolHelp(null);
+        }
+        else
+        {
+            OpenUrl("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download#readme");
+        }
     }
 
     [RelayCommand]

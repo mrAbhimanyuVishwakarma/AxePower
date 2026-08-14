@@ -16,11 +16,21 @@ public class AppSettings
 
     [JsonPropertyName("pluggedInMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PowerMode PluggedInMode { get; set; } = PowerMode.Beast;
+    public PowerMode PluggedInMode { get; set; } = PowerMode.Smart;
 
     [JsonPropertyName("unpluggedMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PowerMode UnpluggedMode { get; set; } = PowerMode.Eco;
+    public PowerMode UnpluggedMode { get; set; } = PowerMode.Smart;
+
+    [JsonPropertyName("startWithLastSelectedMode")]
+    public bool StartWithLastSelectedMode { get; set; } = false;
+
+    [JsonPropertyName("lastSelectedPowerMode")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public PowerMode LastSelectedPowerMode { get; set; } = PowerMode.Smart;
+
+    [JsonPropertyName("fanModeOnBattery")]
+    public string FanModeOnBattery { get; set; } = "Smart";
 
     [JsonPropertyName("lowBatteryRuleEnabled")]
     public bool LowBatteryRuleEnabled { get; set; } = true;
@@ -86,6 +96,9 @@ public class AppSettings
             ApplyExpectedModeOnStartup = this.ApplyExpectedModeOnStartup,
             PluggedInMode = this.PluggedInMode,
             UnpluggedMode = this.UnpluggedMode,
+            StartWithLastSelectedMode = this.StartWithLastSelectedMode,
+            LastSelectedPowerMode = this.LastSelectedPowerMode,
+            FanModeOnBattery = this.FanModeOnBattery,
             LowBatteryRuleEnabled = this.LowBatteryRuleEnabled,
             LowBatteryThresholdPercent = this.LowBatteryThresholdPercent,
             LowBatteryMode = this.LowBatteryMode,

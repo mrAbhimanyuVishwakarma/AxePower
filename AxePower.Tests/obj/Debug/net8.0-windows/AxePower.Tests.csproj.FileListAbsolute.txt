@@ -27,6 +27,10 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-wi
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\Microsoft.Win32.SystemEvents.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\Moq.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\Newtonsoft.Json.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.CodeDom.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.Diagnostics.EventLog.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.Management.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.ServiceProcess.ServiceController.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\xunit.assert.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\xunit.core.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\xunit.execution.dotnet.dll
@@ -96,6 +100,10 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-wi
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\zh-Hant\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Management.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\AxePower.App.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\AxePower.Core.dll
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\AxePower.Core.pdb
@@ -112,11 +120,3 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Debug\net8.0-wi
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Debug\net8.0-windows\AxePower.Tests.pdb
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Debug\net8.0-windows\AxePower.Tests.genruntimeconfig.cache
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Debug\net8.0-windows\ref\AxePower.Tests.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.CodeDom.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.Management.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Management.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.Diagnostics.EventLog.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\System.ServiceProcess.ServiceController.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
-C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll
