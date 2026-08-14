@@ -52,7 +52,7 @@ namespace AxePower.App.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/AxePower.App;V1.2.0.0;component/views/aboutview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/AxePower.App;V1.3.0.0;component/views/aboutview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\AboutView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

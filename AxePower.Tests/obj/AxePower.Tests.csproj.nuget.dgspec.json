@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.App\\AxePower.App.csproj": {
-      "version": "1.2.0",
+      "version": "1.3.0",
       "restore": {
         "projectUniqueName": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.App\\AxePower.App.csproj",
         "projectName": "AxePower.App",
@@ -105,7 +105,7 @@
       }
     },
     "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Core\\AxePower.Core.csproj": {
-      "version": "1.2.0",
+      "version": "1.3.0",
       "restore": {
         "projectUniqueName": "C:\\Users\\Abhimanyu Vishwakarm\\GitHub\\AxePower\\AxePower.Core\\AxePower.Core.csproj",
         "projectName": "AxePower.Core",
