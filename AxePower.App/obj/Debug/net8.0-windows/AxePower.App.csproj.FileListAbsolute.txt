@@ -60,3 +60,5 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Debug\net8.0-wind
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Debug\net8.0-windows\Views\GameModeView.g.cs
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Debug\net8.0-windows\Windows\GameScannerWindow.g.cs
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Debug\net8.0-windows\Windows\GameScannerWindow.baml
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Debug\net8.0-windows\Views\UninstallerView.g.cs
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Debug\net8.0-windows\Views\UninstallerView.baml

@@ -39,6 +39,9 @@
         <DataTemplate DataType="{x:Type viewmodels:AboutViewModel}">
             <views:AboutView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:UninstallerViewModel}">
+            <views:UninstallerView />
+        </DataTemplate>
         
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
@@ -122,20 +125,28 @@
                         </Button>
                     </StackPanel>
                     
-                    <!-- Bottom Actions: MSI Afterburner, Update PC & About -->
+                    <!-- Bottom Actions: Update PC, Debloat, Uninstaller Pro, MSI Afterburner & About -->
                     <StackPanel Grid.Row="2" Margin="0,0,0,24" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <!-- MSI Afterburner with Credit Info (i) -->
+                        <!-- Update PC -->
+                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding UpdateDriversCommand}" ToolTip="Check &amp; update Windows, GPU drivers, and system packages">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Update PC" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Debloat with Credit Info (i) -->
                         <Grid>
-                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenMsiAfterburnerCommand}" ToolTip="Open MSI Afterburner (minimized) with hardware monitoring">
+                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding DebloatCommand}" ToolTip="Launch Win11Debloat by Raphire">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Source="/Resources/icons/MSI Afterburner.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                    <TextBlock Text="MSI Afterburner" VerticalAlignment="Center"/>
+                                    <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Debloat" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding OpenMsiCreditCommand}" 
+                            <Button Command="{Binding OpenDebloatCreditCommand}" 
                                     HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
                                     Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
-                                    ToolTip="Credit to - MSI" WindowChrome.IsHitTestVisibleInChrome="True">
+                                    ToolTip="Credit to - Raphire" WindowChrome.IsHitTestVisibleInChrome="True">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Opacity" Value="0.4"/>
@@ -159,26 +170,27 @@
                             </Button>
                         </Grid>
 
-                        <!-- Update PC -->
-                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding UpdateDriversCommand}" ToolTip="Check &amp; update Windows, GPU drivers, and system packages">
+                        <!-- Uninstaller Pro -->
+                        <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller"
+                                ToolTip="Remove applications and clean verified leftovers">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Update PC" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Uninstaller Pro" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Debloat with Credit Info (i) -->
+                        <!-- MSI Afterburner with Credit Info (i) -->
                         <Grid>
-                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding DebloatCommand}" ToolTip="Launch Win11Debloat by Raphire">
+                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenMsiAfterburnerCommand}" ToolTip="Open MSI Afterburner (minimized) with hardware monitoring">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Debloat" VerticalAlignment="Center"/>
+                                    <Image Source="/Resources/icons/MSI Afterburner.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <TextBlock Text="MSI Afterburner" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding OpenDebloatCreditCommand}" 
+                            <Button Command="{Binding OpenMsiCreditCommand}" 
                                     HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
                                     Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
-                                    ToolTip="Credit to - Raphire" WindowChrome.IsHitTestVisibleInChrome="True">
+                                    ToolTip="Credit to - MSI" WindowChrome.IsHitTestVisibleInChrome="True">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Opacity" Value="0.4"/>

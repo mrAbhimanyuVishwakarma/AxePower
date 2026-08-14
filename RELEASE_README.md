@@ -1,29 +1,32 @@
 # AxePower ⚡
+### Intelligent Power Management & Gaming Optimizer for Windows
+
+<div align="center">
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Version](https://img.shields.io/badge/Version-1.2.0-blueviolet)
 
-Welcome to AxePower! This is a simple, set-and-forget tool designed to automatically optimize your laptop's battery life and performance. 
+[Official Website](https://axepower.com) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
-<img width="962" height="635" alt="axepower_1" src="https://github.com/user-attachments/assets/87a33231-d576-44cd-8f32-85511ae054c6" />
-<img width="1280" height="685" alt="axepower_3" src="https://github.com/user-attachments/assets/328b53c0-ce10-4216-8452-0d2702fe9f21" />
-<img width="1280" height="686" alt="axepower_4" src="https://github.com/user-attachments/assets/6fe3283a-76ae-4c91-bbfb-bdb83c6d4acf" />
-<img width="965" height="633" alt="axepower_5" src="https://github.com/user-attachments/assets/df67309e-d22c-4a2c-a379-ed1aedf82595" />
-<img width="1278" height="682" alt="axepower_6" src="https://github.com/user-attachments/assets/0d154531-d2bd-4961-9dc2-c1ad6859b77e" />
+</div>
+
+Welcome to AxePower! This is a simple, set-and-forget tool designed to automatically optimize your laptop's battery life, thermal envelope, and performance.
 
 ---
 
-## What does it do?
+## ⚡ What does it do?
 
-AxePower manages your laptop's power settings based on whether your charger is plugged in or not. 
+AxePower manages your laptop's power settings and refresh rates based on whether your charger is plugged in or unplugged. 
 
-Have you ever noticed your laptop running slowly when unplugged, or your battery draining too fast? AxePower solves this by offering three easy modes:
+Have you ever noticed your laptop running slowly when unplugged, or your battery draining too fast? AxePower solves this by offering four dedicated modes:
 
 - 🔋 **Eco Mode:** Saves battery so your laptop runs longer when you are away from the charger.
 - ⚖️ **Smart Mode:** The perfect middle ground for everyday tasks like browsing and watching videos.
-- 🚀 **Beast Mode:** Gives you maximum power for gaming or heavy tasks when your charger is plugged in.
+- 🚀 **Beast Mode:** Gives you maximum power and sustained clocks for gaming or heavy tasks when plugged in.
+- 🎮 **Game Mode:** Automatically detects running games, suspends background bloat, and locks maximum display refresh rate.
+- 📱 **Android Companion:** Monitor system vitals and trigger remote actions over local Wi-Fi or USB.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. For example, it can jump to Beast Mode the second you plug your laptop in, and drop down to Eco Mode when you unplug it!
 
@@ -31,6 +34,8 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 ## 🌟 What's New in v1.2.0
 
+- 🌐 **Official Product Website**: Launched [AxePower.com](https://axepower.com) (`AppWebsite/`) with direct GitHub release auto-download.
+- 📱 **Android Companion Sync**: Peer-to-peer local telemetry and mode switching.
 - 🚀 **GitHub Releases Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads with live progress bars, and updates seamlessly.
 - 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows debloating and telemetry removal scripts *(Credit to Raphire)*.
 - 📈 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and on-screen statistics *(Credit to MSI)*.
@@ -41,10 +46,10 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 ---
 
-## How to Install
+## 📥 How to Install
 
-1. Go to the [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) page.
-2. Download the latest **`AxePower-v1.2-Setup.exe`** file.
+1. Go to the [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) page or [AxePower.com](https://axepower.com).
+2. Download the latest installer (e.g. **`AxePower-v1.2-Setup.exe`**).
 3. Open the downloaded file and follow the simple on-screen steps.
 4. Once installed, search for "AxePower" in your Start Menu or open the Desktop shortcut!
 
