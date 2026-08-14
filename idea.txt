@@ -1,2 +1,2 @@
 1. system stats like steam or msi and system info 
-2. 
+2. in the about section of the app view release notes open axepower website - "" build installer v1.3  then update the readme readme release and log 

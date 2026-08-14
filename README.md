@@ -11,7 +11,7 @@
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
-[Download Latest Release](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Report Issue](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues) • [Developer Profile](https://github.com/mrAbhimanyuVishwakarma)
+[Official Website](https://axepower.com) • [Download Latest Release](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Report Issue](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues) • [Developer Profile](https://github.com/mrAbhimanyuVishwakarma)
 
 </div>
 
@@ -20,13 +20,16 @@
 ## 🚀 Key Features
 
 - ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, and **Beast** modes tailored for battery savings or extreme performance.
+- 📱 **Android Companion Sync**: Direct local Wi-Fi and USB peer-to-peer remote monitoring, mode switching, and game launching from your phone.
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
 - 🎮 **Game Booster & Scanner**: Automatically detects foreground gaming sessions, forces Beast Mode, and suspends heavy background processes to eliminate frame drops.
 - 🔋 **Battery Optimization & Health Insights**: Real-time battery discharge tracking, estimated time remaining, charge cycle health, and trend insights.
-- 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
-- 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and on-screen statistics *(Credit to MSI)*.
 - 🔄 **Update PC Utility**: Elevated one-click driver and Windows update management via Windows Package Manager / USOClient.
+- 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
+- 🗑️ **Uninstaller Pro**: Complete native uninstaller engine supporting Win32, MSI, AppX/MSIX, and WinGet applications with confidence-scored leftover scanning, registry backup, and safety guards.
+- 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and on-screen statistics *(Credit to MSI)*.
 - 🚀 **GitHub Releases Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads with live progress bars, and seamlessly updates the app.
+- 🌐 **Modern Product Website**: Clean, dark, responsive single-page product website with dynamic zero-config GitHub release installer auto-discovery.
 - 🗔 **Fluent Dark UI & System Tray**: Modern Windows 11 Fluent Dark interface with custom rounded tray context menu and minimize-to-tray capability.
 - 🔒 **100% Local & Privacy-First**: Zero telemetry, zero analytics tracking, and zero remote data collection.
 
@@ -52,10 +55,12 @@ flowchart TD
     subgraph Core Business Layer [AxePower.Core]
         OS_SVC[Orchestration Services]
         HW_INT[Hardware & Native Integrations]
+        UNINST[Uninstaller Pro Engine]
         DATA[Configuration & Logging]
         UPD[Auto-Update Service]
         
         OS_SVC --> HW_INT
+        OS_SVC --> UNINST
         OS_SVC --> DATA
         UPD --> GitHubAPI[(GitHub Releases API)]
     end
@@ -68,6 +73,11 @@ flowchart TD
     OS_SVC --> Debloat[DebloatService]
     OS_SVC --> DriverUpdate[DriverUpdateService]
     OS_SVC --> Msi[MsiAfterburnerService]
+
+    UNINST --> AppDiscovery[ApplicationDiscoveryService]
+    UNINST --> BatchUninstall[BatchUninstallService]
+    UNINST --> LeftoverScanner[LeftoverScannerService]
+    UNINST --> RegBackup[RegistryBackupService]
 
     HW_INT --> PowerCfg[PowerPlanService (powercfg)]
     HW_INT --> Battery[BatteryService (Win32 API)]
@@ -94,6 +104,7 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **Logs** | 📝 | Real-time diagnostic logging and error tracking. |
 | **Update PC** | 🔄 | Elevated hardware driver and Windows update launcher. |
 | **Debloat** | 🧹 | Win11Debloat PowerShell utility launcher *(with attribution tooltip)*. |
+| **🗑️ Uninstaller Pro** | 🗑️ | Comprehensive app discovery, batch uninstallation, and verified leftover cleaning. |
 | **MSI Afterburner** | 📈 | Dedicated GPU overclocking and OSD launcher *(with attribution tooltip)*. |
 | **About** | ℹ️ | Version information, developer profile, release notes, and integrated GitHub Auto-Updater. |
 

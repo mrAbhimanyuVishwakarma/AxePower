@@ -2,6 +2,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Uninstaller;
 
 namespace AxePower.App.ViewModels;
 
@@ -29,6 +30,7 @@ public partial class MainViewModel : ObservableObject
     public SettingsViewModel SettingsVm { get; }
     public LogsViewModel LogsVm { get; }
     public AboutViewModel AboutVm { get; }
+    public UninstallerViewModel UninstallerVm { get; }
 
     public Style? DashboardActiveStyle => GetStyleForView(DashboardVm);
     public Style? AutoSwitchActiveStyle => GetStyleForView(AutoSwitchVm);
@@ -37,6 +39,7 @@ public partial class MainViewModel : ObservableObject
     public Style? LogsActiveStyle => GetStyleForView(LogsVm);
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
     public Style? AboutActiveStyle => GetStyleForView(AboutVm);
+    public Style? UninstallerActiveStyle => GetStyleForView(UninstallerVm);
 
     public MainViewModel(
         DashboardViewModel dashboardVm, 
@@ -46,6 +49,7 @@ public partial class MainViewModel : ObservableObject
         SettingsViewModel settingsVm, 
         LogsViewModel logsVm,
         AboutViewModel aboutVm,
+        UninstallerViewModel uninstallerVm,
         NotificationService notificationService,
         DriverUpdateService driverUpdateService,
         MsiAfterburnerService msiAfterburnerService,
@@ -59,6 +63,7 @@ public partial class MainViewModel : ObservableObject
         SettingsVm = settingsVm;
         LogsVm = logsVm;
         AboutVm = aboutVm;
+        UninstallerVm = uninstallerVm;
         _notificationService = notificationService;
         _driverUpdateService = driverUpdateService;
         _msiAfterburnerService = msiAfterburnerService;
@@ -115,6 +120,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(LogsActiveStyle));
         OnPropertyChanged(nameof(SettingsActiveStyle));
         OnPropertyChanged(nameof(AboutActiveStyle));
+        OnPropertyChanged(nameof(UninstallerActiveStyle));
         OnPropertyChanged(nameof(ShowBatteryPill));
     }
 
@@ -123,14 +129,15 @@ public partial class MainViewModel : ObservableObject
     {
         CurrentView = viewName switch
         {
-            "Dashboard" => DashboardVm,
-            "AutoSwitch" => AutoSwitchVm,
-            "GameMode" => GameModeVm,
-            "Battery" => BatteryVm,
-            "Settings" => SettingsVm,
-            "Logs" => LogsVm,
-            "About" => AboutVm,
-            _ => DashboardVm
+            "Dashboard"   => DashboardVm,
+            "AutoSwitch"  => AutoSwitchVm,
+            "GameMode"    => GameModeVm,
+            "Battery"     => BatteryVm,
+            "Settings"    => SettingsVm,
+            "Logs"        => LogsVm,
+            "About"       => AboutVm,
+            "Uninstaller" => UninstallerVm,
+            _             => DashboardVm
         };
     }
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Uninstaller;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
 using AxePower.App.Helpers;
@@ -41,6 +42,31 @@ public partial class App : Application
             Environment.Exit(0);
             return;
         }
+
+        // Global crash prevention and error logging
+        DispatcherUnhandledException += (s, args) =>
+        {
+            try
+            {
+                var log = Services?.GetService<LogService>();
+                log?.LogError($"[Unhandled UI Exception] {args.Exception.Message}", args.Exception);
+            }
+            catch { }
+            args.Handled = true;
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+            {
+                try
+                {
+                    var log = Services?.GetService<LogService>();
+                    log?.LogError($"[Unhandled AppDomain Exception] {ex.Message}", ex);
+                }
+                catch { }
+            }
+        };
 
         Services = ConfigureServices();
 
@@ -97,6 +123,23 @@ public partial class App : Application
         services.AddSingleton<DebloatService>();
         services.AddSingleton<UpdateService>();
 
+        // Uninstaller Pro — Core Services
+        services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
+        services.AddSingleton<Win32UninstallExecutor>();
+        services.AddSingleton<MsiUninstallExecutor>();
+        services.AddSingleton<WingetUninstallExecutor>();
+        services.AddSingleton<AppxUninstallExecutor>();
+        services.AddSingleton<UninstallExecutorFactory>();
+        services.AddSingleton<IBatchUninstallService, BatchUninstallService>();
+        services.AddSingleton<ILeftoverScannerService, LeftoverScannerService>();
+        services.AddSingleton<ILeftoverConfidenceService, LeftoverConfidenceService>();
+        services.AddSingleton<IRegistryBackupService, RegistryBackupService>();
+        services.AddSingleton<IFileCleanupService, FileCleanupService>();
+        services.AddSingleton<IProtectionService, ProtectionService>();
+        services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
+        services.AddSingleton<SystemRestoreService>();
+        services.AddSingleton<ProcessDetectionService>();
+
         // ViewModels
         services.AddTransient<MainViewModel>();
         services.AddTransient<DashboardViewModel>();
@@ -106,6 +149,7 @@ public partial class App : Application
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<LogsViewModel>();
         services.AddTransient<AboutViewModel>();
+        services.AddTransient<UninstallerViewModel>();
 
         // Views
         services.AddTransient<MainWindow>();
@@ -121,6 +165,11 @@ public partial class App : Application
         var current = ds.GetCurrentRefreshRate();
         var rates = ds.GetSupportedRefreshRates();
         Console.WriteLine($"DisplayService Initialized: Current {current} Hz, Supported [{string.Join(", ", rates)} Hz]");
+        
+        var discovery = sp.GetRequiredService<IApplicationDiscoveryService>();
+        var apps = Task.Run(async () => await discovery.DiscoverApplicationsAsync()).GetAwaiter().GetResult();
+        Console.WriteLine($"Uninstaller Pro Initialized: Discovered {apps.Count} applications.");
+        
         Environment.ExitCode = 0;
     }
 

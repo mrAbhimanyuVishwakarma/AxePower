@@ -32,6 +32,8 @@ public static class TouchpadScrollHelper
 
         if (scrollViewer == null) return;
 
+        double multiplier = GetScrollMultiplier(scrollViewer);
+
         // Check if Shift is held down for horizontal scrolling
         bool isHorizontal = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
 
@@ -39,7 +41,7 @@ public static class TouchpadScrollHelper
         {
             if (scrollViewer.ScrollableWidth > 0)
             {
-                double scrollDelta = e.Delta * ScrollMultiplier;
+                double scrollDelta = e.Delta * multiplier;
                 double targetOffset = scrollViewer.HorizontalOffset - scrollDelta;
                 targetOffset = Math.Clamp(targetOffset, 0, scrollViewer.ScrollableWidth);
 
@@ -54,7 +56,7 @@ public static class TouchpadScrollHelper
         {
             if (scrollViewer.ScrollableHeight > 0)
             {
-                double scrollDelta = e.Delta * ScrollMultiplier;
+                double scrollDelta = e.Delta * multiplier;
                 double targetOffset = scrollViewer.VerticalOffset - scrollDelta;
                 targetOffset = Math.Clamp(targetOffset, 0, scrollViewer.ScrollableHeight);
 
@@ -65,6 +67,44 @@ public static class TouchpadScrollHelper
                 }
             }
         }
+    }
+
+    private static double GetScrollMultiplier(ScrollViewer scrollViewer)
+    {
+        // If ScrollableHeight is large (> 500), it's definitely scrolling in physical pixels
+        if (scrollViewer.ScrollableHeight > 500)
+        {
+            return 0.85; // 120 delta -> ~102px; 15 delta (trackpad) -> ~12.75px
+        }
+
+        // Check if hosted inside an ItemsControl with explicit Pixel scroll unit
+        var parentItemsControl = FindParentItemsControl(scrollViewer);
+        if (parentItemsControl != null)
+        {
+            var unit = VirtualizingPanel.GetScrollUnit(parentItemsControl);
+            if (unit == ScrollUnit.Pixel)
+            {
+                return 0.85;
+            }
+            if (scrollViewer.CanContentScroll && unit == ScrollUnit.Item)
+            {
+                // Item mode: 120 delta -> 3.0 items; 15 delta -> ~0.38 item
+                return 0.025;
+            }
+        }
+
+        // Standard ScrollViewer (Settings, About, Battery, etc. which scroll in pixels)
+        return 0.85;
+    }
+
+    private static ItemsControl? FindParentItemsControl(DependencyObject? element)
+    {
+        while (element != null)
+        {
+            if (element is ItemsControl ic) return ic;
+            element = VisualTreeHelper.GetParent(element);
+        }
+        return null;
     }
 
     private static ScrollViewer? FindScrollViewer(DependencyObject? element)
