@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AxePower.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.2.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.2.0+1e7fb181f84ad41e44f6d13df00023e4e63a1a06")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.2.0+5c3083433a88e795ec8630276bbff7ed8cbd93b1")]
 [assembly: System.Reflection.AssemblyProductAttribute("AxePower.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AxePower.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.2.0.0")]

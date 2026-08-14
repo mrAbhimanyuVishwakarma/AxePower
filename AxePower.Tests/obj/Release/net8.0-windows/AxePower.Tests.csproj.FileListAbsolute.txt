@@ -112,3 +112,11 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Release\net8.0-
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Release\net8.0-windows\AxePower.Tests.pdb
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Release\net8.0-windows\AxePower.Tests.genruntimeconfig.cache
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\obj\Release\net8.0-windows\ref\AxePower.Tests.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\System.CodeDom.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\System.Diagnostics.EventLog.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\System.Management.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\System.ServiceProcess.ServiceController.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Management.dll
+C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.Tests\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll

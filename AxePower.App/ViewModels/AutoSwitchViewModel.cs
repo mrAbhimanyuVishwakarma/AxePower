@@ -29,7 +29,7 @@ public partial class AutoSwitchViewModel : ObservableObject
     [ObservableProperty]
     private bool _suspendBackgroundAppsOnBattery;
 
-    public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast });
+    public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast, PowerMode.GameMode });
 
     [ObservableProperty]
     private bool _customRuleEnabled;
@@ -91,11 +91,10 @@ public partial class AutoSwitchViewModel : ObservableObject
     [RelayCommand]
     private void OpenHelp()
     {
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        if (System.Windows.Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
         {
-            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower/blob/main/README.md",
-            UseShellExecute = true
-        });
+            mainVm.OpenToolHelp(null);
+        }
     }
 
     [RelayCommand]

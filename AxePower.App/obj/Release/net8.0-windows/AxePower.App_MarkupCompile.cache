@@ -1,5 +1,5 @@
 ﻿AxePower.App
-
+1.2.0.0
 
 winexe
 C#
@@ -8,13 +8,13 @@ C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\obj\Release\net8.0-wi
 AxePower.App
 none
 false
-TRACE;RELEASE;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+TRACE;RELEASE;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\AxePower.App\App.xaml
-81439396695
+15-235459696
 
-18-1552909595
-212537357010
-MainWindow.xaml;Resources\Styles.xaml;Views\AboutView.xaml;Views\AutoSwitchView.xaml;Views\BatteryView.xaml;Views\DashboardView.xaml;Views\LogsView.xaml;Views\SettingsView.xaml;
+299331012
+2141352590033
+MainWindow.xaml;Resources\Styles.xaml;Resources\Themes\DarkTheme.xaml;Resources\Themes\GlassTheme.xaml;Resources\Themes\LightTheme.xaml;Resources\Themes\TransparentTheme.xaml;Views\AboutView.xaml;Views\AutoSwitchView.xaml;Views\BatteryView.xaml;Views\DashboardView.xaml;Views\GameModeView.xaml;Views\LogsView.xaml;Views\SettingsView.xaml;Views\UninstallerView.xaml;Windows\GameScannerWindow.xaml;
 
 False
 

@@ -48,8 +48,20 @@ public class AutoSwitchService : IDisposable
         
         _logService.LogInfo("AutoSwitchService started.");
         
-        // Trigger initial evaluation
-        EvaluatePowerStateAsync().ConfigureAwait(false);
+        // Trigger initial evaluation or apply remembered last manual mode if configured
+        var settings = _settingsService.GetSettings();
+        if (settings.StartWithLastSelectedMode)
+        {
+            _logService.LogInfo($"StartWithLastSelectedMode is enabled. Applying remembered mode: {settings.LastSelectedPowerMode}");
+            var status = _batteryService.GetCurrentStatus();
+            _lastPluggedInState = status.IsPluggedIn;
+            _inLowBatteryState = settings.LowBatteryRuleEnabled && status.BatteryPercentage <= settings.LowBatteryThresholdPercent;
+            _ = _powerPlanService.ApplyModeAsync(settings.LastSelectedPowerMode);
+        }
+        else
+        {
+            EvaluatePowerStateAsync().ConfigureAwait(false);
+        }
     }
 
     public void Stop()

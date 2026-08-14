@@ -39,8 +39,8 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                <Ellipse Fill="{DynamicResource BeastBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource BeastBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource BeastBrush}" Opacity="0.15"/>
+                                <Image Source="/Resources/icons/power.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Grid>
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -64,8 +64,8 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                <Ellipse Fill="{DynamicResource EcoBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource EcoBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/> <!-- Note: icon might differ -->
+                                <Ellipse Fill="{DynamicResource EcoBrush}" Opacity="0.15"/>
+                                <Image Source="/Resources/icons/poweroff.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Grid>
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -89,8 +89,8 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xEBAA;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.15"/>
+                                <Image Source="/Resources/icons/battery_below30.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Grid>
                             
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -115,8 +115,8 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
-                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.1"/>
-                                    <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                    <Image Source="/Resources/icons/custom.png" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 </Grid>
                                 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -188,14 +188,14 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{DynamicResource BeastBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource BeastBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource BeastBrush}" Opacity="0.15"/>
+                                <Image Source="/Resources/icons/power.png" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="When plugged in" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
                                 <TextBlock Text="Switch to Beast Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource BeastBrush}" VerticalAlignment="Center"/>
+                            <Image Grid.Column="2" Source="/Resources/icons/performance_beast.png" Width="16" Height="16" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Grid>
                         
                         <Grid Margin="0,0,0,16">
@@ -206,14 +206,14 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{DynamicResource EcoBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE9A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource EcoBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource EcoBrush}" Opacity="0.15"/>
+                                <Image Source="/Resources/icons/poweroff.png" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="When unplugged" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
                                 <TextBlock Text="Switch to Eco Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource EcoBrush}" VerticalAlignment="Center"/>
+                            <Image Grid.Column="2" Source="/Resources/icons/tick.png" Width="14" Height="14" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Grid>
                         
                         <Grid Margin="0,0,0,16">
@@ -224,14 +224,14 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xEBAA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource WarningBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource WarningBrush}" Opacity="0.15"/>
+                                <Image Source="/Resources/icons/battery_below30.png" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="When battery below 30%" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
                                 <TextBlock Text="Switch to Eco Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource EcoBrush}" VerticalAlignment="Center"/>
+                            <Image Grid.Column="2" Source="/Resources/icons/tick.png" Width="14" Height="14" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Grid>
                         
                         <Grid>
@@ -242,14 +242,14 @@
                             </Grid.ColumnDefinitions>
                             
                             <Grid Grid.Column="0" Width="32" Height="32" Margin="0,0,12,0">
-                                <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.1"/>
-                                <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                <Image Source="/Resources/icons/custom.png" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                             </Grid>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Custom schedule" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13"/>
                                 <TextBlock Text="Weekdays, 9:00 AM – 5:00 PM&#x0a;Switch to Smart Mode" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SmartBrush}" VerticalAlignment="Center"/>
+                            <Image Grid.Column="2" Source="/Resources/icons/bolt_beast.png" Width="16" Height="16" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Grid>
                     </StackPanel>
                 </Border>

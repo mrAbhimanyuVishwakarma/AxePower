@@ -37,7 +37,7 @@ public class UpdateService
     public string GetCurrentVersionString()
     {
         var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-        return asm.GetName().Version?.ToString(3) ?? "1.2.0";
+        return asm.GetName().Version?.ToString(3) ?? "1.3.0";
     }
 
     public Version GetCurrentVersion()

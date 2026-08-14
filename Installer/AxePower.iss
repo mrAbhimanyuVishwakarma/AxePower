@@ -1,5 +1,5 @@
 #define AppName "AxePower"
-#define AppVersion "1.2"
+#define AppVersion "1.3"
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
 #define AppExeName "AxePower.App.exe"
@@ -20,7 +20,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir={#OutputDir}
-OutputBaseFilename=AxePower-v1.2-Setup
+OutputBaseFilename=AxePower-v1.3-Setup
 SetupIconFile=..\AxePower.App\Resources\AxePower_white.ico
 Compression=lzma
 SolidCompression=yes

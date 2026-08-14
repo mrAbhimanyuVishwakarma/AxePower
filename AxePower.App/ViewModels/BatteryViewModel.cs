@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using AxePower.Core.Services;
@@ -16,6 +17,27 @@ public partial class BatteryViewModel : ObservableObject
 
     [ObservableProperty]
     private string _batteryPercentage = "0%";
+
+    [ObservableProperty]
+    private bool _isPluggedIn;
+
+    [ObservableProperty]
+    private int _rawBatteryPercentage = 100;
+
+    [ObservableProperty]
+    private double _batteryFillWidth = 41;
+
+    [ObservableProperty]
+    private string _headerDisplayText = "100% | AC POWER";
+
+    [ObservableProperty]
+    private SolidColorBrush _headerAccentBrush = new(Color.FromRgb(0x10, 0xB9, 0x81));
+
+    [ObservableProperty]
+    private SolidColorBrush _headerPillBackgroundBrush = new(Color.FromArgb(0x22, 0x10, 0xB9, 0x81));
+
+    [ObservableProperty]
+    private SolidColorBrush _headerPillBorderBrush = new(Color.FromArgb(0x44, 0x10, 0xB9, 0x81));
 
     [ObservableProperty]
     private string _chargingState = "Unknown";
@@ -80,10 +102,44 @@ public partial class BatteryViewModel : ObservableObject
     private async Task RefreshStatusAsync()
     {
         var status = _batteryService.GetCurrentStatus();
-        BatteryPercentage = status.HasBattery ? $"{status.BatteryPercentage}%" : "100%";
+        RawBatteryPercentage = status.HasBattery ? status.BatteryPercentage : 100;
+        BatteryPercentage = $"{RawBatteryPercentage}%";
+        IsPluggedIn = status.IsPluggedIn;
         PowerSource = status.IsPluggedIn ? "AC Power" : "Battery";
         ChargingState = status.HasBattery ? (status.IsPluggedIn ? "Charging" : "Discharging") : "Not Applicable";
         
+        // Calculate inner fill width (0 to 55 px for 3x scaled battery shell)
+        BatteryFillWidth = Math.Max(RawBatteryPercentage > 0 ? 5 : 0, Math.Min(55, 55.0 * RawBatteryPercentage / 100.0));
+
+        if (IsPluggedIn)
+        {
+            HeaderDisplayText = $"{RawBatteryPercentage}% | AC POWER";
+            var accent = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81)); // Emerald green #10B981
+            accent.Freeze();
+            var bg = new SolidColorBrush(Color.FromArgb(0x22, 0x10, 0xB9, 0x81));
+            bg.Freeze();
+            var border = new SolidColorBrush(Color.FromArgb(0x44, 0x10, 0xB9, 0x81));
+            border.Freeze();
+
+            HeaderAccentBrush = accent;
+            HeaderPillBackgroundBrush = bg;
+            HeaderPillBorderBrush = border;
+        }
+        else
+        {
+            HeaderDisplayText = $"{RawBatteryPercentage}% | ON BATTERY";
+            var accent = new SolidColorBrush(Color.FromRgb(0xF5, 0x9E, 0x0B)); // Amber gold #F59E0B
+            accent.Freeze();
+            var bg = new SolidColorBrush(Color.FromArgb(0x22, 0xF5, 0x9E, 0x0B));
+            bg.Freeze();
+            var border = new SolidColorBrush(Color.FromArgb(0x44, 0xF5, 0x9E, 0x0B));
+            border.Freeze();
+
+            HeaderAccentBrush = accent;
+            HeaderPillBackgroundBrush = bg;
+            HeaderPillBorderBrush = border;
+        }
+
         var history = await _batteryService.GetHistoryAsync();
         BatteryTrendPoints.Clear();
         foreach (var point in history)

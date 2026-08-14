@@ -55,7 +55,7 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private bool _startWithWindows;
 
-    public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast });
+    public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast, PowerMode.GameMode });
 
     public ObservableCollection<double> BatteryTrendPoints { get; } = new();
 
@@ -145,6 +145,9 @@ public partial class DashboardViewModel : ObservableObject
         if (Enum.TryParse<PowerMode>(modeStr, out var mode))
         {
             SelectedMode = mode;
+            var settings = _settingsService.GetSettings();
+            settings.LastSelectedPowerMode = mode;
+            _settingsService.SaveSettings(settings);
         }
     }
 
@@ -159,6 +162,9 @@ public partial class DashboardViewModel : ObservableObject
             if (success)
             {
                 await RefreshStatusAsync();
+                var settings = _settingsService.GetSettings();
+                settings.LastSelectedPowerMode = SelectedMode;
+                _settingsService.SaveSettings(settings);
                 _notificationService.Show($"{SelectedMode} applied successfully.");
             }
             else
@@ -196,11 +202,10 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private void OpenHelp()
     {
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        if (System.Windows.Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
         {
-            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower/blob/main/README.md",
-            UseShellExecute = true
-        });
+            mainVm.OpenToolHelp(null);
+        }
     }
 
     [RelayCommand]
