@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support &amp; Documentation - AxePower</title>
+  <meta name="description" content="AxePower Help & Support: official Discord community, troubleshooting guides, FAQ, tool documentation, and GitHub issue tracker.">
+  <meta name="keywords" content="AxePower Support, Help Center, Troubleshooting, Discord Community, FAQ, Windows Controller setup">
+  <meta name="author" content="AxePower">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://axepower.vercel.app/support.html">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+  <link rel="icon" type="image/x-icon" id="appFavicon" href="assets/AxePower_white.ico">
+  <link rel="shortcut icon" id="appShortcutFavicon" href="assets/AxePower_white.ico">
+  <link rel="apple-touch-icon" id="appAppleIcon" href="assets/AxePower_white.ico">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .page-hero {
+      padding: 130px 0 50px;
+      text-align: center;
+      background: var(--body-gradient);
+    }
+    .support-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-top: 36px;
+    }
+    .support-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all var(--transition-base);
+    }
+    .support-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    }
+    .support-card.featured {
+      border-color: #5865F2;
+      box-shadow: 0 0 0 1px #5865F2, 0 12px 30px rgba(88, 101, 242, 0.15);
+    }
+  </style>
+
+  <!-- Prevent Theme Flash -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('axepower-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      const icoPath = theme === 'light' ? 'assets/AxePower_black.ico' : 'assets/AxePower_white.ico';
+      const fav = document.getElementById('appFavicon');
+      const shortFav = document.getElementById('appShortcutFavicon');
+      const appleFav = document.getElementById('appAppleIcon');
+      if (fav) fav.href = icoPath;
+      if (shortFav) shortFav.href = icoPath;
+      if (appleFav) appleFav.href = icoPath;
+    })();
+  </script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header" id="navbar">
+    <div class="container header-container">
+      <a href="index.html" class="brand-logo" aria-label="AxePower Home">
+        <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+        <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+        <span class="brand-name">AxePower</span>
+      </a>
+
+      <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
+        <a href="features.html" class="nav-link">Features</a>
+        <a href="download.html" class="nav-link">Download</a>
+        <a href="support.html" class="nav-link active">Support</a>
+        <a href="get-involved.html" class="nav-link">Get Involved</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="jobs.html" class="nav-link">Jobs</a>
+        <a href="store.html" class="nav-link">Store</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="donate.html" class="btn-donate" aria-label="Support AxePower with a Donation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Donate</span>
+        </a>
+
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light theme" title="Toggle theme">
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="hero-title" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 12px;">
+        AxePower Support &amp; Community
+      </h1>
+      <p class="hero-subtitle" style="max-width: 650px; margin: 0 auto;">
+        Join our Discord, read interactive tool guides, and get help from the developer and community.
+      </p>
+    </div>
+  </section>
+
+  <!-- Support Hub Grid -->
+  <main class="container" style="padding-bottom: 90px;">
+    <div class="support-grid">
+      
+      <!-- Card 1: Official Discord (Featured) -->
+      <div class="support-card featured">
+        <div>
+          <div style="font-size: 36px; margin-bottom: 16px;">💬</div>
+          <span style="font-size: 12px; font-weight: 700; color: #5865F2; background: rgba(88, 101, 242, 0.12); padding: 4px 10px; border-radius: var(--radius-pill);">LIVE COMMUNITY</span>
+          <h2 style="font-size: 20px; font-weight: 700; margin: 10px 0 8px;">Join Official Discord</h2>
+          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+            Chat in real-time with other users, ask questions, get instant troubleshooting assistance, and discuss upcoming features.
+          </p>
+        </div>
+        <a href="https://discord.gg/WfD4wZFJ8d" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background: #5865F2; border: none; width: 100%;">
+          <span>Join Discord Server ➔</span>
+        </a>
+      </div>
+
+      <!-- Card 2: Interactive Tool Guides -->
+      <div class="support-card">
+        <div>
+          <div style="font-size: 36px; margin-bottom: 16px;">📖</div>
+          <span style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); background: rgba(0, 212, 255, 0.12); padding: 4px 10px; border-radius: var(--radius-pill);">DOCUMENTATION</span>
+          <h2 style="font-size: 20px; font-weight: 700; margin: 10px 0 8px;">Interactive Tool Guides</h2>
+          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+            Step-by-step guides for Controller Navigation gamepad mappings, LAN Drop Wi-Fi sharing, MSI Afterburner fan curves, and Debloat utilities.
+          </p>
+        </div>
+        <a href="help.html" class="btn btn-secondary" style="width: 100%;">
+          <span>Open Tool Guides ➔</span>
+        </a>
+      </div>
+
+      <!-- Card 3: GitHub Issues -->
+      <div class="support-card">
+        <div>
+          <div style="font-size: 36px; margin-bottom: 16px;">🐛</div>
+          <span style="font-size: 12px; font-weight: 700; color: #ef4444; background: rgba(239, 68, 68, 0.12); padding: 4px 10px; border-radius: var(--radius-pill);">BUG TRACKER</span>
+          <h2 style="font-size: 20px; font-weight: 700; margin: 10px 0 8px;">Report an Issue</h2>
+          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+            Encountered an error or unexpected behavior? Submit an issue on our GitHub repository with logs for rapid review.
+          </p>
+        </div>
+        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="width: 100%;">
+          <span>File GitHub Issue ↗</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-brand-col">
+        <a href="index.html" class="brand-logo footer-logo">
+          <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+          <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+          <span class="brand-name">AxePower</span>
+        </a>
+        <p class="footer-tagline">Your PC. Your Control Center.</p>
+      </div>
+
+      <div class="footer-links-col">
+        <ul class="footer-links">
+          <li><a href="features.html" class="footer-link">Features</a></li>
+          <li><a href="download.html" class="footer-link">Download</a></li>
+          <li><a href="support.html" class="footer-link">Support &amp; Help</a></li>
+          <li><a href="get-involved.html" class="footer-link">Get Involved</a></li>
+          <li><a href="about.html" class="footer-link">About</a></li>
+          <li><a href="jobs.html" class="footer-link">Jobs</a></li>
+          <li><a href="store.html" class="footer-link">Store</a></li>
+          <li><a href="donate.html" class="footer-link">Donate</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p class="copyright-text">&copy; 2026 AxePower. Built for Windows enthusiasts.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

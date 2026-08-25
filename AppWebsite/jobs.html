@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobs &amp; Open Roles - AxePower</title>
+  <meta name="description" content="Explore open roles and contributor opportunities at AxePower. Work on cutting-edge Windows .NET 8 WPF engineering and Android systems.">
+  <meta name="keywords" content="AxePower Jobs, Open source careers, .NET 8 WPF developer, Android Kotlin roles">
+  <meta name="author" content="AxePower">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://axepower.vercel.app/jobs.html">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+  <link rel="icon" type="image/x-icon" id="appFavicon" href="assets/AxePower_white.ico">
+  <link rel="shortcut icon" id="appShortcutFavicon" href="assets/AxePower_white.ico">
+  <link rel="apple-touch-icon" id="appAppleIcon" href="assets/AxePower_white.ico">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .page-hero {
+      padding: 130px 0 50px;
+      text-align: center;
+      background: var(--body-gradient);
+    }
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-top: 36px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .job-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      transition: all var(--transition-base);
+    }
+    @media (max-width: 700px) {
+      .job-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    .job-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    .job-meta-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--accent-cyan);
+      margin-right: 8px;
+    }
+  </style>
+
+  <!-- Prevent Theme Flash -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('axepower-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      const icoPath = theme === 'light' ? 'assets/AxePower_black.ico' : 'assets/AxePower_white.ico';
+      const fav = document.getElementById('appFavicon');
+      const shortFav = document.getElementById('appShortcutFavicon');
+      const appleFav = document.getElementById('appAppleIcon');
+      if (fav) fav.href = icoPath;
+      if (shortFav) shortFav.href = icoPath;
+      if (appleFav) appleFav.href = icoPath;
+    })();
+  </script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header" id="navbar">
+    <div class="container header-container">
+      <a href="index.html" class="brand-logo" aria-label="AxePower Home">
+        <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+        <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+        <span class="brand-name">AxePower</span>
+      </a>
+
+      <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
+        <a href="features.html" class="nav-link">Features</a>
+        <a href="download.html" class="nav-link">Download</a>
+        <a href="support.html" class="nav-link">Support</a>
+        <a href="get-involved.html" class="nav-link">Get Involved</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="jobs.html" class="nav-link active">Jobs</a>
+        <a href="store.html" class="nav-link">Store</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="donate.html" class="btn-donate" aria-label="Support AxePower with a Donation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Donate</span>
+        </a>
+
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light theme" title="Toggle theme">
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="hero-title" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 12px;">
+        Join the AxePower Project
+      </h1>
+      <p class="hero-subtitle" style="max-width: 680px; margin: 0 auto;">
+        We are looking for passionate systems engineers, designers, and technical writers who want to build the future of Windows PC performance tuning.
+      </p>
+    </div>
+  </section>
+
+  <!-- Job Listings -->
+  <main class="container" style="padding-bottom: 90px;">
+    <div class="jobs-grid">
+
+      <!-- Job 1 -->
+      <div class="job-card">
+        <div>
+          <div style="margin-bottom: 8px;">
+            <span class="job-meta-tag">ENGINEERING</span>
+            <span class="job-meta-tag" style="background: rgba(16,185,129,0.12); color: var(--mode-eco);">REMOTE / OPEN SOURCE</span>
+          </div>
+          <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">Senior .NET 8 / WPF Systems Engineer</h2>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">
+            Architect high-efficiency hardware polling engines, Win32/WMI power integrations, and Fluent UI controls with near-zero overhead.
+          </p>
+        </div>
+        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="white-space: nowrap;">
+          <span>Apply via GitHub ↗</span>
+        </a>
+      </div>
+
+      <!-- Job 2 -->
+      <div class="job-card">
+        <div>
+          <div style="margin-bottom: 8px;">
+            <span class="job-meta-tag">MOBILE</span>
+            <span class="job-meta-tag" style="background: rgba(16,185,129,0.12); color: var(--mode-eco);">REMOTE / OPEN SOURCE</span>
+          </div>
+          <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">Android Kotlin Companion Developer</h2>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">
+            Build ultra-low latency Wi-Fi WebSocket telemetry streams, Jetpack Compose interfaces, and ADB mirroring integrations.
+          </p>
+        </div>
+        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="white-space: nowrap;">
+          <span>Apply via GitHub ↗</span>
+        </a>
+      </div>
+
+      <!-- Job 3 -->
+      <div class="job-card">
+        <div>
+          <div style="margin-bottom: 8px;">
+            <span class="job-meta-tag">DESIGN</span>
+            <span class="job-meta-tag" style="background: rgba(16,185,129,0.12); color: var(--mode-eco);">REMOTE / OPEN SOURCE</span>
+          </div>
+          <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">UI / UX &amp; Design Systems Specialist</h2>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">
+            Craft sleek Fluent design components, dark/light themes, dynamic telemetry gauges, and responsive web layouts.
+          </p>
+        </div>
+        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="white-space: nowrap;">
+          <span>Apply via GitHub ↗</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-brand-col">
+        <a href="index.html" class="brand-logo footer-logo">
+          <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+          <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+          <span class="brand-name">AxePower</span>
+        </a>
+        <p class="footer-tagline">Your PC. Your Control Center.</p>
+      </div>
+
+      <div class="footer-links-col">
+        <ul class="footer-links">
+          <li><a href="features.html" class="footer-link">Features</a></li>
+          <li><a href="download.html" class="footer-link">Download</a></li>
+          <li><a href="support.html" class="footer-link">Support &amp; Help</a></li>
+          <li><a href="get-involved.html" class="footer-link">Get Involved</a></li>
+          <li><a href="about.html" class="footer-link">About</a></li>
+          <li><a href="jobs.html" class="footer-link">Jobs</a></li>
+          <li><a href="store.html" class="footer-link">Store</a></li>
+          <li><a href="donate.html" class="footer-link">Donate</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p class="copyright-text">&copy; 2026 AxePower. Built for Windows enthusiasts.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

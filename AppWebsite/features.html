@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features - AxePower Intelligent PC Control Center</title>
+  <meta name="description" content="Explore AxePower features: Eco/Smart/Beast power engines, Game Mode & multi-drive booster, Android Companion, LAN Drop, MSI Afterburner, Uninstaller Pro, and Smart Battery wear protection.">
+  <meta name="keywords" content="AxePower Features, PC Power Plans, Game Booster, Android Companion, Gopher360 Controller, Uninstaller Pro, Win11Debloat">
+  <meta name="author" content="AxePower">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://axepower.vercel.app/features.html">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://axepower.vercel.app/features.html">
+  <meta property="og:title" content="Features - AxePower Intelligent PC Control Center">
+  <meta property="og:description" content="Intelligent Power Modes, Game Booster, Android Companion, and built-in Windows utilities in one unified control center.">
+  <meta property="og:image" content="assets/website_home_image.png">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+  <link rel="icon" type="image/x-icon" id="appFavicon" href="assets/AxePower_white.ico">
+  <link rel="shortcut icon" id="appShortcutFavicon" href="assets/AxePower_white.ico">
+  <link rel="apple-touch-icon" id="appAppleIcon" href="assets/AxePower_white.ico">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .page-hero {
+      padding: 130px 0 60px;
+      text-align: center;
+      background: var(--body-gradient);
+    }
+    .page-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      color: var(--accent-cyan);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .feature-grid-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+    .feature-card-deep {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      transition: all var(--transition-base);
+      display: flex;
+      flex-direction: column;
+    }
+    .feature-card-deep:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+    .feature-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .feature-points-list {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .feature-point-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .feature-point-item strong {
+      color: var(--text-primary);
+    }
+    .point-bullet {
+      color: var(--accent-cyan);
+      font-weight: bold;
+      font-size: 14px;
+    }
+  </style>
+
+  <!-- Prevent Theme Flash -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('axepower-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      const icoPath = theme === 'light' ? 'assets/AxePower_black.ico' : 'assets/AxePower_white.ico';
+      const fav = document.getElementById('appFavicon');
+      const shortFav = document.getElementById('appShortcutFavicon');
+      const appleFav = document.getElementById('appAppleIcon');
+      if (fav) fav.href = icoPath;
+      if (shortFav) shortFav.href = icoPath;
+      if (appleFav) appleFav.href = icoPath;
+    })();
+  </script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header" id="navbar">
+    <div class="container header-container">
+      <a href="index.html" class="brand-logo" aria-label="AxePower Home">
+        <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+        <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+        <span class="brand-name">AxePower</span>
+      </a>
+
+      <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
+        <a href="features.html" class="nav-link active">Features</a>
+        <a href="download.html" class="nav-link">Download</a>
+        <a href="support.html" class="nav-link">Support</a>
+        <a href="get-involved.html" class="nav-link">Get Involved</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="jobs.html" class="nav-link">Jobs</a>
+        <a href="store.html" class="nav-link">Store</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="donate.html" class="btn-donate" aria-label="Support AxePower with a Donation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Donate</span>
+        </a>
+
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light theme" title="Toggle theme">
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero-badge">
+        <span>⚡ Built for Extreme Windows Performance</span>
+      </div>
+      <h1 class="hero-title" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 12px;">
+        Everything you need to master your PC.
+      </h1>
+      <p class="hero-subtitle" style="max-width: 720px; margin: 0 auto;">
+        From dynamic hardware power profiles and game booster scanners to wireless phone companion mirroring and deep uninstallation — AxePower unifies your essential tools.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <main class="container" style="padding-bottom: 90px;">
+    <div class="feature-grid-showcase">
+
+      <!-- 1. Intelligent Power Modes -->
+      <div class="feature-card-deep">
+        <div class="feature-icon-box" style="background: rgba(0, 212, 255, 0.12); color: var(--mode-smart);">⚡</div>
+        <h3 style="font-size: 19px; font-weight: 700; margin-bottom: 8px;">Intelligent Power Engine</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+          Automatically toggles system power plans and display refresh rates (60Hz vs 144/165/240Hz) based on AC power vs Battery state.
+        </p>
+        <ul class="feature-points-list">
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span><strong>Eco Mode:</strong> Capped power states to extend battery runtime on the go.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span><strong>Smart Mode:</strong> Dynamic scaling for everyday work and video streaming.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span><strong>Beast Mode:</strong> Max CPU/GPU clocks and sustained thermal power.</span></li>
+        </ul>
+      </div>
+
+      <!-- 2. Game Mode & Booster -->
+      <div class="feature-card-deep">
+        <div class="feature-icon-box" style="background: rgba(139, 92, 246, 0.12); color: var(--mode-game);">🎮</div>
+        <h3 style="font-size: 19px; font-weight: 700; margin-bottom: 8px;">Game Mode &amp; Multi-Drive Scanner</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+          Scans all fixed drives (C:, D:, E:, etc.) to detect running games instantly, lock display refresh rates, and suspend background bloat.
+        </p>
+        <ul class="feature-points-list">
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Automatic foreground game process detection.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Non-essential Windows services suspension during gaming.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Controller Navigation with gamepad-as-mouse emulation.</span></li>
+        </ul>
+      </div>
+
+      <!-- 3. Phone Control Suite -->
+      <div class="feature-card-deep">
+        <div class="feature-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--mode-eco);">📱</div>
+        <h3 style="font-size: 19px; font-weight: 700; margin-bottom: 8px;">Phone Control &amp; LAN Drop</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+          All-in-one companion suite for wireless local file sharing and low-latency Android screen mirroring.
+        </p>
+        <ul class="feature-points-list">
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span><strong>LAN Drop:</strong> QR code scan file transfer at full Wi-Fi gigabit speeds.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span><strong>scrcpy Mirroring:</strong> Low-latency phone display &amp; mouse/keyboard control.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Remote PC volume and lock screen controls.</span></li>
+        </ul>
+      </div>
+
+      <!-- 4. Software Hub & Ninite -->
+      <div class="feature-card-deep">
+        <div class="feature-icon-box" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">🛍️</div>
+        <h3 style="font-size: 19px; font-weight: 700; margin-bottom: 8px;">Software Hub &amp; Ninite Integration</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+          One-click catalog for game launchers, tuning software, video editors, runtimes, and bundled Ninite multi-installer.
+        </p>
+        <ul class="feature-points-list">
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span><strong>Ninite:</strong> Bundled 1-click Install + Custom web pack builder.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Steam, Epic, Battle.net, OBS Studio, Discord, VLC, DaVinci Resolve.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Visual C++ AIO and DirectX End-User Runtimes.</span></li>
+        </ul>
+      </div>
+
+      <!-- 5. Uninstaller Pro -->
+      <div class="feature-card-deep">
+        <div class="feature-icon-box" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">🗑️</div>
+        <h3 style="font-size: 19px; font-weight: 700; margin-bottom: 8px;">Uninstaller Pro &amp; Leftover Cleaner</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+          Deep software removal discovering Win32, MSI, Microsoft Store (UWP/AppX), and Winget applications with registry leftover cleanup.
+        </p>
+        <ul class="feature-points-list">
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Batch select multiple apps for sequential uninstallation.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Deep registry and filesystem remnant sweep.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Automatic registry restore backup before deletion.</span></li>
+        </ul>
+      </div>
+
+      <!-- 6. Smart Battery & Hardware Vitals -->
+      <div class="feature-card-deep">
+        <div class="feature-icon-box" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6;">🔋</div>
+        <h3 style="font-size: 19px; font-weight: 700; margin-bottom: 8px;">Smart Battery &amp; Conservation</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+          Real-time wear analytics, discharge rates, estimated runtime remaining, and 80% charging threshold protection.
+        </p>
+        <ul class="feature-points-list">
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Battery Conservation Mode (caps charge at 75-80%).</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>Real-time battery wear cycle and health monitoring.</span></li>
+          <li class="feature-point-item"><span class="point-bullet">✓</span><span>BIOS and firmware version checks in Update PC.</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-brand-col">
+        <a href="index.html" class="brand-logo footer-logo">
+          <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+          <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+          <span class="brand-name">AxePower</span>
+        </a>
+        <p class="footer-tagline">Your PC. Your Control Center.</p>
+      </div>
+
+      <div class="footer-links-col">
+        <ul class="footer-links">
+          <li><a href="features.html" class="footer-link">Features</a></li>
+          <li><a href="download.html" class="footer-link">Download</a></li>
+          <li><a href="support.html" class="footer-link">Support &amp; Help</a></li>
+          <li><a href="get-involved.html" class="footer-link">Get Involved</a></li>
+          <li><a href="about.html" class="footer-link">About</a></li>
+          <li><a href="jobs.html" class="footer-link">Jobs</a></li>
+          <li><a href="store.html" class="footer-link">Store</a></li>
+          <li><a href="donate.html" class="footer-link">Donate</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p class="copyright-text">&copy; 2026 AxePower. Built for Windows enthusiasts.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
