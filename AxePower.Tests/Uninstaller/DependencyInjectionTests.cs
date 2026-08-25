@@ -32,7 +32,18 @@ public class DependencyInjectionTests
         services.AddSingleton<MsiAfterburnerService>();
         services.AddSingleton<DebloatService>();
         services.AddSingleton<AndroidControlService>();
+        services.AddSingleton<ControllerNavigationService>();
         services.AddSingleton<UpdateService>();
+        services.AddSingleton<ITweakService, TweakService>();
+        services.AddSingleton<ICacheCleanerService, CacheCleanerService>();
+        services.AddSingleton<IDnsOptimizerService, DnsOptimizerService>();
+        services.AddSingleton<ISystemDoctorService, SystemDoctorService>();
+        services.AddSingleton<IWindowsUpdateShieldService, WindowsUpdateShieldService>();
+        services.AddSingleton<IWinGetHubService, WinGetHubService>();
+        services.AddSingleton<IServiceThrottlerService, ServiceThrottlerService>();
+        services.AddSingleton<IMemoryOptimizerService, MemoryOptimizerService>();
+        services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
+        services.AddSingleton<LanDropService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
@@ -60,6 +71,11 @@ public class DependencyInjectionTests
         services.AddTransient<LogsViewModel>();
         services.AddTransient<AboutViewModel>();
         services.AddTransient<UninstallerViewModel>();
+        services.AddTransient<SystemOptimizerViewModel>();
+        services.AddTransient<SystemDoctorViewModel>();
+        services.AddTransient<SoftwareHubViewModel>();
+        services.AddTransient<PhoneHubViewModel>();
+        services.AddTransient<LanDropViewModel>();
         services.AddTransient<MainViewModel>();
 
         var provider = services.BuildServiceProvider();
@@ -67,10 +83,30 @@ public class DependencyInjectionTests
         var mainVm = provider.GetRequiredService<MainViewModel>();
         Assert.NotNull(mainVm);
         Assert.NotNull(mainVm.UninstallerVm);
+        Assert.NotNull(mainVm.OptimizerVm);
+        Assert.NotNull(mainVm.DoctorVm);
+        Assert.NotNull(mainVm.SoftwareHubVm);
+        Assert.NotNull(mainVm.PhoneHubVm);
 
         // Test navigation
+        mainVm.NavigateCommand.Execute("PhoneControl");
+        Assert.Equal(mainVm.PhoneHubVm, mainVm.CurrentView);
+        mainVm.NavigateCommand.Execute("LanDrop");
+        Assert.Equal(mainVm.PhoneHubVm, mainVm.CurrentView);
         mainVm.NavigateCommand.Execute("Uninstaller");
         Assert.Equal(mainVm.UninstallerVm, mainVm.CurrentView);
+
+        mainVm.NavigateCommand.Execute("Optimizer");
+        Assert.Equal(mainVm.OptimizerVm, mainVm.CurrentView);
+
+        mainVm.NavigateCommand.Execute("Doctor");
+        Assert.Equal(mainVm.DoctorVm, mainVm.CurrentView);
+
+        mainVm.NavigateCommand.Execute("SoftwareHub");
+        Assert.Equal(mainVm.SoftwareHubVm, mainVm.CurrentView);
+
+        mainVm.NavigateCommand.Execute("UpdatePc");
+        Assert.Equal(mainVm.SoftwareHubVm, mainVm.CurrentView);
 
         mainVm.NavigateCommand.Execute("Dashboard");
         Assert.Equal(mainVm.DashboardVm, mainVm.CurrentView);

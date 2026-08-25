@@ -40,6 +40,16 @@ public partial class MainViewModel : ObservableObject
     public LogsViewModel LogsVm { get; }
     public AboutViewModel AboutVm { get; }
     public UninstallerViewModel UninstallerVm { get; }
+    public SystemOptimizerViewModel OptimizerVm { get; }
+    public SystemDoctorViewModel DoctorVm { get; }
+    public SoftwareHubViewModel SoftwareHubVm { get; }
+    public PhoneHubViewModel PhoneHubVm { get; }
+
+    [ObservableProperty]
+    private bool _isMaintenanceExpanded;
+
+    [ObservableProperty]
+    private bool _isUtilitiesExpanded;
 
     public Style? DashboardActiveStyle => GetStyleForView(DashboardVm);
     public Style? AutoSwitchActiveStyle => GetStyleForView(AutoSwitchVm);
@@ -48,7 +58,16 @@ public partial class MainViewModel : ObservableObject
     public Style? LogsActiveStyle => GetStyleForView(LogsVm);
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
     public Style? AboutActiveStyle => GetStyleForView(AboutVm);
-    public Style? UninstallerActiveStyle => GetStyleForView(UninstallerVm);
+    public Style? UninstallerActiveStyle => GetSubItemStyleForView(UninstallerVm);
+    public Style? OptimizerActiveStyle => GetSubItemStyleForView(OptimizerVm);
+    public Style? DoctorActiveStyle => GetSubItemStyleForView(DoctorVm);
+    public Style? SoftwareHubActiveStyle => GetStyleForView(SoftwareHubVm);
+    public Style? UpdatePcActiveStyle => GetSubItemStyleForView(SoftwareHubVm);
+    public Style? PhoneHubActiveStyle => GetStyleForView(PhoneHubVm);
+    public Style? LanDropActiveStyle => GetStyleForView(PhoneHubVm);
+
+    public string MaintenanceChevronGlyph => IsMaintenanceExpanded ? "\uE70D" : "\uE76C";
+    public string UtilitiesChevronGlyph => IsUtilitiesExpanded ? "\uE70D" : "\uE76C";
 
     public MainViewModel(
         DashboardViewModel dashboardVm, 
@@ -59,6 +78,10 @@ public partial class MainViewModel : ObservableObject
         LogsViewModel logsVm,
         AboutViewModel aboutVm,
         UninstallerViewModel uninstallerVm,
+        SystemOptimizerViewModel optimizerVm,
+        SystemDoctorViewModel doctorVm,
+        SoftwareHubViewModel softwareHubVm,
+        PhoneHubViewModel phoneHubVm,
         NotificationService notificationService,
         DriverUpdateService driverUpdateService,
         MsiAfterburnerService msiAfterburnerService,
@@ -74,6 +97,10 @@ public partial class MainViewModel : ObservableObject
         LogsVm = logsVm;
         AboutVm = aboutVm;
         UninstallerVm = uninstallerVm;
+        OptimizerVm = optimizerVm;
+        DoctorVm = doctorVm;
+        SoftwareHubVm = softwareHubVm;
+        PhoneHubVm = phoneHubVm;
         _notificationService = notificationService;
         _driverUpdateService = driverUpdateService;
         _msiAfterburnerService = msiAfterburnerService;
@@ -87,13 +114,19 @@ public partial class MainViewModel : ObservableObject
 
         _notificationService.OnShowNotification += (s, msg) => ShowNotification(msg);
 
-        // Silent background update check after startup
+        // Silent background update check after startup and recurring hourly
         _ = CheckUpdateInBackgroundAsync();
+
+        var updateTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromHours(1)
+        };
+        updateTimer.Tick += async (s, e) => await CheckUpdateInBackgroundAsync();
+        updateTimer.Start();
     }
 
     private async System.Threading.Tasks.Task CheckUpdateInBackgroundAsync()
     {
-        await System.Threading.Tasks.Task.Delay(3500);
         try
         {
             var result = await _updateService.CheckForUpdatesAsync();
@@ -122,7 +155,36 @@ public partial class MainViewModel : ObservableObject
         return Application.Current.TryFindResource(styleName) as Style;
     }
 
+    private Style? GetSubItemStyleForView(object viewVm)
+    {
+        if (Application.Current == null) return null;
+        var styleName = CurrentView == viewVm ? "SidebarSubItemActiveButtonStyle" : "SidebarSubItemButtonStyle";
+        return Application.Current.TryFindResource(styleName) as Style;
+    }
+
     public bool ShowBatteryPill => CurrentView != AboutVm;
+
+    partial void OnIsMaintenanceExpandedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(MaintenanceChevronGlyph));
+    }
+
+    partial void OnIsUtilitiesExpandedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(UtilitiesChevronGlyph));
+    }
+
+    [RelayCommand]
+    private void ToggleMaintenanceGroup()
+    {
+        IsMaintenanceExpanded = !IsMaintenanceExpanded;
+    }
+
+    [RelayCommand]
+    private void ToggleUtilitiesGroup()
+    {
+        IsUtilitiesExpanded = !IsUtilitiesExpanded;
+    }
 
     partial void OnCurrentViewChanged(object? value)
     {
@@ -134,12 +196,27 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(SettingsActiveStyle));
         OnPropertyChanged(nameof(AboutActiveStyle));
         OnPropertyChanged(nameof(UninstallerActiveStyle));
+        OnPropertyChanged(nameof(OptimizerActiveStyle));
+        OnPropertyChanged(nameof(DoctorActiveStyle));
+        OnPropertyChanged(nameof(SoftwareHubActiveStyle));
+        OnPropertyChanged(nameof(UpdatePcActiveStyle));
+        OnPropertyChanged(nameof(PhoneHubActiveStyle));
+        OnPropertyChanged(nameof(LanDropActiveStyle));
         OnPropertyChanged(nameof(ShowBatteryPill));
     }
 
     [RelayCommand]
     private void Navigate(string viewName)
     {
+        if (viewName is "Optimizer" or "Doctor")
+        {
+            IsMaintenanceExpanded = true;
+        }
+        else if (viewName is "Uninstaller" or "UpdatePc" or "SoftwareHub")
+        {
+            IsUtilitiesExpanded = true;
+        }
+
         CurrentView = viewName switch
         {
             "Dashboard"   => DashboardVm,
@@ -150,8 +227,22 @@ public partial class MainViewModel : ObservableObject
             "Logs"        => LogsVm,
             "About"       => AboutVm,
             "Uninstaller" => UninstallerVm,
+            "Optimizer"   => OptimizerVm,
+            "Doctor"      => DoctorVm,
+            "SoftwareHub" => SoftwareHubVm,
+            "UpdatePc"    => SoftwareHubVm,
+            "PhoneControl"=> PhoneHubVm,
+            "PhoneHub"    => PhoneHubVm,
+            "LanDrop"     => SwitchPhoneHubTab("LanDrop"),
+            "AndroidControl" => SwitchPhoneHubTab("ScreenMirror"),
             _             => DashboardVm
         };
+    }
+
+    private object SwitchPhoneHubTab(string tab)
+    {
+        PhoneHubVm.SetTab(tab);
+        return PhoneHubVm;
     }
 
     [RelayCommand]
@@ -243,45 +334,6 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task OpenAndroidControl()
-    {
-        _notificationService.Show("Opening Android Control (scrcpy)...");
-        var result = await _androidControlService.LaunchOrInstallAsync();
-        switch (result)
-        {
-            case AndroidControlLaunchResult.Launched:
-                _notificationService.Show("Android Control (scrcpy) launched successfully.");
-                break;
-            case AndroidControlLaunchResult.AlreadyRunning:
-                _notificationService.Show("Android Control is already running. Showing window.");
-                break;
-            case AndroidControlLaunchResult.DownloadedAndLaunched:
-                _notificationService.Show("Latest scrcpy downloaded & launched successfully.");
-                break;
-            case AndroidControlLaunchResult.Failed:
-                _notificationService.Show("Could not launch Android Control. Ensure your Android device is connected with USB debugging enabled.");
-                break;
-        }
-    }
-
-    [RelayCommand]
-    private void OpenAndroidControlCredit()
-    {
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = "https://github.com/Genymobile/scrcpy.git",
-                UseShellExecute = true
-            });
-        }
-        catch (Exception ex)
-        {
-            _notificationService.Show("Failed to open scrcpy repository: " + ex.Message);
-        }
-    }
-
-    [RelayCommand]
     public void OpenToolHelp(string? toolId = null)
     {
         var found = !string.IsNullOrWhiteSpace(toolId)
@@ -340,8 +392,10 @@ public partial class MainViewModel : ObservableObject
 
         switch (SelectedToolHelp.Id)
         {
+            case "PhoneHub":
             case "AndroidControl":
-                await OpenAndroidControl();
+            case "LanDrop":
+                Navigate("PhoneHub");
                 break;
             case "MsiAfterburner":
                 await OpenMsiAfterburner();
@@ -362,32 +416,29 @@ public partial class MainViewModel : ObservableObject
     {
         AllToolGuides.Clear();
 
-        // 1. Android Control
+        // 1. Phone Control
         AllToolGuides.Add(new AxePower.App.Models.ToolInstructionItem
         {
-            Id = "AndroidControl",
-            Title = "Android Control",
+            Id = "PhoneControl",
+            Title = "Phone Control",
             IconGlyph = "\uE8EA",
-            Subtitle = "Instant Android Screen Mirroring & Low-Latency Control",
-            Credit = "Powered by Genymobile (scrcpy)",
+            Subtitle = "Wi-Fi LAN Drop, Screen Mirroring & Remote Companion",
+            Credit = "Powered by Genymobile & LAN-DropSpot",
             CreditUrl = "https://github.com/Genymobile/scrcpy.git",
-            Overview = "Displays and controls your Android devices (phones, tablets, Android TV) directly from this PC with ultra-low latency, full keyboard/mouse passthrough, and zero apps required on the phone.",
+            Overview = "An all-in-one mobile companion suite: transfer files and clipboard text instantly over local Wi-Fi without apps, mirror and control your Android screen with ultra-low latency, and control PC volume and lock state remotely.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "On your Android phone, open Settings > About Phone and tap 'Build Number' 7 times to enable Developer Options.",
-                "Go to Settings > Developer Options and turn ON 'USB Debugging'.",
-                "Connect your phone to your PC via USB cable (or enable Wireless ADB).",
-                "Click 'Android Control' (or 'Launch Tool' below). AxePower will automatically fetch the latest scrcpy binary and open the device mirror window.",
-                "Accept the 'Allow USB Debugging' prompt on your Android screen if prompted."
+                "LAN Drop: Click 'Start Server' and scan the QR code with your phone camera to share files & clipboard.",
+                "Android Mirroring: Enable USB Debugging on your phone and connect via USB or Wireless ADB to mirror your screen.",
+                "Remote Controls: Use the mobile web portal to control PC media, audio volume, and lock the computer remotely."
             },
             Tips = new System.Collections.Generic.List<string>
             {
-                "Shortcut: Press Ctrl + F to toggle fullscreen mode.",
-                "Shortcut: Press Ctrl + H to press the Home button, or Ctrl + B for Back.",
-                "Drag & Drop APK files directly onto the mirror window to install them instantly.",
-                "Drag & Drop files or photos onto the mirror window to transfer them to your phone."
+                "Shortcut: Press Ctrl + F on the mirror window to toggle fullscreen.",
+                "Drag & Drop APK files directly onto the mirror window or Phone Control to install them.",
+                "LAN Drop transfers occur at full local Wi-Fi bandwidth without using mobile data."
             },
-            LaunchButtonText = "Launch Android Control"
+            LaunchButtonText = "Open Phone Control"
         });
 
         // 2. MSI Afterburner
@@ -487,6 +538,34 @@ public partial class MainViewModel : ObservableObject
                 "You can restore default Windows apps (like Calculator or Microsoft Store) anytime using the utility's Restore tab."
             },
             LaunchButtonText = "Launch Debloat Utility"
+        });
+
+        // 6. Controller Navigation (Gopher360)
+        AllToolGuides.Add(new AxePower.App.Models.ToolInstructionItem
+        {
+            Id = "Gopher360",
+            Title = "Controller Navigation",
+            IconGlyph = "\uE7FC",
+            Subtitle = "Use Gamepad / Xbox Controller as Windows Mouse & Keyboard",
+            Credit = "Powered by wishIwasabear (Gopher360)",
+            CreditUrl = "https://github.com/wishIwasabear/Gopher360.git",
+            Overview = "Turns your Xbox 360, Xbox One, or standard XInput gamepad controller into a mouse and keyboard on Windows, allowing effortless couch and handheld control.",
+            Steps = new System.Collections.Generic.List<string>
+            {
+                "Connect your Xbox / XInput controller via Bluetooth or USB cable.",
+                "Turn ON the 'Controller Navigation' toggle switch on the Dashboard.",
+                "Left Thumbstick: Move the mouse cursor across your monitors.",
+                "A Button: Left Mouse Click. | X Button: Right Mouse Click.",
+                "Right Thumbstick: Scroll Up / Down and Left / Right.",
+                "Y Button: Opens the Windows On-Screen Keyboard for text input.",
+                "D-Pad: Arrow keys for directional navigation."
+            },
+            Tips = new System.Collections.Generic.List<string>
+            {
+                "Press 'Back + Start' buttons together on your controller anytime to toggle navigation ON or OFF.",
+                "Works seamlessly across Windows desktop, browsers, media players, and games."
+            },
+            LaunchButtonText = "Toggle Controller Navigation"
         });
     }
 

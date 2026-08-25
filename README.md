@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.3.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.4.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -18,20 +18,25 @@
 ## 🚀 Key Features
 
 - ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, **Beast**, and **Game** modes tailored for battery savings or extreme performance.
-- ⚙️ **Smart Performance Defaults**: Out-of-the-box defaults set to **Smart Mode** for both AC and Battery power, with custom dropdown configuration in Settings.
-- 🔄 **Remember Last Selected Mode**: Optional toggle to persist and automatically restore your last manually selected power mode across application restarts.
-- 📱 **Android Control (scrcpy)**: Ultra-low latency screen mirroring and full keyboard/mouse control for Android devices via USB or Wi-Fi *(Credit to Genymobile)*.
+- ⚙️ **Smart Performance Defaults**: Out-of-the-box defaults set to **Smart Mode** for AC power and **Eco Mode** on battery, with custom dropdown configuration in Settings.
+- 🎮 **Controller Navigation (Gopher360)**: Full gamepad-to-mouse emulation with custom key shortcuts in Game Mode.
+- 📱 **Phone Control (All-in-One Mobile Suite)**:
+  - 🖥️ **SpaceDesk Virtual Display**: 1-click green launcher & auto-installer to turn your mobile phone or tablet into a wireless secondary display *(Credit to datronicsoft)*.
+  - 📂 **LAN Drop (Wi-Fi Quick Share)**: Instant offline file drop and clipboard note sync between PC and phone via dynamic QR code without requiring apps on the phone *(Credit to yadavnikhil03)*.
+  - 📱 **Android Screen Mirroring (scrcpy)**: Ultra-low latency device mirroring, stay-awake / screen-off power toggles, resolution & FPS presets, and 1-click APK sideloading *(Credit to Genymobile)*.
+- 🛍️ **Software Hub & Gaming Launchers**:
+  - **1-Click Game Launchers & Tools**: Instant access to Steam, Epic Games, Rockstar Games Launcher, Ubisoft Connect, Battle.net, GOG Galaxy, EA App, DaVinci Resolve, MSI Afterburner, CPU-Z, GPU-Z, HWiNFO, CrystalDiskInfo, OBS Studio, Discord, VLC, 7-Zip, Notepad++, and VC++ runtimes.
+  - **Clean 2-Button Flow**: Clear `Open` (launches app/protocol) and `Uninstall` (when installed) or `Install` (when not installed).
+  - **3-Stage Resilient Installation**: Silent WinGet &rarr; Interactive Setup Wizard &rarr; Verified Official Download Website Portal Fallback so installation never hangs or gets stuck.
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
-- 🎮 **Game Booster & Scanner**: Automatically detects foreground gaming sessions, forces Beast Mode, and suspends heavy background processes to eliminate frame drops.
+- 🎮 **Game Booster & Multi-Drive Scanner**: Automatically detects foreground games across all fixed drives (C:, D:, E:, etc.), forces Beast Mode, and suspends heavy background processes.
 - 🔋 **Battery Diagnostics & Health**: Real-time 3x battery indicator, discharge tracking, estimated time remaining, charge cycle health, and trend insights.
 - 🗑️ **Uninstaller Pro**: Deep application discovery, batch uninstallation, and verified leftover registry/filesystem cleaner with safety backups.
-- 🔄 **Update PC Utility**: Elevated one-click driver and Windows update management via Windows Package Manager / USOClient.
+- 🔄 **Update PC Utility**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and Windows Update Orchestration.
 - 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
 - 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
-- 📖 **Interactive Tool Help & Guides**: Comprehensive in-app modal guides for all sidebar tools and `? Help` buttons with step-by-step instructions, shortcuts, and direct Readme links.
 - 🚀 **GitHub Releases Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads with live progress bars, and seamlessly updates the app.
-- 🌐 **Modern Product Website**: Clean, dark, responsive single-page product website with dynamic zero-config GitHub release installer auto-discovery.
-- 🗔 **Fluent Dark UI & System Tray**: Modern Windows 11 Fluent Dark interface with custom rounded tray context menu and minimize-to-tray capability.
+- 🌐 **Zero Hardcoding & Universal Windows 11 Compatibility**: Fully dynamic path resolution across all Windows 10/11 machines, custom drive letters, user profiles, and system locales.
 - 🔒 **100% Local & Privacy-First**: Zero telemetry, zero analytics tracking, and zero remote data collection.
 
 ---
@@ -42,17 +47,24 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 
 | Section | Icon | Purpose |
 | :--- | :---: | :--- |
+| **CONTROL** | | |
 | **Dashboard** | 📊 | Real-time system monitoring, power mode switching (Eco, Smart, Beast, Game Mode), and live battery metrics. |
 | **Auto Switch** | 🔄 | Configure automated rules for AC (Plugged In) and DC (Battery) states and dynamic refresh rate switching. |
-| **Game Mode** | 🎮 | Manage background app suspension and automatic game process detection with custom cyber lion badge. |
+| **Game Mode** | 🎮 | Manage background app suspension, game detection, and Controller Navigation (Gopher360). |
 | **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends with custom icon cards. |
-| **Settings** | ⚙️ | Application preferences, performance defaults, startup toggles, and notification settings. |
-| **📱 Android Control** | 📱 | Direct Android device mirroring and control with built-in guide modal *(Credit to Genymobile)*. |
-| **📊 MSI Afterburner** | ✈️ | Dedicated GPU overclocking and OSD launcher with built-in guide modal *(Credit to MSI)*. |
-| **🗑️ Uninstaller Pro** | 🗑️ | Comprehensive app discovery, batch uninstallation, and leftover cleaner *(Credit to AxePower)*. |
-| **🔄 Update PC** | 🔄 | Elevated hardware driver and Windows update launcher with built-in guide modal *(Credit to Microsoft)*. |
-| **🧹 Debloat** | ⚡ | Win11Debloat PowerShell utility launcher with built-in guide modal *(Credit to Raphire)*. |
-| **About** | ℹ️ | Device license info, version notes, and integrated GitHub Auto-Updater. |
+| **CONNECTION** | | |
+| **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
+| **MAINTENANCE** | | |
+| **⚡ Optimizer** | ⚡ | Safe Windows debloat, telemetry removal, and system performance optimizations. |
+| **🩺 Doctor** | 🩺 | Windows system health repair (SFC/DISM), shader cache cleaner, and DNS benchmark. |
+| **UTILITIES** | | |
+| **✈️ MSI Afterburner** | ✈️ | Dedicated GPU overclocking and OSD launcher with built-in guide modal *(Credit to MSI)*. |
+| **🗑️ Uninstaller Pro** | 🗑️ | Comprehensive app discovery, batch uninstallation, and leftover cleaner. |
+| **🔄 Update PC** | 🔄 | Elevated one-click driver and package updates. |
+| **🧹 Debloat** | 🧹 | Win11Debloat by Raphire integration. |
+| **FOOTER (PINNED)** | | |
+| **⚙️ Settings** | ⚙️ | Application preferences, performance defaults, startup toggles, and notification settings. |
+| **ℹ️ About** | ℹ️ | License details, system compatibility, update checker, and official website links. |
 
 ---
 
@@ -77,11 +89,15 @@ flowchart TD
         OS_SVC[Orchestration Services]
         HW_INT[Hardware & Native Integrations]
         UNINST[Uninstaller Pro Engine]
+        MOBILE[Phone Control & LAN Drop Engine]
+        WINGET[WinGet Hub & Software Catalog]
         DATA[Configuration & Logging]
         UPD[Auto-Update Service]
         
         OS_SVC --> HW_INT
         OS_SVC --> UNINST
+        OS_SVC --> MOBILE
+        OS_SVC --> WINGET
         OS_SVC --> DATA
         UPD --> GitHubAPI[(GitHub Releases API)]
     end
@@ -94,6 +110,11 @@ flowchart TD
     OS_SVC --> Debloat[DebloatService]
     OS_SVC --> DriverUpdate[DriverUpdateService]
     OS_SVC --> Msi[MsiAfterburnerService]
+
+    MOBILE --> LanDrop[LanDropService (TcpListener & Embedded Web Portal)]
+    MOBILE --> AndroidCtrl[AndroidControlService (scrcpy & ADB Bridge)]
+
+    WINGET --> WinGetHub[WinGetHubService (3-Stage Resilient Installer)]
 
     UNINST --> AppDiscovery[ApplicationDiscoveryService]
     UNINST --> BatchUninstall[BatchUninstallService]
@@ -108,26 +129,6 @@ flowchart TD
     DATA --> Settings[SettingsService (Encrypted JSON)]
     DATA --> Log[LogService]
 ```
-
----
-
-## 🖥️ User Interface & Navigation
-
-AxePower provides a centralized desktop hub with a dedicated sidebar:
-
-| Section | Icon | Purpose |
-| :--- | :---: | :--- |
-| **Dashboard** | 📊 | Real-time system monitoring, power mode switching (Eco, Smart, Beast), and battery metrics. |
-| **Auto Switch** | 🔄 | Configure automated rules for AC (Plugged In) and DC (Battery) states and dynamic refresh rate switching. |
-| **Game Mode** | 🎮 | Manage background app suspension and automatic game process detection. |
-| **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends. |
-| **Settings** | ⚙️ | Application preferences, startup toggles, and notification settings. |
-| **Logs** | 📝 | Real-time diagnostic logging and error tracking. |
-| **Update PC** | 🔄 | Elevated hardware driver and Windows update launcher. |
-| **Debloat** | 🧹 | Win11Debloat PowerShell utility launcher *(with attribution tooltip)*. |
-| **🗑️ Uninstaller Pro** | 🗑️ | Comprehensive app discovery, batch uninstallation, and verified leftover cleaning. |
-| **MSI Afterburner** | 📈 | Dedicated GPU overclocking and OSD launcher *(with attribution tooltip)*. |
-| **About** | ℹ️ | Version information, developer profile, release notes, and integrated GitHub Auto-Updater. |
 
 ---
 
@@ -146,7 +147,7 @@ sequenceDiagram
     AboutView->>Vm: CheckForUpdatesCommand
     Vm->>Svc: CheckForUpdatesAsync()
     Svc->>GH: GET /repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest
-    GH-->>Svc: Latest Release JSON (v1.2.1, Assets: Setup.exe)
+    GH-->>Svc: Latest Release JSON (v1.3.0, Assets: Setup.exe)
     Svc-->>Vm: UpdateCheckResult (HasUpdate = true)
     Vm->>AboutView: Display "Update Available" Modal Dialog
     
@@ -205,9 +206,12 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 AxePower proudly integrates with and acknowledges tools created by the open-source and enthusiast community:
 
+- **[spacedesk](https://www.spacedesk.net/)**: Multi-monitor virtual display network extension engine by **datronicsoft Technology GmbH**.
 - **[scrcpy](https://github.com/Genymobile/scrcpy)**: High-performance Android screen mirroring and control engine by **Genymobile**.
+- **[LAN-DropSpot](https://github.com/yadavnikhil03/LAN-DropSpot.git)**: Wi-Fi local file drop & sharing inspiration by **Nikhil Yadav (`yadavnikhil03`)**.
 - **[Win11Debloat](https://github.com/Raphire/Win11Debloat)**: Windows debloating and telemetry optimization scripts created by **Raphire**.
 - **[MSI Afterburner & RTSS](https://www.msi.com/Landing/afterburner/graphics-cards)**: Hardware statistics and GPU monitoring by **MSI** and **Alexey Nicolaychuk (Guru3D / RivaTuner)**.
+- **[DaVinci Resolve](https://www.blackmagicdesign.com/products/davinciresolve)**: Professional video editing and color grading by **Blackmagic Design**.
 - **[Hardcodet WPF TaskbarNotification](https://github.com/hardcodet/wpf-notifyicon)**: System tray icon integration for WPF by **Philipp Sumi**.
 - **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)**: Modern, high-performance MVVM library by the **.NET Foundation & Microsoft**.
 - **Windows Package Manager (`winget`) & USOClient**: Package and driver update orchestration by **Microsoft Corporation**.

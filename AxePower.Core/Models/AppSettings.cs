@@ -20,14 +20,14 @@ public class AppSettings
 
     [JsonPropertyName("unpluggedMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PowerMode UnpluggedMode { get; set; } = PowerMode.Smart;
+    public PowerMode UnpluggedMode { get; set; } = PowerMode.Eco;
 
     [JsonPropertyName("startWithLastSelectedMode")]
     public bool StartWithLastSelectedMode { get; set; } = false;
 
     [JsonPropertyName("lastSelectedPowerMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PowerMode LastSelectedPowerMode { get; set; } = PowerMode.Smart;
+    public PowerMode LastSelectedPowerMode { get; set; } = PowerMode.Beast;
 
     [JsonPropertyName("fanModeOnBattery")]
     public string FanModeOnBattery { get; set; } = "Smart";

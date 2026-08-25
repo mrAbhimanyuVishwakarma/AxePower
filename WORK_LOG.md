@@ -4,13 +4,13 @@
 **Downloads & Releases Repository:** [AxePower_Download](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download)  
 **Website:** [AxePower.com](https://axepower.com) (`AppWebsite/`)  
 **Primary Architect & Developer:** [Abhimanyu Vishwakarma](https://github.com/mrAbhimanyuVishwakarma)  
-**Last Updated:** August 14, 2026
+**Last Updated:** August 24, 2026
 
 ---
 
 ## 🎯 Executive Summary
 
-AxePower is an open-source, high-performance Windows PC Control Center & Power Optimizer built with **.NET 8 WPF**, **C# 12**, and **Domain-Driven Design (DDD)** with `CommunityToolkit.Mvvm`. It provides intelligent, automated power mode switching (**Eco**, **Smart**, **Beast**, **Game**), display refresh rate scaling (60Hz &harr; 144Hz/165Hz/240Hz), battery health telemetry, third-party integrations (MSI Afterburner, Win11Debloat, Winget), an Uninstaller Pro engine, and a peer-to-peer local **Android Companion App**.
+AxePower is an open-source, high-performance Windows PC Control Center & Power Optimizer built with **.NET 8 WPF**, **C# 12**, and **Domain-Driven Design (DDD)** with `CommunityToolkit.Mvvm`. It provides intelligent, automated power mode switching (**Eco**, **Smart**, **Beast**, **Game**), display refresh rate scaling (60Hz &harr; 144Hz/165Hz/240Hz), battery health telemetry, third-party integrations (MSI Afterburner, Win11Debloat, Winget, Gaming Launchers & Runtimes), an Uninstaller Pro engine, and a peer-to-peer local **Phone Control** suite (LAN Drop & scrcpy mirroring).
 
 ---
 
@@ -167,6 +167,13 @@ AxePower/
 ### 2. Desktop Application Core Features
 - **Auto Switch Service**: Real-time AC/DC detection and automated power plan application.
 - **Dynamic Refresh Rate Scaling**: Switches display Hz via `ChangeDisplaySettingsEx` (e.g. 60Hz on DC battery vs 165Hz on AC power).
+- **Phone Control SpaceDesk Integration**: Added a dedicated **SpaceDesk** action button (`#10B981` Emerald Green) in the Phone Control page header. Automatically launches SpaceDesk Driver Console if installed, installs `Datronicsoft.SpacedeskDriver.Server` via WinGet if not present, and provides instant fallback to the official `https://www.spacedesk.net/` portal.
+- **Installer & WinGet Automation Robustness**: Added `--disable-interactivity` and process timeout protection to prevent WinGet from freezing on stdin prompts (e.g. Battle.net, GOG, EA App). Automatically triggers official download websites if silent installers fail.
+- **Zero-Hardcoding & Universal Path Resolution**: Completely audited codebase to remove machine-specific hardcoded paths; dynamically resolves paths using `Environment.SpecialFolder`, `DriveInfo.GetDrives()`, and Windows Registry.
+- **Phone Control (All-in-One Mobile Suite)**:
+  - **LAN Drop**: Offline local Wi-Fi file & clipboard drop via QR code scanning powered by a lightweight zero-permission `TcpListener` HTTP server *(Credit to yadavnikhil03)*.
+  - **Android Screen Control**: Ultra-low latency device mirroring via `scrcpy`, performance presets, stay-awake / screen-off power toggles, and direct APK sideloading *(Credit to Genymobile)*.
+  - **Remote Companion**: Mobile browser portal with live PC battery percentage, volume/media keys, and 1-click PC lock.
 - **Game Booster & Scanner**: Automatically suspends non-essential background processes during game sessions.
 - **Uninstaller Pro Engine**: Full native app uninstallation with confidence-scored leftover filesystem and registry scanning.
 - **System Tray Integration**: Hardcodet tray icon with quick mode switching and minimize-to-tray capability.

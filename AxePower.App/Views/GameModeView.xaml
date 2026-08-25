@@ -286,6 +286,103 @@
                     </Border>
                 </StackPanel>
             </StackPanel>
+
+            <!-- Right Rail (Controller Navigation & Game Tools) -->
+            <StackPanel Grid.Column="1">
+                <!-- Controller Navigation (Gopher360) -->
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
+                    <StackPanel>
+                        <!-- Header with Help button and Switch -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Controller Navigation" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1" Command="{Binding OpenControllerHelpCommand}"
+                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4" Margin="0,0,8,0"
+                                    ToolTip="Credit to - Gopher360&#x0a;Click for controller button mappings &amp; guide">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Opacity" Value="0.6"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Opacity" Value="1.0"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Button>
+
+                            <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}"
+                                      IsChecked="{Binding IsControllerNavigationEnabled, Mode=OneWay}"
+                                      Command="{Binding ToggleControllerNavigationCommand}"
+                                      VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <TextBlock Text="Use gamepad or Xbox controller as Windows mouse &amp; keyboard navigation."
+                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,16"/>
+
+                        <!-- Mapping Quick Reference -->
+                        <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="10" Padding="14">
+                            <StackPanel>
+                                <TextBlock Text="QUICK CONTROLS" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="Left Stick" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                    <TextBlock Text="Mouse Pointer" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="A Button" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                    <TextBlock Text="Left Click" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="X Button" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                    <TextBlock Text="Right Click" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="D-Pad" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                    <TextBlock Text="Arrow Keys" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="Back + Start" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Text="Toggle On/Off" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Gaming Telemetry & Tips -->
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SuccessBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Gaming Optimization" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="14.5" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="• Automatically switches to Beast mode when game processes are detected." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" LineHeight="16"/>
+                        <TextBlock Text="• Suspends non-essential background processes to prevent micro-stuttering." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" LineHeight="16"/>
+                        <TextBlock Text="• Throttles unnecessary Windows telemetry and services during gameplay." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="16"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
             </Grid>
         </ScrollViewer>
         

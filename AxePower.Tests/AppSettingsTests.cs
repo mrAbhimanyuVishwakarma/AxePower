@@ -14,9 +14,9 @@ public class AppSettingsTests
         Assert.True(settings.AutoSwitchEnabled);
         Assert.True(settings.ShowNotifications);
         Assert.Equal(PowerMode.Smart, settings.PluggedInMode);
-        Assert.Equal(PowerMode.Smart, settings.UnpluggedMode);
+        Assert.Equal(PowerMode.Eco, settings.UnpluggedMode);
         Assert.False(settings.StartWithLastSelectedMode);
-        Assert.Equal(PowerMode.Smart, settings.LastSelectedPowerMode);
+        Assert.Equal(PowerMode.Beast, settings.LastSelectedPowerMode);
         Assert.Equal(30, settings.LowBatteryThresholdPercent);
         Assert.Equal(AppTheme.System, settings.Theme);
     }

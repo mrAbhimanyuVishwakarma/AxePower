@@ -10,4 +10,6 @@ public class NotificationService
     {
         OnShowNotification?.Invoke(this, message);
     }
+
+    public void ShowNotification(string message) => Show(message);
 }

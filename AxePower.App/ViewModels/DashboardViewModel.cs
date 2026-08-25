@@ -16,6 +16,7 @@ public partial class DashboardViewModel : ObservableObject
     private readonly NotificationService _notificationService;
     private readonly SettingsService _settingsService;
     private readonly AppKillerService _appKillerService;
+    private readonly ControllerNavigationService? _controllerService;
     private readonly DispatcherTimer _timer;
 
     [ObservableProperty]
@@ -34,26 +35,32 @@ public partial class DashboardViewModel : ObservableObject
     private string _applyStatusText = "Apply Mode";
 
     [ObservableProperty]
-    private PowerMode _selectedMode = PowerMode.Smart;
+    private PowerMode _selectedMode = PowerMode.Beast;
 
     // Settings Bindings
     [ObservableProperty]
     private bool _autoSwitchEnabled;
 
     [ObservableProperty]
-    private PowerMode _pluggedInMode;
+    private PowerMode _pluggedInMode = PowerMode.Smart;
 
     [ObservableProperty]
-    private PowerMode _pluggedOutMode;
+    private PowerMode _pluggedOutMode = PowerMode.Eco;
 
     [ObservableProperty]
-    private PowerMode _lowBatteryMode;
+    private PowerMode _lowBatteryMode = PowerMode.Eco;
 
     [ObservableProperty]
     private bool _showNotifications;
 
     [ObservableProperty]
     private bool _startWithWindows;
+
+    [ObservableProperty]
+    private bool _isControllerNavigationEnabled;
+
+    [ObservableProperty]
+    private bool _isControllerBusy;
 
     public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast, PowerMode.GameMode });
 
@@ -64,13 +71,20 @@ public partial class DashboardViewModel : ObservableObject
         BatteryService batteryService,
         NotificationService notificationService,
         SettingsService settingsService,
-        AppKillerService appKillerService)
+        AppKillerService appKillerService,
+        ControllerNavigationService? controllerService = null)
     {
         _powerPlanService = powerPlanService;
         _batteryService = batteryService;
         _notificationService = notificationService;
         _settingsService = settingsService;
         _appKillerService = appKillerService;
+        _controllerService = controllerService;
+
+        if (_controllerService != null)
+        {
+            IsControllerNavigationEnabled = _controllerService.IsRunning();
+        }
 
         LoadSettings();
 
@@ -114,7 +128,9 @@ public partial class DashboardViewModel : ObservableObject
         _settingsService.SaveSettings(settings);
     }
 
-    private async Task RefreshStatusAsync()
+    private bool _hasInitializedMode = false;
+
+    private async Task RefreshStatusAsync(bool syncSelectedMode = false)
     {
         var status = _batteryService.GetCurrentStatus();
         BatteryPercentage = status.HasBattery ? $"{status.BatteryPercentage}%" : "100%";
@@ -128,7 +144,12 @@ public partial class DashboardViewModel : ObservableObject
             PowerMode.Beast => "Beast",
             _ => mode.ToString()
         };
-        SelectedMode = mode;
+
+        if (!_hasInitializedMode || syncSelectedMode)
+        {
+            SelectedMode = mode;
+            _hasInitializedMode = true;
+        }
         
         // Update trend
         var history = await _batteryService.GetHistoryAsync();
@@ -145,9 +166,6 @@ public partial class DashboardViewModel : ObservableObject
         if (Enum.TryParse<PowerMode>(modeStr, out var mode))
         {
             SelectedMode = mode;
-            var settings = _settingsService.GetSettings();
-            settings.LastSelectedPowerMode = mode;
-            _settingsService.SaveSettings(settings);
         }
     }
 
@@ -161,7 +179,7 @@ public partial class DashboardViewModel : ObservableObject
             var success = await _powerPlanService.ApplyModeAsync(SelectedMode);
             if (success)
             {
-                await RefreshStatusAsync();
+                await RefreshStatusAsync(syncSelectedMode: true);
                 var settings = _settingsService.GetSettings();
                 settings.LastSelectedPowerMode = SelectedMode;
                 _settingsService.SaveSettings(settings);
@@ -216,5 +234,43 @@ public partial class DashboardViewModel : ObservableObject
             FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
             UseShellExecute = true
         });
+    }
+
+    [RelayCommand]
+    private void OpenControllerHelp()
+    {
+        if (System.Windows.Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
+        {
+            mainVm.OpenToolHelp("Gopher360");
+        }
+    }
+
+    [RelayCommand]
+    public async Task ToggleControllerNavigationAsync()
+    {
+        if (_controllerService == null || IsControllerBusy) return;
+
+        IsControllerBusy = true;
+        try
+        {
+            var newState = await _controllerService.ToggleAsync();
+            IsControllerNavigationEnabled = newState == ControllerNavigationState.Running;
+            if (IsControllerNavigationEnabled)
+            {
+                _notificationService.Show("Controller Navigation Enabled (Gopher360)");
+            }
+            else
+            {
+                _notificationService.Show("Controller Navigation Disabled");
+            }
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show($"Controller Navigation Error: {ex.Message}");
+        }
+        finally
+        {
+            IsControllerBusy = false;
+        }
     }
 }

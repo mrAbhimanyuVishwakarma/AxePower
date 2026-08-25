@@ -1,0 +1,16 @@
+## Visual Studio / .NET Build Artifacts
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+_ReSharper*/
+*.dotCover
+
+## Installer intermediate files
+Installer/Output/*.tmp
+build/

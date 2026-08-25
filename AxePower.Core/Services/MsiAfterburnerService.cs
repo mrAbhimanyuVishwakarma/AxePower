@@ -40,8 +40,8 @@ public class MsiAfterburnerService
     {
         string[] candidates =
         [
-            @"C:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe",
-            @"C:\Program Files\MSI Afterburner\MSIAfterburner.exe"
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "MSI Afterburner", "MSIAfterburner.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "MSI Afterburner", "MSIAfterburner.exe")
         ];
 
         foreach (var path in candidates)
@@ -78,8 +78,8 @@ public class MsiAfterburnerService
     {
         string[] candidates =
         [
-            @"C:\Program Files (x86)\RivaTuner Statistics Server\RTSS.exe",
-            @"C:\Program Files\RivaTuner Statistics Server\RTSS.exe"
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "RivaTuner Statistics Server", "RTSS.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RivaTuner Statistics Server", "RTSS.exe")
         ];
 
         foreach (var path in candidates)

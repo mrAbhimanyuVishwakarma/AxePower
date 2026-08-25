@@ -43,6 +43,21 @@
         <DataTemplate DataType="{x:Type viewmodels:UninstallerViewModel}">
             <views:UninstallerView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:SystemOptimizerViewModel}">
+            <views:SystemOptimizerView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:SystemDoctorViewModel}">
+            <views:SystemDoctorView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:SoftwareHubViewModel}">
+            <views:SoftwareHubView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:PhoneHubViewModel}">
+            <views:PhoneHubView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:LanDropViewModel}">
+            <views:LanDropView />
+        </DataTemplate>
         
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
@@ -72,242 +87,163 @@
             <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="112"/>
+                        <RowDefinition Height="96"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
                     <!-- Branding -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="40,30,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <Image Source="/Resources/AxePower_white.ico" Width="52" Height="52" />
-                        <TextBlock Text="AxePower" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="24" FontWeight="SemiBold" Margin="14,0,0,0" />
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="28,24,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Image Source="/Resources/AxePower_white.ico" Width="42" Height="42" />
+                        <TextBlock Text="AxePower" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="22" FontWeight="SemiBold" Margin="12,0,0,0" />
                     </StackPanel>
                     
-                    <!-- Navigation -->
-                    <StackPanel Grid.Row="1" Margin="0,16,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <!-- Dashboard -->
-                        <Button Style="{Binding DashboardActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard">
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/Resources/icons/Dashboards.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+                    <!-- Scrollable Navigation Groups -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" WindowChrome.IsHitTestVisibleInChrome="True" Padding="0,0,0,8">
+                        <StackPanel Margin="0,4,0,0">
+                            <!-- 1. CONTROL GROUP -->
+                            <TextBlock Text="CONTROL" Style="{StaticResource SidebarGroupHeaderTextStyle}" />
 
-                        <!-- Auto Switch -->
-                        <Button Style="{Binding AutoSwitchActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="AutoSwitch">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Auto Switch" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+                            <!-- Dashboard -->
+                            <Button Style="{Binding DashboardActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Resources/icons/Dashboards.png" Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
-                        <!-- Game Mode -->
-                        <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode">
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/Resources/icons/controller.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                <TextBlock Text="Game Mode" VerticalAlignment="Center"/>
+                            <!-- Auto Switch -->
+                            <Button Style="{Binding AutoSwitchActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="AutoSwitch">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Auto Switch" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Game Mode -->
+                            <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Resources/icons/controller.png" Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <TextBlock Text="Game Mode" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Battery -->
+                            <Button Style="{Binding BatteryActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Battery">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Resources/icons/battery.png" Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <TextBlock Text="Battery" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 2. CONNECTION GROUP -->
+                            <TextBlock Text="CONNECTION" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="20,16,20,4"/>
+
+                            <!-- Phone Control -->
+                            <Button Style="{Binding PhoneHubActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="PhoneHub" ToolTip="Phone Control: Screen mirroring, Wi-Fi LAN drop &amp; remote tools">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Phone Control" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 3. MAINTENANCE GROUP (Collapsible) -->
+                            <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleMaintenanceGroupCommand}" Margin="10,14,10,2">
+                                <Grid VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="MAINTENANCE" FontFamily="{StaticResource PrimaryFontFamily}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding MaintenanceChevronGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <!-- Maintenance Sub-items -->
+                            <StackPanel Visibility="{Binding IsMaintenanceExpanded, Converter={StaticResource BoolToVis}}">
+                                <!-- Optimizer -->
+                                <Button Style="{Binding OptimizerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Optimizer" ToolTip="Safe Windows debloat, telemetry removal, and gamer optimizations">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Optimizer" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Doctor -->
+                                <Button Style="{Binding DoctorActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Doctor" ToolTip="Windows health repair (SFC/DISM), shader cache cleaner, and DNS benchmark">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE958;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Doctor" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
-                        </Button>
-                        
-                        <!-- Battery -->
-                        <Button Style="{Binding BatteryActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Battery">
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/Resources/icons/battery.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                <TextBlock Text="Battery" VerticalAlignment="Center"/>
+
+                            <!-- 4. UTILITIES GROUP (Collapsible) -->
+                            <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleUtilitiesGroupCommand}" Margin="10,14,10,2">
+                                <Grid VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="UTILITIES" FontFamily="{StaticResource PrimaryFontFamily}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding UtilitiesChevronGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <!-- Utilities Sub-items -->
+                            <StackPanel Visibility="{Binding IsUtilitiesExpanded, Converter={StaticResource BoolToVis}}">
+                                <!-- MSI Afterburner -->
+                                <Button Style="{StaticResource SidebarSubItemButtonStyle}" Command="{Binding OpenMsiAfterburnerCommand}" ToolTip="Open MSI Afterburner with hardware monitoring">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="/Resources/icons/MSI Afterburner.png" Width="16" Height="16" Margin="0,0,12,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        <TextBlock Text="MSI Afterburner" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Uninstaller Pro -->
+                                <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Remove applications and clean verified leftovers">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Uninstaller Pro" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Update PC -->
+                                <Button Style="{Binding UpdatePcActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="UpdatePc" ToolTip="Dedicated Update Hub: Drivers, WinGet batch upgrade &amp; Windows Update">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Update PC" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Debloat -->
+                                <Button Style="{StaticResource SidebarSubItemButtonStyle}" Command="{Binding DebloatCommand}" ToolTip="Launch Win11Debloat by Raphire">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Debloat" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
-                        </Button>
-                        
-                        <!-- Settings -->
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Bottom Fixed Navigation (Settings & About) -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,16" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <!-- Divider -->
+                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="20,0,20,8" Opacity="0.4"/>
+
+                        <!-- Settings (Above About) -->
                         <Button Style="{Binding SettingsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Settings" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                    </StackPanel>
-                    
-                    <!-- Bottom Actions: Android Control, MSI Afterburner, Uninstaller Pro, Update PC, Debloat, About -->
-                    <StackPanel Grid.Row="2" Margin="0,0,0,24" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <!-- Android Control with Instructions Info (i) -->
-                        <Grid>
-                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenAndroidControlCommand}" ToolTip="Control &amp; mirror Android device via scrcpy">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Android Control" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding OpenToolHelpCommand}" CommandParameter="AndroidControl"
-                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
-                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
-                                    ToolTip="Credit to - Genymobile (scrcpy)&#x0a;how to use" WindowChrome.IsHitTestVisibleInChrome="True">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Opacity" Value="0.4"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="Transparent" CornerRadius="10" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Opacity" Value="1.0"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            </Button>
-                        </Grid>
 
-                        <!-- MSI Afterburner with Instructions Info (i) -->
-                        <Grid>
-                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenMsiAfterburnerCommand}" ToolTip="Open MSI Afterburner (minimized) with hardware monitoring">
-                                <StackPanel Orientation="Horizontal">
-                                    <Image Source="/Resources/icons/MSI Afterburner.png" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                    <TextBlock Text="MSI Afterburner" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding OpenToolHelpCommand}" CommandParameter="MsiAfterburner"
-                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
-                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
-                                    ToolTip="Credit to - MSI&#x0a;how to use" WindowChrome.IsHitTestVisibleInChrome="True">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Opacity" Value="0.4"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="Transparent" CornerRadius="10" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Opacity" Value="1.0"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            </Button>
-                        </Grid>
-
-                        <!-- Uninstaller Pro with Instructions Info (i) -->
-                        <Grid>
-                            <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller"
-                                    ToolTip="Remove applications and clean verified leftovers">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Uninstaller Pro" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding OpenToolHelpCommand}" CommandParameter="Uninstaller"
-                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
-                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
-                                    ToolTip="Credit to - AxePower&#x0a;how to use" WindowChrome.IsHitTestVisibleInChrome="True">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Opacity" Value="0.4"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="Transparent" CornerRadius="10" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Opacity" Value="1.0"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            </Button>
-                        </Grid>
-
-                        <!-- Update PC with Instructions Info (i) -->
-                        <Grid>
-                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding UpdateDriversCommand}" ToolTip="Check &amp; update Windows, GPU drivers, and system packages">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Update PC" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding OpenToolHelpCommand}" CommandParameter="UpdatePc"
-                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
-                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
-                                    ToolTip="Credit to - Microsoft&#x0a;how to use" WindowChrome.IsHitTestVisibleInChrome="True">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Opacity" Value="0.4"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="Transparent" CornerRadius="10" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Opacity" Value="1.0"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            </Button>
-                        </Grid>
-
-                        <!-- Debloat with Instructions Info (i) -->
-                        <Grid>
-                            <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding DebloatCommand}" ToolTip="Launch Win11Debloat by Raphire">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Debloat" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding OpenToolHelpCommand}" CommandParameter="Debloat" 
-                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,22,0"
-                                    Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6"
-                                    ToolTip="Credit to - Raphire&#x0a;how to use" WindowChrome.IsHitTestVisibleInChrome="True">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Opacity" Value="0.4"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="Transparent" CornerRadius="10" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Opacity" Value="1.0"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            </Button>
-                        </Grid>
-
-                        <!-- About -->
+                        <!-- About (Bottom of the list) -->
                         <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="About">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="About" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>

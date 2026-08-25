@@ -35,6 +35,13 @@ public partial class GameModeViewModel : ObservableObject
     public ObservableCollection<SystemServiceObject> AvailableServices { get; } = new();
 
     private readonly PowerPlanService _powerPlanService;
+    private readonly ControllerNavigationService? _controllerService;
+
+    [ObservableProperty]
+    private bool _isControllerNavigationEnabled;
+
+    [ObservableProperty]
+    private bool _isControllerBusy;
 
     public GameModeViewModel(
         SettingsService settingsService, 
@@ -42,7 +49,8 @@ public partial class GameModeViewModel : ObservableObject
         GameScannerService gameScannerService,
         AppKillerService appKillerService,
         SystemServiceOptimizer systemServiceOptimizer,
-        PowerPlanService powerPlanService)
+        PowerPlanService powerPlanService,
+        ControllerNavigationService? controllerService = null)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
@@ -50,6 +58,12 @@ public partial class GameModeViewModel : ObservableObject
         _appKillerService = appKillerService;
         _systemServiceOptimizer = systemServiceOptimizer;
         _powerPlanService = powerPlanService;
+        _controllerService = controllerService;
+
+        if (_controllerService != null)
+        {
+            IsControllerNavigationEnabled = _controllerService.IsRunning();
+        }
         
         LoadSettings();
         _ = RefreshBackgroundAppsAsync();
@@ -391,6 +405,44 @@ public partial class GameModeViewModel : ObservableObject
         {
             await _powerPlanService.ApplyModeAsync(PowerMode.Smart);
             _notificationService.Show("Game Mode deactivated. Reverted to Smart Mode.");
+        }
+    }
+
+    [RelayCommand]
+    private void OpenControllerHelp()
+    {
+        if (System.Windows.Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
+        {
+            mainVm.OpenToolHelp("Gopher360");
+        }
+    }
+
+    [RelayCommand]
+    public async Task ToggleControllerNavigationAsync()
+    {
+        if (_controllerService == null || IsControllerBusy) return;
+
+        IsControllerBusy = true;
+        try
+        {
+            var newState = await _controllerService.ToggleAsync();
+            IsControllerNavigationEnabled = newState == ControllerNavigationState.Running;
+            if (IsControllerNavigationEnabled)
+            {
+                _notificationService.Show("Controller Navigation Enabled (Gopher360)");
+            }
+            else
+            {
+                _notificationService.Show("Controller Navigation Disabled");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            _notificationService.Show($"Controller Navigation Error: {ex.Message}");
+        }
+        finally
+        {
+            IsControllerBusy = false;
         }
     }
 }

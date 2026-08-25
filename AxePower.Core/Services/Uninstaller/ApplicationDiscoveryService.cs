@@ -379,7 +379,11 @@ public sealed class ApplicationDiscoveryService : IApplicationDiscoveryService
                 catch { /* skip malformed line */ }
             }
         }
-        catch (OperationCanceledException) { throw; }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+        catch (OperationCanceledException)
+        {
+            // Internal WinGet discovery timeout is non-fatal; continue with other sources
+        }
         catch
         {
             // WinGet discovery failure is non-fatal
@@ -592,13 +596,12 @@ public sealed class ApplicationDiscoveryService : IApplicationDiscoveryService
 
     private static string? FindWinget()
     {
-        // Check common winget locations
+        // Check common winget locations dynamically
         var candidates = new[]
         {
-            @"C:\Users\" + Environment.UserName +
-            @"\AppData\Local\Microsoft\WindowsApps\winget.exe",
-            @"C:\Program Files\WindowsApps\" +
-            "Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\\winget.exe",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "WindowsApps", "winget.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "WindowsApps", "Microsoft.DesktopAppInstaller_8wekyb3d8bbwe", "winget.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "WindowsApps", "Microsoft.DesktopAppInstaller_8wekyb3d8bbwe", "winget.exe")
         };
 
         foreach (var candidate in candidates)

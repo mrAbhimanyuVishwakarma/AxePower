@@ -122,7 +122,18 @@ public partial class App : Application
         services.AddSingleton<MsiAfterburnerService>();
         services.AddSingleton<DebloatService>();
         services.AddSingleton<AndroidControlService>();
+        services.AddSingleton<ControllerNavigationService>();
         services.AddSingleton<UpdateService>();
+        services.AddSingleton<ITweakService, TweakService>();
+        services.AddSingleton<ICacheCleanerService, CacheCleanerService>();
+        services.AddSingleton<IDnsOptimizerService, DnsOptimizerService>();
+        services.AddSingleton<ISystemDoctorService, SystemDoctorService>();
+        services.AddSingleton<IWindowsUpdateShieldService, WindowsUpdateShieldService>();
+        services.AddSingleton<IWinGetHubService, WinGetHubService>();
+        services.AddSingleton<IServiceThrottlerService, ServiceThrottlerService>();
+        services.AddSingleton<IMemoryOptimizerService, MemoryOptimizerService>();
+        services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
+        services.AddSingleton<LanDropService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
@@ -151,6 +162,11 @@ public partial class App : Application
         services.AddTransient<LogsViewModel>();
         services.AddTransient<AboutViewModel>();
         services.AddTransient<UninstallerViewModel>();
+        services.AddTransient<SystemOptimizerViewModel>();
+        services.AddTransient<SystemDoctorViewModel>();
+        services.AddTransient<SoftwareHubViewModel>();
+        services.AddTransient<PhoneHubViewModel>();
+        services.AddTransient<LanDropViewModel>();
 
         // Views
         services.AddTransient<MainWindow>();

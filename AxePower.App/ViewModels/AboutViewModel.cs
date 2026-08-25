@@ -20,7 +20,7 @@ public partial class AboutViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReleaseVersionWithDate))]
-    private string _version = "1.2.0";
+    private string _version = "1.4.0";
 
     [ObservableProperty]
     private string _runtime = ".NET 8.0";
@@ -63,7 +63,7 @@ public partial class AboutViewModel : ObservableObject
     private bool _isUpdateAvailable;
 
     [ObservableProperty]
-    private string _latestVersionTag = "1.2.0";
+    private string _latestVersionTag = "1.4.0";
 
     [ObservableProperty]
     private string _releaseTitle = "";
@@ -99,8 +99,8 @@ public partial class AboutViewModel : ObservableObject
 
         try
         {
-            var path = Environment.ProcessPath ?? assembly.Location;
-            if (File.Exists(path))
+            var path = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
                 ReleaseDate = File.GetLastWriteTime(path).ToString("MMM dd, yyyy");
             }

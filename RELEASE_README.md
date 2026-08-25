@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.3.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.4.0-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -20,25 +20,54 @@ Welcome to AxePower! This is a simple, set-and-forget tool designed to automatic
 
 AxePower manages your laptop's power settings and refresh rates based on whether your charger is plugged in or unplugged. 
 
-Have you ever noticed your laptop running slowly when unplugged, or your battery draining too fast? AxePower solves this by offering four dedicated modes:
+Have you ever noticed your laptop running slowly when unplugged, or your battery draining too fast? AxePower solves this by offering dedicated modes:
 
 - 🔋 **Eco Mode:** Saves battery so your laptop runs longer when you are away from the charger.
 - ⚖️ **Smart Mode:** The perfect middle ground for everyday tasks like browsing and watching videos.
 - 🚀 **Beast Mode:** Gives you maximum power and sustained clocks for gaming or heavy tasks when plugged in.
-- 🎮 **Game Mode:** Automatically detects running games, suspends background bloat, and locks maximum display refresh rate.
-- 📱 **Android Control:** Direct screen mirroring and control of Android devices via high-speed USB/Wi-Fi connection.
+- 🎮 **Game Mode:** Automatically detects running games across any drive, suspends background bloat, locks maximum display refresh rate, and offers Controller Navigation (Gopher360).
+- 📱 **Phone Control:** All-in-one mobile suite with **SpaceDesk** wireless display, offline **LAN Drop** Wi-Fi file sharing, and **scrcpy** Android screen mirroring.
+- 🛍️ **Software Hub:** 1-click installer and launcher for popular gaming stores, hardware monitoring tools, video editors, and runtimes.
 
-**The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** for balanced performance, or you can choose your own defaults or enable **Start with last selected power mode** to remember whatever mode you chose manually!
+**The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v1.4.0
+
+- 🧭 **Sidebar & Navigation Overhaul**:
+  - **Pinned Footer**: Settings and About sections are cleanly anchored to the bottom footer of the sidebar.
+  - **Reorganized Categories**: Grouped navigation into **CONTROL**, **CONNECTION** (Phone Control), collapsible **MAINTENANCE** (Optimizer, Doctor), and collapsible **UTILITIES** (MSI Afterburner, Uninstaller Pro, Update PC, Debloat).
+- 🎮 **Controller Navigation (Gopher360) in Game Mode**:
+  - Dedicated gamepad / Xbox controller navigation controls in the **Game Mode** page.
+  - Turn gamepad into a Windows mouse & keyboard with quick reference mapping and instant toggle shortcuts (`Back + Start`).
+- ⚡ **Intelligent Default Power Rules**:
+  - **Plugged In**: Defaults to **Smart Mode**.
+  - **On Battery / Unplugged**: Defaults to **Eco Mode**.
+  - **Low Battery (< 30%)**: Defaults to **Eco Mode**.
+  - Improved manual power mode selection flow.
+- 📐 **Dashboard UI Refinements**:
+  - Harmonized symmetric card dimensions across Eco, Smart, and Beast cards.
+- 🏎️ **Performance & Stability**:
+  - Improved non-blocking discovery timeouts and updated underlying dependencies.
 
 ---
 
 ## 🌟 What's New in v1.3.0
 
+- 📱 **Phone Control & SpaceDesk Integration**:
+  - 🖥️ **SpaceDesk Virtual Display**: Dedicated green 1-click launcher & auto-installer to turn phones and tablets into wireless secondary PC displays *(Credit to datronicsoft)*.
+  - 📂 **LAN Drop (Wi-Fi Quick Share)**: High-speed offline file drop and clipboard note sync between PC and phone via dynamic QR code *(Credit to yadavnikhil03)*.
+  - 📱 **Android Screen Mirroring (scrcpy)**: Ultra-low latency device mirroring, stay-awake / screen-off power toggles, resolution & FPS presets, and 1-click APK sideloading *(Credit to Genymobile)*.
+- 🛍️ **Software Hub & Gaming Launchers**:
+  - Direct integration with **Steam**, **Epic Games Launcher**, **Rockstar Games Launcher**, **Ubisoft Connect**, **Battle.net**, **GOG Galaxy**, **EA App**, **DaVinci Resolve (Free)**, **MSI Afterburner**, **CPU-Z**, **GPU-Z**, **HWiNFO**, **CrystalDiskInfo**, **OBS Studio**, **Discord**, **VLC**, **7-Zip**, **Notepad++**, and runtimes.
+  - Strict 2-button flow: **Open** / **Uninstall** (when installed) or **Install** (when not installed).
+  - 3-stage resilient installation with non-blocking stdin handling and instant verified official download website fallbacks.
+- 🌐 **Zero Hardcoding & Universal Windows 11 Compatibility**:
+  - Fully dynamic path resolution across any Windows drive (C:, D:, E:, etc.), user profile directory, and system locale.
 - ⚙️ **Smart Mode Performance Defaults**: Default power mode out-of-the-box is now set to **Smart Mode** for both AC and battery power, with custom dropdown selections for Eco, Smart, Beast, and Game Mode in Settings.
 - 🔄 **Remember Last Selected Mode**: Added a toggle switch in Settings ➔ Startup to automatically persist and restore your last manually selected power mode across application restarts.
-- 📱 **Android Control (scrcpy)**: Direct screen mirroring and control of Android devices via high-speed USB/Wi-Fi connection *(Credit to Genymobile)*.
-- 📖 **Interactive In-App Tool Help & Guides**: Comprehensive modal guides for all sidebar tools (**Android Control**, **MSI Afterburner**, **Uninstaller Pro**, **Update PC**, **Debloat**) and `? Help` buttons with step-by-step instructions, shortcuts, and direct Readme links.
-- 💬 **Attribution & "How to use" Tooltips**: Hovering over any sidebar `(i)` button shows the creator credit and "how to use" guide indicator.
+- 📖 **Interactive In-App Tool Help & Guides**: Comprehensive modal guides for all sidebar tools with step-by-step instructions, shortcuts, and direct Readme links.
 - 🗑️ **Uninstaller Pro**: Deep native uninstaller supporting Win32, MSI, AppX, and WinGet apps with leftover scanning and automated registry safety backups.
 - 🔋 **Modernized Battery Indicator**: Scaled 3x dynamic live battery indicator in the header with power-state awareness (AC Power / On Battery).
 - 🌐 **Official Product Website**: Launched [AxePower Website](https://axepower.vercel.app/) with direct GitHub release auto-download.
@@ -54,38 +83,15 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 ## 📥 How to Install
 
-1. Go to the [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) page or [AxePower.com](https://axepower.com).
-2. Download the latest installer (e.g. **`AxePower-v1.3-Setup.exe`**).
-3. Open the downloaded file and follow the simple on-screen steps.
-4. Once installed, search for "AxePower" in your Start Menu or open the Desktop shortcut!
+1. Go to the [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) page or [AxePower Website](https://axepower.vercel.app/).
+2. Download the latest **`AxePower-Setup.exe`**.
+3. Run the installer and follow the quick setup wizard.
+4. AxePower will automatically start and sit quietly in your system tray!
 
 ---
 
-## Getting Started
+## 👤 Author & Support
 
-1. **Dashboard**: Open AxePower to view your battery status, current power plan, and switch modes manually.
-2. **Auto Switch**: Go to the Auto Switch tab, turn on Auto Switch, and customize what happens when *Plugged In* vs *On Battery*.
-3. **Game Mode**: Manage background processes you want suspended during games with custom lion badge.
-4. **Tool Help & Guides**: Click the `(i)` icon next to any sidebar tool (Android Control, MSI Afterburner, Uninstaller Pro, Update PC, Debloat) to open interactive step-by-step instructions.
-5. **System Tray**: Right-click the AxePower icon in your taskbar (near your clock) to switch modes or minimize to tray.
-6. **About Page**: Check for updates, read release notes, or view developer and third-party credits.
-
----
-
-## Need Help?
-
-- **App isn't switching modes?** Make sure "Auto Switch" is turned on in the Auto Switch tab.
-- **Is it safe?** Absolutely. AxePower just uses your computer's built-in Windows power settings automatically so you don't have to change them yourself.
-- **Have an issue or suggestion?** Open an issue on our [GitHub Issue Tracker](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues).
-
----
-
-## 📜 Credits
-
-- **[scrcpy](https://github.com/Genymobile/scrcpy)** by Genymobile
-- **[Win11Debloat](https://github.com/Raphire/Win11Debloat)** by Raphire
-- **[MSI Afterburner](https://www.msi.com/Landing/afterburner/graphics-cards)** by MSI & Guru3D (Alexey Nicolaychuk)
-- **[Hardcodet.NotifyIcon.Wpf](https://github.com/hardcodet/wpf-notifyicon)** by Philipp Sumi
-- **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)** by Microsoft & .NET Community
-
-Developed with ❤️ by [Abhimanyu Vishwakarma](https://github.com/mrAbhimanyuVishwakarma)
+- **Developer**: [Abhimanyu Vishwakarma](https://github.com/mrAbhimanyuVishwakarma)
+- **Official Download Repo**: [AxePower_Download](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download)
+- **Issue Tracker & Support**: [GitHub Issues](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)

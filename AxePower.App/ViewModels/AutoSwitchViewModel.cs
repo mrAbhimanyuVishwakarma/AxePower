@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace AxePower.App.ViewModels;
 
@@ -10,6 +11,9 @@ public partial class AutoSwitchViewModel : ObservableObject
 {
     private readonly SettingsService _settingsService;
     private readonly NotificationService _notificationService;
+    private readonly IDynamicModeAutomationService _automationService;
+    private readonly IServiceThrottlerService _throttlerService;
+    private readonly IMemoryOptimizerService _memoryOptimizer;
 
     [ObservableProperty]
     private bool _autoSwitchEnabled;
@@ -49,13 +53,39 @@ public partial class AutoSwitchViewModel : ObservableObject
     [ObservableProperty]
     private bool _lowBatteryEnabled = true;
 
+    // Phase 4: Dynamic Mode Automation
+    [ObservableProperty]
+    private bool _autoPauseServicesInBeast = true;
+
+    [ObservableProperty]
+    private bool _autoFlushRamOnGameLaunch = true;
+
+    [ObservableProperty]
+    private bool _autoRestoreOnEco = true;
+
+    [ObservableProperty]
+    private bool _areServicesThrottled;
+
+    [ObservableProperty]
+    private string _memorySummary = string.Empty;
+
+    public ObservableCollection<ManagedServiceItem> ManagedServices { get; } = new();
+
     public AutoSwitchViewModel(
         SettingsService settingsService, 
-        NotificationService notificationService)
+        NotificationService notificationService,
+        IDynamicModeAutomationService automationService,
+        IServiceThrottlerService throttlerService,
+        IMemoryOptimizerService memoryOptimizer)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
+        _automationService = automationService;
+        _throttlerService = throttlerService;
+        _memoryOptimizer = memoryOptimizer;
+
         LoadSettings();
+        RefreshAutomationStatus();
     }
 
     private void LoadSettings()
@@ -69,6 +99,65 @@ public partial class AutoSwitchViewModel : ObservableObject
         SuspendBackgroundAppsOnBattery = settings.SuspendBackgroundAppsOnBattery;
         ShowNotifications = settings.ShowNotifications;
         StartWithWindows = settings.StartWithWindows;
+
+        AutoPauseServicesInBeast = _automationService.Config.AutoPauseServicesInBeast;
+        AutoFlushRamOnGameLaunch = _automationService.Config.AutoFlushRamOnGameLaunch;
+        AutoRestoreOnEco = _automationService.Config.AutoRestoreOnEco;
+    }
+
+    public void RefreshAutomationStatus()
+    {
+        AreServicesThrottled = _throttlerService.AreServicesThrottled;
+        var mem = _memoryOptimizer.GetMemoryStatus();
+        MemorySummary = mem.FormattedSummary;
+
+        ManagedServices.Clear();
+        foreach (var svc in _throttlerService.GetManagedServices())
+        {
+            ManagedServices.Add(svc);
+        }
+    }
+
+    partial void OnAutoPauseServicesInBeastChanged(bool value)
+    {
+        _automationService.Config.AutoPauseServicesInBeast = value;
+    }
+
+    partial void OnAutoFlushRamOnGameLaunchChanged(bool value)
+    {
+        _automationService.Config.AutoFlushRamOnGameLaunch = value;
+    }
+
+    partial void OnAutoRestoreOnEcoChanged(bool value)
+    {
+        _automationService.Config.AutoRestoreOnEco = value;
+    }
+
+    [RelayCommand]
+    public async Task OptimizeRamNowAsync()
+    {
+        double freed = await _automationService.OptimizeMemoryNowAsync();
+        RefreshAutomationStatus();
+        _notificationService.Show(freed > 0.02
+            ? $"✓ Freed ~{freed * 1024:F0} MB of standby RAM!"
+            : "✓ RAM working set & standby cache flushed.");
+    }
+
+    [RelayCommand]
+    public async Task ToggleServiceThrottlingAsync()
+    {
+        if (AreServicesThrottled)
+        {
+            int restored = await _automationService.ForceRestoreServicesAsync();
+            RefreshAutomationStatus();
+            _notificationService.Show($"✓ Restored {restored} background service(s).");
+        }
+        else
+        {
+            int throttled = await _automationService.ForceThrottleServicesAsync();
+            RefreshAutomationStatus();
+            _notificationService.Show($"⚡ Paused {throttled} non-essential background service(s).");
+        }
     }
 
     [RelayCommand]
@@ -85,7 +174,7 @@ public partial class AutoSwitchViewModel : ObservableObject
         settings.StartWithWindows = StartWithWindows;
 
         _settingsService.SaveSettings(settings);
-        _notificationService.Show("Auto Switch settings saved successfully.");
+        _notificationService.Show("Auto Switch & Dynamic Mode settings saved.");
     }
 
     [RelayCommand]
@@ -98,12 +187,9 @@ public partial class AutoSwitchViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CheckForUpdates()
+    private void Cancel()
     {
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-        {
-            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
-            UseShellExecute = true
-        });
+        LoadSettings();
+        RefreshAutomationStatus();
     }
 }

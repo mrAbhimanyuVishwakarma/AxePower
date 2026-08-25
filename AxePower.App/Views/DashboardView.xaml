@@ -121,15 +121,12 @@
                                 <Image Grid.Column="0" Source="/Resources/icons/battery_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Optimized battery" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
-                            <Grid Margin="0,0,0,16">
+                            <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                 <Image Grid.Column="0" Source="/Resources/icons/thermostat_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Column="1" Text="Smart fan control" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
                         </StackPanel>
-                        <Border Background="{DynamicResource SmartBrush}" CornerRadius="4" Padding="0,4" HorizontalAlignment="Stretch">
-                            <TextBlock Text="★ RECOMMENDED" Foreground="White" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        </Border>
                     </StackPanel>
                 </Border>
 
