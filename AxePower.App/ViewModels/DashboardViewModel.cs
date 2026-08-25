@@ -16,6 +16,7 @@ public partial class DashboardViewModel : ObservableObject
     private readonly NotificationService _notificationService;
     private readonly SettingsService _settingsService;
     private readonly AppKillerService _appKillerService;
+    private readonly UpdateService? _updateService;
     private readonly ControllerNavigationService? _controllerService;
     private readonly DispatcherTimer _timer;
 
@@ -62,6 +63,12 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private bool _isControllerBusy;
 
+    [ObservableProperty]
+    private bool _isFnLockEnabled;
+
+    [ObservableProperty]
+    private int _rawBatteryPercentage = 100;
+
     public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast, PowerMode.GameMode });
 
     public ObservableCollection<double> BatteryTrendPoints { get; } = new();
@@ -72,7 +79,8 @@ public partial class DashboardViewModel : ObservableObject
         NotificationService notificationService,
         SettingsService settingsService,
         AppKillerService appKillerService,
-        ControllerNavigationService? controllerService = null)
+        ControllerNavigationService? controllerService = null,
+        UpdateService? updateService = null)
     {
         _powerPlanService = powerPlanService;
         _batteryService = batteryService;
@@ -80,6 +88,7 @@ public partial class DashboardViewModel : ObservableObject
         _settingsService = settingsService;
         _appKillerService = appKillerService;
         _controllerService = controllerService;
+        _updateService = updateService;
 
         if (_controllerService != null)
         {
@@ -107,6 +116,7 @@ public partial class DashboardViewModel : ObservableObject
         LowBatteryMode = settings.LowBatteryMode;
         ShowNotifications = settings.ShowNotifications;
         StartWithWindows = settings.StartWithWindows;
+        IsFnLockEnabled = settings.FnLockEnabled;
     }
 
     partial void OnAutoSwitchEnabledChanged(bool value) => SaveSettings();
@@ -115,6 +125,13 @@ public partial class DashboardViewModel : ObservableObject
     partial void OnLowBatteryModeChanged(PowerMode value) => SaveSettings();
     partial void OnShowNotificationsChanged(bool value) => SaveSettings();
     partial void OnStartWithWindowsChanged(bool value) => SaveSettings();
+    partial void OnIsFnLockEnabledChanged(bool value)
+    {
+        _batteryService.SetFnLock(value);
+        SaveSettings();
+        _notificationService.Show(
+            value ? "Function lock enabled (F1–F12 special keys locked)." : "Function lock disabled.");
+    }
 
     private void SaveSettings()
     {
@@ -125,6 +142,7 @@ public partial class DashboardViewModel : ObservableObject
         settings.LowBatteryMode = LowBatteryMode;
         settings.ShowNotifications = ShowNotifications;
         settings.StartWithWindows = StartWithWindows;
+        settings.FnLockEnabled = IsFnLockEnabled;
         _settingsService.SaveSettings(settings);
     }
 
@@ -133,7 +151,8 @@ public partial class DashboardViewModel : ObservableObject
     private async Task RefreshStatusAsync(bool syncSelectedMode = false)
     {
         var status = _batteryService.GetCurrentStatus();
-        BatteryPercentage = status.HasBattery ? $"{status.BatteryPercentage}%" : "100%";
+        RawBatteryPercentage = status.HasBattery ? status.BatteryPercentage : 100;
+        BatteryPercentage = $"{RawBatteryPercentage}%";
         PluggedInStatus = status.IsPluggedIn ? "Plugged In" : "On Battery";
 
         var mode = await _powerPlanService.GetActivePowerModeAsync();
@@ -227,13 +246,30 @@ public partial class DashboardViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CheckForUpdates()
+    private async Task CheckForUpdatesAsync()
     {
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        if (_updateService == null)
         {
-            FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
-            UseShellExecute = true
-        });
+            _notificationService.Show("Already Updated");
+            return;
+        }
+
+        try
+        {
+            var result = await _updateService.CheckForUpdatesAsync();
+            if (result.HasUpdate)
+            {
+                _notificationService.Show($"🚀 New update available: v{result.LatestVersion}! Check About page.");
+            }
+            else
+            {
+                _notificationService.Show("Already Updated");
+            }
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show("Failed to check for updates: " + ex.Message);
+        }
     }
 
     [RelayCommand]

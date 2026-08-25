@@ -7,11 +7,11 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.4.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.5.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
-[Official Website](https://axepower.vercel.app/) • [Download Latest Release](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Report Issue](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues) • [Developer Profile](https://github.com/mrAbhimanyuVishwakarma)
+[Official Website](https://axepower.vercel.app/) • [Download Latest Release](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Report Issue](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues) • [Developer Profile](https://github.com/mrAbhimanyuVishwakarma)
 
 </div>
 
@@ -19,20 +19,19 @@
 
 - ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, **Beast**, and **Game** modes tailored for battery savings or extreme performance.
 - ⚙️ **Smart Performance Defaults**: Out-of-the-box defaults set to **Smart Mode** for AC power and **Eco Mode** on battery, with custom dropdown configuration in Settings.
-- 🎮 **Controller Navigation (Gopher360)**: Full gamepad-to-mouse emulation with custom key shortcuts in Game Mode.
+- 🎮 **Controller Navigation (Gopher360)**: Full gamepad-to-mouse emulation with custom key shortcuts in Game Mode and smooth horizontal scrollable guide tabs.
+- 🛍️ **Software Hub & Ninite Multi-Installer**:
+  - **Ninite Integration**: Bundled local multi-installer + online custom package builder for zero-click multi-app setups.
+  - **1-Click Game Launchers & Tools**: Instant access to Steam, Epic Games, Rockstar Games Launcher, Ubisoft Connect, Battle.net, GOG Galaxy, EA App, DaVinci Resolve, MSI Afterburner, CPU-Z, GPU-Z, HWiNFO, CrystalDiskInfo, OBS Studio, Discord, VLC, 7-Zip, Notepad++, and VC++ runtimes.
 - 📱 **Phone Control (All-in-One Mobile Suite)**:
-  - 🖥️ **SpaceDesk Virtual Display**: 1-click green launcher & auto-installer to turn your mobile phone or tablet into a wireless secondary display *(Credit to datronicsoft)*.
   - 📂 **LAN Drop (Wi-Fi Quick Share)**: Instant offline file drop and clipboard note sync between PC and phone via dynamic QR code without requiring apps on the phone *(Credit to yadavnikhil03)*.
   - 📱 **Android Screen Mirroring (scrcpy)**: Ultra-low latency device mirroring, stay-awake / screen-off power toggles, resolution & FPS presets, and 1-click APK sideloading *(Credit to Genymobile)*.
-- 🛍️ **Software Hub & Gaming Launchers**:
-  - **1-Click Game Launchers & Tools**: Instant access to Steam, Epic Games, Rockstar Games Launcher, Ubisoft Connect, Battle.net, GOG Galaxy, EA App, DaVinci Resolve, MSI Afterburner, CPU-Z, GPU-Z, HWiNFO, CrystalDiskInfo, OBS Studio, Discord, VLC, 7-Zip, Notepad++, and VC++ runtimes.
-  - **Clean 2-Button Flow**: Clear `Open` (launches app/protocol) and `Uninstall` (when installed) or `Install` (when not installed).
-  - **3-Stage Resilient Installation**: Silent WinGet &rarr; Interactive Setup Wizard &rarr; Verified Official Download Website Portal Fallback so installation never hangs or gets stuck.
+- 📖 **Dedicated Help & Documentation Center**: Direct in-app "Learn More" navigation to the official [AxePower Help Center](https://axepower.vercel.app/help.html) with full controller mappings and troubleshooting guides.
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
 - 🎮 **Game Booster & Multi-Drive Scanner**: Automatically detects foreground games across all fixed drives (C:, D:, E:, etc.), forces Beast Mode, and suspends heavy background processes.
-- 🔋 **Battery Diagnostics & Health**: Real-time 3x battery indicator, discharge tracking, estimated time remaining, charge cycle health, and trend insights.
+- 🔋 **Real-Time Battery Telemetry**: Live battery percentage, discharge tracking, estimated time remaining, charge cycle health, and conservation charging threshold.
 - 🗑️ **Uninstaller Pro**: Deep application discovery, batch uninstallation, and verified leftover registry/filesystem cleaner with safety backups.
-- 🔄 **Update PC Utility**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and Windows Update Orchestration.
+- 🔄 **Update PC Utility & BIOS Checks**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and BIOS/firmware version checks.
 - 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
 - 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
 - 🚀 **GitHub Releases Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads with live progress bars, and seamlessly updates the app.

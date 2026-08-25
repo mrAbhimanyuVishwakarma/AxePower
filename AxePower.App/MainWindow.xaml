@@ -22,9 +22,6 @@
         <DataTemplate DataType="{x:Type viewmodels:DashboardViewModel}">
             <views:DashboardView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:AutoSwitchViewModel}">
-            <views:AutoSwitchView />
-        </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:GameModeViewModel}">
             <views:GameModeView />
         </DataTemplate>
@@ -109,14 +106,6 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Resources/icons/Dashboards.png" Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                     <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-
-                            <!-- Auto Switch -->
-                            <Button Style="{Binding AutoSwitchActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="AutoSwitch">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Auto Switch" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
@@ -393,48 +382,50 @@
                             </Grid>
                         </Border>
 
-                        <!-- Tool Selector Tabs -->
-                        <Border Grid.Row="1" Background="{DynamicResource WindowSecondaryBackgroundBrush}" Padding="16,10" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
-                            <ItemsControl ItemsSource="{Binding AllToolGuides}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.OpenToolHelpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding Id}"
-                                                Margin="0,0,8,0" Padding="12,6" Cursor="Hand" Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="Button">
-                                                                <Border x:Name="TabBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"
-                                                                                   Visibility="{Binding ImageIconSource, Converter={StaticResource NullToVis}}"/>
-                                                                        <Image Source="{Binding ImageIconSource}" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
-                                                                               Visibility="{Binding ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
-                                                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                                                    </StackPanel>
-                                                                </Border>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                    <Style.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#1AFFFFFF"/>
-                                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                        <!-- Tool Selector Tabs (Horizontal Scrolling) -->
+                        <Border Grid.Row="1" Background="{DynamicResource WindowSecondaryBackgroundBrush}" Padding="12,10" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PanningMode="HorizontalOnly" HorizontalAlignment="Stretch" Focusable="False">
+                                <ItemsControl ItemsSource="{Binding AllToolGuides}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.OpenToolHelpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding Id}"
+                                                    Margin="0,0,8,0" Padding="12,6" Cursor="Hand" Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="TabBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                            <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"
+                                                                                       Visibility="{Binding ImageIconSource, Converter={StaticResource NullToVis}}"/>
+                                                                            <Image Source="{Binding ImageIconSource}" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
+                                                                                   Visibility="{Binding ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
+                                                                            <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Background" Value="#1AFFFFFF"/>
+                                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
                         </Border>
 
                         <!-- Scrollable Guide Content -->
@@ -500,17 +491,17 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Left Links: Readme & Tool Repo -->
+                                <!-- Left Links: Learn More (AxePower Help Center) & Tool Repo -->
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenReadmeHelpCommand}" Height="34" Padding="12,0" Margin="0,0,8,0" ToolTip="Open AxePower Readme Documentation">
+                                    <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenReadmeHelpCommand}" Height="34" Padding="12,0" Margin="0,0,8,0" ToolTip="Open AxePower Help Center &amp; Documentation">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="📖" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Readme" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Learn More" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
                                     <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenSelectedToolCreditCommand}" Height="34" Padding="12,0" ToolTip="Open official project website or repository">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🌐" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                             <TextBlock Text="Tool Website / Source" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>

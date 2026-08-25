@@ -221,11 +221,37 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private int _standbyTimeoutDc;
 
+    [ObservableProperty]
+    private bool _isTouchpadEnabled = true;
+
+    partial void OnIsTouchpadEnabledChanged(bool value)
+    {
+        if (CurrentSettings != null)
+        {
+            CurrentSettings.TouchpadEnabled = value;
+            _settingsService.SaveSettings(CurrentSettings);
+        }
+
+        _batteryService?.SetTouchpad(value);
+        _notificationService.Show(value ? "Touchpad enabled." : "Touchpad disabled.");
+    }
+
+    [RelayCommand]
+    private void OpenTouchpadSettings()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:devices-touchpad") { UseShellExecute = true });
+        }
+        catch { }
+    }
+
     public IEnumerable<PowerMode> AvailableModes => Enum.GetValues(typeof(PowerMode)).Cast<PowerMode>();
     public IEnumerable<AppTheme> AvailableThemes => Enum.GetValues(typeof(AppTheme)).Cast<AppTheme>();
     public IEnumerable<CloseBehaviour> AvailableCloseBehaviours => Enum.GetValues(typeof(CloseBehaviour)).Cast<CloseBehaviour>();
 
     private readonly UpdateService? _updateService;
+    private readonly BatteryService? _batteryService;
 
     public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.3.0";
 
@@ -242,7 +268,8 @@ public partial class SettingsViewModel : ObservableObject
         ThemeService themeService,
         DisplayService displayService,
         PowerPlanService powerPlanService,
-        UpdateService updateService)
+        UpdateService updateService,
+        BatteryService? batteryService = null)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
@@ -251,6 +278,7 @@ public partial class SettingsViewModel : ObservableObject
         _displayService = displayService;
         _powerPlanService = powerPlanService;
         _updateService = updateService;
+        _batteryService = batteryService;
         _currentSettings = _settingsService.GetSettings();
         _selectedTheme = _currentSettings.Theme;
         _selectedUnpluggedMode = _currentSettings.UnpluggedMode;
@@ -260,6 +288,7 @@ public partial class SettingsViewModel : ObservableObject
         _startWithWindows = _currentSettings.StartWithWindows;
         _startMinimised = _currentSettings.StartMinimised;
         _showNotifications = _currentSettings.ShowNotifications;
+        _isTouchpadEnabled = _currentSettings.TouchpadEnabled;
 
         InitializeTemperatureUnit();
         InitializeRefreshRates();

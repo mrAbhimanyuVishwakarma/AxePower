@@ -12,11 +12,11 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,24">
-            <TextBlock Text="System Logs" Style="{StaticResource PageTitleText}"/>
-            <TextBlock Text="View background activities, plan switches, and error messages" Style="{StaticResource SecondaryText}"/>
+            <TextBlock Text="System Logs" Style="{DynamicResource PageTitleText}"/>
+            <TextBlock Text="View background activities, plan switches, and error messages" Style="{DynamicResource SecondaryText}"/>
         </StackPanel>
         
-        <Border Grid.Row="1" Style="{StaticResource CardElevatedStyle}" Padding="0,16">
+        <Border Grid.Row="1" Style="{DynamicResource CardElevatedStyle}" Padding="0,16">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -30,9 +30,9 @@
                         <ColumnDefinition Width="160"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Level" Style="{StaticResource SecondaryText}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="1" Text="Timestamp" Style="{StaticResource SecondaryText}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="2" Text="Message" Style="{StaticResource SecondaryText}" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="0" Text="Level" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1" Text="Timestamp" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="2" Text="Message" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
                 </Grid>
                 
                 <Border Grid.Row="0" Height="1" Background="{DynamicResource DividerBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>

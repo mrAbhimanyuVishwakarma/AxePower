@@ -87,6 +87,21 @@ public class AppSettings
     [JsonPropertyName("appsToClose")]
     public List<string> AppsToClose { get; set; } = new();
 
+    [JsonPropertyName("conservationModeEnabled")]
+    public bool ConservationModeEnabled { get; set; } = false;
+
+    [JsonPropertyName("rapidChargeEnabled")]
+    public bool RapidChargeEnabled { get; set; } = false;
+
+    [JsonPropertyName("overnightBatteryChargingEnabled")]
+    public bool OvernightBatteryChargingEnabled { get; set; } = false;
+
+    [JsonPropertyName("fnLockEnabled")]
+    public bool FnLockEnabled { get; set; } = false;
+
+    [JsonPropertyName("touchpadEnabled")]
+    public bool TouchpadEnabled { get; set; } = true;
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -115,7 +130,12 @@ public class AppSettings
             GameBoosterEnabled = this.GameBoosterEnabled,
             DisplayRefreshRate = this.DisplayRefreshRate,
             TemperatureUnit = this.TemperatureUnit,
-            AppsToClose = new List<string>(this.AppsToClose)
+            AppsToClose = new List<string>(this.AppsToClose),
+            ConservationModeEnabled = this.ConservationModeEnabled,
+            RapidChargeEnabled = this.RapidChargeEnabled,
+            OvernightBatteryChargingEnabled = this.OvernightBatteryChargingEnabled,
+            FnLockEnabled = this.FnLockEnabled,
+            TouchpadEnabled = this.TouchpadEnabled
         };
     }
 }

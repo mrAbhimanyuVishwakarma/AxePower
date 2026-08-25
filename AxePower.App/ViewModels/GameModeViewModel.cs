@@ -36,12 +36,31 @@ public partial class GameModeViewModel : ObservableObject
 
     private readonly PowerPlanService _powerPlanService;
     private readonly ControllerNavigationService? _controllerService;
+    private readonly IDynamicModeAutomationService? _automationService;
+    private readonly IServiceThrottlerService? _throttlerService;
+    private readonly IMemoryOptimizerService? _memoryOptimizer;
 
     [ObservableProperty]
     private bool _isControllerNavigationEnabled;
 
     [ObservableProperty]
     private bool _isControllerBusy;
+
+    // Dynamic Mode Automation & Background Tuning
+    [ObservableProperty]
+    private bool _autoPauseServicesInBeast = true;
+
+    [ObservableProperty]
+    private bool _autoFlushRamOnGameLaunch = true;
+
+    [ObservableProperty]
+    private bool _autoRestoreOnEco = true;
+
+    [ObservableProperty]
+    private bool _areServicesThrottled;
+
+    [ObservableProperty]
+    private string _memorySummary = string.Empty;
 
     public GameModeViewModel(
         SettingsService settingsService, 
@@ -50,7 +69,10 @@ public partial class GameModeViewModel : ObservableObject
         AppKillerService appKillerService,
         SystemServiceOptimizer systemServiceOptimizer,
         PowerPlanService powerPlanService,
-        ControllerNavigationService? controllerService = null)
+        ControllerNavigationService? controllerService = null,
+        IDynamicModeAutomationService? automationService = null,
+        IServiceThrottlerService? throttlerService = null,
+        IMemoryOptimizerService? memoryOptimizer = null)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
@@ -59,6 +81,9 @@ public partial class GameModeViewModel : ObservableObject
         _systemServiceOptimizer = systemServiceOptimizer;
         _powerPlanService = powerPlanService;
         _controllerService = controllerService;
+        _automationService = automationService;
+        _throttlerService = throttlerService;
+        _memoryOptimizer = memoryOptimizer;
 
         if (_controllerService != null)
         {
@@ -68,6 +93,39 @@ public partial class GameModeViewModel : ObservableObject
         LoadSettings();
         _ = RefreshBackgroundAppsAsync();
         RefreshServices();
+        RefreshAutomationStatus();
+    }
+
+    public void RefreshAutomationStatus()
+    {
+        if (_throttlerService != null)
+        {
+            AreServicesThrottled = _throttlerService.AreServicesThrottled;
+        }
+
+        if (_memoryOptimizer != null)
+        {
+            var mem = _memoryOptimizer.GetMemoryStatus();
+            MemorySummary = mem.FormattedSummary;
+        }
+    }
+
+    partial void OnAutoPauseServicesInBeastChanged(bool value)
+    {
+        if (_automationService != null)
+            _automationService.Config.AutoPauseServicesInBeast = value;
+    }
+
+    partial void OnAutoFlushRamOnGameLaunchChanged(bool value)
+    {
+        if (_automationService != null)
+            _automationService.Config.AutoFlushRamOnGameLaunch = value;
+    }
+
+    partial void OnAutoRestoreOnEcoChanged(bool value)
+    {
+        if (_automationService != null)
+            _automationService.Config.AutoRestoreOnEco = value;
     }
 
     private void LoadSettings()
@@ -91,6 +149,13 @@ public partial class GameModeViewModel : ObservableObject
                 RunningBackgroundApps.Add(new BackgroundAppItem { ProcessName = app, IsSelected = true });
             }
         }
+
+        if (_automationService != null)
+        {
+            AutoPauseServicesInBeast = _automationService.Config.AutoPauseServicesInBeast;
+            AutoFlushRamOnGameLaunch = _automationService.Config.AutoFlushRamOnGameLaunch;
+            AutoRestoreOnEco = _automationService.Config.AutoRestoreOnEco;
+        }
     }
 
     [RelayCommand]
@@ -111,6 +176,13 @@ public partial class GameModeViewModel : ObservableObject
             .ToList();
 
         _settingsService.SaveSettings(settings);
+
+        if (_automationService != null)
+        {
+            _automationService.Config.AutoPauseServicesInBeast = AutoPauseServicesInBeast;
+            _automationService.Config.AutoFlushRamOnGameLaunch = AutoFlushRamOnGameLaunch;
+            _automationService.Config.AutoRestoreOnEco = AutoRestoreOnEco;
+        }
         
         if (gameBoosterJustEnabled)
         {
@@ -119,6 +191,42 @@ public partial class GameModeViewModel : ObservableObject
         }
 
         _notificationService.Show("Game Mode settings saved successfully.");
+    }
+
+    [RelayCommand]
+    public async Task OptimizeRamNowAsync()
+    {
+        if (_automationService != null)
+        {
+            double freed = await _automationService.OptimizeMemoryNowAsync();
+            RefreshAutomationStatus();
+            _notificationService.Show(freed > 0.02
+                ? $"✓ Freed ~{freed * 1024:F0} MB of standby RAM!"
+                : "✓ RAM working set & standby cache flushed.");
+        }
+        else
+        {
+            _notificationService.Show("✓ RAM working set & standby cache flushed.");
+        }
+    }
+
+    [RelayCommand]
+    public async Task ToggleServiceThrottlingAsync()
+    {
+        if (_automationService == null) return;
+
+        if (AreServicesThrottled)
+        {
+            int restored = await _automationService.ForceRestoreServicesAsync();
+            RefreshAutomationStatus();
+            _notificationService.Show($"✓ Restored {restored} background service(s).");
+        }
+        else
+        {
+            int throttled = await _automationService.ForceThrottleServicesAsync();
+            RefreshAutomationStatus();
+            _notificationService.Show($"⚡ Paused {throttled} non-essential background service(s).");
+        }
     }
 
     private void CreateSystemRestorePoint()

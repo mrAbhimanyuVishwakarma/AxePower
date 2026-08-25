@@ -23,6 +23,9 @@ public class SoftwarePackageItem
     public bool IsWebLinkOnly { get; set; }
     public string WebUrl { get; set; } = string.Empty;
     public string LaunchProtocolOrExe { get; set; } = string.Empty;
+    public string LocalInstallerPath { get; set; } = string.Empty;
+    public string CustomWebUrl { get; set; } = string.Empty;
+    public bool HasCustomInstaller => !string.IsNullOrEmpty(LocalInstallerPath) || !string.IsNullOrEmpty(CustomWebUrl);
 
     public string CategoryDisplayName => Category switch
     {

@@ -9,6 +9,8 @@
              
     <UserControl.Resources>
         <converters:BatteryTrendConverter x:Key="BatteryTrendConverter" />
+        <converters:BatteryPercentageToYConverter x:Key="BatteryPercentageToYConverter" />
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </UserControl.Resources>
 
@@ -188,7 +190,6 @@
                     <TextBlock Text="Apply" Foreground="Black" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            
         </Grid>
 
         <!-- Right Rail -->
@@ -208,22 +209,24 @@
                         </StackPanel>
                         
                         <TextBlock Text="When plugged in:" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedInMode}" Margin="0,0,0,16"/>
+                        <ComboBox Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedInMode}" Margin="0,0,0,16"/>
                         
                         <TextBlock Text="When unplugged:" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedOutMode}" Margin="0,0,0,16"/>
-                        
-                        <TextBlock Text="When battery below 30%:" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding LowBatteryMode}" Margin="0,0,0,24"/>
+                        <ComboBox Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedOutMode}" Margin="0,0,0,20"/>
                         
                         <Grid Margin="0,0,0,16">
                             <TextBlock Text="Show notifications" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
-                            <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}" HorizontalAlignment="Right"/>
+                            <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}" HorizontalAlignment="Right"/>
                         </Grid>
                         
-                        <Grid>
+                        <Grid Margin="0,0,0,16">
                             <TextBlock Text="Start with Windows" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
-                            <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" HorizontalAlignment="Right"/>
+                            <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,0">
+                            <TextBlock Text="Function lock (Fn + FnLock)" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
+                            <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsFnLockEnabled}" HorizontalAlignment="Right"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -263,9 +266,9 @@
                                     <TextBlock Text="0%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,48,0,0"/>
                                 </StackPanel>
                                 
-                                <Grid Grid.Column="1">
+                                <Grid Grid.Column="1" Height="80">
                                     <!-- Filled Graph under the line -->
-                                    <Polygon Points="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}}" Stretch="Fill" Opacity="0.2">
+                                    <Polygon Points="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}, ConverterParameter=Polygon}" Stretch="Fill" Opacity="0.2">
                                         <Polygon.Fill>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                                 <GradientStop Color="#00C853" Offset="0.0"/>
@@ -282,7 +285,7 @@
                                     <!-- Dot for current value -->
                                     <Ellipse Width="8" Height="8" Stroke="{DynamicResource WindowBackgroundBrush}" StrokeThickness="1" Fill="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" VerticalAlignment="Top">
                                         <Ellipse.RenderTransform>
-                                            <TranslateTransform Y="{Binding BatteryPercentage, StringFormat={}{0}}" />
+                                            <TranslateTransform Y="{Binding RawBatteryPercentage, Converter={StaticResource BatteryPercentageToYConverter}, ConverterParameter=80}" />
                                         </Ellipse.RenderTransform>
                                     </Ellipse>
                                 </Grid>
@@ -322,15 +325,15 @@
                 </StackPanel>
                 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                    <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Help" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Padding="16,8" Height="32">
+                    <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Padding="16,8" Height="32">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Check for updates" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

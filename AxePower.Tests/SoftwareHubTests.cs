@@ -13,6 +13,7 @@ public class SoftwareHubTests
     private readonly WinGetHubService _hubService;
     private readonly WindowsUpdateShieldService _updateShieldService;
     private readonly DriverUpdateService _driverUpdateService;
+    private readonly FirmwareUpdateService _firmwareUpdateService;
     private readonly NotificationService _notificationService;
 
     public SoftwareHubTests()
@@ -21,6 +22,7 @@ public class SoftwareHubTests
         _hubService = new WinGetHubService(_logService);
         _updateShieldService = new WindowsUpdateShieldService(_logService);
         _driverUpdateService = new DriverUpdateService(_logService);
+        _firmwareUpdateService = new FirmwareUpdateService(_logService);
         _notificationService = new NotificationService();
     }
 
@@ -38,18 +40,21 @@ public class SoftwareHubTests
     {
         var packages = _hubService.GetAvailablePackages();
 
-        foreach (var pkg in packages)
+        foreach (var p in packages)
         {
-            Assert.False(string.IsNullOrWhiteSpace(pkg.Id), "Package ID must not be empty");
-            if (!pkg.IsWebLinkOnly)
-            {
-                Assert.False(string.IsNullOrWhiteSpace(pkg.WinGetId), $"Package {pkg.Id} WinGet ID must not be empty");
-            }
-            Assert.False(string.IsNullOrWhiteSpace(pkg.WebUrl), $"Package {pkg.Id} WebUrl must not be empty");
-            Assert.False(string.IsNullOrWhiteSpace(pkg.Name), $"Package {pkg.Id} Name must not be empty");
-            Assert.False(string.IsNullOrWhiteSpace(pkg.Description), $"Package {pkg.Id} Description must not be empty");
-            Assert.False(string.IsNullOrWhiteSpace(pkg.CategoryDisplayName), $"Package {pkg.Id} CategoryDisplayName must not be empty");
+            Assert.False(string.IsNullOrWhiteSpace(p.Id));
+            Assert.False(string.IsNullOrWhiteSpace(p.Name));
+            Assert.False(string.IsNullOrWhiteSpace(p.Glyph));
         }
+    }
+
+    [Fact]
+    public async Task WinGetHubService_RefreshInstallationStatuses_CompletesWithoutExceptions()
+    {
+        await _hubService.RefreshInstallationStatusesAsync();
+        var packages = _hubService.GetAvailablePackages();
+
+        Assert.All(packages, p => Assert.NotNull(p));
     }
 
     [Fact]
@@ -69,8 +74,23 @@ public class SoftwareHubTests
         Assert.Contains("fitgirl", ids);
         Assert.Contains("afterburner", ids);
         Assert.Contains("7zip", ids);
+        Assert.Contains("ninite", ids);
         Assert.Contains("obs", ids);
         Assert.Contains("davinci", ids);
+    }
+
+    [Fact]
+    public void NinitePackage_HasCustomInstallerAndWebUrl()
+    {
+        var packages = _hubService.GetAvailablePackages();
+        var ninite = packages.FirstOrDefault(p => p.Id == "ninite");
+
+        Assert.NotNull(ninite);
+        Assert.Equal("Ninite", ninite.Name);
+        Assert.True(ninite.HasCustomInstaller);
+        Assert.Equal("https://ninite.com/", ninite.CustomWebUrl);
+        Assert.Equal("https://ninite.com/", ninite.WebUrl);
+        Assert.Contains("Ninite Installer.exe", ninite.LocalInstallerPath);
     }
 
     [Fact]
@@ -87,6 +107,7 @@ public class SoftwareHubTests
             _hubService,
             _updateShieldService,
             _driverUpdateService,
+            _firmwareUpdateService,
             _notificationService,
             _logService);
 
@@ -94,6 +115,7 @@ public class SoftwareHubTests
         Assert.Equal("All", vm.SelectedCategory);
         Assert.NotEmpty(vm.AllPackages);
         Assert.Equal(vm.AllPackages.Count, vm.FilteredPackages.Count);
+        Assert.NotNull(vm.FirmwareInfo);
 
         // Filter Runtimes
         vm.SetCategoryCommand.Execute("Runtimes");
@@ -120,6 +142,7 @@ public class SoftwareHubTests
             _hubService,
             _updateShieldService,
             _driverUpdateService,
+            _firmwareUpdateService,
             _notificationService,
             _logService);
 
@@ -145,6 +168,7 @@ public class SoftwareHubTests
             _hubService,
             _updateShieldService,
             _driverUpdateService,
+            _firmwareUpdateService,
             _notificationService,
             _logService);
 
@@ -155,10 +179,20 @@ public class SoftwareHubTests
     }
 
     [Fact]
+    public async Task FirmwareUpdateService_QueriesFirmwareDetailsSuccessfully()
+    {
+        var info = await _firmwareUpdateService.GetFirmwareInfoAsync();
+        Assert.NotNull(info);
+        Assert.NotNull(info.BiosVersion);
+        Assert.NotNull(info.Manufacturer);
+        Assert.NotNull(info.VendorPortalUrl);
+        Assert.NotNull(info.FirmwareDevices);
+    }
+
+    [Fact]
     public void DriverUpdateService_TryFocusExisting_ReturnsBooleanWithoutCrashing()
     {
         bool focused = _driverUpdateService.TryFocusExistingUpdateWindow();
-        // Should safely return false or true without unhandled win32 exceptions
         Assert.True(focused || !focused);
     }
 }

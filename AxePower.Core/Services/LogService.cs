@@ -46,6 +46,13 @@ public class LogService
         
         try
         {
+            var fi = new FileInfo(_logFilePath);
+            if (fi.Exists && fi.Length > 5 * 1024 * 1024)
+            {
+                var backup = _logFilePath + ".old";
+                File.Delete(backup);
+                File.Move(_logFilePath, backup);
+            }
             File.AppendAllText(_logFilePath, entry.ToString() + Environment.NewLine);
         }
         catch 

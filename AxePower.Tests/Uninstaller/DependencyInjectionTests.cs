@@ -44,6 +44,7 @@ public class DependencyInjectionTests
         services.AddSingleton<IMemoryOptimizerService, MemoryOptimizerService>();
         services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
         services.AddSingleton<LanDropService>();
+        services.AddSingleton<FirmwareUpdateService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
@@ -128,7 +129,7 @@ public class DependencyInjectionTests
                 // Ensure Application instance exists for resource resolution
                 if (System.Windows.Application.Current is null)
                 {
-                    var app = new System.Windows.Application();
+                    try { var app = new System.Windows.Application(); } catch { }
                 }
 
                 var view = new AxePower.App.Views.UninstallerView();

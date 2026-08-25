@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:localConverters="clr-namespace:AxePower.App.Converters"
              Startup="Application_Startup"
-             Exit="Application_Exit">
+             Exit="Application_Exit"
+             ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -15,6 +16,8 @@
             <localConverters:InverseBooleanConverter x:Key="InverseBool" />
             <localConverters:NullToVisibilityConverter x:Key="NullToVis" Invert="False" />
             <localConverters:NullToVisibilityConverter x:Key="NotNullToVis" Invert="True" />
+            <localConverters:BatteryTrendConverter x:Key="BatteryTrendConverter" />
+            <localConverters:BatteryPercentageToYConverter x:Key="BatteryPercentageToYConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

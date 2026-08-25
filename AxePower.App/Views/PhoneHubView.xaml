@@ -134,19 +134,19 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="📱 Connect Phone / Device" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,10,0"/>
-                                        <Button Grid.Column="1" Command="{Binding ToggleServerCommand}">
-                                            <Button.Style>
-                                                <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
-                                                    <Setter Property="Padding" Value="14,6"/>
-                                                    <Setter Property="Content" Value="Start Server"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
-                                                            <Setter Property="Background" Value="#EF4444"/>
-                                                            <Setter Property="Content" Value="Stop Server"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
+                                        <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding ToggleServerCommand}" Padding="14,6">
+                                            <TextBlock>
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="Start Server"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
+                                                                <Setter Property="Text" Value="Stop Server"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </Button>
                                     </Grid>
 

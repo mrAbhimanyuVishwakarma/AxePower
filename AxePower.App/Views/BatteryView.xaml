@@ -9,6 +9,7 @@
              
     <UserControl.Resources>
         <converters:BatteryTrendConverter x:Key="BatteryTrendConverter" />
+        <converters:BatteryPercentageToYConverter x:Key="BatteryPercentageToYConverter" />
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </UserControl.Resources>
 
@@ -23,6 +24,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -32,8 +34,114 @@
                 <TextBlock Text="Monitor battery health, usage, and performance." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15"/>
             </StackPanel>
 
+            <!-- CHARGING CARD (Image 2) -->
+            <Border Grid.Row="1" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Charging" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                    <!-- 1. Conservation mode -->
+                    <Grid Margin="0,4,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                            <TextBlock Text="Conservation mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14.5" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="Enable this setting to help increase the lifespan of your battery. You can also toggle this setting on and off using the Vantage Widget." 
+                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12.5" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,8"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Start charging: 75%" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" FontWeight="Medium" Margin="0,0,24,0"/>
+                                <TextBlock Text="Stop charging: 80%" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" FontWeight="Medium"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ConservationMode, Mode=TwoWay}" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,4,0,16"/>
+
+                    <!-- 2. Rapid charge -->
+                    <Grid Margin="0,4,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                            <TextBlock Text="Rapid charge" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14.5" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="While hibernating or shut down, your battery can charge much faster than normally, depending on your power adapter wattage and battery condition." 
+                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12.5" TextWrapping="Wrap" LineHeight="18"/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding RapidCharge, Mode=TwoWay}" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,4,0,16"/>
+
+                    <!-- 3. Overnight battery charging -->
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                            <TextBlock Text="Overnight battery charging" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14.5" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="Vantage will study your daily charging patterns in order to charge your device from 80% to full right before you use your computer in the morning. This helps reduce the risk of battery overheating or swelling, and improves battery lifespan." 
+                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12.5" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,16"/>
+
+                            <!-- Visual Curve Diagram (Exact Image 2 representation) -->
+                            <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20,16" HorizontalAlignment="Left" Width="440">
+                                <Grid Height="140">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Y-Axis Labels -->
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Margin="0,0,8,0">
+                                        <TextBlock Text="100%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,-4,0,0"/>
+                                        <TextBlock Text="80%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,20,0,0"/>
+                                        <TextBlock Text="0%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,60,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Curve & Shaded Blocks Container -->
+                                    <Grid Grid.Column="1">
+                                        <!-- Gridlines -->
+                                        <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.4" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                                        <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.4" VerticalAlignment="Top" Margin="0,38,0,0"/>
+                                        <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.4" VerticalAlignment="Bottom" Margin="0,0,0,16"/>
+
+                                        <!-- Shaded Box 1: Overnight charging -->
+                                        <Border HorizontalAlignment="Left" Width="180" Margin="40,38,0,16" Background="#182030" Opacity="0.8" CornerRadius="4">
+                                            <TextBlock Text="Overnight&#x0a;charging" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- Shaded Box 2: Before predicted first use -->
+                                        <Border HorizontalAlignment="Right" Width="140" Margin="0,4,0,16" Background="#1E283C" Opacity="0.8" CornerRadius="4">
+                                            <TextBlock Text="Before&#x0a;predicted&#x0a;first use" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- The S-Curve Line (Vector Path) -->
+                                        <Path Stroke="#6366F1" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Margin="0,0,0,16">
+                                            <Path.Data>
+                                                <PathGeometry>
+                                                    <PathFigure StartPoint="0,124">
+                                                        <BezierSegment Point1="20,100" Point2="30,38" Point3="50,38"/>
+                                                        <LineSegment Point="220,38"/>
+                                                        <BezierSegment Point1="230,38" Point2="240,4" Point3="260,4"/>
+                                                        <LineSegment Point="360,4"/>
+                                                    </PathFigure>
+                                                </PathGeometry>
+                                            </Path.Data>
+                                        </Path>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding OvernightBatteryCharging, Mode=TwoWay}" VerticalAlignment="Top"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <!-- Top Cards -->
-            <WrapPanel Grid.Row="1" Margin="0,0,0,16">
+            <WrapPanel Grid.Row="2" Margin="0,0,0,16">
 
                 <!-- Battery Health -->
                 <Border Width="290" Margin="0,0,16,16" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource EcoBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
@@ -48,8 +156,8 @@
                         </Grid>
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Battery Health" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,2"/>
-                            <TextBlock Text="{Binding HealthStatus}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="20" FontWeight="Bold"/>
-                            <TextBlock Text="Excellent" Foreground="{DynamicResource EcoBrush}" FontSize="12" Margin="0,0,0,12"/>
+                            <TextBlock Text="{Binding HealthPercentage}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="20" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding HealthStatus}" Foreground="{DynamicResource EcoBrush}" FontSize="12" Margin="0,0,0,12"/>
                             <TextBlock Text="Your battery health is in great condition." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Grid>
@@ -69,7 +177,7 @@
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Estimated Time Remaining" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,2"/>
                             <TextBlock Text="{Binding EstimatedTimeRemaining}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="20" FontWeight="Bold"/>
-                            <TextBlock Text="Remaining" Foreground="{DynamicResource SmartBrush}" FontSize="12" Margin="0,0,0,12"/>
+                            <TextBlock Text="{Binding PowerSource}" Foreground="{DynamicResource SmartBrush}" FontSize="12" Margin="0,0,0,12"/>
                             <TextBlock Text="Time left based on your&#x0a;current usage." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Grid>
@@ -89,7 +197,7 @@
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Charge Level" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,2"/>
                             <TextBlock Text="{Binding BatteryPercentage, StringFormat={}{0}}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="20" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding ChargingStatus}" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,0,0,12"/>
+                            <TextBlock Text="{Binding ChargingState}" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,0,0,12"/>
                             <TextBlock Text="Current charge level&#x0a;of your device." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Grid>
@@ -149,15 +257,15 @@
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Current Power Usage" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,2"/>
                             <TextBlock Text="{Binding CurrentPowerUsage}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="20" FontWeight="Bold"/>
-                            <TextBlock Text="Moderate" Foreground="{DynamicResource WarningBrush}" FontSize="12" Margin="0,0,0,12"/>
-                            <TextBlock Text="Power draw is in the&#x0a;moderate range." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" TextWrapping="Wrap"/>
+                            <TextBlock Text="Live Draw" Foreground="{DynamicResource WarningBrush}" FontSize="12" Margin="0,0,0,12"/>
+                            <TextBlock Text="Power draw based on live&#x0a;sensor telemetry." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Grid>
                 </Border>
             </WrapPanel>
 
             <!-- Bottom Area -->
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="16"/>
@@ -203,8 +311,8 @@
                                     <TextBlock Text="0%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,20,0,0"/>
                                 </StackPanel>
                                 
-                                <Grid Grid.Column="1">
-                                    <Polygon Points="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}}" Stretch="Fill" Opacity="0.2">
+                                <Grid Grid.Column="1" Height="100">
+                                    <Polygon Points="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}, ConverterParameter=Polygon}" Stretch="Fill" Opacity="0.2">
                                         <Polygon.Fill>
                                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                                 <GradientStop Color="#00C853" Offset="0.0"/>
@@ -219,7 +327,7 @@
                                     <TextBlock Text="{Binding BatteryPercentage}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-20,0,0"/>
                                     <Ellipse Width="8" Height="8" Stroke="{DynamicResource WindowBackgroundBrush}" StrokeThickness="1" Fill="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" VerticalAlignment="Top">
                                         <Ellipse.RenderTransform>
-                                            <TranslateTransform Y="{Binding BatteryPercentage, StringFormat={}{0}}" />
+                                            <TranslateTransform Y="{Binding RawBatteryPercentage, Converter={StaticResource BatteryPercentageToYConverter}, ConverterParameter=100}" />
                                         </Ellipse.RenderTransform>
                                     </Ellipse>
                                 </Grid>
@@ -393,7 +501,7 @@
                                 <TextBlock Grid.Column="2" Text="{Binding ManufactureDate}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" HorizontalAlignment="Right"/>
                             </Grid>
                             
-                            <Button Style="{DynamicResource SecondaryButtonStyle}" Margin="0,0,0,0" Height="40" Background="Transparent" BorderBrush="{StaticResource DividerBrush}">
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Margin="0,0,0,0" Height="40" Background="Transparent" BorderBrush="{DynamicResource DividerBrush}">
                                 <Grid Width="230">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>

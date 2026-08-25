@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help Center &amp; Tool Guides - AxePower</title>
+  <meta name="description" content="Official AxePower Help Center: step-by-step documentation, shortcuts, controller mapping, phone hub, uninstaller, and gaming optimization guides.">
+  <meta name="keywords" content="AxePower Help, Controller Navigation Guide, Gopher360 keybindings, Phone Control setup, Uninstaller Pro guide, Win11Debloat instructions">
+  <meta name="author" content="AxePower">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://axepower.vercel.app/help.html">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://axepower.vercel.app/help.html">
+  <meta property="og:title" content="Help Center &amp; Tool Guides - AxePower">
+  <meta property="og:description" content="Step-by-step guides, controller bindings, and tips for AxePower PC Control Center tools.">
+  <meta property="og:image" content="assets/website_home_image.png">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+  <link rel="icon" type="image/x-icon" id="appFavicon" href="assets/AxePower_white.ico">
+  <link rel="shortcut icon" id="appShortcutFavicon" href="assets/AxePower_white.ico">
+  <link rel="apple-touch-icon" id="appAppleIcon" href="assets/AxePower_white.ico">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .help-hero {
+      padding: 130px 0 50px;
+      text-align: center;
+      background: var(--body-gradient);
+    }
+    .help-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      color: var(--accent-cyan);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .help-search-box {
+      max-width: 600px;
+      margin: 28px auto 0;
+      position: relative;
+    }
+    .help-search-input {
+      width: 100%;
+      padding: 16px 20px 16px 52px;
+      font-size: 15px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-pill);
+      color: var(--text-primary);
+      outline: none;
+      transition: all var(--transition-fast);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .help-search-input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15), 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    .help-search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .help-nav-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 32px 0 10px;
+    }
+    .help-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-pill);
+      color: var(--text-secondary);
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+    .help-pill:hover, .help-pill.active {
+      color: #fff;
+      background: var(--bg-elevated);
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+    }
+    .help-guide-section {
+      padding: 40px 0 60px;
+      border-bottom: 1px solid var(--border-divider);
+      scroll-margin-top: 100px;
+    }
+    .guide-header-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .guide-icon-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-lg);
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: var(--accent-cyan);
+      flex-shrink: 0;
+    }
+    .guide-title-wrap {
+      flex: 1;
+    }
+    .guide-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .guide-credit-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--mode-eco);
+    }
+    .guide-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .guide-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 860px) {
+      .guide-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .guide-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+    .guide-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .guide-steps-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .guide-step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0, 212, 255, 0.12);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: var(--accent-cyan);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .bindings-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    .bindings-table th, .bindings-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-divider);
+    }
+    .bindings-table th {
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .key-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+    .guide-tips-box {
+      margin-top: 20px;
+      padding: 16px 20px;
+      background: rgba(0, 212, 255, 0.05);
+      border: 1px solid rgba(0, 212, 255, 0.18);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .guide-tips-box strong {
+      color: var(--text-primary);
+    }
+  </style>
+
+  <!-- Prevent Theme Flash -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('axepower-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      const icoPath = theme === 'light' ? 'assets/AxePower_black.ico' : 'assets/AxePower_white.ico';
+      const fav = document.getElementById('appFavicon');
+      const shortFav = document.getElementById('appShortcutFavicon');
+      const appleFav = document.getElementById('appAppleIcon');
+      if (fav) fav.href = icoPath;
+      if (shortFav) shortFav.href = icoPath;
+      if (appleFav) appleFav.href = icoPath;
+    })();
+  </script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header" id="navbar">
+    <div class="container header-container">
+      <a href="index.html" class="brand-logo" aria-label="AxePower Home">
+        <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+        <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+        <span class="brand-name">AxePower</span>
+      </a>
+
+      <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
+        <a href="index.html#features" class="nav-link">Features</a>
+        <a href="index.html#dashboard" class="nav-link">Dashboard</a>
+        <a href="index.html#modes" class="nav-link">Modes</a>
+        <a href="index.html#companion" class="nav-link">Companion</a>
+        <a href="index.html#tools" class="nav-link">Tools</a>
+        <a href="help.html" class="nav-link active">Help &amp; Guides</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light theme" title="Toggle theme">
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest" class="btn btn-sm btn-primary js-direct-download" aria-label="Download Latest AxePower for Windows">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="help-hero">
+    <div class="container">
+      <div class="help-hero-badge">
+        <span>📖 AxePower Documentation &amp; Help Center</span>
+      </div>
+      <h1 class="hero-title" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 12px;">
+        How can we help you today?
+      </h1>
+      <p class="hero-subtitle" style="max-width: 680px; margin: 0 auto;">
+        Explore detailed step-by-step guides, gamepad mappings, phone companion setups, and optimization tips for all built-in AxePower utilities.
+      </p>
+
+      <!-- Interactive Search Box -->
+      <div class="help-search-box">
+        <svg class="help-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="helpSearchInput" class="help-search-input" placeholder="Search guides (e.g. Controller, LAN Drop, MSI, Uninstaller, Debloat)..." autocomplete="off">
+      </div>
+
+      <!-- Quick Nav Pills -->
+      <div class="help-nav-pills">
+        <a href="#gopher360" class="help-pill">🎮 Controller Navigation</a>
+        <a href="#phonecontrol" class="help-pill">📱 Phone Control &amp; LAN Drop</a>
+        <a href="#msiafterburner" class="help-pill">⚡ MSI Afterburner</a>
+        <a href="#uninstaller" class="help-pill">🗑️ Uninstaller Pro</a>
+        <a href="#updatepc" class="help-pill">🔄 Update PC &amp; Winget</a>
+        <a href="#debloat" class="help-pill">🚀 Debloat Utility</a>
+        <a href="#battery" class="help-pill">🔋 Smart Battery Modes</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Guides -->
+  <main class="container" style="padding-bottom: 80px;">
+
+    <!-- 1. CONTROLLER NAVIGATION (GOPHER360) -->
+    <section class="help-guide-section" id="gopher360">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🎮</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Controller Navigation
+            <span class="guide-credit-badge">Powered by Gopher360 (wishIwasabear)</span>
+          </h2>
+          <p class="guide-subtitle">Control your entire Windows desktop, browser, and media with an Xbox / XInput gamepad.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <!-- Keybindings & Controls -->
+        <div class="guide-card">
+          <h3 class="guide-card-title">🕹️ Gamepad Button Mapping</h3>
+          <table class="bindings-table">
+            <thead>
+              <tr>
+                <th>Button / Stick</th>
+                <th>Windows Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="key-badge">Left Thumbstick</span></td>
+                <td>Move Mouse Cursor smoothly across all monitors</td>
+              </tr>
+              <tr>
+                <td><span class="key-badge">A Button</span></td>
+                <td>Left Mouse Click / Select</td>
+              </tr>
+              <tr>
+                <td><span class="key-badge">X Button</span></td>
+                <td>Right Mouse Click / Context Menu</td>
+              </tr>
+              <tr>
+                <td><span class="key-badge">Right Thumbstick</span></td>
+                <td>Scroll Up / Down &amp; Left / Right (Wheel)</td>
+              </tr>
+              <tr>
+                <td><span class="key-badge">Y Button</span></td>
+                <td>Open Windows Touch / On-Screen Keyboard</td>
+              </tr>
+              <tr>
+                <td><span class="key-badge">D-Pad</span></td>
+                <td>Arrow Keys (Up / Down / Left / Right)</td>
+              </tr>
+              <tr>
+                <td><span class="key-badge">Back + Start</span></td>
+                <td>Toggle Controller Navigation ON / OFF instantly</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Step-by-Step Instructions -->
+        <div class="guide-card">
+          <h3 class="guide-card-title">📋 Step-by-Step Setup</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Connect your Xbox Series X/S, Xbox One, Xbox 360, or any standard XInput-compatible gamepad via Bluetooth or USB cable.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Turn <strong>ON</strong> the <strong>'Controller Navigation'</strong> toggle switch on the AxePower Dashboard.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Use the <strong>Left Thumbstick</strong> to glide the mouse pointer and <strong>A</strong> button to click anywhere on screen.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">4</span>
+              <span>Whenever you launch a full-screen game, press <span class="key-badge">Back + Start</span> together to disable desktop navigation so the game receives native controller inputs.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="guide-tips-box">
+        💡 <strong>Pro Tip:</strong> Controller Navigation runs invisibly in your system tray. You can leave the toggle ON and use the <span class="key-badge">Back + Start</span> shortcut anytime to switch between mouse mode and gameplay mode without opening AxePower.
+      </div>
+    </section>
+
+    <!-- Alias anchor for #controller -->
+    <div id="controller"></div>
+
+    <!-- 2. PHONE CONTROL & LAN DROP -->
+    <section class="help-guide-section" id="phonecontrol">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">📱</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Phone Control &amp; LAN Drop
+            <span class="guide-credit-badge">Powered by scrcpy &amp; LAN-DropSpot</span>
+          </h2>
+          <p class="guide-subtitle">Ultra-fast local file sharing, live clipboard sync, and low-latency Android screen mirroring.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">🌐 LAN Drop (Zero-Install File Sharing)</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Ensure your PC and phone are connected to the same Wi-Fi network.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>In AxePower, open <strong>Phone Control</strong> &gt; <strong>LAN Drop</strong> and click <strong>Start Server</strong>.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Point your phone camera at the QR code displayed on screen to open the transfer portal in your browser.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">4</span>
+              <span>Drag and drop photos, documents, videos, or send text snippets. Files are transferred at full local Wi-Fi gigabit speeds without using cloud or mobile data.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🪞 Android Screen Mirroring (scrcpy)</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Enable <strong>Developer Options</strong> and <strong>USB Debugging</strong> on your Android phone.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Connect phone via USB cable and tap <strong>Allow Always</strong> on the RSA fingerprint prompt.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Click <strong>Mirror Screen</strong> in AxePower. Use keyboard and mouse for full phone control.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">4</span>
+              <span>Shortcuts: Press <span class="key-badge">Ctrl + F</span> for fullscreen, <span class="key-badge">Ctrl + H</span> for Home, and drag APKs onto the window to install.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alias anchor for #phonehub -->
+    <div id="phonehub"></div>
+
+    <!-- 3. MSI AFTERBURNER -->
+    <section class="help-guide-section" id="msiafterburner">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">⚡</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            MSI Afterburner &amp; RivaTuner
+            <span class="guide-credit-badge">Powered by Guru3D / MSI</span>
+          </h2>
+          <p class="guide-subtitle">Real-time in-game FPS counter, GPU temperature tracking, and custom cooling fan profiles.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">📊 Setting Up In-Game Telemetry</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Click <strong>MSI Afterburner</strong> in the AxePower sidebar to launch it in background monitoring mode.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Open Afterburner Settings &gt; <strong>Monitoring</strong> tab.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Check the metrics you want (Framerate, GPU Temperature, GPU Usage, Memory Clock) and check <strong>Show in On-Screen Display</strong>.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">4</span>
+              <span>Launch your game — your real-time stats will appear in the top corner.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">❄️ Custom Fan Curve &amp; Tuning</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>In Afterburner Settings, navigate to the <strong>Fan</strong> tab and enable user-defined software automatic fan control.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Adjust curve points to ramp fan speeds higher when GPU temperature exceeds 65°C.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Click <strong>Apply</strong> and save to profile slot 1 for persistent thermal safety.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. UNINSTALLER PRO -->
+    <section class="help-guide-section" id="uninstaller">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🗑️</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Uninstaller Pro
+            <span class="guide-credit-badge">Built into AxePower</span>
+          </h2>
+          <p class="guide-subtitle">Deep application removal, batch uninstallation, and leftover registry cleaner with safe rollback.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">🔍 Comprehensive App Discovery</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            Uninstaller Pro scans standard Win32 64-bit and 32-bit registry keys, Windows Store (UWP/AppX) packages, and Winget sources to uncover applications that Windows Control Panel often misses.
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Search apps instantly by name or publisher.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Filter by Win32 desktop apps or Windows Store packages.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Batch select multiple items for sequential removal.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🛡️ Deep Leftover Cleanup &amp; Safety</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Select the app you wish to remove and click <strong>Uninstall</strong>.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>After standard uninstallation completes, AxePower performs a deep sweep for orphaned AppData folders, ProgramData remnants, and registry keys.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>A restore snapshot is automatically created before any leftover registry items are deleted.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. UPDATE PC & SOFTWARE HUB -->
+    <section class="help-guide-section" id="updatepc">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🔄</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Update PC &amp; Software Hub
+            <span class="guide-credit-badge">Winget Engine &amp; Windows Update Shield</span>
+          </h2>
+          <p class="guide-subtitle">Automated driver updates, gaming runtimes catalog, Ninite multi-installer, and update pause shield.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">📦 Gaming Runtimes &amp; Ninite Integration</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+            A curated one-click catalog of DirectX End-User Runtimes, Visual C++ All-in-One Redistributables, .NET Runtimes, Steam, Epic Games, OBS, Discord, and Ninite Multi-Installer.
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span><strong>Install:</strong> Runs the bundled multi-installer to automatically setup essential apps with zero clicks.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span><strong>Custom:</strong> Opens the official builder at ninite.com to assemble custom application bundles.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🛡️ Windows Update Shield</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span><strong>Security-Only Updates:</strong> Prevents unexpected feature upgrades from interrupting gaming sessions while keeping security patches active.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span><strong>Disable Forced Reboots:</strong> Blocks Windows from auto-rebooting during active work or gaming.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. DEBLOAT UTILITY -->
+    <section class="help-guide-section" id="debloat">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🚀</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Debloat Utility
+            <span class="guide-credit-badge">Powered by Win11Debloat (Raphire)</span>
+          </h2>
+          <p class="guide-subtitle">Safely remove Windows 11 sponsored bloatware, telemetry, and background drain.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">🧹 Recommended Optimizations</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Click <strong>Debloat Utility</strong> in AxePower sidebar and approve the Windows UAC elevation prompt.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Select <strong>Quick / Recommended Debloat</strong> to remove pre-installed bloatware (sponsored apps, promotional shortcuts).</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Disables intrusive diagnostic telemetry and Bing web results in Windows Start search.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">4</span>
+              <span>Restart your computer after applying for maximum responsiveness.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">↩️ Restoring Default Apps</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6;">
+            If you ever need to restore standard Windows applications (such as Calculator, Microsoft Photos, or Xbox Game Bar), open Win11Debloat and select the <strong>Restore Apps</strong> tab.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. SMART BATTERY & POWER MODES -->
+    <section class="help-guide-section" id="battery">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🔋</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Smart Battery &amp; Dynamic Power Modes
+            <span class="guide-credit-badge">AxePower Intelligent Power Engine</span>
+          </h2>
+          <p class="guide-subtitle">Optimize power draw, monitor battery wear, and protect lifespan with charging thresholds.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">⚡ Power Profiles Explained</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num" style="color: var(--mode-eco); background: rgba(16,185,129,0.15);">🌱</span>
+              <span><strong>Eco Mode:</strong> Reduces CPU clock states and background activity to maximize battery endurance during travel or quiet work.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num" style="color: var(--mode-smart); background: rgba(0,212,255,0.15);">⚡</span>
+              <span><strong>Smart Mode:</strong> Dynamically scales performance between productivity tasks and moderate gaming.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num" style="color: var(--mode-beast); background: rgba(255,56,92,0.15);">🔥</span>
+              <span><strong>Beast Mode:</strong> Unlocks maximum CPU/GPU power limits and sets system power plan to Ultimate Performance.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🛡️ Battery Conservation (80% Limit)</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+            Keeping modern lithium batteries constantly at 100% state of charge while plugged into AC power degrades chemical capacity over time.
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Enable <strong>Battery Conservation Mode</strong> on the Battery page.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Automatically caps charging at 75-80% to double long-term battery lifespan.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-brand-col">
+        <a href="index.html" class="brand-logo footer-logo" aria-label="AxePower Home">
+          <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+          <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+          <span class="brand-name">AxePower</span>
+        </a>
+        <p class="footer-tagline">Your PC. Your Control Center.</p>
+      </div>
+
+      <div class="footer-links-col">
+        <ul class="footer-links">
+          <li><a href="index.html" class="footer-link">Home</a></li>
+          <li><a href="help.html" class="footer-link">Help &amp; Documentation</a></li>
+          <li><a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues" target="_blank" rel="noopener noreferrer" class="footer-link">Report Issue</a></li>
+          <li><a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p class="copyright">&copy; 2026 AxePower. Built with passion for PC enthusiasts and gamers.</p>
+    </div>
+  </footer>
+
+  <!-- Interactive Search & Theme Script -->
+  <script>
+    // Theme Toggle Sync
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('axepower-theme', newTheme);
+
+        const icoPath = newTheme === 'light' ? 'assets/AxePower_black.ico' : 'assets/AxePower_white.ico';
+        const fav = document.getElementById('appFavicon');
+        const shortFav = document.getElementById('appShortcutFavicon');
+        const appleFav = document.getElementById('appAppleIcon');
+        if (fav) fav.href = icoPath;
+        if (shortFav) shortFav.href = icoPath;
+        if (appleFav) appleFav.href = icoPath;
+      });
+    }
+
+    // Live Search Filter
+    const searchInput = document.getElementById('helpSearchInput');
+    const guideSections = document.querySelectorAll('.help-guide-section');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        guideSections.forEach(section => {
+          const text = section.textContent.toLowerCase();
+          if (query === '' || text.includes(query)) {
+            section.style.display = 'block';
+          } else {
+            section.style.display = 'none';
+          }
+        });
+      });
+    }
+
+    // Smooth Anchor Highlighting
+    function highlightActiveHash() {
+      const hash = window.location.hash;
+      if (hash) {
+        const target = document.querySelector(hash);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+          target.style.transition = 'background-color 0.4s ease';
+          const originalBg = target.style.backgroundColor;
+          target.style.backgroundColor = 'rgba(0, 212, 255, 0.08)';
+          setTimeout(() => {
+            target.style.backgroundColor = originalBg;
+          }, 1800);
+        }
+      }
+    }
+
+    window.addEventListener('load', highlightActiveHash);
+    window.addEventListener('hashchange', highlightActiveHash);
+  </script>
+</body>
+</html>

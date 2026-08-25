@@ -91,32 +91,33 @@
                 </Button>
 
                 <!-- Toggle Server Button -->
-                <Button Command="{Binding ToggleServerCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Start Server" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
-                                    <Setter Property="Background" Value="#EF4444"/>
-                                    <Setter Property="Content">
-                                        <Setter.Value>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Stop Server" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Setter.Value>
-                                    </Setter>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
+                <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding ToggleServerCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="&#xE768;"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
+                                            <Setter Property="Text" Value="&#xE71A;"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock FontWeight="SemiBold" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Start Server"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
+                                            <Setter Property="Text" Value="Stop Server"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
                 </Button>
             </StackPanel>
         </Grid>

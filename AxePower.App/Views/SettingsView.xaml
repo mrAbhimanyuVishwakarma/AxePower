@@ -30,7 +30,7 @@
                     <!-- Left Column -->
                     <StackPanel Grid.Column="0">
                         <!-- General -->
-                        <Border Style="{StaticResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -43,35 +43,35 @@
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Language" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}">
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}">
                                         <ComboBoxItem Content="English" IsSelected="True"/>
                                     </ComboBox>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Temperature unit" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableTemperatureUnits}" SelectedItem="{Binding SelectedTemperatureUnit}"/>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableTemperatureUnits}" SelectedItem="{Binding SelectedTemperatureUnit}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Display refresh rate" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableRefreshRates}" SelectedItem="{Binding SelectedRefreshRate}"/>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableRefreshRates}" SelectedItem="{Binding SelectedRefreshRate}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Start minimized to system tray" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="True"/>
                                 </Grid>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Run in background" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="True"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Notifications -->
-                        <Border Style="{StaticResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <TextBlock Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -84,30 +84,30 @@
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Show notifications" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Notify on mode switch" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding NotifyOnModeSwitch}"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding NotifyOnModeSwitch}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Notify when battery below" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}">
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}">
                                         <ComboBoxItem Content="30%" IsSelected="True"/>
                                     </ComboBox>
                                 </Grid>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Low battery alert sound" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding LowBatteryAlertSound}"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding LowBatteryAlertSound}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Performance Defaults -->
-                        <Border Style="{StaticResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -120,7 +120,7 @@
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Default mode on battery" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}"
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}"
                                               ItemsSource="{Binding AvailablePowerModeItems}"
                                               SelectedValuePath="Mode"
                                               SelectedValue="{Binding SelectedUnpluggedMode}">
@@ -137,7 +137,7 @@
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Default mode when plugged in" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}"
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}"
                                               ItemsSource="{Binding AvailablePowerModeItems}"
                                               SelectedValuePath="Mode"
                                               SelectedValue="{Binding SelectedPluggedInMode}">
@@ -154,7 +154,7 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Fan mode on battery" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}"
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}"
                                               ItemsSource="{Binding AvailableFanModes}"
                                               SelectedItem="{Binding SelectedFanModeOnBattery}">
                                         <ComboBox.ItemTemplate>
@@ -171,7 +171,7 @@
                         </Border>
 
                         <!-- Power Timeouts -->
-                        <Border Style="{StaticResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -208,7 +208,7 @@
                     <!-- Right Column -->
                     <StackPanel Grid.Column="2">
                         <!-- Startup -->
-                        <Border Style="{StaticResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -221,23 +221,23 @@
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Launch AxePower on Windows startup" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Start minimized" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding StartMinimised}"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartMinimised}"/>
                                 </Grid>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Start with last selected power mode" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding StartWithLastSelectedMode}"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithLastSelectedMode}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Theme -->
-                        <Border Style="{StaticResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <TextBlock Text="&#xE790;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -250,7 +250,7 @@
                                 <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Theme" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"/>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"/>
                                 </Grid>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -275,8 +275,109 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Touchpad & Gestures (Image 5 -> Hover Image 4) -->
+                        <Border x:Name="TouchpadGesturesCard" Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                            <StackPanel>
+                                <!-- Normal Header View (Image 5) -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE755;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                        <TextBlock Text="Touchpad" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsTouchpadEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Hover Gestures Detail Section (Image 4) -->
+                                <StackPanel x:Name="GesturesDetailPanel" Margin="0,16,0,0">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ElementName=TouchpadGesturesCard, Path=IsMouseOver}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+
+                                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,0,0,16"/>
+
+                                    <!-- Gestures Title & Description -->
+                                    <TextBlock Text="Gestures" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="14.5" Margin="0,0,0,6"/>
+                                    <TextBlock Text="With gestures enabled, you can quickly adjust the display brightness and volume controls by gesturing up and down on the touchpad or touchscreen." 
+                                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="17" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Gestures only work when the compatible application is active, focused, and in full-screen display mode. Compatible applications include Win32 media players, Microsoft PowerPoint, and select web browsers, such as Microsoft Edge and Google Chrome." 
+                                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="17" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Note: You can enter full-screen mode with the F11 key when browsing with Edge or Chrome." 
+                                               Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                                    <!-- Info Box -->
+                                    <Border Background="#122538" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,16">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#3B82F6" VerticalAlignment="Top" Margin="0,2,10,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="This feature does not support two-finger, three-finger, and four-finger gestures, as these may conflict with Windows gesture functions. Go to Windows touchpad gestures for more details." 
+                                                           Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" TextWrapping="Wrap" LineHeight="17"/>
+                                                <Button Command="{Binding OpenTouchpadSettingsCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand" Margin="0,6,0,0">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="Windows Touchpad Gestures" Foreground="#60A5FA" FontSize="12" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#60A5FA" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Gesture Diagrams (Left: Screen Brightness, Right: Volume) -->
+                                    <UniformGrid Columns="2" Margin="0,0,0,0">
+                                        <!-- Screen Brightness (Left) -->
+                                        <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,6,0">
+                                            <StackPanel>
+                                                <!-- Visual Box -->
+                                                <Border Height="70" Background="#182030" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10">
+                                                    <Grid>
+                                                        <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <!-- Blue touch dot on left side -->
+                                                        <Ellipse Width="10" Height="10" Fill="#2563EB" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10"/>
+                                                    </Grid>
+                                                </Border>
+                                                <TextBlock Text="Screen brightness" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5"/>
+                                                <TextBlock Text="Left" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,2,0,4"/>
+                                                <TextBlock Text="With one finger, swipe up or down on the left side of the screen or trackpad." Foreground="{DynamicResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" LineHeight="15"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Volume (Right) -->
+                                        <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="6,0,0,0">
+                                            <StackPanel>
+                                                <!-- Visual Box -->
+                                                <Border Height="70" Background="#182030" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10">
+                                                    <Grid>
+                                                        <TextBlock Text="&#xE767;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <!-- Blue touch dot on right side -->
+                                                        <Ellipse Width="10" Height="10" Fill="#2563EB" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10"/>
+                                                    </Grid>
+                                                </Border>
+                                                <TextBlock Text="Volume" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5"/>
+                                                <TextBlock Text="Right" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,2,0,4"/>
+                                                <TextBlock Text="With one finger, swipe up or down on the right side of the screen or trackpad." Foreground="{DynamicResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" LineHeight="15"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Updates -->
-                        <Border Style="{StaticResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                                     <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
@@ -289,7 +390,7 @@
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Check for updates automatically" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True"/>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="True"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -302,7 +403,12 @@
                                     <TextBlock Grid.Column="1" Text="{Binding LastCheckedDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                                 </Grid>
                                 
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Content="&#xE895; Check for updates" HorizontalAlignment="Left" Padding="12,6"/>
+                                <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding CheckForUpdatesCommand}" HorizontalAlignment="Left" Padding="16,8">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Check for updates" FontSize="13" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -331,28 +437,28 @@
                 </StackPanel>
                 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding RestoreDefaultsCommand}" Padding="16,8" Height="36" Margin="0,0,16,0">
+                    <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding RestoreDefaultsCommand}" Padding="16,8" Height="36" Margin="0,0,16,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE7A7;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Reset to default" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding SaveSettingsCommand}" Padding="24,8" Height="36" Margin="0,0,24,0">
+                    <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding SaveSettingsCommand}" Padding="24,8" Height="36" Margin="0,0,24,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Save changes" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     
-                    <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="16,8" Height="36" Margin="0,0,8,0">
+                    <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="16,8" Height="36" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Help" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Padding="16,8" Height="36">
+                    <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Padding="16,8" Height="36">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Check for updates" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

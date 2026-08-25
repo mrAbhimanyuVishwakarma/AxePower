@@ -29,6 +29,9 @@ public partial class PackageCardViewModel : ObservableObject
     public bool IsWebLinkOnly => Item.IsWebLinkOnly;
     public string WebUrl => Item.WebUrl;
     public string LaunchProtocolOrExe => Item.LaunchProtocolOrExe;
+    public bool HasCustomInstaller => Item.HasCustomInstaller;
+    public string LocalInstallerPath => Item.LocalInstallerPath;
+    public string CustomWebUrl => !string.IsNullOrEmpty(Item.CustomWebUrl) ? Item.CustomWebUrl : Item.WebUrl;
 
     [ObservableProperty]
     private bool _isInstalled;
@@ -36,9 +39,10 @@ public partial class PackageCardViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
-    public bool IsNotInstalled => !IsInstalled && !IsWebLinkOnly;
-    public bool CanOpen => IsInstalled && !IsWebLinkOnly;
-    public bool CanUninstall => IsInstalled && !IsWebLinkOnly && !string.IsNullOrEmpty(WinGetId);
+    public bool IsNotInstalled => !IsInstalled && !IsWebLinkOnly && !HasCustomInstaller;
+    public bool CanOpen => IsInstalled && !IsWebLinkOnly && !HasCustomInstaller;
+    public bool CanUninstall => IsInstalled && !IsWebLinkOnly && !HasCustomInstaller && !string.IsNullOrEmpty(WinGetId);
+    public bool ShowCustomInstallerButtons => HasCustomInstaller;
 
     public PackageCardViewModel(SoftwarePackageItem item, IWinGetHubService hubService, SoftwareHubViewModel parent)
     {
@@ -53,6 +57,7 @@ public partial class PackageCardViewModel : ObservableObject
         OnPropertyChanged(nameof(IsNotInstalled));
         OnPropertyChanged(nameof(CanOpen));
         OnPropertyChanged(nameof(CanUninstall));
+        OnPropertyChanged(nameof(ShowCustomInstallerButtons));
     }
 
     [RelayCommand]
@@ -88,6 +93,56 @@ public partial class PackageCardViewModel : ObservableObject
         _parent.ShowWebLinkWarning(
             $"Open {Name}",
             $"⚠️ Warning: You are about to visit {Name} ({targetUrl}) in your web browser.\n\nAlways ensure you remain on the authentic official domain ({targetUrl}) to avoid clone or phishing sites.",
+            targetUrl
+        );
+    }
+
+    [RelayCommand]
+    public void LaunchLocalInstaller()
+    {
+        string[] candidatePaths = new[]
+        {
+            LocalInstallerPath,
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ninite Installer.exe"),
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Ninite Installer.exe"),
+            Path.Combine(Directory.GetCurrentDirectory(), "Ninite Installer.exe"),
+            @"C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\Ninite Installer.exe"
+        };
+
+        string? foundPath = candidatePaths.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p) && File.Exists(p));
+
+        if (foundPath != null)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = foundPath,
+                    UseShellExecute = true
+                });
+                _parent.Notify($"🚀 Launching {Name} Installer...");
+                _parent.AppendLog($"\n>>> Launched {Name} Installer: {foundPath}");
+            }
+            catch (Exception ex)
+            {
+                _parent.Notify($"Error launching installer: {ex.Message}");
+                _parent.AppendLog($"\n[ERROR] Could not start installer: {ex.Message}");
+            }
+        }
+        else
+        {
+            _parent.Notify($"Local installer file not found. Opening {Name} website...");
+            OpenCustomWebUrl();
+        }
+    }
+
+    [RelayCommand]
+    public void OpenCustomWebUrl()
+    {
+        string targetUrl = !string.IsNullOrEmpty(CustomWebUrl) ? CustomWebUrl : "https://ninite.com/";
+        _parent.ShowWebLinkWarning(
+            $"Open {Name}",
+            $"You are about to visit {Name} ({targetUrl}) in your web browser to customize and download apps.",
             targetUrl
         );
     }
@@ -157,6 +212,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     private readonly IWinGetHubService _hubService;
     private readonly IWindowsUpdateShieldService _updateShieldService;
     private readonly DriverUpdateService _driverUpdateService;
+    private readonly FirmwareUpdateService _firmwareUpdateService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
 
@@ -168,6 +224,26 @@ public partial class SoftwareHubViewModel : ObservableObject
 
     [ObservableProperty]
     private string _searchText = string.Empty;
+
+    // BIOS & Firmware Properties
+    [ObservableProperty]
+    private FirmwareInfo _firmwareInfo = new();
+
+    [ObservableProperty]
+    private bool _isCheckingFirmware;
+
+    [ObservableProperty]
+    private string _firmwareCheckStatus = "Ready to check for latest BIOS & firmware updates.";
+
+    // Hero Banner Properties
+    [ObservableProperty]
+    private string _lastUpdatedText = DateTime.Now.ToString("M/d/yyyy h:mm tt");
+
+    [ObservableProperty]
+    private string _nextScheduledUpdateText = DateTime.Now.AddDays(7).ToString("M/d/yyyy h:mm tt");
+
+    [ObservableProperty]
+    private bool _isCheckingAllUpdates;
 
     // Web Link Warning Modal
     [ObservableProperty]
@@ -223,12 +299,14 @@ public partial class SoftwareHubViewModel : ObservableObject
         IWinGetHubService hubService,
         IWindowsUpdateShieldService updateShieldService,
         DriverUpdateService driverUpdateService,
+        FirmwareUpdateService firmwareUpdateService,
         NotificationService notificationService,
         LogService logService)
     {
         _hubService = hubService;
         _updateShieldService = updateShieldService;
         _driverUpdateService = driverUpdateService;
+        _firmwareUpdateService = firmwareUpdateService;
         _notificationService = notificationService;
         _logService = logService;
 
@@ -236,6 +314,7 @@ public partial class SoftwareHubViewModel : ObservableObject
         LoadShieldSettings();
 
         _ = RefreshStatusesAsync();
+        _ = LoadFirmwareInfoAsync();
     }
 
     public void ShowWebLinkWarning(string title, string message, string url)
@@ -452,6 +531,99 @@ public partial class SoftwareHubViewModel : ObservableObject
 
     [RelayCommand]
     public void ClearConsole() => ClearLogs();
+
+    public async Task LoadFirmwareInfoAsync(bool forceRefresh = false)
+    {
+        try
+        {
+            var info = await _firmwareUpdateService.GetFirmwareInfoAsync(forceRefresh);
+            FirmwareInfo = info;
+            FirmwareCheckStatus = info.UpdateStatus;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to load firmware info.", ex);
+        }
+    }
+
+    [RelayCommand]
+    public async Task CheckFirmwareUpdatesAsync()
+    {
+        if (IsCheckingFirmware) return;
+
+        IsCheckingFirmware = true;
+        FirmwareCheckStatus = "Scanning Windows Update catalog & firmware devices...";
+        AppendLog("[BIOS & Firmware] Initiating system firmware check...");
+
+        try
+        {
+            var (hasUpdates, statusMessage) = await _firmwareUpdateService.CheckForFirmwareUpdatesAsync();
+            FirmwareCheckStatus = statusMessage;
+            FirmwareInfo.HasPendingUpdates = hasUpdates;
+            FirmwareInfo.UpdateStatus = statusMessage;
+            OnPropertyChanged(nameof(FirmwareInfo));
+
+            AppendLog($"[BIOS & Firmware] {statusMessage}");
+            Notify(statusMessage);
+        }
+        catch (Exception ex)
+        {
+            FirmwareCheckStatus = $"Firmware scan error: {ex.Message}";
+            AppendLog($"[BIOS & Firmware Error] {ex.Message}");
+        }
+        finally
+        {
+            IsCheckingFirmware = false;
+        }
+    }
+
+    [RelayCommand]
+    public void OpenVendorBiosPortal()
+    {
+        if (FirmwareInfo != null)
+        {
+            _firmwareUpdateService.OpenVendorBiosPortal(FirmwareInfo);
+            Notify($"Opening official {FirmwareInfo.VendorName} BIOS support portal...");
+            AppendLog($"[BIOS & Firmware] Opened vendor portal: {FirmwareInfo.VendorPortalUrl}");
+        }
+    }
+
+    [RelayCommand]
+    public void TriggerWindowsFirmwareScan()
+    {
+        _firmwareUpdateService.TriggerInteractiveScan();
+        Notify("Triggered Windows Update firmware capsule interactive scan.");
+        AppendLog("[BIOS & Firmware] USOClient StartInteractiveScan triggered.");
+    }
+
+    [RelayCommand]
+    public async Task CheckAllUpdatesAsync()
+    {
+        if (IsCheckingAllUpdates) return;
+
+        IsCheckingAllUpdates = true;
+        LastUpdatedText = DateTime.Now.ToString("M/d/yyyy h:mm tt");
+        NextScheduledUpdateText = DateTime.Now.AddDays(7).ToString("M/d/yyyy h:mm tt");
+        Notify("Checking for system, driver & BIOS updates...");
+        AppendLog($"[{DateTime.Now:T}] [System Update] Initiating full system update check...");
+
+        try
+        {
+            await CheckFirmwareUpdatesAsync();
+            await RefreshStatusesAsync();
+            Notify("✓ System scan completed. All components checked.");
+            AppendLog($"[{DateTime.Now:T}] [System Update] Full system scan completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Notify($"Update check error: {ex.Message}");
+            AppendLog($"[System Update Error] {ex.Message}");
+        }
+        finally
+        {
+            IsCheckingAllUpdates = false;
+        }
+    }
 
     public void AppendLog(string message)
     {

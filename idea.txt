@@ -1,61 +1,116 @@
-1. system stats like steam or msi and system info 
-2. add one more item here "Phone Control" and use the latest version https://github.com/Genymobile/scrcpy.git 
-3. https://github.com/wishIwasabear/Gopher360.git
-4. https://github.com/ChrisTitusTech?tab=repositories
-5. https://github.com/ChrisTitusTech/winutil.git
-6. LAN Drop - https://github.com/yadavnikhil03/LAN-DropSpot.git
+# 🚀 AxePower - Future Feature Ideas & Product Roadmap 💡
 
-# AxePower Feature Ideas & Roadmap
+---
 
-1. System Stats & Hardware Telemetry (Steam/MSI style)
-   - Real-time CPU/GPU temperatures, clock speeds, utilization, power draw (Watts), and VRAM.
-   - Live battery discharge rate in Watts (e.g., -14.5W drain) and estimated runtime at current load.
-   - In-app telemetry cards and optional compact floating desktop/gaming HUD overlay.
-   - References: LibreHardwareMonitor / MSI Afterburner
+## ⚡ High-Priority Features (v1.5 - v2.0 Roadmap)
 
-2. Keep Awake / Caffeine Mode (from Microsoft PowerToys Awake)
-   - One-click temporary sleep prevention toggle in System Tray or Title Bar (30m / 1h / Infinite / Until process ends).
-   - Uses SetThreadExecutionState Win32 API without modifying permanent Windows power plans.
-   - Reference: https://github.com/microsoft/PowerToys.git
+### 1. ☕ Keep Awake / Caffeine Mode (PowerToys Awake Style)
+* **Description:** 1-click temporary sleep & display timeout inhibitor in the System Tray and Title Bar.
+* **Key Capabilities:**
+  * Preset durations: `30 mins`, `1 hour`, `2 hours`, `Indefinite`, or `Until active process finishes` (e.g. large downloads, video rendering, exports).
+  * Implemented using native Win32 `SetThreadExecutionState` without altering permanent Windows Power Plan configurations.
+  * System tray quick toggle with cup icon state change.
+* **Reference:** [Microsoft PowerToys Awake](https://github.com/microsoft/PowerToys)
 
-3. Phone / Android Control (Integrated Scrcpy)
-   - Ultra-low latency Android screen mirroring & full keyboard/mouse control via USB & Wi-Fi.
-   - Reference: https://github.com/Genymobile/scrcpy.git
+---
 
-4. Controller to Mouse/Keyboard Navigation (Gopher360 Companion)
-   - Control Windows desktop using an Xbox / PlayStation / generic controller when gaming on TV/couch.
-   - Reference: https://github.com/wishIwasabear/Gopher360.git
+### 2. 🔋 Battery Conservation Mode / Charge Threshold Limiter (80% / 60%)
+* **Description:** Native ACPI/WMI OEM battery charge limiting to prevent battery swelling and chemical wear when plugged in continuously.
+* **Key Capabilities:**
+  * 80% / 60% charge cap when AC adapter is connected.
+  * Rapid charge / Express charge toggle.
+  * Support for Lenovo (Vantage WMI / Legion Toolkit), ASUS (ATK/WMI G-Helper), Dell (Command WMI), HP, and Acer hardware interfaces.
+* **Reference:** [LenovoLegionToolkit](https://github.com/BartoszCichecki/LenovoLegionToolkit) & [G-Helper](https://github.com/seerge/g-helper)
 
-5. Battery Conservation Mode / Charge Threshold Limit (80% / 60%)
-   - Native ACPI/WMI hardware charge limiting to extend laptop battery lifespan (Lenovo / ASUS / OEM support).
-   - Reference: https://github.com/BartoszCichecki/LenovoLegionToolkit.git
+---
 
-6. CPU Power Limits (TDP / Wattage) & dGPU Eco Mode
-   - Custom Wattage/TDP clamps per power profile (e.g., 15W Eco limit for maximum battery, 65W+ Beast mode).
-   - Dedicated GPU Eco switch (completely power down dGPU on battery power).
-   - Reference: https://github.com/seerge/g-helper.git
+### 3. 🎯 Floating Hardware HUD & Compact In-Game Overlay
+* **Description:** Minimalist, semi-transparent hardware vitals pill/overlay for desktop and gaming.
+* **Key Capabilities:**
+  * Real-time metrics: CPU/GPU temps, clock speeds, active Wattage draw (e.g., `18.5W`), battery drain rate, and active Power Mode.
+  * Customizable position (Corner snap / draggable) and global toggle hotkey (e.g., `Ctrl + Shift + O`).
+  * Low CPU overhead using non-polling Windows WMI / Performance Counters / LibreHardwareMonitor library.
+* **Reference:** [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
 
-7. Dynamic Display Refresh Rate & Global Hotkeys
-   - Smooth 60Hz <-> 144Hz/165Hz/240Hz auto-switch on AC plug/unplug via ChangeDisplaySettingsEx.
-   - Global hotkey support (e.g., Win + Shift + P) to cycle through Eco -> Smart -> Beast -> Game modes.
-   - Reference: https://github.com/BartoszCichecki/LenovoLegionToolkit.git & PowerToys
+---
 
-8. Smart AI / Heuristic Power Advisor
-   - Local heuristics to detect high background battery drains and suggest one-click optimizations.
-   - Auto game genre profiling.
-   - Reference: https://github.com/microsoft/generative-ai-for-beginners.git
+### 4. ⌨️ Global Hotkeys & Screen OSD Mode Flyout
+* **Description:** Keyboard shortcuts to cycle power modes on the fly with a modern Windows 11 Fluent On-Screen Display (OSD) notification.
+* **Key Capabilities:**
+  * Configurable hotkey (e.g., `Win + Shift + P` or `Fn + Q` on supported laptops).
+  * Centered translucent pop-up banner showing current mode transition: `🍃 Eco Mode` ➔ `⚡ Smart Mode` ➔ `🚀 Beast Mode` ➔ `🎮 Game Mode`.
+  * Audio chirp feedback option on switch.
 
-9. System Optimizer, Debloat & Maintenance Hub (from Chris Titus WinUtil)
-   - Dynamic Service Optimizer: Auto-pause heavy services (SysMain, Search Indexing, Telemetry) in Eco Mode to save battery & CPU cycles.
-   - Privacy & Telemetry Debloat: Disable diagnostic telemetry, Bing search in Start Menu, Cortana/Copilot overheads.
-   - Gamer Tweaks: Disable GameDVR background capture stutters, disable mouse acceleration for 1:1 input.
-   - Windows Update & Reboot Shield: Security updates only policy, prevent surprise reboots mid-game.
-   - System Doctor & Maintenance: SFC/DISM health repairs, junk & DirectX shader cache cleaner, network/DNS flush.
-   - Low-Latency DNS Switcher: 1-click switch & ping benchmark (Cloudflare 1.1.1.1, Quad9, Google DNS).
-   - WinGet Software & Runtimes Hub: 1-click batch installer for VC++ runtimes, DirectX, gaming launchers, and 1-click app updates.
-   - Reference & Blueprint: winutilreference.md & https://github.com/ChrisTitusTech/winutil.git
+---
 
-10. Phone Control (All-in-One Mobile Suite)
-   - 📂 LAN Drop (Local Wi-Fi Quick File Transfer & Clipboard Drop)
-   - 📱 Android Screen Mirroring & Low-Latency Control (scrcpy)
-   - ⚡ Remote PC Companion (Mobile web widget for battery stats, media playback & remote PC lock)
+### 5. 🧹 Intelligent Standby List Cleaner (RAM Cache Auto-Purge / ISLC)
+* **Description:** Eliminates Windows micro-stutters and memory bottlenecks during intensive gameplay.
+* **Key Capabilities:**
+  * Monitors Windows Standby Memory and Working Set.
+  * Automatically purges the cached standby list when free memory drops below a configurable threshold (e.g., < 1024 MB) or when high-priority game executables launch.
+* **Reference:** [Intelligent Standby List Cleaner (ISLC)](https://www.wagnardsoft.com/content/intelligent-standby-list-cleaner-v1028-released)
+
+---
+
+### 6. 🌙 Modern Standby Fix & Deep Sleep Auto-Hibernate
+* **Description:** Prevents laptop battery drain and backpack overheating caused by Windows 11 Modern Standby (S0) bugs.
+* **Key Capabilities:**
+  * Auto-transition from Sleep to Hibernate after a user-defined period on battery (e.g. 15 or 30 minutes).
+  * Auto-disables network connectivity during Modern Standby to eliminate battery drain while asleep.
+  * Sleep battery drain diagnostics tool (analyzing Windows SleepStudy logs).
+
+---
+
+### 7. 🔊 Quick Per-App Audio Mixer & Output Device Switcher
+* **Description:** Streamlined volume mixer and audio output switcher integrated into AxePower Tray / Dashboard.
+* **Key Capabilities:**
+  * 1-click switch between Headset, Speakers, Display Audio, and Bluetooth.
+  * Independent volume sliders for foreground game vs Discord / Spotify.
+  * Auto-switch audio profile to surround sound / spatial audio in Game Mode.
+
+---
+
+### 8. 📱 Remote Phone Web Dashboard & Quick PC Actions
+* **Description:** Lightweight local web companion running on local port (no app installation needed on phone).
+* **Key Capabilities:**
+  * Open web UI via QR code scan on mobile browser.
+  * View live laptop battery percentage, temperature, and AC status from bed/couch.
+  * Remote PC quick actions: Lock PC, Sleep, Switch Power Mode, Adjust Volume, or Media Play/Pause.
+
+---
+
+### 9. 📈 Battery & Gaming Usage Analytics (Weekly Insights)
+* **Description:** Local telemetry history and efficiency reporting.
+* **Key Capabilities:**
+  * Weekly battery runtime comparisons, total hours gamed, and estimated energy saved in Eco Mode.
+  * Battery health degradation curve (Full Charge Capacity vs Design Capacity over months).
+  * Exportable battery health summary report (HTML / PDF).
+
+---
+
+### 10. 🕹️ Lossless Scaling & Game Optimizers Companion
+* **Description:** Quick profile launcher and config integration with modern gaming scaling utilities.
+* **Key Capabilities:**
+  * Integration with [Lossless Scaling](https://store.steampowered.com/app/993090/Lossless_Scaling/) (LSFG Frame Generation / AMD FSR / Integer Scaling).
+  * Pre-configured resolution scaling profiles for battery-powered gaming.
+
+---
+
+## 🏛️ Completed & Implemented Features Archive (v1.0 - v1.4)
+
+* ✅ **Smart Power Modes (Eco, Smart, Beast, Game Mode)** with dynamic AC/DC rules.
+* ✅ **Intelligent Auto-Switch Engine** (Plugged In: Smart, Unplugged: Eco, Low Battery <30%: Eco).
+* ✅ **Display Refresh Rate Auto-Scaling** (60Hz on Battery &harr; 144Hz/165Hz/240Hz on AC).
+* ✅ **Game Mode & Background App Booster** with multi-drive automatic game process detection.
+* ✅ **Controller Navigation (Gopher360)**: Full gamepad-to-mouse & keyboard navigation.
+* ✅ **Phone Control Suite**:
+  * 📱 **scrcpy**: Ultra-low latency Android screen mirroring, stay-awake, and APK installer.
+  * 🖥️ **SpaceDesk**: Wireless phone/tablet secondary display integration.
+  * 📂 **LAN Drop**: Instant offline local Wi-Fi file sharing & clipboard drop.
+* ✅ **Software Hub**: 1-click installer and launcher for 20+ top storefronts, monitors, and runtimes.
+* ✅ **System Optimizer (WinUtil-style)**: Safe debloat, telemetry removal, and update shield.
+* ✅ **System Doctor**: SFC/DISM health repairs, shader & cache cleaner, low-latency DNS optimizer.
+* ✅ **Uninstaller Pro**: Deep app discovery, batch removal, and verified leftover registry cleaning.
+* ✅ **3x Scaled Header Battery Telemetry** & discharge history graph.
+* ✅ **Modern Dark Fluent WPF UI** with responsive layout and collapsible sidebar navigation.
+* ✅ **Native GitHub Auto-Updater** & Inno Setup 6 packaging with clean upgrade engine.

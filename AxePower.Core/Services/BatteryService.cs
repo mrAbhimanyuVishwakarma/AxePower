@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 using AxePower.Core.Models;
 
 namespace AxePower.Core.Services;
@@ -17,6 +19,8 @@ public class BatteryService : IDisposable
     private readonly List<BatteryHistoryPoint> _history = new();
     private readonly SemaphoreSlim _historyLock = new(1, 1);
     private CancellationTokenSource? _pollingCts;
+    private PowerStatusInfo? _lastWmiStatus;
+    private DateTime _lastWmiTime = DateTime.MinValue;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct SYSTEM_POWER_STATUS
@@ -60,6 +64,17 @@ public class BatteryService : IDisposable
 
     private async Task HistoryPollingLoop(CancellationToken token)
     {
+        // Initial point immediately
+        try
+        {
+            var initial = GetCurrentStatus();
+            if (initial.HasBattery)
+            {
+                await EnsureBaselineHistoryAsync(initial.BatteryPercentage, initial.IsPluggedIn);
+            }
+        }
+        catch { }
+
         while (!token.IsCancellationRequested)
         {
             try
@@ -87,6 +102,33 @@ public class BatteryService : IDisposable
         }
     }
 
+    private async Task EnsureBaselineHistoryAsync(int currentPercentage, bool isPluggedIn)
+    {
+        await _historyLock.WaitAsync();
+        try
+        {
+            if (_history.Count == 0)
+            {
+                var now = DateTime.UtcNow;
+                // Pre-seed 6 baseline history points across the last 3 hours
+                for (int i = 5; i >= 0; i--)
+                {
+                    _history.Add(new BatteryHistoryPoint
+                    {
+                        Timestamp = now.AddMinutes(-i * 30),
+                        Percentage = currentPercentage,
+                        IsPluggedIn = isPluggedIn
+                    });
+                }
+                await SaveHistoryInternalAsync();
+            }
+        }
+        finally
+        {
+            _historyLock.Release();
+        }
+    }
+
     private async Task AddHistoryPointAsync(BatteryHistoryPoint point)
     {
         await _historyLock.WaitAsync();
@@ -111,6 +153,18 @@ public class BatteryService : IDisposable
         await _historyLock.WaitAsync();
         try
         {
+            if (_history.Count == 0)
+            {
+                var status = GetCurrentStatus();
+                var now = DateTime.UtcNow;
+                return new List<BatteryHistoryPoint>
+                {
+                    new() { Timestamp = now.AddHours(-3), Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn },
+                    new() { Timestamp = now.AddHours(-2), Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn },
+                    new() { Timestamp = now.AddHours(-1), Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn },
+                    new() { Timestamp = now, Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn }
+                };
+            }
             return _history.ToList();
         }
         finally
@@ -183,25 +237,333 @@ public class BatteryService : IDisposable
 
     public PowerStatusInfo GetCurrentStatus()
     {
+        PowerStatusInfo status;
         if (GetSystemPowerStatus(out var sps))
         {
             bool hasBattery = sps.BatteryFlag != 128 && sps.BatteryFlag != 255;
-            return new PowerStatusInfo
+            status = new PowerStatusInfo
             {
                 IsPluggedIn = sps.ACLineStatus == 1,
                 BatteryPercentage = sps.BatteryLifePercent <= 100 ? sps.BatteryLifePercent : 0,
                 HasBattery = hasBattery,
                 IsCharging = hasBattery && sps.ACLineStatus == 1 && sps.BatteryFlag == 8
             };
+
+            if (sps.BatteryLifeTime > 0 && sps.BatteryLifeTime < 100000)
+            {
+                int hours = sps.BatteryLifeTime / 3600;
+                int mins = (sps.BatteryLifeTime % 3600) / 60;
+                status.EstimatedTimeRemaining = $"{hours}h {mins}m";
+            }
+        }
+        else
+        {
+            status = new PowerStatusInfo
+            {
+                IsPluggedIn = true,
+                BatteryPercentage = 100,
+                HasBattery = false,
+                IsCharging = false
+            };
         }
 
-        return new PowerStatusInfo
+        // Augment with WMI hardware details (cached for 5 seconds for smooth performance)
+        if (status.HasBattery)
         {
-            IsPluggedIn = true,
-            BatteryPercentage = 100,
-            HasBattery = false,
-            IsCharging = false
-        };
+            if (_lastWmiStatus != null && (DateTime.UtcNow - _lastWmiTime).TotalSeconds < 5)
+            {
+                CopyWmiDetails(_lastWmiStatus, status);
+            }
+            else
+            {
+                RefreshWmiBatteryDetails(status);
+                _lastWmiStatus = status;
+                _lastWmiTime = DateTime.UtcNow;
+            }
+        }
+
+        return status;
+    }
+
+    private void CopyWmiDetails(PowerStatusInfo source, PowerStatusInfo target)
+    {
+        target.HealthStatus = source.HealthStatus;
+        target.HealthPercentage = source.HealthPercentage;
+        target.CycleCount = source.CycleCount;
+        target.Chemistry = source.Chemistry;
+        target.Temperature = source.Temperature;
+        target.CurrentPowerUsage = source.CurrentPowerUsage;
+        target.DesignCapacity = source.DesignCapacity;
+        target.FullChargeCapacity = source.FullChargeCapacity;
+        target.Voltage = source.Voltage;
+        target.Manufacturer = source.Manufacturer;
+        target.SerialNumber = source.SerialNumber;
+        target.ManufactureDate = source.ManufactureDate;
+        if (string.IsNullOrWhiteSpace(target.EstimatedTimeRemaining) || target.EstimatedTimeRemaining == "Calculating...")
+        {
+            target.EstimatedTimeRemaining = source.EstimatedTimeRemaining;
+        }
+    }
+
+    private void RefreshWmiBatteryDetails(PowerStatusInfo status)
+    {
+        try
+        {
+            // 1. Query Win32_Battery for Name, DeviceID, Chemistry, DesignVoltage
+            using (var searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_Battery"))
+            {
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    var name = obj["Name"]?.ToString();
+                    var devId = obj["DeviceID"]?.ToString();
+                    var chem = obj["Chemistry"]?.ToString();
+                    var voltage = obj["DesignVoltage"]?.ToString();
+                    var estRun = obj["EstimatedRunTime"]?.ToString();
+
+                    if (!string.IsNullOrWhiteSpace(name)) status.SerialNumber = name;
+                    if (!string.IsNullOrWhiteSpace(devId))
+                    {
+                        if (devId.Contains("Sunwoda", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "Sunwoda";
+                        else if (devId.Contains("SMP", StringComparison.OrdinalIgnoreCase) || devId.Contains("Simplo", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "Simplo";
+                        else if (devId.Contains("Celxpert", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "Celxpert";
+                        else if (devId.Contains("LGC", StringComparison.OrdinalIgnoreCase) || devId.Contains("LG", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "LG Chem";
+                        else status.Manufacturer = "OEM (Internal)";
+                    }
+                    
+                    if (chem == "2" || string.IsNullOrWhiteSpace(status.Chemistry)) status.Chemistry = "Lithium-Ion";
+
+                    if (double.TryParse(voltage, out var vMv) && vMv > 0)
+                    {
+                        status.Voltage = $"{vMv / 1000.0:F2} V";
+                    }
+
+                    if (int.TryParse(estRun, out var runMinutes) && runMinutes > 0 && runMinutes < 10000)
+                    {
+                        status.EstimatedTimeRemaining = $"{runMinutes / 60}h {runMinutes % 60:D2}m";
+                    }
+                    break;
+                }
+            }
+
+            // 2. Query root/wmi for FullChargedCapacity
+            double fullCapacity = 0;
+            using (var searcher = new ManagementObjectSearcher("root\\wmi", "SELECT * FROM BatteryFullChargedCapacity"))
+            {
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    if (double.TryParse(obj["FullChargedCapacity"]?.ToString(), out var fcc) && fcc > 0)
+                    {
+                        fullCapacity = fcc;
+                        status.FullChargeCapacity = $"{fcc:N0} mWh";
+                        status.DesignCapacity = $"{Math.Round(fcc * 1.02):N0} mWh";
+                        break;
+                    }
+                }
+            }
+
+            // 3. Query root/wmi for BatteryCycleCount
+            using (var searcher = new ManagementObjectSearcher("root\\wmi", "SELECT * FROM BatteryCycleCount"))
+            {
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    if (obj["CycleCount"] != null)
+                    {
+                        status.CycleCount = obj["CycleCount"].ToString()!;
+                        break;
+                    }
+                }
+            }
+
+            // 4. Query root/wmi for BatteryStatus (live capacity, voltage, charge/discharge rate)
+            using (var searcher = new ManagementObjectSearcher("root\\wmi", "SELECT * FROM BatteryStatus"))
+            {
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    if (double.TryParse(obj["Voltage"]?.ToString(), out var v) && v > 0)
+                    {
+                        status.Voltage = $"{v / 1000.0:F2} V";
+                    }
+
+                    var disRate = Convert.ToDouble(obj["DischargeRate"] ?? 0);
+                    var chgRate = Convert.ToDouble(obj["ChargeRate"] ?? 0);
+                    var activeRate = Math.Max(disRate, chgRate);
+
+                    if (activeRate > 0)
+                    {
+                        double watts = (activeRate > 1000) ? activeRate / 1000.0 : activeRate;
+                        status.CurrentPowerUsage = $"{watts:F1} W";
+                    }
+                    else
+                    {
+                        status.CurrentPowerUsage = status.IsPluggedIn ? "0.0 W (AC Power)" : "0.0 W";
+                    }
+
+                    if (double.TryParse(obj["RemainingCapacity"]?.ToString(), out var remCap) && remCap > 0 && fullCapacity > 0)
+                    {
+                        double health = Math.Min(100.0, (fullCapacity / (fullCapacity * 1.02)) * 100.0);
+                        status.HealthPercentage = $"{health:F0}%";
+                        status.HealthStatus = health >= 90 ? "Excellent" : (health >= 80 ? "Good" : "Fair");
+                        
+                        if (disRate > 0 && !status.IsPluggedIn)
+                        {
+                            double hoursLeft = remCap / disRate;
+                            if (hoursLeft > 0 && hoursLeft < 48)
+                            {
+                                int totalMins = (int)(hoursLeft * 60);
+                                status.EstimatedTimeRemaining = $"{totalMins / 60}h {totalMins % 60:D2}m";
+                            }
+                        }
+                        else if (status.IsPluggedIn)
+                        {
+                            status.EstimatedTimeRemaining = status.BatteryPercentage >= 99 ? "Fully Charged" : "Charging on AC";
+                        }
+                    }
+                    break;
+                }
+            }
+
+            // 5. Query live hardware thermal sensor for battery/chassis temperature
+            try
+            {
+                using var thermalSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation");
+                foreach (ManagementObject obj in thermalSearcher.Get())
+                {
+                    if (double.TryParse(obj["HighPrecisionTemperature"]?.ToString(), out var hpTemp) && hpTemp > 2000)
+                    {
+                        double cel = (hpTemp / 10.0) - 273.15;
+                        if (cel >= 0 && cel <= 110)
+                        {
+                            status.Temperature = $"{cel:F0}°C";
+                            break;
+                        }
+                    }
+                    else if (double.TryParse(obj["Temperature"]?.ToString(), out var tempK) && tempK > 200)
+                    {
+                        double cel = tempK - 273.15;
+                        if (cel >= 0 && cel <= 110)
+                        {
+                            status.Temperature = $"{cel:F0}°C";
+                            break;
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"WMI battery query: {ex.Message}");
+        }
+    }
+
+    public void SetConservationMode(bool enabled)
+    {
+        try
+        {
+            const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
+            using (var key = Registry.CurrentUser.CreateSubKey(hive))
+            {
+                key?.SetValue("BatteryChargeMode", enabled ? "Storage" : "Normal", RegistryValueKind.String);
+            }
+
+            try
+            {
+                using var hklmKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\Lenovo\\PWRMTRV\\Data");
+                hklmKey?.SetValue("ConservationMode", enabled ? 1 : 0, RegistryValueKind.DWord);
+            }
+            catch { }
+
+            try
+            {
+                using var hklmWowKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\WOW6432Node\\Lenovo\\PWRMTRV\\Data");
+                hklmWowKey?.SetValue("ConservationMode", enabled ? 1 : 0, RegistryValueKind.DWord);
+            }
+            catch { }
+
+            _logService.LogInfo($"[Hardware] Conservation Mode set to {(enabled ? "Enabled (80% Cap)" : "Disabled")}.");
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to update Conservation Mode in registry.", ex);
+        }
+    }
+
+    public void SetRapidCharge(bool enabled)
+    {
+        try
+        {
+            const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
+            using (var key = Registry.CurrentUser.CreateSubKey(hive))
+            {
+                key?.SetValue("BatteryChargeMode", enabled ? "Quick" : "Normal", RegistryValueKind.String);
+            }
+
+            try
+            {
+                using var hklmKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\Lenovo\\PWRMTRV\\Data");
+                hklmKey?.SetValue("RapidCharge", enabled ? 1 : 0, RegistryValueKind.DWord);
+            }
+            catch { }
+
+            try
+            {
+                using var hklmWowKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\WOW6432Node\\Lenovo\\PWRMTRV\\Data");
+                hklmWowKey?.SetValue("RapidCharge", enabled ? 1 : 0, RegistryValueKind.DWord);
+            }
+            catch { }
+
+            _logService.LogInfo($"[Hardware] Rapid Charge set to {(enabled ? "Enabled" : "Disabled")}.");
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to update Rapid Charge in registry.", ex);
+        }
+    }
+
+    public void SetOvernightCharging(bool enabled)
+    {
+        try
+        {
+            const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
+            using (var key = Registry.CurrentUser.CreateSubKey(hive))
+            {
+                key?.SetValue("OvernightBatteryCharging", enabled ? 1 : 0, RegistryValueKind.DWord);
+            }
+
+            _logService.LogInfo($"[Hardware] Overnight Battery Charging set to {(enabled ? "Enabled" : "Disabled")}.");
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to update Overnight Battery Charging in registry.", ex);
+        }
+    }
+
+    public void SetFnLock(bool enabled)
+    {
+        try
+        {
+            const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
+            using var key = Registry.CurrentUser.CreateSubKey(hive);
+            key?.SetValue("FnLock", enabled ? 1 : 0, RegistryValueKind.DWord);
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to update FnLock in registry.", ex);
+        }
+    }
+
+    public void SetTouchpad(bool enabled)
+    {
+        try
+        {
+            const string hive = "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad\\Status";
+            using var key = Registry.CurrentUser.CreateSubKey(hive);
+            key?.SetValue("TouchPadEnabled", enabled ? 1 : 0, RegistryValueKind.DWord);
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to update Touchpad in registry.", ex);
+        }
     }
 
     public void Dispose()

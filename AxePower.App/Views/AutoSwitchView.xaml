@@ -48,8 +48,8 @@
                                 <TextBlock Text="Use maximum performance&#x0a;when connected to power." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                             </StackPanel>
                             
-                            <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedInMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                            <CheckBox Grid.Column="3" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding PluggedInEnabled}" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="2" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedInMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <CheckBox Grid.Column="3" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding PluggedInEnabled}" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
                     
@@ -73,8 +73,8 @@
                                 <TextBlock Text="Optimize efficiency&#x0a;when running on battery." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                             </StackPanel>
                             
-                            <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding UnpluggedMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                            <CheckBox Grid.Column="3" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding UnpluggedEnabled}" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="2" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding UnpluggedMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <CheckBox Grid.Column="3" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding UnpluggedEnabled}" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
 
@@ -98,8 +98,8 @@
                                 <TextBlock Text="Extend battery life by&#x0a;switching to Eco Mode." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                             </StackPanel>
                             
-                            <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding LowBatteryMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                            <CheckBox Grid.Column="3" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding LowBatteryEnabled}" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="2" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding LowBatteryMode}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <CheckBox Grid.Column="3" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding LowBatteryEnabled}" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
                     
@@ -124,10 +124,10 @@
                                     <TextBlock Text="Create a schedule or custom condition that fits your workflow." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 
-                                <ComboBox Grid.Column="2" Style="{StaticResource AppComboBoxStyle}" VerticalAlignment="Center" Margin="0,0,16,0">
+                                <ComboBox Grid.Column="2" Style="{DynamicResource AppComboBoxStyle}" VerticalAlignment="Center" Margin="0,0,16,0">
                                     <ComboBoxItem Content="Custom Schedule" IsSelected="True"/>
                                 </ComboBox>
-                                <CheckBox Grid.Column="3" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding CustomRuleEnabled}" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="3" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding CustomRuleEnabled}" VerticalAlignment="Center"/>
                             </Grid>
                             
                             <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="8" Padding="16">
@@ -214,7 +214,7 @@
                                             <TextBlock Text="Auto-Pause Heavy Services in Beast / Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13.5" FontWeight="SemiBold"/>
                                             <TextBlock Text="Pauses SysMain, Windows Search Indexer, Telemetry, and Error Reporting while gaming." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0"/>
                                         </StackPanel>
-                                        <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding AutoPauseServicesInBeast}" VerticalAlignment="Center"/>
+                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoPauseServicesInBeast}" VerticalAlignment="Center"/>
                                     </Grid>
 
                                     <!-- Option 2: Auto-Flush RAM Cache -->
@@ -227,7 +227,7 @@
                                             <TextBlock Text="Auto-Flush Standby RAM on High Performance Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13.5" FontWeight="SemiBold"/>
                                             <TextBlock Text="Frees standby memory cache pages into active physical RAM." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0"/>
                                         </StackPanel>
-                                        <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding AutoFlushRamOnGameLaunch}" VerticalAlignment="Center"/>
+                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoFlushRamOnGameLaunch}" VerticalAlignment="Center"/>
                                     </Grid>
 
                                     <!-- Option 3: Auto-Restore on Eco -->
@@ -240,7 +240,7 @@
                                             <TextBlock Text="Auto-Restore All Services on Eco / Balanced Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13.5" FontWeight="SemiBold"/>
                                             <TextBlock Text="Smoothly restarts previously paused background services when switching back to Eco." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0"/>
                                         </StackPanel>
-                                        <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding AutoRestoreOnEco}" VerticalAlignment="Center"/>
+                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoRestoreOnEco}" VerticalAlignment="Center"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -348,7 +348,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
                             <TextBlock Grid.Column="1" Text="Show notifications" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" VerticalAlignment="Center"/>
-                            <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}" VerticalAlignment="Center"/>
+                            <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}" VerticalAlignment="Center"/>
                         </Grid>
                         
                         <Grid>
@@ -359,7 +359,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
                             <TextBlock Grid.Column="1" Text="Start with Windows" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" VerticalAlignment="Center"/>
-                            <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center"/>
+                            <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -405,7 +405,7 @@
                     </Button>
                     <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Padding="16,8" Height="32">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Check for updates" FontSize="13" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

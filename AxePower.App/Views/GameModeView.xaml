@@ -5,7 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="728" d:DesignWidth="1040">
-             
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -43,33 +47,116 @@
                                 <TextBlock Text="Instantly apply Beast mode, close background apps, and stop unnecessary services." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="14" TextWrapping="Wrap"/>
                             </StackPanel>
                             
-                            <Button Grid.Column="2" Command="{Binding ToggleManualGameModeCommand}" Padding="24,12" Height="48" VerticalAlignment="Center">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
-                                        <Setter Property="Content">
-                                            <Setter.Value>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Turn On Game Mode" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
-                                                <Setter Property="Content">
-                                                    <Setter.Value>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="Turn Off Game Mode" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
+                            <Button Grid.Column="2" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding ToggleManualGameModeCommand}" Padding="24,12" Height="48" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="&#xE7E8;"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
+                                                        <Setter Property="Text" Value="&#xE71A;"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Turn On Game Mode"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
+                                                        <Setter Property="Text" Value="Turn Off Game Mode"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
                             </Button>
                         </Grid>
+                    </Border>
+
+                    <!-- Dynamic Mode Automation & Background Tuning -->
+                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                    <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="22" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="Dynamic Mode Automation" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="16"/>
+                                        <Border Background="#1A06B6D4" BorderBrush="#3306B6D4" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="DYNAMIC TUNING" FontSize="10.5" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="Intelligently pause heavy background services in Beast mode and optimize RAM cache." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
+                                </StackPanel>
+
+                                <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"
+                                        Command="{Binding OptimizeRamNowCommand}"
+                                        Padding="14,8" FontSize="12.5" VerticalAlignment="Center"
+                                        ToolTip="Purge Windows standby RAM cache to free memory for games">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Purge RAM" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="10" Padding="16,14">
+                                <StackPanel>
+                                    <!-- Option 1: Auto-Pause Services -->
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Auto-Pause Heavy Services in Beast / Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13.5" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Pauses SysMain, Windows Search Indexer, Telemetry, and Error Reporting while gaming." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoPauseServicesInBeast}" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <!-- Option 2: Auto-Flush RAM Cache -->
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Auto-Flush Standby RAM on High Performance Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13.5" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Frees standby memory cache pages into active physical RAM." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoFlushRamOnGameLaunch}" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <!-- Option 3: Auto-Restore on Eco -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Auto-Restore All Services on Eco / Balanced Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13.5" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Smoothly restarts previously paused background services when switching back to Eco." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoRestoreOnEco}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                     </Border>
                     
                     <!-- Game Mode Rule -->
@@ -92,25 +179,25 @@
                                     <TextBlock Text="Automatically switch to Beast mode when these apps are running." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 
-                                <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding AppRulesEnabled}" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AppRulesEnabled}" VerticalAlignment="Center"/>
                             </Grid>
                             
                             <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
-                                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding ClearAllRulesCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                                        <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding ClearAllRulesCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Clear All" FontSize="13" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding ScanForGamesCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                                        <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding ScanForGamesCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE10C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Scan for Games" FontSize="13" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddRuleCommand}" Padding="16,8" Height="32">
+                                        <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding AddRuleCommand}" Padding="16,8" Height="32">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Add App" FontSize="13" VerticalAlignment="Center"/>
@@ -129,8 +216,8 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding ExecutableName}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" />
-                                                    <ComboBox Grid.Column="1" Style="{StaticResource AppComboBoxStyle}" ItemsSource="{Binding DataContext.AvailableModes, RelativeSource={RelativeSource AncestorType=UserControl}}" SelectedItem="{Binding TargetMode}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                    <Button Grid.Column="2" Command="{Binding DataContext.RemoveRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource SidebarButtonStyle}" Width="32" Height="32" Padding="0">
+                                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding DataContext.AvailableModes, RelativeSource={RelativeSource AncestorType=UserControl}}" SelectedItem="{Binding TargetMode}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <Button Grid.Column="2" Command="{Binding DataContext.RemoveRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{DynamicResource SidebarButtonStyle}" Width="32" Height="32" Padding="0">
                                                         <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource WarningBrush}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Button>
                                                 </Grid>
@@ -165,31 +252,31 @@
                                     </TextBlock>
                                 </StackPanel>
                                 
-                                <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding GameBoosterEnabled}" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding GameBoosterEnabled}" VerticalAlignment="Center"/>
                             </Grid>
                             
                             <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
-                                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding SelectAllAppsCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                                        <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding SelectAllAppsCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE73A;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Select All" FontSize="13" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding DeselectAllAppsCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                                        <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding DeselectAllAppsCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE739;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Deselect All" FontSize="13" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding KillSelectedNowCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                                        <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding KillSelectedNowCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE10B;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource WarningBrush}" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Kill Selected Now" Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding RefreshBackgroundAppsCommand}" Padding="16,8" Height="32">
+                                        <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding RefreshBackgroundAppsCommand}" Padding="16,8" Height="32">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE149;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Refresh Active Apps" FontSize="13" VerticalAlignment="Center"/>
@@ -242,13 +329,13 @@
                             <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
-                                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding OptimizeSelectedServicesCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
+                                        <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding OptimizeSelectedServicesCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Optimize Selected Services" FontSize="13" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
-                                        <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding RefreshServicesCommand}" Padding="16,8" Height="32">
+                                        <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding RefreshServicesCommand}" Padding="16,8" Height="32">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="&#xE149;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Refresh" FontSize="13" VerticalAlignment="Center"/>
@@ -330,7 +417,7 @@
                                 <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Button>
 
-                            <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitchStyle}"
+                            <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}"
                                       IsChecked="{Binding IsControllerNavigationEnabled, Mode=OneWay}"
                                       Command="{Binding ToggleControllerNavigationCommand}"
                                       VerticalAlignment="Center"/>
@@ -395,7 +482,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <Button Grid.Column="1" Style="{StaticResource PrimaryButtonStyle}" 
+                <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" 
                         Command="{Binding SaveSettingsCommand}" 
                         HorizontalAlignment="Center" VerticalAlignment="Center" Padding="32,8" Background="#222" BorderBrush="#444" BorderThickness="1">
                     <StackPanel Orientation="Horizontal">

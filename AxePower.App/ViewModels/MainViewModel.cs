@@ -33,7 +33,7 @@ public partial class MainViewModel : ObservableObject
     public System.Collections.ObjectModel.ObservableCollection<AxePower.App.Models.ToolInstructionItem> AllToolGuides { get; } = new();
 
     public DashboardViewModel DashboardVm { get; }
-    public AutoSwitchViewModel AutoSwitchVm { get; }
+    public AutoSwitchViewModel? AutoSwitchVm { get; }
     public GameModeViewModel GameModeVm { get; }
     public BatteryViewModel BatteryVm { get; }
     public SettingsViewModel SettingsVm { get; }
@@ -52,7 +52,7 @@ public partial class MainViewModel : ObservableObject
     private bool _isUtilitiesExpanded;
 
     public Style? DashboardActiveStyle => GetStyleForView(DashboardVm);
-    public Style? AutoSwitchActiveStyle => GetStyleForView(AutoSwitchVm);
+    public Style? AutoSwitchActiveStyle => AutoSwitchVm != null ? GetStyleForView(AutoSwitchVm) : null;
     public Style? GameModeActiveStyle => GetStyleForView(GameModeVm);
     public Style? BatteryActiveStyle => GetStyleForView(BatteryVm);
     public Style? LogsActiveStyle => GetStyleForView(LogsVm);
@@ -71,7 +71,6 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(
         DashboardViewModel dashboardVm, 
-        AutoSwitchViewModel autoSwitchVm,
         GameModeViewModel gameModeVm,
         BatteryViewModel batteryVm,
         SettingsViewModel settingsVm, 
@@ -87,7 +86,8 @@ public partial class MainViewModel : ObservableObject
         MsiAfterburnerService msiAfterburnerService,
         DebloatService debloatService,
         AndroidControlService androidControlService,
-        UpdateService updateService)
+        UpdateService updateService,
+        AutoSwitchViewModel? autoSwitchVm = null)
     {
         DashboardVm = dashboardVm;
         AutoSwitchVm = autoSwitchVm;
@@ -220,7 +220,7 @@ public partial class MainViewModel : ObservableObject
         CurrentView = viewName switch
         {
             "Dashboard"   => DashboardVm,
-            "AutoSwitch"  => AutoSwitchVm,
+            "AutoSwitch"  => DashboardVm,
             "GameMode"    => GameModeVm,
             "Battery"     => BatteryVm,
             "Settings"    => SettingsVm,
@@ -354,15 +354,21 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
+            string toolSection = SelectedToolHelp != null && !string.IsNullOrWhiteSpace(SelectedToolHelp.Id)
+                ? SelectedToolHelp.Id.ToLowerInvariant()
+                : "help";
+
+            string helpUrl = $"https://axepower.vercel.app/help.html#{toolSection}";
+
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download#readme",
+                FileName = helpUrl,
                 UseShellExecute = true
             });
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open Readme: " + ex.Message);
+            _notificationService.Show("Failed to open Help Center: " + ex.Message);
         }
     }
 

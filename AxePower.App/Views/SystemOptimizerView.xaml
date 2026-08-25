@@ -257,7 +257,7 @@
                                     </TextBlock>
 
                                     <!-- Switch -->
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}"
+                                    <CheckBox Style="{DynamicResource ToggleSwitchStyle}"
                                               IsChecked="{Binding IsApplied, Mode=OneWay}"
                                               Command="{Binding ToggleCommand}"
                                               VerticalAlignment="Center"

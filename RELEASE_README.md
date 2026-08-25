@@ -6,9 +6,9 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.4.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.5.0-blueviolet)
 
-[Official Website](https://axepower.vercel.app/) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
+[Official Website](https://axepower.vercel.app/) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
 </div>
 
@@ -27,10 +27,30 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - ⚖️ **Smart Mode:** The perfect middle ground for everyday tasks like browsing and watching videos.
 - 🚀 **Beast Mode:** Gives you maximum power and sustained clocks for gaming or heavy tasks when plugged in.
 - 🎮 **Game Mode:** Automatically detects running games across any drive, suspends background bloat, locks maximum display refresh rate, and offers Controller Navigation (Gopher360).
-- 📱 **Phone Control:** All-in-one mobile suite with **SpaceDesk** wireless display, offline **LAN Drop** Wi-Fi file sharing, and **scrcpy** Android screen mirroring.
-- 🛍️ **Software Hub:** 1-click installer and launcher for popular gaming stores, hardware monitoring tools, video editors, and runtimes.
+- 📱 **Phone Control:** All-in-one mobile suite with offline **LAN Drop** Wi-Fi file sharing and **scrcpy** Android screen mirroring.
+- 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v1.5.0
+
+- 🛍️ **Ninite Multi-Installer Integration**:
+  - Added Ninite to Update PC & Software Hub with dual-action buttons:
+    - **Install**: Launches the bundled local multi-installer to setup apps with zero clicks.
+    - **Custom**: Opens the official Ninite builder at [ninite.com](https://ninite.com/) to create custom packages.
+- 🧭 **Tool Guides & Help Modal Scrolling**:
+  - Implemented horizontal scrollable tabs in the in-app Tool Help modal, ensuring all tools (including Controller Navigation) are smoothly navigable.
+- 📖 **Dedicated Help & Documentation Center Webpage**:
+  - Launched official [AxePower Help Center](https://axepower.vercel.app/help.html) with detailed controller gamepad mappings, step-by-step setup guides, and live instant search.
+  - Replaced "Readme" button with "Learn More" linking directly to corresponding tool documentation.
+- 🔋 **Live Real-Time Battery Telemetry**:
+  - Dynamic battery metrics and real-time charging status.
+- 🛠️ **Firmware & BIOS Update Checks**:
+  - Integrated hardware BIOS and firmware inspection in Update PC.
+- 🎨 **Dynamic Theme & Resource Architecture**:
+  - Fully dynamic theme resources and instantaneous light/dark theme switching across all views.
 
 ---
 

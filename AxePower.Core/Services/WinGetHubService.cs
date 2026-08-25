@@ -219,6 +219,19 @@ public class WinGetHubService : IWinGetHubService
         // 4. Tools & Productivity
         _packages.Add(new SoftwarePackageItem
         {
+            Id = "ninite",
+            WinGetId = "",
+            Name = "Ninite",
+            Description = "Install and update popular Windows apps automatically at once with no toolbars or clicking next.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE896",
+            LocalInstallerPath = @"C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\Ninite Installer.exe",
+            CustomWebUrl = "https://ninite.com/",
+            WebUrl = "https://ninite.com/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
             Id = "7zip",
             WinGetId = "7zip.7zip",
             Name = "7-Zip",

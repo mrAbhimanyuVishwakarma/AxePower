@@ -67,19 +67,29 @@ public class DynamicModeAutomationTests
     }
 
     [Fact]
-    public void AutoSwitchViewModel_InitializesWithAutomationConfig()
+    public void GameModeViewModel_InitializesWithAutomationConfig()
     {
-        var vm = new AutoSwitchViewModel(
+        var gameScanner = new GameScannerService(_logService);
+        var appKiller = new AppKillerService();
+        var systemServiceOptimizer = new SystemServiceOptimizer();
+        var displayService = new DisplayService(_logService);
+        var powerPlanService = new PowerPlanService(_logService, displayService, _settingsService);
+
+        var vm = new GameModeViewModel(
             _settingsService,
             _notificationService,
-            _automationService,
-            _throttlerService,
-            _memoryOptimizer);
+            gameScanner,
+            appKiller,
+            systemServiceOptimizer,
+            powerPlanService,
+            controllerService: null,
+            automationService: _automationService,
+            throttlerService: _throttlerService,
+            memoryOptimizer: _memoryOptimizer);
 
         Assert.True(vm.AutoPauseServicesInBeast);
         Assert.True(vm.AutoFlushRamOnGameLaunch);
         Assert.True(vm.AutoRestoreOnEco);
         Assert.False(string.IsNullOrWhiteSpace(vm.MemorySummary));
-        Assert.NotEmpty(vm.ManagedServices);
     }
 }

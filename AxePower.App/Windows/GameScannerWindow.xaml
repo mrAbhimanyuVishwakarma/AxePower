@@ -34,7 +34,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" VerticalAlignment="Center"/>
-                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -43,8 +43,8 @@
         </Border>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Cancel" Click="Cancel_Click" Padding="24,8" Margin="0,0,12,0"/>
-            <Button Style="{StaticResource PrimaryButtonStyle}" Content="Add Selected" Click="AddSelected_Click" Padding="24,8"/>
+            <Button Style="{DynamicResource SecondaryButtonStyle}" Content="Cancel" Click="Cancel_Click" Padding="24,8" Margin="0,0,12,0"/>
+            <Button Style="{DynamicResource PrimaryButtonStyle}" Content="Add Selected" Click="AddSelected_Click" Padding="24,8"/>
         </StackPanel>
     </Grid>
 </Window>

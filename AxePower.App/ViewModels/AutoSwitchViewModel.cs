@@ -14,6 +14,7 @@ public partial class AutoSwitchViewModel : ObservableObject
     private readonly IDynamicModeAutomationService _automationService;
     private readonly IServiceThrottlerService _throttlerService;
     private readonly IMemoryOptimizerService _memoryOptimizer;
+    private readonly UpdateService? _updateService;
 
     [ObservableProperty]
     private bool _autoSwitchEnabled;
@@ -76,13 +77,15 @@ public partial class AutoSwitchViewModel : ObservableObject
         NotificationService notificationService,
         IDynamicModeAutomationService automationService,
         IServiceThrottlerService throttlerService,
-        IMemoryOptimizerService memoryOptimizer)
+        IMemoryOptimizerService memoryOptimizer,
+        UpdateService? updateService = null)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
         _automationService = automationService;
         _throttlerService = throttlerService;
         _memoryOptimizer = memoryOptimizer;
+        _updateService = updateService;
 
         LoadSettings();
         RefreshAutomationStatus();
@@ -191,5 +194,32 @@ public partial class AutoSwitchViewModel : ObservableObject
     {
         LoadSettings();
         RefreshAutomationStatus();
+    }
+
+    [RelayCommand]
+    private async Task CheckForUpdatesAsync()
+    {
+        if (_updateService == null)
+        {
+            _notificationService.Show("Already Updated");
+            return;
+        }
+
+        try
+        {
+            var result = await _updateService.CheckForUpdatesAsync();
+            if (result.HasUpdate)
+            {
+                _notificationService.Show($"🚀 New update available: v{result.LatestVersion}! Check About page.");
+            }
+            else
+            {
+                _notificationService.Show("Already Updated");
+            }
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show("Failed to check for updates: " + ex.Message);
+        }
     }
 }
