@@ -1,8 +1,46 @@
+// ==========================================
+// Google Analytics 4 (GA4) Configuration (100% Free)
+// Replace 'G-XXXXXXXXXX' with your GA4 Measurement ID
+// ==========================================
+const GA_MEASUREMENT_ID = window.GA_MEASUREMENT_ID || 'G-DXTX507FC9';
+
+function initGoogleAnalytics() {
+  if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID === 'G-XXXXXXXXXX') {
+    // Analytics is disabled until a valid GA4 Measurement ID is provided
+    return;
+  }
+
+  // Prevent duplicate script injection
+  if (document.getElementById('ga-gtag-script')) return;
+
+  const script = document.createElement('script');
+  script.id = 'ga-gtag-script';
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  document.head.appendChild(script);
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function() {
+    window.dataLayer.push(arguments);
+  };
+
+  window.gtag('js', new Date());
+  window.gtag('config', GA_MEASUREMENT_ID, {
+    send_page_view: true
+  });
+}
+
 /**
- * AxePower — Modern Product Website Interactive Logic
+ * Custom Event Tracker Helper
  */
+function trackAnalyticsEvent(eventName, params = {}) {
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', eventName, params);
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+  initGoogleAnalytics();
   initThemeToggle();
   initMobileMenu();
   initFaqAccordion();
@@ -175,6 +213,15 @@ function initLatestRelease() {
   // Attach dynamic click handler to all download buttons
   downloadLinks.forEach(link => {
     link.addEventListener('click', async (e) => {
+      // Track the download click event in Google Analytics
+      trackAnalyticsEvent('file_download', {
+        file_name: resolvedFileName || 'AxePower_Setup.exe',
+        file_extension: 'exe',
+        link_url: resolvedDownloadUrl || fallbackPageUrl,
+        link_text: (link.textContent || 'Download').trim(),
+        version: vTag || 'latest'
+      });
+
       // If we already have the direct download URL attached, allow standard direct download
       if (resolvedDownloadUrl && link.href === resolvedDownloadUrl) {
         return;
