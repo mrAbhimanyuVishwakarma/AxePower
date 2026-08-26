@@ -154,6 +154,7 @@ function initLatestRelease() {
 
   let resolvedDownloadUrl = null;
   let resolvedFileName = null;
+  let resolvedVTag = 'latest';
   let isFetching = true;
 
   // Asynchronously resolve latest release from GitHub API
@@ -184,6 +185,7 @@ function initLatestRelease() {
 
     if (versionText && (release.tag_name || release.name)) {
       const vTag = release.tag_name || release.name;
+      resolvedVTag = vTag;
       versionText.textContent = `${vTag} (Latest)`;
       
       // Sync all version indicators across headers, modals and footers
@@ -219,7 +221,7 @@ function initLatestRelease() {
         file_extension: 'exe',
         link_url: resolvedDownloadUrl || fallbackPageUrl,
         link_text: (link.textContent || 'Download').trim(),
-        version: vTag || 'latest'
+        version: resolvedVTag || 'latest'
       });
 
       // If we already have the direct download URL attached, allow standard direct download
@@ -272,18 +274,47 @@ function initMobileMenu() {
 
   if (!toggleBtn || !navLinks) return;
 
-  toggleBtn.addEventListener('click', () => {
+  function setMenuState(open) {
+    toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggleBtn.classList.toggle('active', open);
+    navLinks.classList.toggle('mobile-active', open);
+    document.body.classList.toggle('menu-open', open);
+  }
+
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
-    toggleBtn.setAttribute('aria-expanded', !isExpanded);
-    navLinks.classList.toggle('mobile-active');
+    setMenuState(!isExpanded);
   });
 
   // Close menu on link click
   navLinks.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
-      toggleBtn.setAttribute('aria-expanded', 'false');
-      navLinks.classList.remove('mobile-active');
+      setMenuState(false);
     });
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!navLinks.contains(e.target) && !toggleBtn.contains(e.target)) {
+      if (toggleBtn.getAttribute('aria-expanded') === 'true') {
+        setMenuState(false);
+      }
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && toggleBtn.getAttribute('aria-expanded') === 'true') {
+      setMenuState(false);
+    }
+  });
+
+  // Close when window resized past mobile breakpoint
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768 && toggleBtn.getAttribute('aria-expanded') === 'true') {
+      setMenuState(false);
+    }
   });
 }
 

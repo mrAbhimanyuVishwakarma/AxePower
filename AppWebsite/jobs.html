@@ -75,6 +75,14 @@
       color: var(--accent-cyan);
       margin-right: 8px;
     }
+    @media (max-width: 768px) {
+      .page-hero {
+        padding: 42px 0 24px !important;
+      }
+      .job-card {
+        padding: 20px 18px !important;
+      }
+    }
   </style>
 
   <!-- Prevent Theme Flash -->
@@ -108,8 +116,8 @@
       <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
         <a href="features.html" class="nav-link">Features</a>
         <a href="download.html" class="nav-link">Download</a>
-        <a href="support.html" class="nav-link">Support</a>
-        <a href="get-involved.html" class="nav-link">Get Involved</a>
+        <a href="support.html" class="nav-link">Connect with Us</a>
+        <a href="help.html" class="nav-link">Help</a>
         <a href="about.html" class="nav-link">About</a>
         <a href="jobs.html" class="nav-link active">Jobs</a>
         <a href="store.html" class="nav-link">Store</a>
@@ -138,7 +146,7 @@
         Join the AxePower Project
       </h1>
       <p class="hero-subtitle" style="max-width: 680px; margin: 0 auto;">
-        We are looking for passionate systems engineers, designers, and technical writers who want to build the future of Windows PC performance tuning.
+        We're looking for a passionate Android developer to build the AxePower Companion App — a real-time mobile control surface for PC performance monitoring and management.
       </p>
     </div>
   </section>
@@ -147,54 +155,29 @@
   <main class="container" style="padding-bottom: 90px;">
     <div class="jobs-grid">
 
-      <!-- Job 1 -->
-      <div class="job-card">
-        <div>
-          <div style="margin-bottom: 8px;">
-            <span class="job-meta-tag">ENGINEERING</span>
-            <span class="job-meta-tag" style="background: rgba(16,185,129,0.12); color: var(--mode-eco);">REMOTE / OPEN SOURCE</span>
-          </div>
-          <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">Senior .NET 8 / WPF Systems Engineer</h2>
-          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">
-            Architect high-efficiency hardware polling engines, Win32/WMI power integrations, and Fluent UI controls with near-zero overhead.
-          </p>
-        </div>
-        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="white-space: nowrap;">
-          <span>Apply via GitHub ↗</span>
-        </a>
-      </div>
-
-      <!-- Job 2 -->
-      <div class="job-card">
+      <!-- Active Opening -->
+      <div class="job-card" style="border-color: var(--accent-cyan); box-shadow: 0 0 0 1px var(--accent-cyan), 0 8px 24px rgba(0, 212, 255, 0.1);">
         <div>
           <div style="margin-bottom: 8px;">
             <span class="job-meta-tag">MOBILE</span>
             <span class="job-meta-tag" style="background: rgba(16,185,129,0.12); color: var(--mode-eco);">REMOTE / OPEN SOURCE</span>
+            <span class="job-meta-tag" style="background: rgba(239,68,68,0.12); color: #ef4444;">ACTIVELY HIRING</span>
           </div>
-          <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">Android Kotlin Companion Developer</h2>
-          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">
-            Build ultra-low latency Wi-Fi WebSocket telemetry streams, Jetpack Compose interfaces, and ADB mirroring integrations.
+          <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">Android Companion App Developer</h2>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            Build the AxePower Android Companion — a real-time mobile control surface for PC monitoring, performance mode switching, and file transfer over Wi-Fi &amp; USB. You'll work with Kotlin, Jetpack Compose, WebSocket telemetry streams, and ADB integrations.
           </p>
-        </div>
-        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="white-space: nowrap;">
-          <span>Apply via GitHub ↗</span>
-        </a>
-      </div>
-
-      <!-- Job 3 -->
-      <div class="job-card">
-        <div>
-          <div style="margin-bottom: 8px;">
-            <span class="job-meta-tag">DESIGN</span>
-            <span class="job-meta-tag" style="background: rgba(16,185,129,0.12); color: var(--mode-eco);">REMOTE / OPEN SOURCE</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
+            <span style="font-size: 11.5px; padding: 3px 8px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-card);">Kotlin</span>
+            <span style="font-size: 11.5px; padding: 3px 8px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-card);">Jetpack Compose</span>
+            <span style="font-size: 11.5px; padding: 3px 8px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-card);">WebSocket</span>
+            <span style="font-size: 11.5px; padding: 3px 8px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-card);">Material 3</span>
+            <span style="font-size: 11.5px; padding: 3px 8px; border-radius: 6px; background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-card);">ADB</span>
           </div>
-          <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">UI / UX &amp; Design Systems Specialist</h2>
-          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">
-            Craft sleek Fluent design components, dark/light themes, dynamic telemetry gauges, and responsive web layouts.
-          </p>
         </div>
-        <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="white-space: nowrap;">
-          <span>Apply via GitHub ↗</span>
+        <a href="https://www.linkedin.com/jobs/view/4457913753/" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="white-space: nowrap; margin-top: 12px; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76c-.97 0-1.75-.79-1.75-1.76s.78-1.75 1.75-1.75 1.75.78 1.75 1.75-.78 1.76-1.75 1.76m1.4 9.74v-8.37H5.06v8.37h2.8z"/></svg>
+          <span>Apply via LinkedIn ↗</span>
         </a>
       </div>
 

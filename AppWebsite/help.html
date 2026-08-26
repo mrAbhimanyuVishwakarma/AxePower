@@ -37,7 +37,7 @@
 
   <style>
     .help-hero {
-      padding: 130px 0 50px;
+      padding: 120px 0 50px;
       text-align: center;
       background: var(--body-gradient);
     }
@@ -52,17 +52,32 @@
       color: var(--accent-cyan);
       font-size: 13px;
       font-weight: 600;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+    }
+    .help-hero .hero-title {
+      font-size: clamp(24px, 5vw, 44px);
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+    }
+    .help-hero .hero-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 680px;
+      margin: 0 auto;
     }
     .help-search-box {
       max-width: 600px;
-      margin: 28px auto 0;
+      width: 100%;
+      margin: 24px auto 0;
       position: relative;
     }
     .help-search-input {
       width: 100%;
-      padding: 16px 20px 16px 52px;
-      font-size: 15px;
+      padding: 15px 20px 15px 50px;
+      font-size: 16px;
       background: var(--bg-card);
       border: 1px solid var(--border-card);
       border-radius: var(--radius-pill);
@@ -77,7 +92,7 @@
     }
     .help-search-icon {
       position: absolute;
-      left: 20px;
+      left: 18px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
@@ -88,13 +103,14 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 10px;
-      margin: 32px 0 10px;
+      margin: 28px 0 10px;
+      width: 100%;
     }
     .help-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 9px 18px;
+      padding: 8px 16px;
       background: var(--bg-card);
       border: 1px solid var(--border-card);
       border-radius: var(--radius-pill);
@@ -102,6 +118,7 @@
       font-size: 13.5px;
       font-weight: 600;
       text-decoration: none;
+      white-space: nowrap;
       transition: all var(--transition-fast);
     }
     .help-pill:hover, .help-pill.active {
@@ -114,24 +131,25 @@
     .help-guide-section {
       padding: 40px 0 60px;
       border-bottom: 1px solid var(--border-divider);
-      scroll-margin-top: 100px;
+      scroll-margin-top: 90px;
     }
     .guide-header-card {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 18px;
       margin-bottom: 24px;
     }
     .guide-icon-badge {
-      width: 56px;
-      height: 56px;
+      width: 52px;
+      height: 52px;
+      min-width: 52px;
       border-radius: var(--radius-lg);
       background: rgba(0, 212, 255, 0.1);
       border: 1px solid rgba(0, 212, 255, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
+      font-size: 24px;
       color: var(--accent-cyan);
       flex-shrink: 0;
     }
@@ -139,19 +157,19 @@
       flex: 1;
     }
     .guide-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
       color: var(--text-primary);
       margin: 0 0 4px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     .guide-credit-badge {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: var(--radius-pill);
       background: rgba(16, 185, 129, 0.12);
       border: 1px solid rgba(16, 185, 129, 0.3);
@@ -166,11 +184,6 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 20px;
-    }
-    @media (max-width: 860px) {
-      .guide-grid {
-        grid-template-columns: 1fr;
-      }
     }
     .guide-card {
       background: var(--bg-card);
@@ -218,10 +231,18 @@
       flex-shrink: 0;
       margin-top: 1px;
     }
+    .table-responsive {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 8px 0;
+      border-radius: var(--radius-sm);
+    }
     .bindings-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13.5px;
+      font-size: 13px;
     }
     .bindings-table th, .bindings-table td {
       padding: 10px 12px;
@@ -236,14 +257,15 @@
     }
     .key-badge {
       display: inline-block;
-      padding: 4px 8px;
+      padding: 3px 8px;
       background: var(--bg-elevated);
       border: 1px solid var(--border-card);
       border-radius: 6px;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       color: var(--accent-cyan);
+      white-space: nowrap;
     }
     .guide-tips-box {
       margin-top: 20px;
@@ -253,10 +275,134 @@
       border-radius: var(--radius-md);
       font-size: 13.5px;
       color: var(--text-secondary);
-      line-height: 1.5;
+      line-height: 1.55;
     }
     .guide-tips-box strong {
       color: var(--text-primary);
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 860px) {
+      .guide-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .help-hero {
+        padding: 42px 0 24px !important;
+      }
+      .help-hero-badge {
+        font-size: 12px;
+        padding: 5px 12px;
+        margin-bottom: 12px;
+      }
+      .help-hero .hero-title {
+        font-size: clamp(22px, 6vw, 32px) !important;
+        margin-bottom: 8px;
+      }
+      .help-hero .hero-subtitle {
+        font-size: 14px;
+        line-height: 1.5;
+        padding: 0 4px;
+      }
+      .help-search-box {
+        margin: 16px auto 0;
+        padding: 0;
+      }
+      .help-search-input {
+        padding: 13px 16px 13px 44px;
+        font-size: 16px;
+      }
+      .help-search-icon {
+        left: 15px;
+      }
+      .help-nav-pills {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 8px;
+        justify-content: flex-start;
+        padding: 12px 2px 8px;
+        margin: 16px 0 0;
+        width: 100%;
+      }
+      .help-nav-pills::-webkit-scrollbar {
+        display: none;
+      }
+      .help-pill {
+        padding: 7px 13px;
+        font-size: 12.5px;
+        flex-shrink: 0;
+      }
+      .help-guide-section {
+        padding: 30px 0 40px;
+        scroll-margin-top: 76px;
+      }
+      .guide-header-card {
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .guide-icon-badge {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        font-size: 20px;
+        border-radius: var(--radius-md);
+      }
+      .guide-title {
+        font-size: 18px;
+        gap: 8px;
+      }
+      .guide-subtitle {
+        font-size: 13px;
+      }
+      .guide-card {
+        padding: 18px 16px !important;
+      }
+      .guide-card-title {
+        font-size: 15px;
+        margin-bottom: 12px;
+      }
+      .guide-step-item {
+        font-size: 13px;
+        gap: 10px;
+      }
+      .bindings-table {
+        font-size: 12px;
+      }
+      .bindings-table th, .bindings-table td {
+        padding: 8px 8px;
+      }
+      .guide-tips-box {
+        padding: 13px 15px;
+        font-size: 12.5px;
+        margin-top: 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .guide-header-card {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .guide-title {
+        font-size: 17px;
+      }
+      .guide-credit-badge {
+        font-size: 10.5px;
+      }
+      .guide-card {
+        padding: 16px 12px !important;
+      }
+      .bindings-table th, .bindings-table td {
+        padding: 6px 6px;
+        font-size: 11.5px;
+      }
     }
   </style>
 
@@ -291,8 +437,8 @@
       <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
         <a href="features.html" class="nav-link">Features</a>
         <a href="download.html" class="nav-link">Download</a>
-        <a href="support.html" class="nav-link active">Support</a>
-        <a href="get-involved.html" class="nav-link">Get Involved</a>
+        <a href="support.html" class="nav-link">Connect with Us</a>
+        <a href="help.html" class="nav-link active">Help</a>
         <a href="about.html" class="nav-link">About</a>
         <a href="jobs.html" class="nav-link">Jobs</a>
         <a href="store.html" class="nav-link">Store</a>
@@ -332,10 +478,10 @@
       <div class="help-hero-badge">
         <span>📖 AxePower Documentation &amp; Help Center</span>
       </div>
-      <h1 class="hero-title" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 12px;">
+      <h1 class="hero-title">
         How can we help you today?
       </h1>
-      <p class="hero-subtitle" style="max-width: 680px; margin: 0 auto;">
+      <p class="hero-subtitle">
         Explore detailed step-by-step guides, gamepad mappings, phone companion setups, and optimization tips for all built-in AxePower utilities.
       </p>
 
@@ -378,44 +524,46 @@
         <!-- Keybindings & Controls -->
         <div class="guide-card">
           <h3 class="guide-card-title">🕹️ Gamepad Button Mapping</h3>
-          <table class="bindings-table">
-            <thead>
-              <tr>
-                <th>Button / Stick</th>
-                <th>Windows Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><span class="key-badge">Left Thumbstick</span></td>
-                <td>Move Mouse Cursor smoothly across all monitors</td>
-              </tr>
-              <tr>
-                <td><span class="key-badge">A Button</span></td>
-                <td>Left Mouse Click / Select</td>
-              </tr>
-              <tr>
-                <td><span class="key-badge">X Button</span></td>
-                <td>Right Mouse Click / Context Menu</td>
-              </tr>
-              <tr>
-                <td><span class="key-badge">Right Thumbstick</span></td>
-                <td>Scroll Up / Down &amp; Left / Right (Wheel)</td>
-              </tr>
-              <tr>
-                <td><span class="key-badge">Y Button</span></td>
-                <td>Open Windows Touch / On-Screen Keyboard</td>
-              </tr>
-              <tr>
-                <td><span class="key-badge">D-Pad</span></td>
-                <td>Arrow Keys (Up / Down / Left / Right)</td>
-              </tr>
-              <tr>
-                <td><span class="key-badge">Back + Start</span></td>
-                <td>Toggle Controller Navigation ON / OFF instantly</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="bindings-table">
+              <thead>
+                <tr>
+                  <th>Button / Stick</th>
+                  <th>Windows Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="key-badge">Left Thumbstick</span></td>
+                  <td>Move Mouse Cursor smoothly across all monitors</td>
+                </tr>
+                <tr>
+                  <td><span class="key-badge">A Button</span></td>
+                  <td>Left Mouse Click / Select</td>
+                </tr>
+                <tr>
+                  <td><span class="key-badge">X Button</span></td>
+                  <td>Right Mouse Click / Context Menu</td>
+                </tr>
+                <tr>
+                  <td><span class="key-badge">Right Thumbstick</span></td>
+                  <td>Scroll Up / Down &amp; Left / Right (Wheel)</td>
+                </tr>
+                <tr>
+                  <td><span class="key-badge">Y Button</span></td>
+                  <td>Open Windows Touch / On-Screen Keyboard</td>
+                </tr>
+                <tr>
+                  <td><span class="key-badge">D-Pad</span></td>
+                  <td>Arrow Keys (Up / Down / Left / Right)</td>
+                </tr>
+                <tr>
+                  <td><span class="key-badge">Back + Start</span></td>
+                  <td>Toggle Controller Navigation ON / OFF instantly</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Step-by-Step Instructions -->
