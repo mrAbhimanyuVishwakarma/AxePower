@@ -18,6 +18,7 @@
             <localConverters:NullToVisibilityConverter x:Key="NotNullToVis" Invert="True" />
             <localConverters:BatteryTrendConverter x:Key="BatteryTrendConverter" />
             <localConverters:BatteryPercentageToYConverter x:Key="BatteryPercentageToYConverter" />
+            <localConverters:PercentageToGridLengthConverter x:Key="PercentageToGridLengthConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

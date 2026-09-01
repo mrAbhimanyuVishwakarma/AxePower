@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:AxePower.App.ViewModels"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:SystemDoctorViewModel, IsDesignTimeCreatable=False}"
              Background="Transparent"
@@ -11,6 +12,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:InverseBooleanConverter x:Key="InverseBool"/>
 
         <!-- Tab RadioButton Style -->
         <Style x:Key="DoctorTabStyle" TargetType="RadioButton">
@@ -54,6 +56,7 @@
             <RowDefinition Height="Auto"/>  <!-- Header -->
             <RowDefinition Height="Auto"/>  <!-- Tab Switcher -->
             <RowDefinition Height="*"/>     <!-- Active Tab Content -->
+            <RowDefinition Height="69"/>    <!-- Bottom Status Bar -->
         </Grid.RowDefinitions>
 
         <!-- ─── 1. Header ───────────────────────────────────────────────────── -->
@@ -107,7 +110,7 @@
                         <!-- SFC Scan -->
                         <Button Style="{DynamicResource PrimaryButtonStyle}"
                                 Command="{Binding RunSfcScanCommand}"
-                                IsEnabled="{Binding IsDiagnosticRunning, Converter={x:Null}}"
+                                IsEnabled="{Binding IsDiagnosticRunning, Converter={StaticResource InverseBool}}"
                                 ToolTip="Run System File Checker to scan and repair corrupted Windows system files"
                                 Padding="16,9" FontSize="13" Margin="0,0,10,6">
                             <StackPanel Orientation="Horizontal">
@@ -430,5 +433,27 @@
             </Grid>
 
         </Grid>
+
+        <!-- ─── 4. Bottom Status Bar ────────────────────────────────────────── -->
+        <Border Grid.Row="3" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="32,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="32" Height="32" Margin="0,0,16,0">
+                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
+                        <TextBlock Text="&#xE958;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="System Doctor Ready" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
+                        <TextBlock Text="Run automated Windows diagnostics, repairs, and shader cleaners." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

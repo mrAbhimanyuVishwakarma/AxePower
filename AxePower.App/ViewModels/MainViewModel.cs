@@ -14,6 +14,7 @@ public partial class MainViewModel : ObservableObject
     private readonly DebloatService _debloatService;
     private readonly AndroidControlService _androidControlService;
     private readonly UpdateService _updateService;
+    private readonly SettingsService _settingsService;
 
     [ObservableProperty]
     private object? _currentView;
@@ -51,6 +52,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isUtilitiesExpanded;
 
+    private string _currentNavSection = "Dashboard";
+
     public Style? DashboardActiveStyle => GetStyleForView(DashboardVm);
     public Style? AutoSwitchActiveStyle => AutoSwitchVm != null ? GetStyleForView(AutoSwitchVm) : null;
     public Style? GameModeActiveStyle => GetStyleForView(GameModeVm);
@@ -63,7 +66,8 @@ public partial class MainViewModel : ObservableObject
     public Style? DoctorActiveStyle => GetSubItemStyleForView(DoctorVm);
     public Style? SoftwareHubActiveStyle => GetStyleForView(SoftwareHubVm);
     public Style? UpdatePcActiveStyle => GetSubItemStyleForView(SoftwareHubVm);
-    public Style? PhoneHubActiveStyle => GetStyleForView(PhoneHubVm);
+    public Style? PhoneHubActiveStyle => (_currentNavSection is "PhoneHub" or "PhoneControl") && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
+    public Style? SecondMonitorActiveStyle => _currentNavSection == "SecondMonitor" && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
     public Style? LanDropActiveStyle => GetStyleForView(PhoneHubVm);
 
     public string MaintenanceChevronGlyph => IsMaintenanceExpanded ? "\uE70D" : "\uE76C";
@@ -87,6 +91,7 @@ public partial class MainViewModel : ObservableObject
         DebloatService debloatService,
         AndroidControlService androidControlService,
         UpdateService updateService,
+        SettingsService settingsService,
         AutoSwitchViewModel? autoSwitchVm = null)
     {
         DashboardVm = dashboardVm;
@@ -107,6 +112,7 @@ public partial class MainViewModel : ObservableObject
         _debloatService = debloatService;
         _androidControlService = androidControlService;
         _updateService = updateService;
+        _settingsService = settingsService;
 
         _currentView = DashboardVm;
 
@@ -129,6 +135,9 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
+            var settings = _settingsService.GetSettings();
+            if (!settings.AutoCheckUpdates) return;
+
             var result = await _updateService.CheckForUpdatesAsync();
             if (result.HasUpdate)
             {
@@ -139,7 +148,36 @@ public partial class MainViewModel : ObservableObject
                 AboutVm.DownloadUrl = result.DownloadUrl;
                 AboutVm.AssetName = result.AssetName;
                 AboutVm.ReleaseUrl = result.ReleaseUrl;
-                _notificationService.Show($"🚀 AxePower v{result.LatestVersion} update is available!");
+
+                bool downloaded = false;
+                if (settings.AutoDownloadUpdates && !string.IsNullOrWhiteSpace(result.DownloadUrl) &&
+                    (result.DownloadUrl.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || result.DownloadUrl.EndsWith(".msi", StringComparison.OrdinalIgnoreCase)))
+                {
+                    try
+                    {
+                        // Silently download the update in background
+                        var installerPath = await _updateService.DownloadUpdateAsync(result.DownloadUrl, new Progress<double>());
+                        AboutVm.DownloadedInstallerPath = installerPath;
+                        AboutVm.IsUpdateDownloaded = true;
+                        AboutVm.SteamUpdateBannerMessage = $"AxePower v{result.LatestVersion} is downloaded and ready to install - ";
+                        AboutVm.IsSteamUpdateBannerOpen = true;
+                        downloaded = true;
+
+                        if (settings.NotifyOnNewRelease)
+                        {
+                            _notificationService.Show($"🚀 AxePower v{result.LatestVersion} is downloaded and ready to install!");
+                        }
+                    }
+                    catch
+                    {
+                        // Download failed — still tell the user an update exists (below)
+                    }
+                }
+
+                if (!downloaded && settings.NotifyOnNewRelease)
+                {
+                    _notificationService.Show($"🚀 AxePower v{result.LatestVersion} update is available!");
+                }
             }
         }
         catch
@@ -206,13 +244,25 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Navigate(string viewName)
+    public async Task ApplyPowerModeAsync(string modeStr)
     {
-        if (viewName is "Optimizer" or "Doctor")
+        if (modeStr == "GameMode")
+        {
+            Navigate("GameMode");
+        }
+        await DashboardVm.ApplyModeDirectAsync(modeStr);
+    }
+
+    [RelayCommand]
+    public void Navigate(string viewName)
+    {
+        _currentNavSection = viewName;
+
+        if (viewName is "Optimizer" or "Doctor" or "Maintenance")
         {
             IsMaintenanceExpanded = true;
         }
-        else if (viewName is "Uninstaller" or "UpdatePc" or "SoftwareHub")
+        else if (viewName is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities")
         {
             IsUtilitiesExpanded = true;
         }
@@ -228,15 +278,22 @@ public partial class MainViewModel : ObservableObject
             "About"       => AboutVm,
             "Uninstaller" => UninstallerVm,
             "Optimizer"   => OptimizerVm,
+            "Utilities"   => OptimizerVm,
             "Doctor"      => DoctorVm,
+            "Maintenance" => DoctorVm,
             "SoftwareHub" => SoftwareHubVm,
             "UpdatePc"    => SoftwareHubVm,
-            "PhoneControl"=> PhoneHubVm,
-            "PhoneHub"    => PhoneHubVm,
+            "PhoneControl"=> SwitchPhoneHubTab("LanDrop"),
+            "PhoneHub"    => SwitchPhoneHubTab("LanDrop"),
+            "SecondMonitor"=> SwitchPhoneHubTab("SecondMonitor"),
+            "PhoneLink"   => SwitchPhoneHubTab("PhoneLink"),
             "LanDrop"     => SwitchPhoneHubTab("LanDrop"),
             "AndroidControl" => SwitchPhoneHubTab("ScreenMirror"),
             _             => DashboardVm
         };
+
+        OnPropertyChanged(nameof(PhoneHubActiveStyle));
+        OnPropertyChanged(nameof(SecondMonitorActiveStyle));
     }
 
     private object SwitchPhoneHubTab(string tab)

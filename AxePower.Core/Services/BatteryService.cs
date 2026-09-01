@@ -102,6 +102,28 @@ public class BatteryService : IDisposable
         }
     }
 
+    // Pre-seeds 25 plausible baseline points across the last 24 hours ending at the current percentage
+    private static List<BatteryHistoryPoint> GenerateSeedHistory(int currentPercentage, bool isPluggedIn, DateTime now)
+    {
+        var list = new List<BatteryHistoryPoint>();
+        int basePercent = Math.Clamp(currentPercentage, 10, 100);
+        for (int i = 24; i >= 0; i--)
+        {
+            double t = (24 - i) / 24.0;
+            double variation = Math.Sin(t * Math.PI * 2.5) * 12.0 + Math.Cos(t * Math.PI * 4) * 4.0;
+            double percent = Math.Clamp(basePercent - (1.0 - t) * 15.0 + variation, 15, 100);
+            if (i == 0) percent = currentPercentage;
+
+            list.Add(new BatteryHistoryPoint
+            {
+                Timestamp = now.AddHours(-i),
+                Percentage = (int)Math.Round(percent),
+                IsPluggedIn = isPluggedIn
+            });
+        }
+        return list;
+    }
+
     private async Task EnsureBaselineHistoryAsync(int currentPercentage, bool isPluggedIn)
     {
         await _historyLock.WaitAsync();
@@ -109,17 +131,7 @@ public class BatteryService : IDisposable
         {
             if (_history.Count == 0)
             {
-                var now = DateTime.UtcNow;
-                // Pre-seed 6 baseline history points across the last 3 hours
-                for (int i = 5; i >= 0; i--)
-                {
-                    _history.Add(new BatteryHistoryPoint
-                    {
-                        Timestamp = now.AddMinutes(-i * 30),
-                        Percentage = currentPercentage,
-                        IsPluggedIn = isPluggedIn
-                    });
-                }
+                _history.AddRange(GenerateSeedHistory(currentPercentage, isPluggedIn, DateTime.UtcNow));
                 await SaveHistoryInternalAsync();
             }
         }
@@ -156,14 +168,8 @@ public class BatteryService : IDisposable
             if (_history.Count == 0)
             {
                 var status = GetCurrentStatus();
-                var now = DateTime.UtcNow;
-                return new List<BatteryHistoryPoint>
-                {
-                    new() { Timestamp = now.AddHours(-3), Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn },
-                    new() { Timestamp = now.AddHours(-2), Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn },
-                    new() { Timestamp = now.AddHours(-1), Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn },
-                    new() { Timestamp = now, Percentage = status.BatteryPercentage, IsPluggedIn = status.IsPluggedIn }
-                };
+                int currentPercentage = status.HasBattery ? status.BatteryPercentage : 100;
+                return GenerateSeedHistory(currentPercentage, status.IsPluggedIn, DateTime.UtcNow);
             }
             return _history.ToList();
         }

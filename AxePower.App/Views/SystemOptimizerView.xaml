@@ -56,6 +56,7 @@
             <RowDefinition Height="Auto"/>  <!-- Search & Category Filter -->
             <RowDefinition Height="Auto"/>  <!-- Status Notice / Busy Bar -->
             <RowDefinition Height="*"/>     <!-- Tweaks Scrollable Cards List -->
+            <RowDefinition Height="69"/>    <!-- Bottom Status Bar -->
         </Grid.RowDefinitions>
 
         <!-- ─── 1. Header & Overview ────────────────────────────────────────── -->
@@ -269,5 +270,27 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
+        <!-- ─── 6. Bottom Status Bar ────────────────────────────────────────── -->
+        <Border Grid.Row="5" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="32,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="32" Height="32" Margin="0,0,16,0">
+                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
+                        <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="System Optimizer Active" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
+                        <TextBlock Text="Privacy debloating, Windows telemetry reduction, and gaming responsiveness." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

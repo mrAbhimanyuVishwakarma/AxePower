@@ -101,6 +101,7 @@
             <RowDefinition Height="Auto"/>  <!-- Status bar -->
             <RowDefinition Height="*"/>     <!-- Main content -->
             <RowDefinition Height="Auto"/>  <!-- Leftover review panel -->
+            <RowDefinition Height="69"/>    <!-- Bottom status bar -->
         </Grid.RowDefinitions>
 
         <!-- ─── Header ─────────────────────────────────────────────────────── -->
@@ -756,6 +757,28 @@
                             <TextBlock Text="Clean Selected" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ─── Bottom Status Bar ───────────────────────────────────────────── -->
+        <Border Grid.Row="6" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="32,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="32" Height="32" Margin="0,0,16,0">
+                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Uninstaller Pro" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
+                        <TextBlock Text="Clean uninstalls, leftover file scanning, and system restore integration." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>

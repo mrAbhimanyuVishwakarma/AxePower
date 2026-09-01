@@ -92,10 +92,57 @@ public partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     private string _downloadStatusText = "Downloading update...";
 
+    // Steam-Style Update & Patch Notes Dialog State
+    [ObservableProperty]
+    private bool _isSteamUpdateBannerOpen;
+
+    [ObservableProperty]
+    private string _steamUpdateBannerMessage = "Your AxePower is already up to date - ";
+
+    [ObservableProperty]
+    private bool _isUpdateDownloaded;
+
+    [ObservableProperty]
+    private string? _downloadedInstallerPath;
+
+    [ObservableProperty]
+    private bool _isSteamPatchNotesModalOpen;
+
+    [ObservableProperty]
+    private string _patchNotesCategory = "SMALL UPDATE / PATCH NOTES";
+
+    [ObservableProperty]
+    private string _patchNotesDate = "POSTED " + DateTime.Now.ToString("ddd, MMMM d");
+
+    [ObservableProperty]
+    private string _patchNotesTitle = string.Empty; // derived from the assembly version in the constructor
+
+    [ObservableProperty]
+    private string _patchNotesHeader = "A new AxePower Client update has been released and will be automatically applied.";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FormattedLikesCount))]
+    [NotifyPropertyChangedFor(nameof(HasLikes))]
+    private int _patchNotesLikes = 1;
+
+    [ObservableProperty]
+    private bool _isLiked;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FormattedCommentsCount))]
+    [NotifyPropertyChangedFor(nameof(HasComments))]
+    private int _patchNotesComments = 0;
+
+    public string FormattedLikesCount => PatchNotesLikes > 0 ? $"{PatchNotesLikes:N0} " : string.Empty;
+    public string FormattedCommentsCount => PatchNotesComments > 0 ? $"{PatchNotesComments:N0} " : string.Empty;
+    public bool HasLikes => PatchNotesLikes > 0;
+    public bool HasComments => PatchNotesComments > 0;
+
     public AboutViewModel()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        Version = assembly.GetName().Version?.ToString(3) ?? "1.2.0";
+        Version = assembly.GetName().Version?.ToString(3) ?? UpdateService.FallbackVersion;
+        PatchNotesTitle = $"AxePower Client Update - Version {Version}";
 
         try
         {
@@ -144,6 +191,8 @@ public partial class AboutViewModel : ObservableObject
         _driverUpdateService = driverUpdateService;
         _notificationService = notificationService;
         _updateService = updateService;
+
+        _ = SyncCommunityStatsAsync();
     }
 
     [RelayCommand]
@@ -228,11 +277,12 @@ public partial class AboutViewModel : ObservableObject
             }
             else
             {
-                // Version matches -> Already Updated without opening any release page!
+                // Version matches -> Already Updated -> Open Steam Banner (Image 2 & 3)!
                 IsUpdateAvailable = false;
                 UpdateStatusTitle = "Already Updated";
                 CheckButtonText = "✓ Already Updated";
-                _notificationService?.Show("Already Updated");
+                IsSteamUpdateBannerOpen = true;
+                PatchNotesTitle = $"AxePower Client Update - Version {Version}";
                 _ = ResetCheckButtonTextAfterDelay();
             }
         }
@@ -250,6 +300,88 @@ public partial class AboutViewModel : ObservableObject
         if (!IsUpdateAvailable && !IsCheckingForUpdate)
         {
             CheckButtonText = "Check for updates";
+        }
+    }
+
+    [RelayCommand]
+    public void OpenPatchNotesModal()
+    {
+        IsSteamPatchNotesModalOpen = true;
+        _ = SyncCommunityStatsAsync();
+    }
+
+    public async Task SyncCommunityStatsAsync()
+    {
+        if (_updateService == null) return;
+        try
+        {
+            var stats = await _updateService.GetCommunityStatsAsync();
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                PatchNotesLikes = stats.StarsCount;
+                PatchNotesComments = stats.DiscussionsCount;
+            });
+        }
+        catch { }
+    }
+
+    [RelayCommand]
+    public void ClosePatchNotesModal()
+    {
+        IsSteamPatchNotesModalOpen = false;
+    }
+
+    [RelayCommand]
+    public void CloseSteamUpdateBanner()
+    {
+        IsSteamUpdateBannerOpen = false;
+    }
+
+    [RelayCommand]
+    public void RateUpPatchNotes()
+    {
+        if (!IsLiked)
+        {
+            IsLiked = true;
+            PatchNotesLikes++;
+            _notificationService?.Show("⭐ Opening GitHub to star AxePower repository!");
+        }
+        else
+        {
+            IsLiked = false;
+            PatchNotesLikes = Math.Max(0, PatchNotesLikes - 1);
+        }
+        OpenUrl("https://github.com/mrAbhimanyuVishwakarma/AxePower");
+    }
+
+    [RelayCommand]
+    public void DiscussPatchNotes()
+    {
+        OpenUrl("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues");
+    }
+
+    [RelayCommand]
+    public void SharePatchNotes()
+    {
+        try
+        {
+            Clipboard.SetText("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases");
+            _notificationService?.Show("🔗 Release link copied to clipboard!");
+        }
+        catch { }
+    }
+
+    [RelayCommand]
+    public void ApplyDownloadedUpdate()
+    {
+        if (!string.IsNullOrWhiteSpace(DownloadedInstallerPath) && File.Exists(DownloadedInstallerPath))
+        {
+            _updateService?.ApplyUpdate(DownloadedInstallerPath);
+            Application.Current?.Shutdown();
+        }
+        else if (!string.IsNullOrWhiteSpace(DownloadUrl))
+        {
+            _ = DownloadAndApplyUpdate();
         }
     }
 

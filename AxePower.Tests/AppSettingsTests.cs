@@ -13,8 +13,18 @@ public class AppSettingsTests
 
         Assert.True(settings.AutoSwitchEnabled);
         Assert.True(settings.ShowNotifications);
+        Assert.True(settings.NotifyOnModeSwitch);
+        Assert.True(settings.LowBatteryAlertSound);
+        Assert.True(settings.StartWithWindows);
+        Assert.True(settings.StartMinimised);
+        Assert.True(settings.TouchpadEnabled);
+        Assert.True(settings.AutoCheckUpdates);
+        Assert.True(settings.AutoDownloadUpdates);
         Assert.Equal(PowerMode.Smart, settings.PluggedInMode);
         Assert.Equal(PowerMode.Eco, settings.UnpluggedMode);
+        Assert.Equal("Smart", settings.FanModeOnBattery);
+        Assert.Equal(TemperatureUnit.Celsius, settings.TemperatureUnit);
+        Assert.Equal(0, settings.DisplayRefreshRate);
         Assert.False(settings.StartWithLastSelectedMode);
         Assert.Equal(PowerMode.Beast, settings.LastSelectedPowerMode);
         Assert.Equal(30, settings.LowBatteryThresholdPercent);

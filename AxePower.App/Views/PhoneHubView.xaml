@@ -18,10 +18,12 @@
             <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Padding" Value="10,10"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -54,49 +56,33 @@
             <RowDefinition Height="Auto"/>  <!-- Header -->
             <RowDefinition Height="Auto"/>  <!-- Tab Switcher -->
             <RowDefinition Height="*"/>     <!-- Active Content Scroll -->
+            <RowDefinition Height="69"/>    <!-- Bottom Status Bar -->
         </Grid.RowDefinitions>
 
         <!-- ─── 1. Header ───────────────────────────────────────────────────── -->
-        <Grid Grid.Row="0" Margin="40,24,40,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                    <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    <TextBlock Text="Phone Control" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+        <Grid Grid.Row="0" Margin="40,16,40,8">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="Phone Control" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
-                <TextBlock Text="All-in-one mobile suite: screen mirroring, Wi-Fi LAN drop file sharing, and remote companion controls."
-                           FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBlock Text="All-in-one mobile suite: screen mirroring, Wi-Fi LAN drop file sharing, wireless second display, and Phone Link."
+                           FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
             </StackPanel>
-
-            <!-- Green SpaceDesk Button (Click to Open or Install) -->
-            <Button Grid.Column="1" Command="{Binding SpaceDeskActionCommand}"
-                    Background="#10B981" Foreground="#FFFFFF" BorderThickness="0"
-                    Padding="18,10" Cursor="Hand" VerticalAlignment="Center"
-                    ToolTip="SpaceDesk: Turn phone/tablet into a secondary display (Click to Open if installed, or Install)">
-                <Button.Resources>
-                    <Style TargetType="Border">
-                        <Setter Property="CornerRadius" Value="10"/>
-                    </Style>
-                </Button.Resources>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="SpaceDesk" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
         </Grid>
 
-        <!-- ─── 2. Segmented Tab Switcher ───────────────────────────────────── -->
-        <Border Grid.Row="1" Padding="40,0,40,16">
-            <StackPanel Orientation="Horizontal">
+        <!-- ─── 2. Segmented Tab Switcher (4 Equal-Sized Buttons) ─────────────── -->
+        <Border Grid.Row="1" Padding="40,0,40,10">
+            <UniformGrid Columns="4" HorizontalAlignment="Stretch">
                 <RadioButton Content="📂 LAN Drop (Wi-Fi Share)" Style="{StaticResource HubTabStyle}"
-                             IsChecked="True" Command="{Binding SetTabCommand}" CommandParameter="LanDrop" Margin="0,0,10,0"/>
-                <RadioButton Content="📱 Screen Mirror &amp; Control (scrcpy)" Style="{StaticResource HubTabStyle}"
-                             Command="{Binding SetTabCommand}" CommandParameter="ScreenMirror" Margin="0,0,10,0"/>
-            </StackPanel>
+                             IsChecked="{Binding IsLanDropTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="LanDrop" Margin="0,0,8,0"/>
+                <RadioButton Content="📱 Screen Mirror &amp; Control" Style="{StaticResource HubTabStyle}"
+                             IsChecked="{Binding IsScreenMirrorTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="ScreenMirror" Margin="0,0,8,0"/>
+                <RadioButton Content="🖥️ Second Monitor" Style="{StaticResource HubTabStyle}"
+                             IsChecked="{Binding IsSecondMonitorTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="SecondMonitor" Margin="0,0,8,0"/>
+                <RadioButton Content="🔗 Phone Link" Style="{StaticResource HubTabStyle}"
+                             IsChecked="{Binding IsPhoneLinkTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="PhoneLink" Margin="0,0,0,0"/>
+            </UniformGrid>
         </Border>
 
         <!-- ─── 3. Content Area ─────────────────────────────────────────────── -->
@@ -117,30 +103,30 @@
                     </Style>
                 </Grid.Style>
 
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="36,0,36,24">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="36,0,36,12">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*" MinWidth="320" MaxWidth="460"/>
-                            <ColumnDefinition Width="3*" MinWidth="360"/>
+                            <ColumnDefinition Width="2*" MinWidth="300" MaxWidth="440"/>
+                            <ColumnDefinition Width="3*" MinWidth="340"/>
                         </Grid.ColumnDefinitions>
 
                         <!-- Left Column: Connection Card & QR -->
-                        <StackPanel Grid.Column="0" Margin="0,0,20,0">
-                            <Border Style="{DynamicResource CardElevatedStyle}">
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <Border Style="{DynamicResource CardElevatedStyle}" Padding="16,12">
                                 <StackPanel>
-                                    <Grid Margin="0,0,0,12">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="📱 Connect Phone / Device" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,10,0"/>
-                                        <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding ToggleServerCommand}" Padding="14,6">
-                                            <TextBlock>
+                                        <TextBlock Text="📱 Connect Phone / Device" FontSize="14.5" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,8,0"/>
+                                        <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding ToggleServerCommand}" Padding="12,5">
+                                            <TextBlock FontSize="12" FontWeight="SemiBold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="Start Server"/>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
+                                                             <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
                                                                 <Setter Property="Text" Value="Stop Server"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
@@ -151,72 +137,59 @@
                                     </Grid>
 
                                     <TextBlock Text="Scan this QR code with your phone camera or browser on the same Wi-Fi network to transfer files instantly."
-                                               FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="17" Margin="0,0,0,14"/>
+                                               FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="15" Margin="0,0,0,8"/>
 
-                                    <!-- QR Code Container -->
-                                    <Border Background="#090D16" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                                            CornerRadius="16" Height="210" Margin="0,0,0,14" Padding="12">
-                                        <Grid>
-                                            <Image Source="{Binding QrCodeImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <StackPanel.Style>
-                                                    <Style TargetType="StackPanel">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsServerRunning}" Value="False">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </StackPanel.Style>
-                                                <TextBlock Text="&#xE724;" FontFamily="Segoe MDL2 Assets" FontSize="32" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,6"/>
-                                                <TextBlock Text="Server Offline" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="Click 'Start Server' to generate QR" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Grid>
+                                    <!-- QR Code Container: Pure White & Only Show QR -->
+                                    <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1"
+                                            CornerRadius="12" Height="140" Margin="0,0,0,8" Padding="6" HorizontalAlignment="Center">
+                                        <Image Source="{Binding QrCodeImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
 
                                     <!-- Direct URL Box -->
-                                    <TextBlock Text="Local Server URL:" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <Grid Margin="0,0,0,12">
+                                    <TextBlock Text="Local Server URL:" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,3"/>
+                                    <Grid Margin="0,0,0,8">
                                         <TextBox Text="{Binding ServerUrl, Mode=OneWay}" IsReadOnly="True"
                                                  Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource PrimaryTextBrush}"
-                                                 BorderBrush="{DynamicResource CardBorderBrush}" Padding="10,8" FontSize="12" FontWeight="SemiBold"/>
+                                                 BorderBrush="{DynamicResource CardBorderBrush}" Padding="8,5" FontSize="11.5" FontWeight="SemiBold"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,4,0">
-                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding CopyServerUrlCommand}" ToolTip="Copy URL" Padding="8,4" Margin="0,0,4,0">
-                                                <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding CopyServerUrlCommand}" ToolTip="Copy URL" Padding="6,3" Margin="0,0,4,0">
+                                                <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
                                             </Button>
-                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenInBrowserCommand}" ToolTip="Open in Browser" Padding="8,4">
-                                                <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenInBrowserCommand}" ToolTip="Open in Browser" Padding="6,3">
+                                                <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
                                             </Button>
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- Network Adapter & Port -->
-                                    <TextBlock Text="Network Adapter / IP Address:" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <ComboBox ItemsSource="{Binding AvailableIpAddresses}" SelectedItem="{Binding SelectedIpAddress}"
-                                              Margin="0,0,0,12" Padding="8,6" FontSize="12"/>
-
-                                    <Grid Margin="0,0,0,12">
+                                    <!-- Combined Network Adapter & Port in 1 Row -->
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="76"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Port Number:" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Column="1" Text="{Binding PortNumber, UpdateSourceTrigger=PropertyChanged}" Width="80"
-                                                 Padding="6,4" FontSize="12" TextAlignment="Center" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <TextBlock Text="Network Adapter / IP:" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,3"/>
+                                            <ComboBox ItemsSource="{Binding AvailableIpAddresses}" SelectedItem="{Binding SelectedIpAddress}"
+                                                      Padding="6,4" FontSize="11.5"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="Port:" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,3"/>
+                                            <TextBox Text="{Binding PortNumber, UpdateSourceTrigger=PropertyChanged}"
+                                                     Padding="6,4" FontSize="11.5" TextAlignment="Center" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        </StackPanel>
                                     </Grid>
 
                                     <!-- Instruction Tip -->
-                                    <Border Background="#131B2A" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10">
+                                    <Border Background="#131B2A" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top" Margin="0,2,8,0"/>
-                                            <TextBlock Grid.Column="1" Text="Ensure both PC and phone are connected to the same Wi-Fi router or mobile hotspot."
-                                                       FontSize="11.5" LineHeight="16" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Column="0" Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Grid.Column="1" Text="Connect both PC and phone to the same Wi-Fi router or hotspot."
+                                                       FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
                                         </Grid>
                                     </Border>
                                 </StackPanel>
@@ -226,32 +199,32 @@
                         <!-- Right Column: Share, Received & Clipboard -->
                         <StackPanel Grid.Column="1">
                             <!-- Share to Mobile -->
-                            <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16">
+                            <Border Style="{DynamicResource CardElevatedStyle}" Padding="16,10" Margin="0,0,0,8">
                                 <StackPanel>
-                                    <Grid Margin="0,0,0,12">
+                                    <Grid Margin="0,0,0,6">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="📤 Share to Mobile &amp; Other Devices" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                <Border Background="{DynamicResource AccentBrush}" CornerRadius="8" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding SharedCount}" FontSize="11" FontWeight="Bold" Foreground="#090D16"/>
+                                                <TextBlock Text="📤 Share to Mobile &amp; Other Devices" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <Border Background="{DynamicResource AccentBrush}" CornerRadius="8" Padding="6,1" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding SharedCount}" FontSize="10.5" FontWeight="Bold" Foreground="#090D16"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="Files queued here can be downloaded instantly by any connected phone." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            <TextBlock Text="Files queued here can be downloaded instantly by any connected phone." FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,1,0,0"/>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
                                             <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ClearSharedFilesCommand}"
-                                                    Margin="0,0,8,0" Padding="10,6" ToolTip="Clear shared list">
-                                                <TextBlock Text="Clear All" FontSize="12"/>
+                                                    Margin="0,0,6,0" Padding="8,4" ToolTip="Clear shared list">
+                                                <TextBlock Text="Clear All" FontSize="11"/>
                                             </Button>
-                                            <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding AddFilesToShareCommand}" Padding="12,6">
+                                            <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding AddFilesToShareCommand}" Padding="10,4">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Add Files" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Add Files" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
                                         </StackPanel>
@@ -262,22 +235,22 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
-                                                        BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,6">
+                                                        BorderThickness="1" CornerRadius="8" Padding="8,5" Margin="0,0,0,4">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0">
-                                                            <TextBlock Text="{Binding FileName}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock Text="{Binding FormattedSize}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                        <TextBlock Grid.Column="0" Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding FileName}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{Binding FormattedSize}" FontSize="10.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                         </StackPanel>
                                                         <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"
                                                                 Command="{Binding DataContext.RemoveSharedFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                CommandParameter="{Binding}" Padding="8,4">
-                                                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#EF4444"/>
+                                                                CommandParameter="{Binding}" Padding="6,3">
+                                                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#EF4444"/>
                                                         </Button>
                                                     </Grid>
                                                 </Border>
@@ -287,7 +260,7 @@
 
                                     <!-- Empty Shared Placeholder -->
                                     <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                                            CornerRadius="10" Padding="16" Background="#0C111C">
+                                            CornerRadius="8" Padding="10,6" Background="#0C111C">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -298,35 +271,35 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock Text="No files queued for mobile download. Click '+ Add Files' above." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="No files queued for mobile download. Click '+ Add Files' above." FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center"/>
                                     </Border>
                                 </StackPanel>
                             </Border>
 
                             <!-- Received Files from Mobile -->
-                            <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16">
+                            <Border Style="{DynamicResource CardElevatedStyle}" Padding="16,10" Margin="0,0,0,8">
                                 <StackPanel>
-                                    <Grid Margin="0,0,0,12">
+                                    <Grid Margin="0,0,0,6">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="📥 Received Files from Devices" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                <Border Background="#10B981" CornerRadius="8" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding ReceivedCount}" FontSize="11" FontWeight="Bold" Foreground="#090D16"/>
+                                                <TextBlock Text="📥 Received Files from Devices" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <Border Background="#10B981" CornerRadius="8" Padding="6,1" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding ReceivedCount}" FontSize="10.5" FontWeight="Bold" Foreground="#090D16"/>
                                                 </Border>
                                             </StackPanel>
-                                            <TextBlock Text="Files dropped from mobile phones to this PC are stored in your Downloads folder." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            <TextBlock Text="Files dropped from mobile phones to this PC are stored in your Downloads folder." FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,1,0,0"/>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenSaveDirectoryCommand}" Margin="0,0,6,0" Padding="10,6" ToolTip="Open downloads folder">
-                                                <TextBlock Text="Open Folder" FontSize="12"/>
+                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenSaveDirectoryCommand}" Margin="0,0,4,0" Padding="8,4" ToolTip="Open downloads folder">
+                                                <TextBlock Text="Open Folder" FontSize="11"/>
                                             </Button>
-                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ClearReceivedFilesCommand}" Padding="10,6">
-                                                <TextBlock Text="Clear" FontSize="12"/>
+                                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ClearReceivedFilesCommand}" Padding="8,4">
+                                                <TextBlock Text="Clear" FontSize="11"/>
                                             </Button>
                                         </StackPanel>
                                     </Grid>
@@ -336,17 +309,17 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
-                                                        BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,6">
+                                                        BorderThickness="1" CornerRadius="8" Padding="8,5" Margin="0,0,0,4">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="&#xED25;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#10B981" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0">
-                                                            <TextBlock Text="{Binding FileName}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}">
+                                                        <TextBlock Grid.Column="0" Text="&#xED25;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#10B981" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding FileName}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock FontSize="10.5" Foreground="{DynamicResource SecondaryTextBrush}">
                                                                 <Run Text="{Binding FormattedSize}"/>
                                                                 <Run Text=" • From "/>
                                                                 <Run Text="{Binding DeviceName}" FontWeight="SemiBold"/>
@@ -355,18 +328,18 @@
                                                         <StackPanel Grid.Column="2" Orientation="Horizontal">
                                                             <Button Style="{DynamicResource SecondaryButtonStyle}"
                                                                     Command="{Binding DataContext.OpenReceivedFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                    CommandParameter="{Binding}" Padding="8,4" Margin="0,0,4,0">
-                                                                <TextBlock Text="Open" FontSize="11"/>
+                                                                    CommandParameter="{Binding}" Padding="6,3" Margin="0,0,3,0">
+                                                                <TextBlock Text="Open" FontSize="10.5"/>
                                                             </Button>
                                                             <Button Style="{DynamicResource SecondaryButtonStyle}"
                                                                     Command="{Binding DataContext.ShowReceivedFileInFolderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                    CommandParameter="{Binding}" Padding="8,4" Margin="0,0,4,0">
-                                                                <TextBlock Text="&#xED25;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
+                                                                    CommandParameter="{Binding}" Padding="6,3" Margin="0,0,3,0">
+                                                                <TextBlock Text="&#xED25;" FontFamily="Segoe MDL2 Assets" FontSize="10.5"/>
                                                             </Button>
                                                             <Button Style="{DynamicResource SecondaryButtonStyle}"
                                                                     Command="{Binding DataContext.DeleteReceivedFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                    CommandParameter="{Binding}" Padding="8,4">
-                                                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#EF4444"/>
+                                                                    CommandParameter="{Binding}" Padding="6,3">
+                                                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="10.5" Foreground="#EF4444"/>
                                                             </Button>
                                                         </StackPanel>
                                                     </Grid>
@@ -377,7 +350,7 @@
 
                                     <!-- Empty Received Placeholder -->
                                     <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                                            CornerRadius="10" Padding="16" Background="#0C111C">
+                                            CornerRadius="8" Padding="10,6" Background="#0C111C">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -388,27 +361,27 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock Text="No files received yet. Scan the QR code with your phone and drop files." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="No files received yet. Scan the QR code with your phone and drop files." FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center"/>
                                     </Border>
                                 </StackPanel>
                             </Border>
 
                             <!-- Quick Text Drop -->
-                            <Border Style="{DynamicResource CardElevatedStyle}">
+                            <Border Style="{DynamicResource CardElevatedStyle}" Padding="16,10">
                                 <StackPanel>
-                                    <TextBlock Text="📋 Quick Text &amp; Clipboard Drop" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Send notes, OTP codes, or links between your PC and phone instantly." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                    <TextBlock Text="📋 Quick Text &amp; Clipboard Drop" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Send notes, OTP codes, or links between your PC and phone instantly." FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
 
-                                    <Grid Margin="0,0,0,10">
+                                    <Grid Margin="0,0,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBox Text="{Binding QuickTextInput, UpdateSourceTrigger=PropertyChanged}"
                                                  Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource PrimaryTextBrush}"
-                                                 BorderBrush="{DynamicResource CardBorderBrush}" Padding="10,8" FontSize="12.5" Margin="0,0,8,0"/>
-                                        <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding SendQuickTextCommand}" Padding="14,8">
-                                            <TextBlock Text="Send to Phone" FontWeight="SemiBold" FontSize="12"/>
+                                                 BorderBrush="{DynamicResource CardBorderBrush}" Padding="8,5" FontSize="11.5" Margin="0,0,6,0"/>
+                                        <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding SendQuickTextCommand}" Padding="12,5">
+                                            <TextBlock Text="Send to Phone" FontWeight="SemiBold" FontSize="11.5"/>
                                         </Button>
                                     </Grid>
 
@@ -416,17 +389,17 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
-                                                        BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,0,0,4">
+                                                        BorderThickness="1" CornerRadius="8" Padding="6,4" Margin="0,0,0,3">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
-                                                            <TextBlock Text="{Binding Content}" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
-                                                            <TextBlock FontSize="10.5" Foreground="{DynamicResource SecondaryTextBrush}">
+                                                        <TextBlock Grid.Column="0" Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,6,0">
+                                                            <TextBlock Text="{Binding Content}" FontSize="11.5" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                                                            <TextBlock FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}">
                                                                 <Run Text="{Binding SenderDevice}"/>
                                                                 <Run Text=" • "/>
                                                                 <Run Text="{Binding Timestamp, StringFormat=HH:mm:ss}"/>
@@ -434,8 +407,8 @@
                                                         </StackPanel>
                                                         <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"
                                                                 Command="{Binding DataContext.CopyMessageTextCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                CommandParameter="{Binding}" Padding="6,3">
-                                                            <TextBlock Text="Copy" FontSize="11"/>
+                                                                CommandParameter="{Binding}" Padding="5,2">
+                                                            <TextBlock Text="Copy" FontSize="10.5"/>
                                                         </Button>
                                                     </Grid>
                                                 </Border>
@@ -646,6 +619,457 @@
                 </ScrollViewer>
             </Grid>
 
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- TAB 3: Wireless Second Monitor (SpaceDesk)                      -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActiveTab}" Value="SecondMonitor">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="36,0,36,24">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" MinWidth="320" MaxWidth="460"/>
+                            <ColumnDefinition Width="3*" MinWidth="360"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left Column: SpaceDesk Control & Status -->
+                        <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                            <!-- Driver / Service Status Card -->
+                            <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="🖥️ SpaceDesk Display Server" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" CornerRadius="6" Padding="8,2"
+                                                Visibility="{Binding IsSpaceDeskInstalled, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="INSTALLED" FontSize="11" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBlock Text="Turns any Android phone, iPhone, iPad, tablet, or secondary laptop on your Wi-Fi into an ultra-low latency wireless monitor with full touchscreen support."
+                                               FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="18"/>
+
+                                    <Button Command="{Binding SpaceDeskActionCommand}"
+                                            Background="#10B981" Foreground="#FFFFFF" BorderThickness="0"
+                                            Padding="18,12" Cursor="Hand" Margin="0,0,0,10">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="10"/>
+                                            </Style>
+                                        </Button.Resources>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding SpaceDeskButtonText}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenSpaceDeskWebsiteCommand}"
+                                            Padding="16,8" Margin="0,0,0,0" HorizontalAlignment="Stretch">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Official SpaceDesk Portal" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Display Configuration Quick Shortcut -->
+                            <Border Style="{DynamicResource CardElevatedStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="⚙️ Windows Display Settings" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Easily arrange your wireless monitor position or change resolution &amp; scaling from Windows Settings."
+                                               FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                    <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenWindowsDisplaySettingsCommand}"
+                                            Padding="14,8" HorizontalAlignment="Stretch">
+                                        <TextBlock Text="Open Windows Display Settings" FontSize="12" FontWeight="SemiBold"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Right Column: Step-by-Step Instructions & App Links -->
+                        <StackPanel Grid.Column="1">
+                            <!-- How to Connect Steps -->
+                            <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Text="📖 How to Connect Your Device" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,14"/>
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}">
+                                            <TextBlock Text="1" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <TextBlock Text="Ensure both PC and Phone are on the same Wi-Fi" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Your phone or tablet must be connected to the same local router / hotspot as this PC." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}">
+                                            <TextBlock Text="2" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <TextBlock Text="Install SpaceDesk Viewer App on your Phone / Tablet" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Available free for Android (Play Store), iOS (App Store), Windows, and HTML5 Web Viewer." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}">
+                                            <TextBlock Text="3" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <TextBlock Text="Tap your PC's name on your phone to connect!" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="The phone screen instantly becomes your extended second monitor with full touchscreen support." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Viewer App Download Shortcuts -->
+                            <Border Style="{DynamicResource CardElevatedStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="📱 SpaceDesk Viewer Downloads (Click to show QR Code)" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Button Grid.Column="0" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="android" Padding="10,8" Margin="0,0,6,0" ToolTip="Scan QR code with Android phone">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Google Play (Android)" FontSize="11.5" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button Grid.Column="1" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="ios" Padding="10,8" Margin="0,0,6,0" ToolTip="Scan QR code with iPhone or iPad">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="App Store (iOS)" FontSize="11.5" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="web" Padding="10,8" ToolTip="Scan QR code or open HTML5 Web Viewer">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="HTML5 Web Viewer" FontSize="11.5" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- TAB 4: Windows Phone Link                                       -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActiveTab}" Value="PhoneLink">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="36,0,36,24">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" MinWidth="320" MaxWidth="460"/>
+                            <ColumnDefinition Width="3*" MinWidth="360"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left Column: Primary Launcher & Features -->
+                        <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                            <!-- Windows Phone Link Card -->
+                            <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="🔗 Microsoft Phone Link" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Background="#1A2563EB" BorderBrush="#332563EB" BorderThickness="1" CornerRadius="6" Padding="8,2">
+                                            <TextBlock Text="WINDOWS NATIVE" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBlock Text="Seamlessly pair your Android or iPhone device with Windows. Make and receive calls, reply to SMS, view instant photos, manage phone notifications, and stream Android apps."
+                                               FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="18"/>
+
+                                    <Button Command="{Binding LaunchPhoneLinkCommand}"
+                                            Style="{DynamicResource PrimaryButtonStyle}"
+                                            Padding="18,12" Margin="0,0,0,0">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <TextBlock Text="&#xE71B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Launch Windows Phone Link" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Feature Summary Pills Card -->
+                            <Border Style="{DynamicResource CardElevatedStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="✨ What You Can Do" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="30"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="📞" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Make and receive phone calls from your PC" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="30"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="💬" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Send and receive text messages &amp; media" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="30"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="🖼️" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Access 2,000+ recent phone photos instantly" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="30"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="🔔" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Sync real-time notifications &amp; quick reply" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Right Column: How to Pair & Mobile App Links -->
+                        <StackPanel Grid.Column="1">
+                            <!-- How to Pair Steps -->
+                            <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Text="📖 Quick 3-Step Setup" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,14"/>
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}">
+                                            <TextBlock Text="1" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <TextBlock Text="Click 'Launch Windows Phone Link'" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Phone Link opens on your Windows system and displays a setup pairing QR code." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}">
+                                            <TextBlock Text="2" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <TextBlock Text="Install 'Link to Windows' on your Phone" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Scan the QR codes below to download from Google Play (Android) or App Store (iOS)." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}">
+                                            <TextBlock Text="3" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <TextBlock Text="Scan the PC screen QR code with your phone" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="Your phone and PC pair seamlessly via Bluetooth and local Wi-Fi." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Mobile Companion App Downloads -->
+                            <Border Style="{DynamicResource CardElevatedStyle}">
+                                <StackPanel>
+                                    <TextBlock Text="📱 'Link to Windows' Companion App (Click to show QR Code)" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Button Grid.Column="0" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="phonelink_android" Padding="12,10" Margin="0,0,6,0" ToolTip="Scan QR code with Android phone">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Google Play (Android)" FontSize="12" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button Grid.Column="1" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="phonelink_ios" Padding="12,10" Margin="6,0,0,0" ToolTip="Scan QR code with iPhone or iPad">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="App Store (iOS)" FontSize="12" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+
+        </Grid>
+
+        <!-- ─── 4. Bottom Status Bar ────────────────────────────────────────── -->
+        <Border Grid.Row="3" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="32,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="32" Height="32" Margin="0,0,16,0">
+                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
+                        <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Phone Control Hub Active" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
+                        <TextBlock Text="High-speed Wi-Fi LAN Drop, Screen Mirroring, Second Monitor &amp; Windows Phone Link." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ─── 5. QR Code Modal Overlay ─────────────────────────────────────── -->
+        <Grid Grid.Row="0" Grid.RowSpan="4"
+              Visibility="{Binding IsQrModalOpen, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="100">
+            <!-- Semi-transparent backdrop -->
+            <Border Background="#D9080B12">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding CloseQrModalCommand}"/>
+                </Border.InputBindings>
+            </Border>
+
+            <!-- Centered Modal Card -->
+            <Border Width="460" Margin="24"
+                    Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="20"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.75" Direction="270" ShadowDepth="14"/>
+                </Border.Effect>
+
+                <StackPanel Margin="28,24">
+                    <!-- Modal Header -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="{Binding QrModalTitle}" FontSize="16.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <Border Background="#1A2563EB" BorderBrush="#332563EB" BorderThickness="1" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding QrModalBadge}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="{Binding QrModalSubtitle}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                        </StackPanel>
+
+                        <Button Grid.Column="1" Command="{Binding CloseQrModalCommand}"
+                                Width="30" Height="30" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" HorizontalAlignment="Right">
+                            <TextBlock Text="✕" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- QR Code Container: Pure White High-Contrast -->
+                    <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="16" Padding="14" HorizontalAlignment="Center" Margin="0,0,0,18">
+                        <Image Source="{Binding QrModalImage}" Width="190" Height="190" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                    </Border>
+
+                    <!-- Scan Instruction Tip -->
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,18">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="📷" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Open phone camera &amp; scan QR to install easily" FontSize="12" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Action Buttons -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenQrModalUrlCommand}" Padding="14,10" Margin="0,0,6,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Open Link on PC" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding CloseQrModalCommand}" Padding="14,10" Margin="6,0,0,0">
+                            <TextBlock Text="Done" FontSize="12.5" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

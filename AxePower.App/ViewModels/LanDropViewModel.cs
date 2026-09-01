@@ -64,11 +64,12 @@ public partial class LanDropViewModel : ObservableObject
 
         // Initialize IP choices
         RefreshIpList();
+        UpdateQrCode();
 
         // Subscribe to service events
         _lanDropService.OnFileReceived += (s, item) =>
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 ReceivedFiles.Insert(0, item);
                 OnPropertyChanged(nameof(ReceivedCount));
@@ -79,7 +80,7 @@ public partial class LanDropViewModel : ObservableObject
 
         _lanDropService.OnTextReceived += (s, msg) =>
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 ClipboardMessages.Insert(0, msg);
                 _notificationService.Show($"📋 Quick Text received from {msg.SenderDevice}");
@@ -88,10 +89,13 @@ public partial class LanDropViewModel : ObservableObject
 
         _lanDropService.OnStateChanged += (s, state) =>
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 IsServerRunning = state.IsRunning;
-                ServerUrl = state.ServerUrl;
+                if (!string.IsNullOrEmpty(state.ServerUrl))
+                {
+                    ServerUrl = state.ServerUrl;
+                }
                 UpdateQrCode();
                 StatusMessage = IsServerRunning
                     ? $"Server active on {ServerUrl} — Scan QR code on your phone"
@@ -115,27 +119,46 @@ public partial class LanDropViewModel : ObservableObject
 
     partial void OnSelectedIpAddressChanged(string value)
     {
-        if (!IsServerRunning && !string.IsNullOrEmpty(value))
+        if (!string.IsNullOrEmpty(value))
         {
             ServerUrl = $"http://{value}:{PortNumber}/";
+            RestartServerIfRunning();
+            UpdateQrCode();
         }
     }
 
     partial void OnPortNumberChanged(int value)
     {
-        if (!IsServerRunning && !string.IsNullOrEmpty(SelectedIpAddress))
+        if (!string.IsNullOrEmpty(SelectedIpAddress))
         {
             ServerUrl = $"http://{SelectedIpAddress}:{value}/";
+            RestartServerIfRunning();
+            UpdateQrCode();
         }
+    }
+
+    // The advertised URL/QR must always match the endpoint the server is bound to
+    private void RestartServerIfRunning()
+    {
+        if (!IsServerRunning) return;
+        _lanDropService.StopServer();
+        _ = _lanDropService.StartServerAsync(SelectedIpAddress, PortNumber);
     }
 
     private void UpdateQrCode()
     {
-        if (IsServerRunning && !string.IsNullOrEmpty(ServerUrl))
+        // Never show a scannable QR for an endpoint nobody is listening on
+        if (!IsServerRunning)
+        {
+            QrCodeImage = null;
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(ServerUrl))
         {
             try
             {
-                byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(ServerUrl, 8, 3, 0x0000F0FF, 0x000B101D);
+                byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(ServerUrl, 8, 4, 0x00000000, 0x00FFFFFF);
                 using var ms = new MemoryStream(bmpBytes);
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
@@ -149,10 +172,6 @@ public partial class LanDropViewModel : ObservableObject
             {
                 QrCodeImage = null;
             }
-        }
-        else
-        {
-            QrCodeImage = null;
         }
     }
 

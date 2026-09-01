@@ -66,7 +66,7 @@
 * **Key Capabilities:**
   * 1-click switch between Headset, Speakers, Display Audio, and Bluetooth.
   * Independent volume sliders for foreground game vs Discord / Spotify.
-  * Auto-switch audio profile to surround sound / spatial audio in Game Mode.
+  * Auto-switch audio profile to Dolby Atmos 3D spatial sound or Peace Equalizer competitive EQ presets in Game Mode.
 
 ---
 
@@ -93,6 +93,79 @@
 * **Key Capabilities:**
   * Integration with [Lossless Scaling](https://store.steampowered.com/app/993090/Lossless_Scaling/) (LSFG Frame Generation / AMD FSR / Integer Scaling).
   * Pre-configured resolution scaling profiles for battery-powered gaming.
+
+---
+
+### 11. 🎨 Creative, Media & Power-User Software Suite (Software Hub Expansion)
+* **Description:** Pre-configured 1-click modular software catalog and optimization profiles. Users pick **only what they need (OR options)** based on their specific creative or gaming workflow.
+* **Modular Software Catalog & Choice Matrix (Choose 1 per category):**
+  * 🎧 **Gaming Audio Equalization & Spatial Sound (Pick ONE):**
+    * **Option A: SteelSeries GG & Sonar Audio** (`SteelSeries.GG`): *Best for Gamers & Streamers* — Parametric EQ, separate game/chat/media virtual sliders, and ClearCast AI microphone noise removal.
+    * *— OR —*
+    * **Option B: Peace Equalizer (Equalizer APO GUI)** (`PeterVerbeek.PeaceEqualizer`): *Best for Audiophiles & Headphone Tuning* — Ultra-lightweight system EQ with AutoEQ database presets (Harman curve/Crinacle/Oratory1990).
+    * *— OR —*
+    * **Option C: Dolby Access & Dolby Atmos for Headphones** (`9N0866FS04B8`): *Best for Movie Immersion & Built-in Laptop Speakers* — Certified 3D spatial surround sound virtualization.
+  * 🎙️ **Audio Recording & Virtual Mixing (Pick based on need):**
+    * **Audacity** (`Audacity.Audacity`): *Best for Podcasting & Audio Editing* — Free multi-track audio recorder, noise reduction, and spectral editing.
+    * *— OR —*
+    * **Voicemeeter / Virtual Audio Cable**: *Best for Advanced Streamers* — Complex multi-device audio routing and hardware loopback.
+    * *— OR —*
+    * **Soundpad / Voicemod**: *Best for Gaming Fun* — In-game voice chat soundboard and real-time voice changer.
+  * 📹 **Screen Capture & Live Streaming (Pick ONE or BOTH):**
+    * **Option A: OBS Studio** (`OBSProject.OBSStudio`): *Best for Full Gameplay Recording & Streaming* — Multi-scene layouts, webcam, hardware NVENC/AV1 encoding, and Twitch/YouTube broadcasting.
+    * *— OR —*
+    * **Option B: ShareX** (`ShareX.ShareX`): *Best for Quick Desktop Snapshots & GIFs* — Instant region capture, annotations, OCR text extractor, and auto-uploading.
+  * 🎬 **Video Editing & Production (Pick ONE based on project scope):**
+    * **Option A: DaVinci Resolve** (`BlackmagicDesign.DaVinciResolve`): *Best for Complete Video Projects* — Hollywood-grade NLE video editor, Fairlight audio workstation, Fusion VFX, and GPU color grading.
+    * *— OR —*
+    * **Option B: LosslessCut**: *Best for Quick Trimming without Re-encoding* — Instant zero-quality-loss video cutting and splitting.
+    * *— Companion Utility —*
+    * **HandBrake** (`HandBrake.HandBrake`): *Best for Video Compression* — Transcode heavy video files into lightweight AV1 / HEVC (H.265) formats.
+  * 🖌️ **Graphic Design, Photo Editing & 3D (Pick based on style):**
+    * **Option A: Canva Desktop** (`Canva.Canva`): *Best for Quick Graphic Design* — Beginner-friendly cloud templates for YouTube thumbnails, banners, posters, and presentations.
+    * *— OR —*
+    * **Option B: GIMP** (`GIMP.GIMP`): *Best for Photo Retouching* — Free open-source Photoshop alternative with layer masks, brushes, and color correction.
+    * *— OR —*
+    * **Option C: Krita** (`KDE.Krita`): *Best for Digital Art & Drawing Tablets* — Professional digital painting, sketching, and 2D frame-by-frame animation.
+    * *— 3D Creation —*
+    * **Blender** (`BlenderFoundation.Blender`): *Best for 3D & VFX* — Complete open-source 3D modeling, sculpting, animation, and Cycles/Eevee GPU raytracing.
+  * 🛠️ **Essential Power-User Tools (Install as needed):**
+    * **Microsoft PowerToys** (`Microsoft.PowerToys`): Windows productivity booster (FancyZones, Text Extractor OCR, ColorPicker, Awake).
+    * **Voidtools Everything** (`voidtools.Everything`): Lightning-fast real-time instant search across multi-terabyte drives.
+    * **QuickLook** (`QL-Win.QuickLook`): macOS-style Spacebar instant file preview (images, audio, video, zip, pdf).
+* **Key Capabilities & Synergies with AxePower:**
+  * **Smart Resource Scaling:** Auto-detects intensive render tasks (DaVinci exports, Blender renders, HandBrake transcoding) to temporarily boost CPU/GPU power limits ("Beast Mode") and engage Caffeine sleep prevention.
+  * **Zero Bloat Guarantee:** Clean individual 1-click install/uninstall so users only keep the single tool that matches their workflow.
+
+---
+
+### 12. 🦆 Advanced Windows Tweaks & Reversible Optimizer Engine (optimizerDuck Integration)
+* **Description:** Granular, risk-rated Windows performance, privacy, and gaming customization engine with 1-click automatic backup & rollback.
+* **Key Capabilities:**
+  * **Risk-Categorized Tweaks:** Categorized into `Safe`, `Caution`, and `Expert` (Service Host grouping, GPU power states, timer resolution, background throttling, network latency / Nagle's algorithm, telemetry neutralization).
+  * **Instant 1-Click Revert & Snapshot:** Automatic snapshot / revert file generation before any registry or service modification so users can roll back individual tweaks or restore default state in 1 click.
+  * **Modern System Customizer:** Quick toggles for Windows 11 UI preferences (Classic Context Menu, Taskbar alignment, End Task on Taskbar, Bing Search in Start, HAGS, Mouse Acceleration disable, Compact View).
+  * **System Restore Point Prompt:** Automatic prompt / creation of a Windows System Restore point before applying system-level tweaks.
+* **Reference:** [optimizerDuck (itsfatduck/optimizerDuck)](https://github.com/itsfatduck/optimizerDuck)
+
+---
+
+### 13. 🎮 Next-Gen Game Mode Engine (Deep System Optimization & Low-Latency Tuning)
+* **Description:** What the **Game Mode Toggle** currently executes under the hood, plus advanced next-gen gaming optimizations.
+* **What the Game Mode Toggle Currently Does:**
+  * ⚡ **Ultimate Power Scheme Activation:** Triggers Windows `Ultimate Performance` / `High Performance` scheme, unlocking 100% CPU clock ceiling, disabling PCIe Link State Power Management, and eliminating CPU core parking.
+  * 🖥️ **Max Refresh Rate Scaling:** Instantly switches display panel to highest native refresh rate (144Hz / 165Hz / 240Hz).
+  * 🧹 **RAM Standby Cache Flush:** Purges Windows standby memory working set and cache to prevent frame drops and micro-stutters.
+  * 🛑 **Dynamic Service Throttling:** Pauses non-essential background Windows services (Windows Update, Spooler, Diagnostics) during gaming and auto-restores them on Eco/Balanced.
+  * 🚫 **Background App Killer / Suspend:** Terminates or suspends user-selected heavy background tasks (browsers, Discord, torrent clients, cloud syncs) with auto-restart upon game exit.
+  * 🕹️ **Controller Navigation (Gopher360):** Enables full gamepad-to-mouse navigation for couch/living-room gaming.
+  * 🎯 **Auto-Game Detection:** Listens for active game processes across Steam, Epic, Xbox Game Pass, GOG, and custom paths to automatically trigger optimizations.
+* **Next-Gen Game Mode Roadmap Ideas:**
+  * ⏱️ **0.5ms System Timer Resolution:** Temporarily call `NtSetTimerResolution` to force ultra-low input latency for competitive FPS titles.
+  * 🧠 **CPU Core Pinning & Affinity (P-Core / AMD 3D V-Cache):** Bind game threads strictly to Performance cores on Intel 12th-14th Gen or cache-heavy CCD on AMD Ryzen 7000/9000X3D CPUs.
+  * 🚀 **GPU Priority & HAGS Orchestration:** Set foreground game process scheduling priority to `High` / `Real-Time` with DirectX GPU preemption.
+  * 🔕 **Windows Focus Assist & DND Auto-Trigger:** Automatically silence Windows 11 notifications, banners, and lock Windows Update driver installs during active gameplay.
+  * 🎧 **Auto Audio Profile Switch:** Auto-apply competitive equalizer profiles (e.g. footsteps boost) or Dolby Atmos 3D audio when entering Game Mode.
 
 ---
 

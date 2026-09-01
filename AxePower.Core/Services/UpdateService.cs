@@ -34,16 +34,19 @@ public class UpdateService
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
     }
 
+    /// <summary>Single fallback when no assembly version is available; the assembly version is the source of truth.</summary>
+    public const string FallbackVersion = "1.6.0";
+
     public string GetCurrentVersionString()
     {
         var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-        return asm.GetName().Version?.ToString(3) ?? "1.3.0";
+        return asm.GetName().Version?.ToString(3) ?? FallbackVersion;
     }
 
     public Version GetCurrentVersion()
     {
         var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-        return asm.GetName().Version ?? new Version(1, 2, 0);
+        return asm.GetName().Version ?? Version.Parse(FallbackVersion);
     }
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
@@ -225,6 +228,71 @@ public class UpdateService
 
         return null;
     }
+
+    public async Task<CommunityStatsResult> GetCommunityStatsAsync(CancellationToken cancellationToken = default)
+    {
+        int totalStars = 0;
+        int totalDiscussions = 0;
+
+        try
+        {
+            var repoEndpoints = new[]
+            {
+                "https://api.github.com/repos/mrAbhimanyuVishwakarma/AxePower",
+                "https://api.github.com/repos/mrAbhimanyuVishwakarma/AxePower_Download"
+            };
+
+            foreach (var endpoint in repoEndpoints)
+            {
+                try
+                {
+                    using var response = await _httpClient.GetAsync(endpoint, cancellationToken);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                        using var doc = await System.Text.Json.JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+                        if (doc.RootElement.TryGetProperty("stargazers_count", out var starsProp))
+                        {
+                            totalStars += starsProp.GetInt32();
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            try
+            {
+                var searchEndpoint = "https://api.github.com/search/issues?q=repo:mrAbhimanyuVishwakarma/AxePower+repo:mrAbhimanyuVishwakarma/AxePower_Download+is:issue+is:open";
+                using var response = await _httpClient.GetAsync(searchEndpoint, cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    using var doc = await System.Text.Json.JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+                    if (doc.RootElement.TryGetProperty("total_count", out var countProp))
+                    {
+                        totalDiscussions = countProp.GetInt32();
+                    }
+                }
+            }
+            catch { }
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"Community stats sync failed: {ex.Message}");
+        }
+
+        return new CommunityStatsResult
+        {
+            StarsCount = totalStars,
+            DiscussionsCount = totalDiscussions
+        };
+    }
+}
+
+public class CommunityStatsResult
+{
+    public int StarsCount { get; set; }
+    public int DiscussionsCount { get; set; }
 }
 
 public class UpdateCheckResult

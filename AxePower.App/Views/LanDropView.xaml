@@ -17,6 +17,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>  <!-- Header -->
             <RowDefinition Height="*"/>     <!-- Main Content Scroll -->
+            <RowDefinition Height="69"/>    <!-- Bottom Status Bar -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
@@ -138,27 +139,11 @@
                             <TextBlock Text="Scan this QR code with your phone camera or browser on the same Wi-Fi network to transfer files instantly."
                                        FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="17" Margin="0,0,0,16"/>
 
-                            <!-- QR Code Container -->
-                            <Border Background="#090D16" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                                    CornerRadius="16" Height="220" Margin="0,0,0,16" Padding="14">
-                                <Grid>
-                                    <Image Source="{Binding QrCodeImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <StackPanel.Style>
-                                            <Style TargetType="StackPanel">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsServerRunning}" Value="False">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </StackPanel.Style>
-                                        <TextBlock Text="&#xE724;" FontFamily="Segoe MDL2 Assets" FontSize="36" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                        <TextBlock Text="Server Offline" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Click 'Start Server' to generate QR" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                    </StackPanel>
-                                </Grid>
+                            <!-- QR Code Container: Pure White & Only Show QR -->
+                            <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1"
+                                    CornerRadius="12" Height="150" Margin="0,0,0,12" Padding="8" HorizontalAlignment="Center">
+                                <Image Source="{Binding QrCodeImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
 
                             <!-- Direct URL Box -->
@@ -442,5 +427,27 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
+
+        <!-- ─── Bottom Status Bar ───────────────────────────────────────────── -->
+        <Border Grid.Row="2" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="32,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="32" Height="32" Margin="0,0,16,0">
+                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
+                        <TextBlock Text="&#xE753;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="LAN Drop Active" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
+                        <TextBlock Text="Zero-configuration local network file, image &amp; text sharing across all devices." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

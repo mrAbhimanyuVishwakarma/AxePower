@@ -149,7 +149,7 @@ public partial class SystemDoctorViewModel : ObservableObject
 
         var progress = new Progress<string>(line =>
         {
-            App.Current?.Dispatcher?.Invoke(() =>
+            App.Current?.Dispatcher?.BeginInvoke(() =>
             {
                 ConsoleLogs += line + "\n";
             });
