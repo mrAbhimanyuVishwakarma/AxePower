@@ -250,7 +250,7 @@ public partial class GameModeViewModel : ObservableObject
                 process.Start();
                 process.WaitForExit();
                 
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                 {
                     _notificationService.Show("System Restore Point created.");
                 });
@@ -415,7 +415,7 @@ public partial class GameModeViewModel : ObservableObject
                 catch { }
             }
 
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current.Dispatcher.BeginInvoke(() =>
             {
                 foreach (var sel in currentSelected)
                 {
@@ -443,7 +443,7 @@ public partial class GameModeViewModel : ObservableObject
         Task.Run(() =>
         {
             var services = _systemServiceOptimizer.GetOptimizableServices();
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current.Dispatcher.BeginInvoke(() =>
             {
                 AvailableServices.Clear();
                 foreach (var s in services)

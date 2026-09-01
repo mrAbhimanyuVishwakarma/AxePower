@@ -25,7 +25,8 @@ public class BatteryTrendConverter : IValueConverter
 
         if (pointList.Count == 1)
         {
-            double y = height - (Math.Clamp(pointList[0], 0, 100) / 100.0 * height);
+            double val = Math.Clamp(pointList[0], 0, 100);
+            double y = height - (val / 100.0 * height);
             collection.Add(new Point(0, y));
             collection.Add(new Point(width, y));
             if (isPolygon)
@@ -40,8 +41,8 @@ public class BatteryTrendConverter : IValueConverter
         for (int i = 0; i < pointList.Count; i++)
         {
             double x = i * stepX;
-            // Value is 0-100. Y is inverted in screen coordinates (0 is top)
-            double y = height - (Math.Clamp(pointList[i], 0, 100) / 100.0 * height);
+            double val = Math.Clamp(pointList[i], 0, 100);
+            double y = height - (val / 100.0 * height);
             collection.Add(new Point(x, y));
         }
 

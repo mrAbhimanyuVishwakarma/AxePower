@@ -77,6 +77,16 @@ public class SoftwareHubTests
         Assert.Contains("ninite", ids);
         Assert.Contains("obs", ids);
         Assert.Contains("davinci", ids);
+        Assert.Contains("audacity", ids);
+        Assert.Contains("gimp", ids);
+        Assert.Contains("canva", ids);
+        Assert.Contains("blender", ids);
+        Assert.Contains("handbrake", ids);
+        Assert.Contains("powertoys", ids);
+        Assert.Contains("sharex", ids);
+        Assert.Contains("peace", ids);
+        Assert.Contains("dolby", ids);
+        Assert.Contains("steelseriesgg", ids);
     }
 
     [Fact]

@@ -133,8 +133,26 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _notifyOnModeSwitch = true;
 
+    partial void OnNotifyOnModeSwitchChanged(bool value)
+    {
+        if (CurrentSettings != null)
+        {
+            CurrentSettings.NotifyOnModeSwitch = value;
+            _settingsService.SaveSettings(CurrentSettings);
+        }
+    }
+
     [ObservableProperty]
     private bool _lowBatteryAlertSound = true;
+
+    partial void OnLowBatteryAlertSoundChanged(bool value)
+    {
+        if (CurrentSettings != null)
+        {
+            CurrentSettings.LowBatteryAlertSound = value;
+            _settingsService.SaveSettings(CurrentSettings);
+        }
+    }
 
     [ObservableProperty]
     private AppTheme _selectedTheme;
@@ -145,6 +163,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             CurrentSettings.Theme = value;
             _themeService.ApplyTheme(value);
+            _settingsService.SaveSettings(CurrentSettings);
         }
     }
 
@@ -253,13 +272,37 @@ public partial class SettingsViewModel : ObservableObject
     private readonly UpdateService? _updateService;
     private readonly BatteryService? _batteryService;
 
-    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.3.0";
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.6.0";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]
     private string _lastCheckedTime = "Not checked yet";
 
     public string LastCheckedDisplay => LastCheckedTime == "Not checked yet" ? "Not checked yet" : LastCheckedTime;
+
+    [ObservableProperty]
+    private bool _autoCheckUpdates = true;
+
+    partial void OnAutoCheckUpdatesChanged(bool value)
+    {
+        if (CurrentSettings != null)
+        {
+            CurrentSettings.AutoCheckUpdates = value;
+            _settingsService.SaveSettings(CurrentSettings);
+        }
+    }
+
+    [ObservableProperty]
+    private bool _autoDownloadUpdates = true;
+
+    partial void OnAutoDownloadUpdatesChanged(bool value)
+    {
+        if (CurrentSettings != null)
+        {
+            CurrentSettings.AutoDownloadUpdates = value;
+            _settingsService.SaveSettings(CurrentSettings);
+        }
+    }
 
     public SettingsViewModel(
         SettingsService settingsService,
@@ -288,7 +331,11 @@ public partial class SettingsViewModel : ObservableObject
         _startWithWindows = _currentSettings.StartWithWindows;
         _startMinimised = _currentSettings.StartMinimised;
         _showNotifications = _currentSettings.ShowNotifications;
+        _notifyOnModeSwitch = _currentSettings.NotifyOnModeSwitch;
+        _lowBatteryAlertSound = _currentSettings.LowBatteryAlertSound;
         _isTouchpadEnabled = _currentSettings.TouchpadEnabled;
+        _autoCheckUpdates = _currentSettings.AutoCheckUpdates;
+        _autoDownloadUpdates = _currentSettings.AutoDownloadUpdates;
 
         InitializeTemperatureUnit();
         InitializeRefreshRates();
@@ -352,46 +399,6 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SaveSettingsAsync()
-    {
-        _settingsService.SaveSettings(CurrentSettings);
-
-        if (CurrentSettings.DisplayRefreshRate > 0)
-        {
-            _displayService.SetRefreshRate(CurrentSettings.DisplayRefreshRate);
-        }
-        else
-        {
-            var mode = await _powerPlanService.GetActivePowerModeAsync();
-            _displayService.SetSmartRefreshRate(mode == PowerMode.Eco);
-        }
-        
-        await _timeoutService.SetMonitorTimeoutAsync(MonitorTimeoutAc, true);
-        await _timeoutService.SetMonitorTimeoutAsync(MonitorTimeoutDc, false);
-        await _timeoutService.SetStandbyTimeoutAsync(StandbyTimeoutAc, true);
-        await _timeoutService.SetStandbyTimeoutAsync(StandbyTimeoutDc, false);
-
-        _notificationService.Show("Settings saved.");
-    }
-
-    [RelayCommand]
-    private void RestoreDefaults()
-    {
-        CurrentSettings = new AppSettings();
-        SelectedTheme = CurrentSettings.Theme;
-        SelectedRefreshRate = "Auto (Smart)";
-        SelectedUnpluggedMode = CurrentSettings.UnpluggedMode;
-        SelectedPluggedInMode = CurrentSettings.PluggedInMode;
-        SelectedFanModeOnBattery = CurrentSettings.FanModeOnBattery;
-        StartWithLastSelectedMode = CurrentSettings.StartWithLastSelectedMode;
-        StartWithWindows = CurrentSettings.StartWithWindows;
-        StartMinimised = CurrentSettings.StartMinimised;
-        ShowNotifications = CurrentSettings.ShowNotifications;
-        _settingsService.SaveSettings(CurrentSettings);
-        _notificationService.Show("Defaults restored to Smart mode.");
-    }
-
-    [RelayCommand]
     private void OpenHelp()
     {
         if (System.Windows.Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
@@ -400,31 +407,56 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    [ObservableProperty]
+    private bool _isCheckingForUpdate;
+
+    [ObservableProperty]
+    private string _checkButtonText = "Check for updates";
+
     [RelayCommand]
     private async Task CheckForUpdatesAsync()
     {
+        if (IsCheckingForUpdate) return;
+
+        IsCheckingForUpdate = true;
+        CheckButtonText = "Checking...";
         LastCheckedTime = DateTime.Now.ToString("MMM dd, yyyy • h:mm tt");
         if (_updateService == null)
         {
+            IsCheckingForUpdate = false;
+            CheckButtonText = "✓ Already Updated";
             _notificationService.Show("Already Updated");
+            _ = ResetCheckButtonTextAfterDelay();
             return;
         }
 
         try
         {
             var result = await _updateService.CheckForUpdatesAsync();
+            IsCheckingForUpdate = false;
             if (result.HasUpdate)
             {
+                CheckButtonText = "Update Available";
                 _notificationService.Show($"🚀 New update available: v{result.LatestVersion}! Check About page.");
             }
             else
             {
+                CheckButtonText = "✓ Already Updated";
                 _notificationService.Show("Already Updated");
             }
+            _ = ResetCheckButtonTextAfterDelay();
         }
         catch (Exception ex)
         {
+            IsCheckingForUpdate = false;
+            CheckButtonText = "Check for updates";
             _notificationService.Show("Failed to check for updates: " + ex.Message);
         }
+    }
+
+    private async Task ResetCheckButtonTextAfterDelay()
+    {
+        await Task.Delay(3000);
+        CheckButtonText = "Check for updates";
     }
 }

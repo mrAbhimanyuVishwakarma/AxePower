@@ -210,20 +210,59 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 ### Compiling the Inno Setup Installer
 ```powershell
-# Requires Inno Setup 6 (iscc.exe on PATH)
-iscc "Installer/AxePowerSetup.iss"
-# Output installer: Installer/Output/AxePower-Setup.exe
+# Compile the installer using Inno Setup 6
+& "C:\Users\abhim\AppData\Local\Programs\Inno Setup 6\ISCC.exe" "d:\Projects\AxePower\Installer\AxePower.iss"
+# Output installer: d:\Projects\AxePower\Installer\Output\AxePower-v1.6.0-Setup.exe
 ```
+
+---
+
+## 🚀 Version 1.6.0 Release Summary
+
+1. **Task Manager-Style 2x2 Live Performance Grid**:
+   - Replaced legacy right-rail widgets with a responsive 2x2 performance matrix:
+     - **CPU**: Win32 `GetSystemTimes` high-precision CPU utilization % & live clock speed.
+     - **GPU**: Direct Windows WDDM 3D engine utilization % & GPU temperature (RTX 4060 / Intel UHD).
+     - **RAM**: Win32 `GlobalMemoryStatusEx` physical memory usage (GB & %).
+     - **Internet**: IPv4/IPv6 delta bandwidth monitoring for live Send & Receive speeds.
+   - Built custom `SparklinePathConverter` with `Viewbox` scaling to guarantee zero-baseline pinning (0% at bottom, 100% at top) with glowing gradient fills.
+2. **24-Hour Battery History**:
+   - Dedicated full-width battery trend card seeded with 24-hour continuous rolling historical curve.
+   - Range header `· 24h to Now` with time-axis labels: `24h ago`, `12h ago`, `Now`.
+3. **Steam-Style Taskbar Context Menu**:
+   - Modernized tray right-click menu with `#171A21` Steam dark theme, 4 grouped sections, and edge-to-edge full-width dividers.
+   - 1-Click dynamic mode toggling: Eco, Smart, Beast, Game Mode.
+4. **Steam Update Banner & Scrollable Patch Notes Modal**:
+   - Cyan/Blue update banner with `View patch notes` and `Restart & Install`.
+   - Scrollable changelog feed with multi-post updates, scroll arrows (`▲`/`▼`), and interactive community reaction bar.
+5. **Background Auto-Update Engine**:
+   - Background GitHub release checks with silent installer download to `%TEMP%\AxePower_Update\`.
+   - 1-Click installer execution with automatic restart.
+   - Settings toggles for `AutoCheckUpdates` and `AutoDownloadUpdates`.
+6. **Website Light Mode Visual Fixes**:
+   - Fixed Game Mode Profile Workflow step titles to dynamic `var(--text-primary)` (readable dark text in light mode).
+   - Added brightness/contrast filter to `MSI Afterburner.png` so the fighter jet logo renders in crisp dark slate in light mode.
+7. **Window Layout Refinements**:
+   - `? Help` button in title bar left of Minimize.
+   - Window Close `✕` minimizes cleanly to System Tray.
+   - Bottom status bar preserved with clean empty slot for future user widgets.
+8. **Website & Help Center Documentation Sync**:
+   - **`index.html`**: Updated features grid with Task Manager 2x2 telemetry, 24h battery history, SpaceDesk second display, and Audio Suite cards; updated privacy/terms modals to v1.6.0 with full credits.
+   - **`features.html`**: Added showcase cards for Task Manager 2x2 Telemetry, SpaceDesk Wireless Display, Steam Context Menu & Background Updater, and Audio & Creative Tools Suite.
+   - **`download.html`**: Bumped release version to `v1.6.0` and embedded a comprehensive "What's New in Version 1.6.0" changelog highlight matrix.
+   - **`help.html`**: Added 4 extensive step-by-step documentation guides (`#telemetry`, `#spacedesk`, `#updater`, `#audio`), updated navigation pills, and added search filtering keywords.
+   - **`sitemap.xml`**: Refreshed all URLs `<lastmod>` to `2026-09-01`.
+   - **`README.md` & `RELEASE_README.md`**: Fully aligned with v1.6.0 features and tools.
+9. **Installer Created**:
+   - `d:\Projects\AxePower\Installer\Output\AxePower-v1.6.0-Setup.exe` built with Inno Setup 6.7.3.
 
 ---
 
 ## 📌 Continuing Work & Next Action Items
 
-1. **Discord Community Link**:
-   - Update `contactModal` and `discordCard` in `AppWebsite/index.html` with the official Discord server invite link once generated.
-2. **Android Companion APK Release**:
+1. **Android Companion APK Release**:
    - Link the companion APK download button to the Android release artifact repository when ready for public distribution.
-3. **Continuous Deployment (CI/CD)**:
+2. **Continuous Deployment (CI/CD)**:
    - Configure GitHub Actions to automatically deploy `AppWebsite/` to GitHub Pages or custom domain `AxePower.com` upon commits to `main`.
-4. **Installer Code Signing**:
-   - Add digital certificate signing to `Installer/Output/AxePower-Setup.exe` to avoid Windows SmartScreen warnings on new releases.
+3. **Installer Code Signing**:
+   - Add digital certificate signing to `Installer/Output/AxePower-v1.6.0-Setup.exe` to avoid Windows SmartScreen warnings on new releases.

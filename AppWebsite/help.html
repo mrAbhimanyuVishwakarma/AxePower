@@ -488,13 +488,17 @@
       <!-- Interactive Search Box -->
       <div class="help-search-box">
         <svg class="help-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="helpSearchInput" class="help-search-input" placeholder="Search guides (e.g. Controller, LAN Drop, MSI, Uninstaller, Debloat)..." autocomplete="off">
+        <input type="text" id="helpSearchInput" class="help-search-input" placeholder="Search guides (e.g. Telemetry, SpaceDesk, Updater, Audio, Controller, LAN Drop, MSI, Uninstaller)..." autocomplete="off">
       </div>
 
       <!-- Quick Nav Pills -->
       <div class="help-nav-pills">
+        <a href="#telemetry" class="help-pill">📊 2x2 Telemetry &amp; Battery</a>
         <a href="#gopher360" class="help-pill">🎮 Controller Navigation</a>
+        <a href="#spacedesk" class="help-pill">🖥️ SpaceDesk Second Display</a>
         <a href="#phonecontrol" class="help-pill">📱 Phone Control &amp; LAN Drop</a>
+        <a href="#updater" class="help-pill">📌 Steam Menu &amp; Auto-Updater</a>
+        <a href="#audio" class="help-pill">🎧 Audio &amp; Creative Suites</a>
         <a href="#msiafterburner" class="help-pill">⚡ MSI Afterburner</a>
         <a href="#uninstaller" class="help-pill">🗑️ Uninstaller Pro</a>
         <a href="#updatepc" class="help-pill">🔄 Update PC &amp; Winget</a>
@@ -909,6 +913,224 @@
             <li class="guide-step-item">
               <span class="step-num">✓</span>
               <span>Automatically caps charging at 75-80% to double long-term battery lifespan.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. TASK MANAGER TELEMETRY & 24H BATTERY TREND -->
+    <section class="help-guide-section" id="telemetry">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">📊</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Task Manager Telemetry &amp; 24h Battery History
+            <span class="guide-credit-badge">Built into AxePower v1.6.0</span>
+          </h2>
+          <p class="guide-subtitle">Real-time CPU, GPU, RAM, and Internet performance tracking with zero-baseline live sparklines.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">📈 2x2 Performance Grid Metrics</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">CPU</span>
+              <span><strong>Processor Load &amp; Clock:</strong> High-precision kernel timing measuring real-time CPU utilization percentage and live base/boost GHz.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">GPU</span>
+              <span><strong>WDDM 3D &amp; Thermals:</strong> Direct DirectX/WDDM graphics engine load and discrete GPU temperature monitoring (e.g. RTX 4060).</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">RAM</span>
+              <span><strong>Memory Allocation:</strong> Live physical RAM consumption in gigabytes (Used / Total GB) and percentage utilization.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">NET</span>
+              <span><strong>Network Bandwidth:</strong> Dynamic upload and download rates (Kbps, Mbps, MB/s) across active Wi-Fi and Ethernet adapters.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🔋 24-Hour Continuous Battery Timeline</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            The 24-hour battery trend graph displays a rolling curve of your PC's power state over the past day:
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span><strong>Timeline Axis:</strong> Markers indicate battery states at <code>24h ago</code>, <code>12h ago</code>, and <code>Now</code>.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span><strong>Charge Tracking:</strong> Real-time detection of charging, discharging, and AC adapter connection status.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span><strong>Zero Overhead:</strong> Sparklines and curves are drawn using hardware-accelerated WPF StreamGeometry with sub-millisecond redraw costs.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. SPACEDESK SECOND DISPLAY & PHONE LINK -->
+    <section class="help-guide-section" id="spacedesk">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🖥️</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            SpaceDesk Second Display &amp; Phone Link
+            <span class="guide-credit-badge">Powered by DATRONICSOFT &amp; Microsoft</span>
+          </h2>
+          <p class="guide-subtitle">Turn any Android, iPad, or browser into an extended PC display and sync phone notifications.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">📱 SpaceDesk Multi-Monitor Setup</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Navigate to <strong>Phone Control</strong> &gt; <strong>Second Monitor</strong> in AxePower.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Click <strong>Launch SpaceDesk Console</strong> (if not installed, AxePower will offer 1-click driver installation via WinGet).</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Scan the QR code on screen for your platform: <strong>Google Play</strong> (Android), <strong>App Store</strong> (iOS), or <strong>HTML5 Web Viewer</strong> (any browser).</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">4</span>
+              <span>Connect both devices to the same Wi-Fi network and tap your PC name in the viewer app to extend your desktop.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🔗 Microsoft Phone Link Integration</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Click <strong>Open Phone Link</strong> from the Phone Control page or taskbar tray menu.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Scan the companion QR code to install the <strong>Link to Windows</strong> app on your Android or iPhone.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Sync calls, text messages, phone photos, and mobile notifications directly onto your PC screen.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. STEAM CONTEXT MENU & AUTO-UPDATER -->
+    <section class="help-guide-section" id="updater">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">📌</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Steam Context Menu &amp; Background Auto-Updater
+            <span class="guide-credit-badge">Built into AxePower v1.6.0</span>
+          </h2>
+          <p class="guide-subtitle">Dark Steam-style tray menu, silent background installer downloads, and interactive changelog feed.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">🎮 4-Section Taskbar Context Menu</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+            Right-click the AxePower system tray icon at any time to open the Steam-style dark menu:
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span><strong>Power Modes:</strong> Instant 1-click toggling between Eco, Smart, Beast, and Game Mode without opening the window.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span><strong>Navigation:</strong> Quick shortcuts to Dashboard, Battery Diagnostics, Phone Control, and Second Monitor.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span><strong>Maintenance:</strong> Elevated shortcuts to System Doctor, System Utilities, and Update PC.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🚀 Silent Background Auto-Updater</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span><strong>Silent Downloads:</strong> When a new release is published, AxePower streams the update installer into the background quietly without interrupting your workflow.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span><strong>1-Click Restart:</strong> Click <strong>Restart &amp; Install</strong> on the banner to apply the update seamlessly.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span><strong>Patch Notes Modal:</strong> Click <strong>View patch notes</strong> to browse the scrollable release notes feed, rate up the update, or share links.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. AUDIO OPTIMIZATION & CREATIVE SUITE -->
+    <section class="help-guide-section" id="audio">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🎧</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Audio Suite Optimization &amp; Creative Hub
+            <span class="guide-credit-badge">Dolby, SteelSeries &amp; Winget Ecosystem</span>
+          </h2>
+          <p class="guide-subtitle">Parametric EQ, 3D spatial surround sound, multi-channel mixing, and creative production tools.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">🔊 Audio Tuning &amp; Spatial Sound</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span><strong>Dolby Atmos:</strong> Open <strong>Software Hub</strong> &gt; <strong>Dolby Access</strong> to activate Dolby Atmos for Headphones and 3D spatial positioning in supported games.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span><strong>SteelSeries GG Sonar:</strong> Virtual multi-channel audio mixer with parametric EQ profiles for footsteps, gunshots, and Discord voice noise cancellation.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span><strong>Peace Equalizer (APO):</strong> System-wide parametric EQ interface for audiophile headphone tuning.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🎨 Creative &amp; Production Software</h3>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span><strong>1-Click Installation:</strong> Install DaVinci Resolve, OBS Studio, Audacity, GIMP, Blender, HandBrake, and Microsoft PowerToys in one click.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span><strong>PowerShell Batch Upgrade:</strong> Click <strong>Update All (winget)</strong> in Software Hub to check and update all installed applications at once.</span>
             </li>
           </ul>
         </div>

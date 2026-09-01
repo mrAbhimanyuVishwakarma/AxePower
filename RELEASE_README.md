@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.5.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.6.0-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -31,6 +31,46 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v1.6.0
+
+- 📊 **Task Manager Live 2x2 Performance Grid**:
+  - Replaced legacy sidebar widgets with a high-performance 2x2 live telemetry matrix:
+    - **CPU**: Real-time processor load % and live clock speed (GHz).
+    - **GPU**: Direct Windows WDDM 3D engine utilization % and temperature monitor for discrete graphics (e.g. RTX 4060).
+    - **RAM**: Live physical memory consumption (Used/Total GB and %).
+    - **Internet**: Active Wi-Fi and Ethernet bandwidth meter tracking real-time Send & Receive speeds.
+  - Zero-baseline StreamGeometry sparklines with smooth glowing area fills and stroke curves.
+- 🔋 **24-Hour Battery History**:
+  - Dedicated full-width battery diagnostics card with a 24-hour continuous rolling trend curve.
+  - Clear time-axis markers (`24h ago`, `12h ago`, `Now`) and percentage badge.
+- 📌 **Steam-Style Taskbar Context Menu**:
+  - Completely redesigned taskbar right-click menu with dark Steam slate aesthetic `#171A21` and full-width edge-to-edge dividers.
+  - Organized into 4 clean sections:
+    - **Power Modes (1-Click Switch)**: Eco Mode, Smart Mode, Beast Mode, Game Mode.
+    - **Navigation & Monitoring**: Open AxePower, Battery Hub, Phone Control, Second Monitor.
+    - **Maintenance & Updaters**: System Doctor, System Utilities, Update PC.
+    - **System**: Settings, Exit AxePower.
+- 📜 **Steam Update Banner & Scrollable Patch Notes Modal Dialog**:
+  - Bright Cyan/Blue bottom banner popping open on update checks or when an update is ready to install.
+  - Full-featured Steam Patch Notes dialog featuring a multi-post scrollable feed, Up (`▲`) and Down (`▼`) scroll buttons, and live community reaction buttons (`👍 Rate Up`, `👎`, `💬 Discuss`, `🔗 Share`).
+- 🚀 **Silent Background Auto-Updater**:
+  - Background auto-checking and silent background download of update installers into `%TEMP%\AxePower_Update\`.
+  - 1-Click **Restart & Install** banner button that launches the new installer and seamlessly restarts AxePower.
+  - Configurable in *Settings &rarr; Updates* with interactive toggles for automatic checks and background downloads.
+- 🖥️ **SpaceDesk Wireless Second Display & Microsoft Phone Link**:
+  - 1-Click SpaceDesk virtual display driver install (`Datronicsoft.SpacedeskDriver.Server`) and console launcher.
+  - Interactive QR code modals for Google Play (Android), App Store (iOS), and HTML5 Web Viewer.
+  - Instant Microsoft Phone Link launcher and Link to Windows pairing modals.
+- 🎧 **Audio Suite & Creative Software Hub**:
+  - 1-Click catalog integration for Dolby Access (Dolby Atmos 3D spatial surround sound), SteelSeries GG Sonar mixer, Peace Equalizer APO, DaVinci Resolve, OBS Studio, and Microsoft PowerToys.
+  - PowerShell batch updates (`winget upgrade --all`) and individual package upgrades.
+- 🪟 **Window Controls & Layout Refinements**:
+  - Added dedicated `? Help` button to the title bar directly to the left of Minimize.
+  - Set `✕` close button to minimize directly to the system tray (`Hide()`) with background taskbar monitoring intact.
+  - Streamlined Settings and About views with left-aligned update checkers.
 
 ---
 

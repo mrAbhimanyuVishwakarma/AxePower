@@ -83,4 +83,23 @@ public class PhoneControlTests
         Assert.NotNull(vm.SpaceDeskActionCommand);
         Assert.False(vm.IsSpaceDeskBusy);
     }
+
+    [Theory]
+    [InlineData("android", "https://play.google.com/store/apps/details?id=ph.spacedesk.beta")]
+    [InlineData("ios", "https://apps.apple.com/in/app/spacedesk-usb-display-for-pc/id1069217220")]
+    [InlineData("phonelink_android", "https://play.google.com/store/apps/details?id=com.microsoft.appmanager")]
+    [InlineData("phonelink_ios", "https://apps.apple.com/in/app/link-to-windows/id6443686328")]
+    public void PhoneHubViewModel_ShowDownloadQr_SetsOfficialStoreUrls(string platform, string expectedUrl)
+    {
+        var log = new LogService();
+        var lan = new LanDropService(log);
+        var android = new AndroidControlService(log);
+        var notif = new NotificationService();
+
+        var vm = new PhoneHubViewModel(lan, android, notif);
+        vm.ShowDownloadQr(platform);
+
+        Assert.True(vm.IsQrModalOpen);
+        Assert.Equal(expectedUrl, vm.QrModalUrl);
+    }
 }

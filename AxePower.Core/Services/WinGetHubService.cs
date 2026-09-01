@@ -301,6 +301,126 @@ public class WinGetHubService : IWinGetHubService
             LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Blackmagic Design", "DaVinci Resolve", "Resolve.exe"),
             WebUrl = "https://www.blackmagicdesign.com/products/davinciresolve"
         });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "audacity",
+            WinGetId = "Audacity.Audacity",
+            Name = "Audacity",
+            Description = "Free, open source, multi-track audio recorder and waveform editor.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE8D6",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Audacity", "Audacity.exe"),
+            WebUrl = "https://www.audacityteam.org/download/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "gimp",
+            WinGetId = "GIMP.GIMP",
+            Name = "GIMP",
+            Description = "Free & open source raster graphics and photo manipulation editor.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uEB9F",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "GIMP 2", "bin", "gimp-2.10.exe"),
+            WebUrl = "https://www.gimp.org/downloads/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "canva",
+            WinGetId = "Canva.Canva",
+            Name = "Canva",
+            Description = "Visual design suite for creating graphics, banners, presentations, and social media content.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE8B7",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Canva", "Canva.exe"),
+            WebUrl = "https://www.canva.com/download/windows/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "blender",
+            WinGetId = "BlenderFoundation.Blender",
+            Name = "Blender",
+            Description = "Free open source 3D creation suite for modeling, sculpting, animation, and raytracing.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE8B7",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Blender Foundation", "Blender", "blender.exe"),
+            WebUrl = "https://www.blender.org/download/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "handbrake",
+            WinGetId = "HandBrake.HandBrake",
+            Name = "HandBrake",
+            Description = "Open-source video transcoder for converting video formats with AV1, HEVC, and H.264 support.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE8B7",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "HandBrake", "HandBrake.exe"),
+            WebUrl = "https://handbrake.fr/downloads.php"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "powertoys",
+            WinGetId = "Microsoft.PowerToys",
+            Name = "Microsoft PowerToys",
+            Description = "Windows productivity suite (FancyZones, Text Extractor OCR, ColorPicker, Awake).",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE713",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PowerToys", "PowerToys.exe"),
+            WebUrl = "https://github.com/microsoft/PowerToys/releases"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "sharex",
+            WinGetId = "ShareX.ShareX",
+            Name = "ShareX",
+            Description = "Screen capture, GIF/video recorder, OCR tool, and file sharing utility.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE8B7",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "ShareX", "ShareX.exe"),
+            WebUrl = "https://getsharex.com/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "peace",
+            WinGetId = "PeterVerbeek.PeaceEqualizer",
+            Name = "Peace Equalizer (Equalizer APO)",
+            Description = "System-wide parametric equalizer GUI with auto-EQ headphone tuning, bass boost, and spatial crossfeed.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE767",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "EqualizerAPO", "config", "Peace.exe"),
+            WebUrl = "https://sourceforge.net/projects/peace-equalizer-apo-extension/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "dolby",
+            WinGetId = "9N0866FS04B8",
+            Name = "Dolby Access (Dolby Atmos)",
+            Description = "3D spatial sound virtualization, gaming audio positioning, dynamic studio EQ, and headphone surround.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE767",
+            LaunchProtocolOrExe = "ms-windows-store://pdp/?ProductId=9N0866FS04B8",
+            WebUrl = "https://www.dolby.com/technologies/dolby-atmos/access/"
+        });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "steelseriesgg",
+            WinGetId = "SteelSeries.GG",
+            Name = "SteelSeries GG (Sonar Audio)",
+            Description = "Gaming parametric audio engine, Sonar virtual multi-channel mixer, and AI microphone noise cancellation.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE767",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "SteelSeries", "GG", "SteelSeriesGG.exe"),
+            WebUrl = "https://steelseries.com/gg/sonar"
+        });
     }
 
     public IReadOnlyList<SoftwarePackageItem> GetAvailablePackages() => _packages.AsReadOnly();
@@ -347,7 +467,7 @@ public class WinGetHubService : IWinGetHubService
         });
     }
 
-    private static bool CheckIsInstalledFast(SoftwarePackageItem pkg)
+    public static bool CheckIsInstalledFast(SoftwarePackageItem pkg)
     {
         try
         {
@@ -399,6 +519,11 @@ public class WinGetHubService : IWinGetHubService
         return false;
     }
 
+    // Microsoft Store product IDs (e.g. 9N0866FS04B8) only exist in the msstore source
+    private static string GetWinGetSource(string id) =>
+        System.Text.RegularExpressions.Regex.IsMatch(id, "^9[A-Z0-9]{11}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            ? "msstore" : "winget";
+
     public async Task<bool> InstallPackageAsync(string wingetId, IProgress<string> outputProgress)
     {
         var pkg = _packages.FirstOrDefault(p => p.WinGetId.Equals(wingetId, StringComparison.OrdinalIgnoreCase) || p.Id.Equals(wingetId, StringComparison.OrdinalIgnoreCase));
@@ -406,41 +531,29 @@ public class WinGetHubService : IWinGetHubService
         string displayName = pkg?.Name ?? targetId;
         string webUrl = pkg?.WebUrl ?? string.Empty;
 
-        outputProgress.Report($"\n[Starting Installation] > winget install --id {targetId} --source winget");
-        _log.LogInfo($"[WinGetHub] Installing package '{targetId}'...");
+        outputProgress.Report($"\n[Install] > {displayName} ({targetId})");
+        _log.LogInfo($"[WinGetHub] Starting 1-click install for '{targetId}'...");
 
         bool success = false;
 
         if (!string.IsNullOrEmpty(targetId))
         {
-            // Attempt 1: Silent installation with disable-interactivity to avoid blocking on stdin prompts
-            success = await ExecuteWinGetProcessAsync($"install --id \"{targetId}\" --source winget --silent --disable-interactivity --accept-source-agreements --accept-package-agreements", outputProgress, 35000);
+            success = await ExecuteWinGetProcessAsync(
+                $"install --id \"{targetId}\" --exact --source {GetWinGetSource(targetId)} --accept-source-agreements --accept-package-agreements --silent",
+                outputProgress, 300000);
 
-            // Attempt 2: If silent was rejected, run installer setup without silent flag
-            if (!success)
-            {
-                outputProgress.Report($"\n[Notice] Silent setup non-zero. Launching installer for {displayName}...");
-                success = await ExecuteWinGetProcessAsync($"install --id \"{targetId}\" --source winget --disable-interactivity --accept-source-agreements --accept-package-agreements", outputProgress, 35000);
-            }
-        }
+            // The exit code can lie for wrapped installers; trust an on-disk check before declaring failure
+            if (!success && pkg != null && CheckIsInstalledFast(pkg))
+                success = true;
 
-        if (pkg != null)
-        {
-            if (!success)
-            {
-                pkg.IsInstalled = CheckIsInstalledFast(pkg);
-                success = pkg.IsInstalled;
-            }
-            else
-            {
+            if (success && pkg != null)
                 pkg.IsInstalled = true;
-            }
         }
 
-        // Attempt 3: Guaranteed fallback - Open official website in browser so user is never stuck
+        // Fallback: if the install failed (or there is no winget ID), open the official portal in the browser
         if (!success && !string.IsNullOrEmpty(webUrl))
         {
-            outputProgress.Report($"\n[Web Fallback] Opening official download portal for {displayName}: {webUrl}");
+            outputProgress.Report($"\n[Direct Web Setup] Opening official download portal for {displayName}: {webUrl}");
             try
             {
                 Process.Start(new ProcessStartInfo
@@ -458,13 +571,30 @@ public class WinGetHubService : IWinGetHubService
         return success;
     }
 
+    public async Task<bool> UpgradePackageAsync(string wingetId, IProgress<string> outputProgress)
+    {
+        var pkg = _packages.FirstOrDefault(p => p.WinGetId.Equals(wingetId, StringComparison.OrdinalIgnoreCase) || p.Id.Equals(wingetId, StringComparison.OrdinalIgnoreCase));
+        string targetId = pkg?.WinGetId ?? wingetId;
+        string displayName = pkg?.Name ?? targetId;
+
+        outputProgress.Report($"\n[Update] > {displayName} ({targetId})");
+        _log.LogInfo($"[WinGetHub] Starting update for '{targetId}'...");
+
+        if (string.IsNullOrEmpty(targetId))
+            return false;
+
+        return await ExecuteWinGetProcessAsync(
+            $"upgrade --id \"{targetId}\" --exact --source {GetWinGetSource(targetId)} --accept-source-agreements --accept-package-agreements --silent",
+            outputProgress, 300000);
+    }
+
     public async Task<bool> UninstallPackageAsync(string wingetId, IProgress<string> outputProgress)
     {
         var pkg = _packages.FirstOrDefault(p => p.WinGetId.Equals(wingetId, StringComparison.OrdinalIgnoreCase) || p.Id.Equals(wingetId, StringComparison.OrdinalIgnoreCase));
         string targetId = pkg?.WinGetId ?? wingetId;
 
-        outputProgress.Report($"\n[Starting Uninstall] > winget uninstall --id {targetId} --silent");
-        _log.LogInfo($"[WinGetHub] Uninstalling package '{targetId}'...");
+        outputProgress.Report($"\n[Starting PowerShell Uninstall] > winget uninstall --id {targetId} --silent");
+        _log.LogInfo($"[WinGetHub] Uninstalling package '{targetId}' via PowerShell...");
 
         bool success = await ExecuteWinGetProcessAsync($"uninstall --id \"{targetId}\" --silent", outputProgress, 35000);
 
@@ -484,12 +614,12 @@ public class WinGetHubService : IWinGetHubService
 
     public async Task<bool> UpgradeAllPackagesAsync(IProgress<string> outputProgress)
     {
-        outputProgress.Report("\n=== Starting Batch Upgrade of All Installed Apps (winget upgrade --all) ===");
-        _log.LogInfo("[WinGetHub] Executing batch upgrade for all installed packages...");
+        outputProgress.Report("\n=== Starting Batch Upgrade via PowerShell (winget upgrade --all) ===");
+        _log.LogInfo("[WinGetHub] Executing PowerShell batch upgrade for all installed packages...");
 
         bool success = await ExecuteWinGetProcessAsync("upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements", outputProgress, 300000);
 
-        outputProgress.Report("\n=== Batch Upgrade Completed ===");
+        outputProgress.Report("\n=== PowerShell Batch Upgrade Completed ===");
         await RefreshInstallationStatusesAsync();
         return success;
     }

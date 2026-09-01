@@ -10,6 +10,7 @@
     <UserControl.Resources>
         <converters:BatteryTrendConverter x:Key="BatteryTrendConverter" />
         <converters:BatteryPercentageToYConverter x:Key="BatteryPercentageToYConverter" />
+        <converters:SparklinePathConverter x:Key="SparklinePathConverter" />
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </UserControl.Resources>
@@ -17,7 +18,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="76"/>
+            <RowDefinition Height="69"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -25,7 +26,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Main Area (Left) -->
-        <Grid Grid.Column="0" Margin="40,32,40,24">
+        <Grid Grid.Row="0" Grid.Column="0" Margin="40,32,40,24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -192,152 +193,309 @@
             </Button>
         </Grid>
 
-        <!-- Right Rail -->
-        <Border Grid.Column="1" Margin="0,32,32,24">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                
-                <!-- Smart Auto Switch Settings -->
-                <Border Grid.Row="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Smart Auto Switch" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        
-                        <TextBlock Text="When plugged in:" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedInMode}" Margin="0,0,0,16"/>
-                        
-                        <TextBlock Text="When unplugged:" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,4"/>
-                        <ComboBox Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableModes}" SelectedItem="{Binding PluggedOutMode}" Margin="0,0,0,20"/>
-                        
-                        <Grid Margin="0,0,0,16">
-                            <TextBlock Text="Show notifications" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
-                            <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}" HorizontalAlignment="Right"/>
-                        </Grid>
-                        
-                        <Grid Margin="0,0,0,16">
-                            <TextBlock Text="Start with Windows" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
-                            <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" HorizontalAlignment="Right"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,0">
-                            <TextBlock Text="Function lock (Fn + FnLock)" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
-                            <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsFnLockEnabled}" HorizontalAlignment="Right"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-                
-                <!-- Battery Trend -->
-                <Border Grid.Row="1" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,16,0,0">
-                    <Grid>
+        <!-- Right Rail: Hardware & Battery Monitor -->
+        <Border Grid.Row="0" Grid.Column="1" Margin="0,32,32,24" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="14,14">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                <StackPanel>
+                    <!-- 1. 2x2 Grid for [CPU] [GPU] / [RAM] [WiFi] -->
+                    <Grid Margin="0,0,0,8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        
-                        <Grid Grid.Row="0" Margin="0,0,0,16">
-                            <TextBlock Text="Battery trend" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
-                            <TextBlock Text="Last 3 hours ∨" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        </Grid>
-                        
-                        <!-- Graph -->
-                        <Grid Grid.Row="1" Margin="0,16,0,0">
-                            <!-- Graph Background Lines -->
-                            <UniformGrid Rows="4" Columns="1">
-                                <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.5" VerticalAlignment="Top"/>
-                                <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.5" VerticalAlignment="Bottom"/>
-                                <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.5" VerticalAlignment="Bottom"/>
-                                <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.5" VerticalAlignment="Bottom"/>
-                            </UniformGrid>
-                            
-                            <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- [CPU] Card -->
+                        <Border Grid.Row="0" Grid.Column="0" Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,4,8">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="CPU" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CpuDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                                <!-- Sparkline Graph -->
+                                <Border Height="40" Background="#14181F" BorderBrush="#252D3B" BorderThickness="1" CornerRadius="4">
+                                    <Grid ClipToBounds="True">
+                                        <Grid Opacity="0.18">
+                                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                            <Border Grid.Row="0" Grid.ColumnSpan="2" BorderBrush="#38BDF8" BorderThickness="0,0,0,1"/>
+                                            <Border Grid.Column="0" Grid.RowSpan="2" BorderBrush="#38BDF8" BorderThickness="0,0,1,0"/>
+                                        </Grid>
+                                        <Viewbox Stretch="Fill">
+                                            <Canvas Width="100" Height="50">
+                                                <Path Data="{Binding CpuHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Fill;100;50'}">
+                                                    <Path.Fill>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#5038BDF8" Offset="0.0"/>
+                                                            <GradientStop Color="#0038BDF8" Offset="1.0"/>
+                                                        </LinearGradientBrush>
+                                                    </Path.Fill>
+                                                </Path>
+                                                <Path Data="{Binding CpuHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Line;100;50'}" Stroke="#38BDF8" StrokeThickness="1.5"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- [GPU] Card -->
+                        <Border Grid.Row="0" Grid.Column="1" Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="4,0,0,8">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="GPU" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding GpuDisplay}" Foreground="#C084FC" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                                <!-- Sparkline Graph -->
+                                <Border Height="40" Background="#14181F" BorderBrush="#252D3B" BorderThickness="1" CornerRadius="4">
+                                    <Grid ClipToBounds="True">
+                                        <Grid Opacity="0.18">
+                                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                            <Border Grid.Row="0" Grid.ColumnSpan="2" BorderBrush="#C084FC" BorderThickness="0,0,0,1"/>
+                                            <Border Grid.Column="0" Grid.RowSpan="2" BorderBrush="#C084FC" BorderThickness="0,0,1,0"/>
+                                        </Grid>
+                                        <Viewbox Stretch="Fill">
+                                            <Canvas Width="100" Height="50">
+                                                <Path Data="{Binding GpuHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Fill;100;50'}">
+                                                    <Path.Fill>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#50C084FC" Offset="0.0"/>
+                                                            <GradientStop Color="#00C084FC" Offset="1.0"/>
+                                                        </LinearGradientBrush>
+                                                    </Path.Fill>
+                                                </Path>
+                                                <Path Data="{Binding GpuHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Line;100;50'}" Stroke="#C084FC" StrokeThickness="1.5"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- [RAM] Card -->
+                        <Border Grid.Row="1" Grid.Column="0" Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,4,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="RAM" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding MemoryDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                                <!-- Sparkline Graph -->
+                                <Border Height="40" Background="#14181F" BorderBrush="#252D3B" BorderThickness="1" CornerRadius="4">
+                                    <Grid ClipToBounds="True">
+                                        <Grid Opacity="0.18">
+                                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                            <Border Grid.Row="0" Grid.ColumnSpan="2" BorderBrush="#60A5FA" BorderThickness="0,0,0,1"/>
+                                            <Border Grid.Column="0" Grid.RowSpan="2" BorderBrush="#60A5FA" BorderThickness="0,0,1,0"/>
+                                        </Grid>
+                                        <Viewbox Stretch="Fill">
+                                            <Canvas Width="100" Height="50">
+                                                <Path Data="{Binding MemoryHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Fill;100;50'}">
+                                                    <Path.Fill>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#5060A5FA" Offset="0.0"/>
+                                                            <GradientStop Color="#0060A5FA" Offset="1.0"/>
+                                                        </LinearGradientBrush>
+                                                    </Path.Fill>
+                                                </Path>
+                                                <Path Data="{Binding MemoryHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Line;100;50'}" Stroke="#60A5FA" StrokeThickness="1.5"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- [WiFi speed] Card -->
+                        <Border Grid.Row="1" Grid.Column="1" Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="4,0,0,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="WiFi" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding NetworkDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                                <!-- Sparkline Graph -->
+                                <Border Height="40" Background="#14181F" BorderBrush="#252D3B" BorderThickness="1" CornerRadius="4">
+                                    <Grid ClipToBounds="True">
+                                        <Grid Opacity="0.18">
+                                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                            <Border Grid.Row="0" Grid.ColumnSpan="2" BorderBrush="#F472B6" BorderThickness="0,0,0,1"/>
+                                            <Border Grid.Column="0" Grid.RowSpan="2" BorderBrush="#F472B6" BorderThickness="0,0,1,0"/>
+                                        </Grid>
+                                        <Viewbox Stretch="Fill">
+                                            <Canvas Width="100" Height="50">
+                                                <Path Data="{Binding NetworkHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Fill;100;50'}">
+                                                    <Path.Fill>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#50F472B6" Offset="0.0"/>
+                                                            <GradientStop Color="#00F472B6" Offset="1.0"/>
+                                                        </LinearGradientBrush>
+                                                    </Path.Fill>
+                                                </Path>
+                                                <Path Data="{Binding NetworkHistory, Converter={StaticResource SparklinePathConverter}, ConverterParameter='Line;100;50'}" Stroke="#F472B6" StrokeThickness="1.5"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- 2. Dynamic Disks Section (Full width cards, height same as above, Image 2 style storage bar) -->
+                    <ItemsControl ItemsSource="{Binding Disks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,9" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <!-- Header: Disk Name on left (size data below it), Usage % on right -->
+                                        <Grid Margin="0,0,0,7">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xEDA2;" FontFamily="Segoe MDL2 Assets" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding FreeSpaceDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="18,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding UsageDisplay}" Foreground="{Binding StatusColorHex}" FontWeight="SemiBold" FontSize="10.5" VerticalAlignment="Center"/>
+                                        </Grid>
+
+                                        <!-- Storage Bar Track (Image 2 style: rounded track with dynamic color: <70% green, 70-85% yellow, >85% red) -->
+                                        <Border Height="5" Background="#1E2430" CornerRadius="2.5" ClipToBounds="True">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="{Binding UsedPercent, Converter={StaticResource PercentageToGridLengthConverter}}"/>
+                                                    <ColumnDefinition Width="{Binding FreePercent, Converter={StaticResource PercentageToGridLengthConverter}}"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Background="{Binding StatusColorHex}" CornerRadius="2.5"/>
+                                            </Grid>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- 3. [Battery] - Big graph covering the whole width as CPU+GPU combined with 100%, 50%, 0% marks on left -->
+                    <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,11" Margin="0,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Header: Title on left, Mode & live Battery on right -->
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                
-                                <StackPanel Grid.Column="0" VerticalAlignment="Stretch" Margin="0,0,8,0">
-                                    <TextBlock Text="100%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,-6,0,0"/>
-                                    <TextBlock Text="50%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,48,0,0"/>
-                                    <TextBlock Text="0%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,48,0,0"/>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🔋" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Battery" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                
-                                <Grid Grid.Column="1" Height="80">
-                                    <!-- Filled Graph under the line -->
-                                    <Polygon Points="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}, ConverterParameter=Polygon}" Stretch="Fill" Opacity="0.2">
-                                        <Polygon.Fill>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#00C853" Offset="0.0"/>
-                                                <GradientStop Color="Transparent" Offset="1.0"/>
-                                            </LinearGradientBrush>
-                                        </Polygon.Fill>
-                                    </Polygon>
-                                    
-                                    <Polyline Points="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}}"
-                                              Stroke="{DynamicResource SuccessBrush}" StrokeThickness="2" Stretch="Fill"/>
-                                              
-                                    <TextBlock Text="{Binding BatteryPercentage}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-20,0,0"/>
-                                              
-                                    <!-- Dot for current value -->
-                                    <Ellipse Width="8" Height="8" Stroke="{DynamicResource WindowBackgroundBrush}" StrokeThickness="1" Fill="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" VerticalAlignment="Top">
-                                        <Ellipse.RenderTransform>
-                                            <TranslateTransform Y="{Binding RawBatteryPercentage, Converter={StaticResource BatteryPercentageToYConverter}, ConverterParameter=80}" />
-                                        </Ellipse.RenderTransform>
-                                    </Ellipse>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CurrentMode, StringFormat='{}Mode: {0}'}" Foreground="{DynamicResource SmartBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding BatteryPercentage}" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Graph Row with Left Y-Axis Marks (100%, 50%, 0%) -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="28"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Y-Axis Percentage Marks -->
+                                <Grid Grid.Column="0" Height="90" Margin="0,1,5,1">
+                                    <TextBlock Text="100%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="8.5" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="50%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="8.5" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="0%" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="8.5" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
                                 </Grid>
+
+                                <!-- High-Resolution Timeline Sparkline Canvas with Glowing Gradient -->
+                                <Border Grid.Column="1" Height="90" Background="#14181F" BorderBrush="#252D3B" BorderThickness="1" CornerRadius="8">
+                                    <Grid ClipToBounds="True">
+                                        <!-- Background Grid Lines -->
+                                        <Grid Opacity="0.12">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Row="0" Grid.ColumnSpan="4" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="0,0,0,1"/>
+                                            <Border Grid.Row="1" Grid.ColumnSpan="4" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="0,0,0,1"/>
+                                            <Border Grid.Row="2" Grid.ColumnSpan="4" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="0,0,0,1"/>
+                                            <Border Grid.Column="0" Grid.RowSpan="4" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="0,0,1,0"/>
+                                            <Border Grid.Column="1" Grid.RowSpan="4" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="0,0,1,0"/>
+                                            <Border Grid.Column="2" Grid.RowSpan="4" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="0,0,1,0"/>
+                                        </Grid>
+
+                                        <!-- Gradient Fill and Stroke Line -->
+                                        <Viewbox Stretch="Fill">
+                                            <Canvas Width="100" Height="50">
+                                                <Path Data="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}, ConverterParameter='Polygon'}">
+                                                    <Path.Fill>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#4010B981" Offset="0.0"/>
+                                                            <GradientStop Color="#0010B981" Offset="1.0"/>
+                                                        </LinearGradientBrush>
+                                                    </Path.Fill>
+                                                </Path>
+                                                <Path Data="{Binding BatteryTrendPoints, Converter={StaticResource BatteryTrendConverter}}"
+                                                      Stroke="{DynamicResource SuccessBrush}" 
+                                                      StrokeThickness="2"
+                                                      StrokeLineJoin="Round"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Time Axis Sub-Labels -->
+                            <Grid Grid.Row="2" Margin="32,6,4,0">
+                                <TextBlock Text="24h ago" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="9.5" HorizontalAlignment="Left"/>
+                                <TextBlock Text="12h ago" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="9.5" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Now" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" FontSize="9.5" HorizontalAlignment="Right"/>
                             </Grid>
                         </Grid>
-                        
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,-8">
-                            <TextBlock Text="3h ago" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,0,32,0"/>
-                            <TextBlock Text="2h ago" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,0,32,0"/>
-                            <TextBlock Text="1h ago" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,0,24,0"/>
-                            <TextBlock Text="Now" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-            </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
-        <!-- Bottom Status Region -->
+        <!-- Bottom Status Bar Container (Items removed, ready for custom widgets) -->
         <Border Grid.Row="1" Grid.ColumnSpan="2" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
             <Grid Margin="32,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Auto Switch Enabled indicator -->
-                    <Grid Width="32" Height="32" Margin="0,0,16,0">
-                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
-                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Auto switch enabled" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
-                        <TextBlock Text="AxePower is optimizing your system automatically." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                    </StackPanel>
-                </StackPanel>
-                
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Help" FontSize="13" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{DynamicResource SidebarButtonStyle}" Command="{Binding CheckForUpdatesCommand}" Padding="16,8" Height="32">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Check for updates" FontSize="13" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
+                <!-- Ready for your future widgets and items -->
             </Grid>
         </Border>
     </Grid>

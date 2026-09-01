@@ -69,6 +69,34 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private int _rawBatteryPercentage = 100;
 
+    private readonly SystemTelemetryService? _telemetryService;
+
+    // 4 Performance Metrics (2x2 Grid: CPU, GPU, RAM, WiFi)
+    public ObservableCollection<double> CpuHistory { get; } = new();
+    public ObservableCollection<double> GpuHistory { get; } = new();
+    public ObservableCollection<double> MemoryHistory { get; } = new();
+    public ObservableCollection<double> NetworkHistory { get; } = new();
+
+    [ObservableProperty]
+    private string _cpuDisplay = "0%  2.40 GHz";
+
+    [ObservableProperty]
+    private string _gpuName = "GPU";
+
+    [ObservableProperty]
+    private string _gpuDisplay = "0%";
+
+    [ObservableProperty]
+    private string _memoryDisplay = "0.0 GB (0%)";
+
+    [ObservableProperty]
+    private string _networkName = "WiFi";
+
+    [ObservableProperty]
+    private string _networkDisplay = "↑0 bps ↓0 bps";
+
+    public ObservableCollection<DiskDriveSnapshot> Disks { get; } = new();
+
     public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast, PowerMode.GameMode });
 
     public ObservableCollection<double> BatteryTrendPoints { get; } = new();
@@ -80,7 +108,8 @@ public partial class DashboardViewModel : ObservableObject
         SettingsService settingsService,
         AppKillerService appKillerService,
         ControllerNavigationService? controllerService = null,
-        UpdateService? updateService = null)
+        UpdateService? updateService = null,
+        SystemTelemetryService? telemetryService = null)
     {
         _powerPlanService = powerPlanService;
         _batteryService = batteryService;
@@ -89,6 +118,21 @@ public partial class DashboardViewModel : ObservableObject
         _appKillerService = appKillerService;
         _controllerService = controllerService;
         _updateService = updateService;
+        _telemetryService = telemetryService;
+
+        // Initialize 30 points for sparklines
+        for (int i = 0; i < 30; i++)
+        {
+            CpuHistory.Add(0);
+            GpuHistory.Add(0);
+            MemoryHistory.Add(0);
+            NetworkHistory.Add(0);
+        }
+
+        if (_telemetryService != null)
+        {
+            _telemetryService.TelemetryUpdated += OnTelemetryUpdated;
+        }
 
         if (_controllerService != null)
         {
@@ -105,6 +149,102 @@ public partial class DashboardViewModel : ObservableObject
         _timer.Start();
 
         _ = RefreshStatusAsync();
+    }
+
+    private void OnTelemetryUpdated(SystemTelemetrySnapshot snapshot)
+    {
+        System.Windows.Application.Current?.Dispatcher?.BeginInvoke(() =>
+        {
+            CpuDisplay = snapshot.CpuDisplay;
+            GpuName = snapshot.GpuName;
+            GpuDisplay = snapshot.GpuDisplay;
+            MemoryDisplay = snapshot.MemoryDisplay;
+            NetworkName = snapshot.NetworkName;
+            NetworkDisplay = snapshot.NetworkDisplay;
+
+            PushHistoryPoint(CpuHistory, snapshot.CpuPercent);
+            PushHistoryPoint(GpuHistory, snapshot.GpuPercent);
+            PushHistoryPoint(MemoryHistory, snapshot.MemoryPercent);
+            PushHistoryPoint(NetworkHistory, snapshot.NetworkPercent);
+
+            // Sparkline Paths bind through a converter, which only re-runs on PropertyChanged
+            OnPropertyChanged(nameof(CpuHistory));
+            OnPropertyChanged(nameof(GpuHistory));
+            OnPropertyChanged(nameof(MemoryHistory));
+            OnPropertyChanged(nameof(NetworkHistory));
+
+            UpdateDisks(snapshot.Disks);
+        });
+    }
+
+    private void UpdateDisks(System.Collections.Generic.List<DiskDriveSnapshot> latest)
+    {
+        // Update in place keyed by drive letter so unchanged cards cause no UI invalidation
+        for (int i = Disks.Count - 1; i >= 0; i--)
+        {
+            if (!latest.Exists(d => d.DriveLetter == Disks[i].DriveLetter))
+                Disks.RemoveAt(i);
+        }
+
+        for (int i = 0; i < latest.Count; i++)
+        {
+            var disk = latest[i];
+            int existing = -1;
+            for (int j = 0; j < Disks.Count; j++)
+            {
+                if (Disks[j].DriveLetter == disk.DriveLetter) { existing = j; break; }
+            }
+
+            if (existing < 0)
+            {
+                Disks.Insert(Math.Min(i, Disks.Count), disk);
+            }
+            else if (Disks[existing].UsedGb != disk.UsedGb ||
+                     Disks[existing].FreeGb != disk.FreeGb ||
+                     Disks[existing].DisplayName != disk.DisplayName ||
+                     Disks[existing].StatusColorHex != disk.StatusColorHex)
+            {
+                Disks[existing] = disk;
+            }
+        }
+    }
+
+    [RelayCommand]
+    public async Task ToggleControllerNavigationAsync()
+    {
+        if (_controllerService == null || IsControllerBusy) return;
+
+        IsControllerBusy = true;
+        try
+        {
+            var newState = await _controllerService.ToggleAsync();
+            IsControllerNavigationEnabled = newState == ControllerNavigationState.Running;
+            if (IsControllerNavigationEnabled)
+            {
+                _notificationService.Show("Controller Navigation Enabled (Gopher360)");
+            }
+            else
+            {
+                _notificationService.Show("Controller Navigation Disabled");
+            }
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show($"Controller Navigation Error: {ex.Message}");
+        }
+        finally
+        {
+            IsControllerBusy = false;
+        }
+    }
+
+    private static void PushHistoryPoint(ObservableCollection<double> collection, double value)
+    {
+        if (collection.Count >= 30)
+        {
+            collection.RemoveAt(0);
+        }
+        collection.Add(value);
     }
 
     private void LoadSettings()
@@ -185,6 +325,16 @@ public partial class DashboardViewModel : ObservableObject
         if (Enum.TryParse<PowerMode>(modeStr, out var mode))
         {
             SelectedMode = mode;
+        }
+    }
+
+    [RelayCommand]
+    public async Task ApplyModeDirectAsync(string modeStr)
+    {
+        if (Enum.TryParse<PowerMode>(modeStr, out var mode))
+        {
+            SelectedMode = mode;
+            await ApplyModeAsync();
         }
     }
 
@@ -278,35 +428,6 @@ public partial class DashboardViewModel : ObservableObject
         if (System.Windows.Application.Current?.MainWindow?.DataContext is MainViewModel mainVm)
         {
             mainVm.OpenToolHelp("Gopher360");
-        }
-    }
-
-    [RelayCommand]
-    public async Task ToggleControllerNavigationAsync()
-    {
-        if (_controllerService == null || IsControllerBusy) return;
-
-        IsControllerBusy = true;
-        try
-        {
-            var newState = await _controllerService.ToggleAsync();
-            IsControllerNavigationEnabled = newState == ControllerNavigationState.Running;
-            if (IsControllerNavigationEnabled)
-            {
-                _notificationService.Show("Controller Navigation Enabled (Gopher360)");
-            }
-            else
-            {
-                _notificationService.Show("Controller Navigation Disabled");
-            }
-        }
-        catch (Exception ex)
-        {
-            _notificationService.Show($"Controller Navigation Error: {ex.Message}");
-        }
-        finally
-        {
-            IsControllerBusy = false;
         }
     }
 }

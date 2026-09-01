@@ -5,113 +5,142 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="800">
-    <Grid Margin="32">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="69"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,24">
-            <TextBlock Text="System Logs" Style="{DynamicResource PageTitleText}"/>
-            <TextBlock Text="View background activities, plan switches, and error messages" Style="{DynamicResource SecondaryText}"/>
-        </StackPanel>
-        
-        <Border Grid.Row="1" Style="{DynamicResource CardElevatedStyle}" Padding="0,16">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                
-                <!-- Table Header -->
-                <Grid Grid.Row="0" Margin="16,0,16,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="80"/>
-                        <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Level" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="1" Text="Timestamp" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="2" Text="Message" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
-                </Grid>
-                
-                <Border Grid.Row="0" Height="1" Background="{DynamicResource DividerBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
+        <Grid Grid.Row="0" Margin="40,24,40,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-                <ListBox Grid.Row="1" ItemsSource="{Binding Logs}" Background="Transparent" BorderThickness="0" Margin="0,8,0,0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="border" Background="{TemplateBinding Background}" Margin="8,2" Padding="8" CornerRadius="8">
-                                            <ContentPresenter />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="160"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <!-- Level indicator -->
-                                <Border Grid.Column="0" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#1A3388FF"/> <!-- Info/Default -->
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Level}" Value="ERROR">
-                                                    <Setter Property="Background" Value="#1AFF5964"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Level}" Value="WARN">
-                                                    <Setter Property="Background" Value="#1AF4C451"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding Level}" FontSize="11" FontWeight="Bold">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                <TextBlock Text="System Logs" Style="{DynamicResource PageTitleText}"/>
+                <TextBlock Text="View background activities, plan switches, and error messages" Style="{DynamicResource SecondaryText}"/>
+            </StackPanel>
+            
+            <Border Grid.Row="1" Style="{DynamicResource CardElevatedStyle}" Padding="0,16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Table Header -->
+                    <Grid Grid.Row="0" Margin="16,0,16,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Level" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1" Text="Timestamp" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="2" Text="Message" Style="{DynamicResource SecondaryText}" FontWeight="SemiBold"/>
+                    </Grid>
+                    
+                    <Border Grid.Row="0" Height="1" Background="{DynamicResource DividerBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Logs}" Background="Transparent" BorderThickness="0" Margin="0,8,0,0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="border" Background="{TemplateBinding Background}" Margin="8,2" Padding="8" CornerRadius="8">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Level indicator -->
+                                    <Border Grid.Column="0" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#1A3388FF"/> <!-- Info/Default -->
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Level}" Value="ERROR">
-                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                        <Setter Property="Background" Value="#1AFF5964"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Level}" Value="WARN">
-                                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                        <Setter Property="Background" Value="#1AF4C451"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Border>
-                                
-                                <!-- Timestamp -->
-                                <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='MM/dd/yyyy HH:mm:ss'}" 
-                                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontFamily="Consolas" VerticalAlignment="Center"/>
-                                
-                                <!-- Message -->
-                                <TextBlock Grid.Column="2" Text="{Binding Message}" 
-                                           Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding Level}" FontSize="11" FontWeight="Bold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Level}" Value="ERROR">
+                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Level}" Value="WARN">
+                                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    
+                                    <!-- Timestamp -->
+                                    <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='MM/dd/yyyy HH:mm:ss'}" 
+                                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontFamily="Consolas" VerticalAlignment="Center"/>
+                                    
+                                    <!-- Message -->
+                                    <TextBlock Grid.Column="2" Text="{Binding Message}" 
+                                               Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ─── Bottom Status Bar ───────────────────────────────────────────── -->
+        <Border Grid.Row="1" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="32,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="32" Height="32" Margin="0,0,16,0">
+                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
+                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="System Activity Logs" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
+                        <TextBlock Text="Real-time background power state transitions and diagnostic event stream." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

@@ -105,6 +105,7 @@ public class AutoSwitchService : IDisposable
 
     public async Task EvaluatePowerStateAsync()
     {
+        await Task.CompletedTask;
         if (_isPaused)
         {
             return;

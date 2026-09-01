@@ -19,7 +19,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="64"/>
+                <RowDefinition Height="69"/>
             </Grid.RowDefinitions>
 
             <!-- Page Title Header -->
@@ -55,32 +55,11 @@
 
                                     <!-- Product Info -->
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="AxePower" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                            <Border Background="#0C345C" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                                <TextBlock Text="Pro" Foreground="#60A5FA" FontSize="11" FontWeight="SemiBold"/>
-                                            </Border>
-                                        </StackPanel>
+                                        <TextBlock Text="AxePower" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
 
                                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="Version " Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding Version}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
-                                            
-                                            <!-- Up to Date Badge -->
-                                            <Border Background="#063E23" BorderBrush="#059669" BorderThickness="1" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource InverseBoolToVis}}">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="✓" Foreground="#34D399" FontSize="10" FontWeight="Bold" Margin="0,0,4,0"/>
-                                                    <TextBlock Text="Up to date" Foreground="#34D399" FontSize="11" FontWeight="SemiBold"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- Update Available Badge -->
-                                            <Border Background="#0C345C" BorderBrush="#2563EB" BorderThickness="1" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="🚀" FontSize="10" Margin="0,0,4,0"/>
-                                                    <TextBlock Text="Update available" Foreground="#60A5FA" FontSize="11" FontWeight="SemiBold"/>
-                                                </StackPanel>
-                                            </Border>
                                         </StackPanel>
 
                                         <TextBlock Text="AxePower intelligently optimizes your system's power usage to deliver the perfect balance between performance, battery life, and cooling—automatically." 
@@ -88,58 +67,24 @@
                                     </StackPanel>
                                 </Grid>
 
-                                <!-- Developer & Website Section -->
+                                <!-- Developer Section -->
                                 <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,20,0,16"/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
 
-                                    <!-- Developer Column -->
-                                    <Grid Grid.Column="0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,14,0" VerticalAlignment="Center">
-                                            <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <Button Command="{Binding OpenDeveloperCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand">
-                                                <Button.Template>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <TextBlock Text="Developed by Abhimanyu Vishwakarma" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                                    </ControlTemplate>
-                                                </Button.Template>
-                                            </Button>
-                                            <TextBlock Text="Built with performance and efficiency in mind." FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- Website Link Button -->
-                                    <Button Grid.Column="1" Command="{Binding VisitWebsiteCommand}" Background="Transparent" BorderThickness="0" Padding="0" VerticalAlignment="Center" Cursor="Hand" ToolTip="Visit https://axepower.vercel.app/">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border x:Name="siteBtn" Background="#0C345C" BorderBrush="#1D4ED8" BorderThickness="1" CornerRadius="10" Padding="12,7" Margin="10,0,0,0">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#60A5FA" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="axepower.vercel.app" FontSize="12" FontWeight="SemiBold" Foreground="#93C5FD" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#60A5FA" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="siteBtn" Property="Background" Value="#1E40AF"/>
-                                                        <Setter TargetName="siteBtn" Property="BorderBrush" Value="#3B82F6"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
-                                </Grid>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <Button Command="{Binding OpenDeveloperCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <TextBlock Text="Developed by Abhimanyu Vishwakarma" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <TextBlock Text="Built with performance and efficiency in mind." FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 
@@ -226,7 +171,7 @@
                                         <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <TextBlock Text="Release notes" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <Button Command="{Binding ViewAllReleasesCommand}" Content="View all" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="#3B82F6" FontSize="12.5" FontWeight="Medium" Cursor="Hand"/>
+                                    <Button Command="{Binding OpenPatchNotesModalCommand}" Content="View all" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="#3B82F6" FontSize="12.5" FontWeight="Medium" Cursor="Hand"/>
                                 </Grid>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Center">
@@ -237,13 +182,13 @@
                                 </StackPanel>
 
                                 <StackPanel Margin="0,0,0,18">
-                                    <TextBlock Text="• Improved Smart Auto Switch accuracy" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Added battery trend insights" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Enhanced Eco Mode efficiency" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• General performance and stability improvements" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Text="• Fixed taskbar menu with full-width Steam styling" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Added Creative &amp; Media software catalog" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Fixed package install buttons and state bindings" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="• Wireless Second Monitor &amp; phone integration" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 </StackPanel>
 
-                                <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ViewAllReleasesCommand}" Padding="0,10" HorizontalAlignment="Stretch">
+                                <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenPatchNotesModalCommand}" Padding="0,10" HorizontalAlignment="Stretch">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <TextBlock Text="View release notes" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
@@ -285,21 +230,10 @@
             </ScrollViewer>
 
             <!-- Bottom Status & Updates Bar -->
-            <Border Grid.Row="2" Background="#0C1016" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="40,0">
-                <Grid VerticalAlignment="Center">
-                    <!-- Left: Up to date Status -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <Border Width="26" Height="26" CornerRadius="13" Background="#063E23" BorderBrush="#059669" BorderThickness="1" Margin="0,0,12,0" VerticalAlignment="Center">
-                            <TextBlock Text="✓" Foreground="#34D399" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{Binding UpdateStatusTitle}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock Text="{Binding LastCheckedDisplay}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,1,0,0"/>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!-- Center: Check for Updates Button -->
-                    <Button HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding CheckForUpdatesCommand}" Cursor="Hand" IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}">
+            <Border Grid.Row="2" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+                <Grid Margin="32,0" VerticalAlignment="Center">
+                    <!-- Left: Check for Updates Button -->
+                    <Button HorizontalAlignment="Left" VerticalAlignment="Center" Command="{Binding CheckForUpdatesCommand}" Cursor="Hand" IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="chkBorder" Background="#141A24" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="18" Padding="20,8">
@@ -318,15 +252,8 @@
                         </Button.Template>
                     </Button>
 
-                    <!-- Right: Help and Privacy Policy -->
+                    <!-- Right: Privacy Policy -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Command="{Binding OpenHelpCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand" Margin="0,0,16,0">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Help" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
                         <Button Command="{Binding OpenPrivacyPolicyCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>

@@ -136,7 +136,10 @@ public partial class App : Application
 
             var mainWindow = Services.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
-            
+
+            // Never veto the close that Windows issues during logoff/shutdown
+            SessionEnding += (s, args) => mainWindow.AllowClose();
+
             // Show and foreground the main window
             mainWindow.WindowState = WindowState.Normal;
             mainWindow.ShowInTaskbar = true;
@@ -204,6 +207,7 @@ public partial class App : Application
         services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
         services.AddSingleton<LanDropService>();
         services.AddSingleton<FirmwareUpdateService>();
+        services.AddSingleton<SystemTelemetryService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();

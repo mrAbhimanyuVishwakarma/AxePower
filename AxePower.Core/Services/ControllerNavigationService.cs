@@ -207,6 +207,7 @@ public class ControllerNavigationService
 
     public async Task<ControllerNavigationState> StartAsync(CancellationToken ct = default)
     {
+        await Task.CompletedTask;
         if (_isRunning) return ControllerNavigationState.Running;
 
         if (_xinputGetState == null)

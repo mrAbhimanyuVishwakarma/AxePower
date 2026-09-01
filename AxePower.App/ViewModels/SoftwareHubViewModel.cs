@@ -40,8 +40,9 @@ public partial class PackageCardViewModel : ObservableObject
     private bool _isBusy;
 
     public bool IsNotInstalled => !IsInstalled && !IsWebLinkOnly && !HasCustomInstaller;
-    public bool CanOpen => IsInstalled && !IsWebLinkOnly && !HasCustomInstaller;
-    public bool CanUninstall => IsInstalled && !IsWebLinkOnly && !HasCustomInstaller && !string.IsNullOrEmpty(WinGetId);
+    public bool CanOpen => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
+    public bool CanUpdate => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
+    public bool CanUninstall => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
     public bool ShowCustomInstallerButtons => HasCustomInstaller;
 
     public PackageCardViewModel(SoftwarePackageItem item, IWinGetHubService hubService, SoftwareHubViewModel parent)
@@ -56,6 +57,7 @@ public partial class PackageCardViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsNotInstalled));
         OnPropertyChanged(nameof(CanOpen));
+        OnPropertyChanged(nameof(CanUpdate));
         OnPropertyChanged(nameof(CanUninstall));
         OnPropertyChanged(nameof(ShowCustomInstallerButtons));
     }
@@ -155,21 +157,54 @@ public partial class PackageCardViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            _parent.AppendLog($"\n>>> Installing {Name} ({WinGetId})...");
+            _parent.Notify($"🚀 1-Click Install started for {Name}!");
+            _parent.AppendLog($"\n>>> 1-Click Install: {Name} ({WinGetId})...");
             var progress = new Progress<string>(_parent.AppendLog);
             bool success = await _hubService.InstallPackageAsync(WinGetId, progress);
+
             if (success)
             {
                 IsInstalled = true;
-                _parent.Notify($"✓ Successfully installed {Name}!");
+                _parent.Notify($"✓ {Name} is now installed and ready!");
+                _parent.AppendLog($"\n[Success] {Name} is now installed.");
             }
             else
             {
-                _parent.Notify($"Installation of {Name} finished with notices. Check logs.");
+                _parent.Notify($"Installation of {Name} did not complete. Opening website...");
             }
         }
         finally
         {
+            // Release card busy lock quickly so user is never frozen
+            await Task.Delay(500);
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task UpdateAsync()
+    {
+        if (IsBusy) return;
+
+        IsBusy = true;
+        try
+        {
+            _parent.Notify($"🚀 Update started for {Name}...");
+            _parent.AppendLog($"\n>>> [Update] Updating {Name} ({WinGetId})...");
+            var progress = new Progress<string>(_parent.AppendLog);
+            bool success = await _hubService.UpgradePackageAsync(WinGetId, progress);
+            if (success)
+            {
+                _parent.Notify($"✓ {Name} updated successfully.");
+            }
+            else
+            {
+                _parent.Notify($"Could not update {Name}. Check logs.");
+            }
+        }
+        finally
+        {
+            await Task.Delay(500);
             IsBusy = false;
         }
     }

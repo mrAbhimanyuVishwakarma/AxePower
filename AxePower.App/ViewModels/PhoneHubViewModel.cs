@@ -24,13 +24,24 @@ public partial class PhoneHubViewModel : ObservableObject
     private readonly IWinGetHubService? _winGetHubService;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SpaceDeskButtonText))]
     private bool _isSpaceDeskInstalled;
 
     [ObservableProperty]
     private bool _isSpaceDeskBusy;
 
     [ObservableProperty]
-    private string _activeTab = "LanDrop"; // "LanDrop", "ScreenMirror", "RemoteControls"
+    [NotifyPropertyChangedFor(nameof(IsLanDropTabActive))]
+    [NotifyPropertyChangedFor(nameof(IsScreenMirrorTabActive))]
+    [NotifyPropertyChangedFor(nameof(IsSecondMonitorTabActive))]
+    [NotifyPropertyChangedFor(nameof(IsPhoneLinkTabActive))]
+    private string _activeTab = "LanDrop"; // "LanDrop", "ScreenMirror", "SecondMonitor", "PhoneLink"
+
+    public bool IsLanDropTabActive => ActiveTab == "LanDrop";
+    public bool IsScreenMirrorTabActive => ActiveTab == "ScreenMirror";
+    public bool IsSecondMonitorTabActive => ActiveTab == "SecondMonitor";
+    public bool IsPhoneLinkTabActive => ActiveTab == "PhoneLink";
+    public string SpaceDeskButtonText => IsSpaceDeskInstalled ? "Launch SpaceDesk Console" : "Install SpaceDesk Driver";
 
     // ─── 1. LAN Drop State ─────────────────────────────────────────────
     [ObservableProperty]
@@ -127,11 +138,12 @@ public partial class PhoneHubViewModel : ObservableObject
 
         RefreshIpList();
         CheckSpaceDeskInstalled();
+        UpdateQrCode();
 
         // Subscribe to LAN Drop events
         _lanDropService.OnFileReceived += (s, item) =>
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 ReceivedFiles.Insert(0, item);
                 OnPropertyChanged(nameof(ReceivedCount));
@@ -142,7 +154,7 @@ public partial class PhoneHubViewModel : ObservableObject
 
         _lanDropService.OnTextReceived += (s, msg) =>
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 ClipboardMessages.Insert(0, msg);
                 _notificationService.Show($"📋 Quick Text received from {msg.SenderDevice}");
@@ -151,10 +163,13 @@ public partial class PhoneHubViewModel : ObservableObject
 
         _lanDropService.OnStateChanged += (s, state) =>
         {
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 IsServerRunning = state.IsRunning;
-                ServerUrl = state.ServerUrl;
+                if (!string.IsNullOrEmpty(state.ServerUrl))
+                {
+                    ServerUrl = state.ServerUrl;
+                }
                 UpdateQrCode();
                 StatusMessage = IsServerRunning
                     ? $"Server active on {ServerUrl} — Scan QR code on your phone"
@@ -170,7 +185,15 @@ public partial class PhoneHubViewModel : ObservableObject
     public void SetTab(string tabName)
     {
         ActiveTab = tabName;
-        if (tabName == "ScreenMirror")
+        if (tabName == "LanDrop")
+        {
+            UpdateQrCode();
+            if (!IsServerRunning)
+            {
+                _ = _lanDropService.StartServerAsync(SelectedIpAddress, PortNumber);
+            }
+        }
+        else if (tabName == "ScreenMirror")
         {
             _ = RefreshDevicesAsync();
         }
@@ -191,27 +214,38 @@ public partial class PhoneHubViewModel : ObservableObject
 
     partial void OnSelectedIpAddressChanged(string value)
     {
-        if (!IsServerRunning && !string.IsNullOrEmpty(value))
+        if (!string.IsNullOrEmpty(value))
         {
             ServerUrl = $"http://{value}:{PortNumber}/";
+            UpdateQrCode();
+            if (IsServerRunning)
+            {
+                _ = _lanDropService.StartServerAsync(value, PortNumber);
+            }
         }
     }
 
     partial void OnPortNumberChanged(int value)
     {
-        if (!IsServerRunning && !string.IsNullOrEmpty(SelectedIpAddress))
+        if (!string.IsNullOrEmpty(SelectedIpAddress))
         {
             ServerUrl = $"http://{SelectedIpAddress}:{value}/";
+            UpdateQrCode();
+            if (IsServerRunning)
+            {
+                _ = _lanDropService.StartServerAsync(SelectedIpAddress, value);
+            }
         }
     }
 
     private void UpdateQrCode()
     {
-        if (IsServerRunning && !string.IsNullOrEmpty(ServerUrl))
+        if (!string.IsNullOrEmpty(ServerUrl))
         {
             try
             {
-                byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(ServerUrl, 8, 3, 0x0000F0FF, 0x000B101D);
+                // Pure high-contrast black QR on white background (0x00000000 on 0x00FFFFFF) with 4-module quiet zone
+                byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(ServerUrl, 8, 4, 0x00000000, 0x00FFFFFF);
                 using var ms = new MemoryStream(bmpBytes);
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
@@ -225,10 +259,6 @@ public partial class PhoneHubViewModel : ObservableObject
             {
                 QrCodeImage = null;
             }
-        }
-        else
-        {
-            QrCodeImage = null;
         }
     }
 
@@ -460,7 +490,7 @@ public partial class PhoneHubViewModel : ObservableObject
         try
         {
             var list = await _androidControlService.GetConnectedDevicesAsync();
-            Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 ConnectedDevices.Clear();
                 foreach (var d in list)
@@ -652,19 +682,23 @@ public partial class PhoneHubViewModel : ObservableObject
             }
             else
             {
-                // Fallback direct winget execution
+                // Fallback direct execution via winget
                 try
                 {
                     var psi = new ProcessStartInfo
                     {
                         FileName = "winget.exe",
-                        Arguments = "install --id Datronicsoft.SpacedeskDriver.Server --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity",
+                        Arguments = "install --id Datronicsoft.SpacedeskDriver.Server --source winget --accept-source-agreements --accept-package-agreements --silent",
                         UseShellExecute = false,
-                        CreateNoWindow = true
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden
                     };
                     using var p = Process.Start(psi);
-                    p?.WaitForExit(35000);
-                    installed = (p?.ExitCode == 0);
+                    if (p != null)
+                    {
+                        await p.WaitForExitAsync();
+                        installed = p.ExitCode == 0;
+                    }
                 }
                 catch { }
             }
@@ -705,5 +739,157 @@ public partial class PhoneHubViewModel : ObservableObject
             IsSpaceDeskBusy = false;
             CheckSpaceDeskInstalled();
         }
+    }
+
+    [ObservableProperty]
+    private bool _isQrModalOpen;
+
+    [ObservableProperty]
+    private string _qrModalTitle = string.Empty; // ShowDownloadQr always assigns the modal fields before opening
+
+    [ObservableProperty]
+    private string _qrModalSubtitle = string.Empty;
+
+    [ObservableProperty]
+    private string _qrModalUrl = string.Empty;
+
+    [ObservableProperty]
+    private string _qrModalBadge = string.Empty;
+
+    [ObservableProperty]
+    private ImageSource? _qrModalImage;
+
+    [RelayCommand]
+    public void ShowDownloadQr(string platform)
+    {
+        switch (platform?.ToLowerInvariant())
+        {
+            case "android":
+                QrModalTitle = "📱 SpaceDesk for Android";
+                QrModalSubtitle = "Scan this QR code with your phone's camera to install directly from the Google Play Store.";
+                QrModalUrl = "https://play.google.com/store/apps/details?id=ph.spacedesk.beta";
+                QrModalBadge = "GOOGLE PLAY";
+                break;
+            case "ios":
+                QrModalTitle = "🍎 SpaceDesk for iOS (iPhone & iPad)";
+                QrModalSubtitle = "Scan this QR code with your iPhone or iPad camera to install directly from the Apple App Store.";
+                QrModalUrl = "https://apps.apple.com/in/app/spacedesk-usb-display-for-pc/id1069217220";
+                QrModalBadge = "APP STORE";
+                break;
+            case "phonelink_android":
+                QrModalTitle = "📱 Link to Windows (Android)";
+                QrModalSubtitle = "Scan this QR code with your Android phone to install 'Link to Windows' from Google Play.";
+                QrModalUrl = "https://play.google.com/store/apps/details?id=com.microsoft.appmanager";
+                QrModalBadge = "GOOGLE PLAY";
+                break;
+            case "phonelink_ios":
+                QrModalTitle = "🍎 Link to Windows (iPhone)";
+                QrModalSubtitle = "Scan this QR code with your iPhone to install 'Link to Windows' from Apple App Store.";
+                QrModalUrl = "https://apps.apple.com/in/app/link-to-windows/id6443686328";
+                QrModalBadge = "APP STORE";
+                break;
+            case "web":
+            default:
+                QrModalTitle = "🌐 SpaceDesk HTML5 Web Viewer";
+                QrModalSubtitle = "Scan to open the browser-based second display viewer directly on any device without installing any app.";
+                QrModalUrl = "https://viewer.spacedesk.net/";
+                QrModalBadge = "WEB VIEWER";
+                break;
+        }
+
+        QrModalImage = GenerateQrImage(QrModalUrl);
+        IsQrModalOpen = true;
+    }
+
+    [RelayCommand]
+    public void LaunchPhoneLink()
+    {
+        try
+        {
+            _notificationService.Show("Opening Windows Phone Link...");
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "ms-phonelink:",
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "ms-yourphone:",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _notificationService.Show("Could not launch Phone Link: " + ex.Message);
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://aka.ms/phonelink",
+                        UseShellExecute = true
+                    });
+                }
+                catch { }
+            }
+        }
+    }
+
+    [RelayCommand]
+    public void CloseQrModal()
+    {
+        IsQrModalOpen = false;
+    }
+
+    [RelayCommand]
+    public void OpenQrModalUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(QrModalUrl))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = QrModalUrl, UseShellExecute = true });
+            }
+            catch { }
+        }
+    }
+
+    private static ImageSource? GenerateQrImage(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return null;
+        try
+        {
+            byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(url, 8, 4, 0x00000000, 0x00FFFFFF);
+            using var stream = new MemoryStream(bmpBytes);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = stream;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    [RelayCommand]
+    public void OpenSpaceDeskWebsite()
+    {
+        try { Process.Start(new ProcessStartInfo { FileName = "https://www.spacedesk.net/", UseShellExecute = true }); }
+        catch { }
+    }
+
+    [RelayCommand]
+    public void OpenWindowsDisplaySettings()
+    {
+        try { Process.Start(new ProcessStartInfo { FileName = "ms-settings:display", UseShellExecute = true }); }
+        catch { }
     }
 }

@@ -48,11 +48,17 @@ public class AppSettings
     [JsonPropertyName("showNotifications")]
     public bool ShowNotifications { get; set; } = true;
 
+    [JsonPropertyName("notifyOnModeSwitch")]
+    public bool NotifyOnModeSwitch { get; set; } = true;
+
+    [JsonPropertyName("lowBatteryAlertSound")]
+    public bool LowBatteryAlertSound { get; set; } = true;
+
     [JsonPropertyName("startWithWindows")]
-    public bool StartWithWindows { get; set; } = false;
+    public bool StartWithWindows { get; set; } = true;
 
     [JsonPropertyName("startMinimised")]
-    public bool StartMinimised { get; set; } = false;
+    public bool StartMinimised { get; set; } = true;
 
     [JsonPropertyName("closeBehaviour")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -102,6 +108,15 @@ public class AppSettings
     [JsonPropertyName("touchpadEnabled")]
     public bool TouchpadEnabled { get; set; } = true;
 
+    [JsonPropertyName("autoCheckUpdates")]
+    public bool AutoCheckUpdates { get; set; } = true;
+
+    [JsonPropertyName("autoDownloadUpdates")]
+    public bool AutoDownloadUpdates { get; set; } = true;
+
+    [JsonPropertyName("notifyOnNewRelease")]
+    public bool NotifyOnNewRelease { get; set; } = true;
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -119,6 +134,8 @@ public class AppSettings
             LowBatteryMode = this.LowBatteryMode,
             SwitchDelaySeconds = this.SwitchDelaySeconds,
             ShowNotifications = this.ShowNotifications,
+            NotifyOnModeSwitch = this.NotifyOnModeSwitch,
+            LowBatteryAlertSound = this.LowBatteryAlertSound,
             StartWithWindows = this.StartWithWindows,
             StartMinimised = this.StartMinimised,
             CloseBehaviour = this.CloseBehaviour,
@@ -135,7 +152,10 @@ public class AppSettings
             RapidChargeEnabled = this.RapidChargeEnabled,
             OvernightBatteryChargingEnabled = this.OvernightBatteryChargingEnabled,
             FnLockEnabled = this.FnLockEnabled,
-            TouchpadEnabled = this.TouchpadEnabled
+            TouchpadEnabled = this.TouchpadEnabled,
+            AutoCheckUpdates = this.AutoCheckUpdates,
+            AutoDownloadUpdates = this.AutoDownloadUpdates,
+            NotifyOnNewRelease = this.NotifyOnNewRelease
         };
     }
 }
