@@ -45,6 +45,11 @@ public partial class PackageCardViewModel : ObservableObject
     public bool CanUninstall => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
     public bool ShowCustomInstallerButtons => HasCustomInstaller;
 
+    public string InstallButtonText => Id == "dlss5swapper" ? "Download & Run" : "Install";
+    public string InstallButtonTooltip => Id == "dlss5swapper" ? "Download latest portable release from GitHub and run it" : "Install this software via PowerShell";
+    public string OpenButtonText => Id == "dlss5swapper" ? "Run" : "Open";
+    public string UpdateButtonTooltip => Id == "dlss5swapper" ? "Update to the newest portable release from GitHub" : "Update this software to the latest release via PowerShell";
+
     public PackageCardViewModel(SoftwarePackageItem item, IWinGetHubService hubService, SoftwareHubViewModel parent)
     {
         Item = item;
@@ -248,6 +253,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     private readonly IWindowsUpdateShieldService _updateShieldService;
     private readonly DriverUpdateService _driverUpdateService;
     private readonly FirmwareUpdateService _firmwareUpdateService;
+    private readonly GraphicsDriverService _graphicsDriverService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
 
@@ -296,6 +302,15 @@ public partial class SoftwareHubViewModel : ObservableObject
     public ObservableCollection<PackageCardViewModel> AllPackages { get; } = new();
     public ObservableCollection<PackageCardViewModel> FilteredPackages { get; } = new();
 
+    // Graphics driver centre — only the vendors actually present on this machine
+    public ObservableCollection<GraphicsAdapterInfo> GraphicsAdapters { get; } = new();
+
+    [ObservableProperty]
+    private bool _hasGraphicsAdapters;
+
+    [ObservableProperty]
+    private bool _isInstallingGraphicsDriver;
+
     [ObservableProperty]
     private bool _isSecurityOnlyUpdates;
 
@@ -336,7 +351,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         DriverUpdateService driverUpdateService,
         FirmwareUpdateService firmwareUpdateService,
         NotificationService notificationService,
-        LogService logService)
+        LogService logService,
+        GraphicsDriverService graphicsDriverService)
     {
         _hubService = hubService;
         _updateShieldService = updateShieldService;
@@ -344,12 +360,153 @@ public partial class SoftwareHubViewModel : ObservableObject
         _firmwareUpdateService = firmwareUpdateService;
         _notificationService = notificationService;
         _logService = logService;
+        _graphicsDriverService = graphicsDriverService;
 
         LoadPackages();
         LoadShieldSettings();
+        LoadGraphicsAdapters();
 
         _ = RefreshStatusesAsync();
         _ = LoadFirmwareInfoAsync();
+    }
+
+    private void LoadGraphicsAdapters()
+    {
+        try
+        {
+            GraphicsAdapters.Clear();
+            foreach (var adapter in _graphicsDriverService.DetectAdapters())
+            {
+                GraphicsAdapters.Add(adapter);
+            }
+            HasGraphicsAdapters = GraphicsAdapters.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("Failed to detect graphics adapters.", ex);
+        }
+    }
+
+    [RelayCommand]
+    public async Task UpdateGraphicsDriverAsync(GraphicsAdapterInfo? adapter)
+    {
+        if (adapter == null || IsInstallingGraphicsDriver) return;
+
+        IsInstallingGraphicsDriver = true;
+        try
+        {
+            AppendLog($"\n>>> [Graphics Drivers] {adapter.VendorName} — {adapter.Name} via {adapter.ToolName}");
+            var progress = new Progress<string>(AppendLog);
+            var (_, message) = await _graphicsDriverService.InstallOrUpdateAsync(adapter, progress);
+            Notify(message);
+            AppendLog($"[Graphics Drivers] {message}");
+        }
+        catch (Exception ex)
+        {
+            Notify($"Graphics driver update failed: {ex.Message}");
+            AppendLog($"[Graphics Drivers Error] {ex.Message}");
+        }
+        finally
+        {
+            IsInstallingGraphicsDriver = false;
+        }
+    }
+
+    [RelayCommand]
+    public void OpenGraphicsVendorSite(GraphicsAdapterInfo? adapter)
+    {
+        if (adapter == null) return;
+        _graphicsDriverService.OpenOfficialPage(adapter);
+        Notify($"Opening the official {adapter.VendorName} driver site...");
+    }
+
+    [RelayCommand]
+    public void OpenGraphicsCompanionApp(GraphicsAdapterInfo? adapter)
+    {
+        if (adapter == null || !adapter.HasCompanionApp) return;
+        _graphicsDriverService.OpenCompanionApp(adapter);
+        Notify($"Opening {adapter.CompanionAppName} in the Microsoft Store...");
+    }
+
+    [ObservableProperty]
+    private bool _isNvidiaPickerOpen;
+
+    [ObservableProperty]
+    private GraphicsAdapterInfo? _selectedNvidiaAdapter;
+
+    [ObservableProperty]
+    private NvidiaDriverRelease? _selectedNvidiaDriver;
+
+    [ObservableProperty]
+    private bool _isDownloadingNvidiaDriver;
+
+    [ObservableProperty]
+    private bool _isNotebookVariant = true;
+
+    public ObservableCollection<NvidiaDriverRelease> CuratedNvidiaDrivers { get; } = new();
+
+    [RelayCommand]
+    public void OpenNvidiaPicker(GraphicsAdapterInfo? adapter)
+    {
+        SelectedNvidiaAdapter = adapter ?? GraphicsAdapters.FirstOrDefault(a => a.IsNvidia);
+        IsNotebookVariant = SelectedNvidiaAdapter?.IsNotebook ?? true;
+
+        CuratedNvidiaDrivers.Clear();
+        foreach (var driver in _graphicsDriverService.GetCuratedNvidiaDrivers())
+        {
+            CuratedNvidiaDrivers.Add(driver);
+        }
+
+        SelectedNvidiaDriver = CuratedNvidiaDrivers.FirstOrDefault(d => d.Badge.Contains("RECOMMENDED"))
+                               ?? CuratedNvidiaDrivers.FirstOrDefault();
+
+        IsNvidiaPickerOpen = true;
+    }
+
+    [RelayCommand]
+    public void CloseNvidiaPicker()
+    {
+        IsNvidiaPickerOpen = false;
+    }
+
+    [RelayCommand]
+    public async Task InstallSelectedNvidiaDriverAsync()
+    {
+        if (SelectedNvidiaDriver == null || IsDownloadingNvidiaDriver) return;
+
+        IsDownloadingNvidiaDriver = true;
+        try
+        {
+            string downloadUrl = SelectedNvidiaDriver.GetDownloadUrl(IsNotebookVariant);
+            AppendLog($"\n>>> [NVIDIA Driver Rollback/Install] Version: {SelectedNvidiaDriver.Version} ({SelectedNvidiaDriver.Badge})");
+            Notify($"Starting download for NVIDIA Driver {SelectedNvidiaDriver.Version}...");
+
+            var progress = new Progress<string>(AppendLog);
+            var (success, message) = await _graphicsDriverService.DownloadAndRunNvidiaDriverAsync(
+                downloadUrl, SelectedNvidiaDriver.Version, progress);
+
+            Notify(message);
+            if (success)
+            {
+                IsNvidiaPickerOpen = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Notify($"Download failed: {ex.Message}");
+            AppendLog($"\n[ERROR] NVIDIA Driver Install failed: {ex.Message}");
+        }
+        finally
+        {
+            IsDownloadingNvidiaDriver = false;
+        }
+    }
+
+    [RelayCommand]
+    public void OpenNvidiaAdvancedSearch()
+    {
+        _graphicsDriverService.OpenNvidiaAdvancedSearch();
+        Notify("Opening NVIDIA Advanced Driver Search in browser...");
     }
 
     public void ShowWebLinkWarning(string title, string message, string url)

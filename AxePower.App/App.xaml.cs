@@ -207,6 +207,7 @@ public partial class App : Application
         services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
         services.AddSingleton<LanDropService>();
         services.AddSingleton<FirmwareUpdateService>();
+        services.AddSingleton<GraphicsDriverService>();
         services.AddSingleton<SystemTelemetryService>();
 
         // Uninstaller Pro — Core Services

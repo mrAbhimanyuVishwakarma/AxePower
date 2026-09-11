@@ -45,6 +45,7 @@ public class DependencyInjectionTests
         services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
         services.AddSingleton<LanDropService>();
         services.AddSingleton<FirmwareUpdateService>();
+        services.AddSingleton<GraphicsDriverService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();

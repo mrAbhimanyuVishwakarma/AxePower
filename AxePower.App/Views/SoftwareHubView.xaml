@@ -176,6 +176,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Left: Illustrated Monitor + Download Icon -->
@@ -206,6 +207,92 @@
                                             <TextBlock Text="Check for updates" FontWeight="SemiBold" FontSize="13"/>
                                         </StackPanel>
                                     </Button>
+                                </StackPanel>
+
+                                <!-- Right: Graphics Driver Centre (auto-detected adapters only) -->
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" MaxWidth="470" Margin="28,0,0,0"
+                                            Visibility="{Binding HasGraphicsAdapters, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel Orientation="Horizontal" Margin="2,0,0,8">
+                                        <TextBlock Text="&#xF211;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="GRAPHICS DRIVERS" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <ItemsControl ItemsSource="{Binding GraphicsAdapters}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource CardBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource CardBorderBrush}"
+                                                        BorderThickness="1" CornerRadius="10" Padding="14,11" Margin="0,0,0,8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!-- Vendor accent bar -->
+                                                        <Border Grid.Column="0" Width="3" CornerRadius="2" Background="{Binding AccentColorHex}" Margin="0,1,12,1"/>
+
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                                                <TextBlock Text="{Binding VendorName}" FontSize="13" FontWeight="SemiBold" Foreground="{Binding AccentColorHex}" VerticalAlignment="Center"/>
+                                                                <Border Background="#22FFFFFF" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding TypeLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                                </Border>
+                                                            </StackPanel>
+                                                            <TextBlock Text="{Binding Name}" FontSize="11.5" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis" MaxWidth="250" HorizontalAlignment="Left" Margin="0,0,0,2"/>
+                                                            <TextBlock Text="{Binding DriverDisplay}" FontSize="10.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                            <!-- NVIDIA Control Panel (second Store app from the same vendor) -->
+                                                            <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                                                    Command="{Binding DataContext.OpenGraphicsCompanionAppCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="{Binding CompanionAppName, StringFormat='Open {0} in the Microsoft Store'}"
+                                                                    Visibility="{Binding HasCompanionApp, Converter={StaticResource BoolToVis}}"
+                                                                    Padding="9,7" Margin="0,0,6,0" FontSize="11">
+                                                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                                            </Button>
+                                                            <!-- NVIDIA Version Selector / Rollback Button -->
+                                                            <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                                                    Command="{Binding DataContext.OpenNvidiaPickerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Select specific Game Ready driver version or rollback if the new update has bugs or stuttering"
+                                                                    Visibility="{Binding IsNvidia, Converter={StaticResource BoolToVis}}"
+                                                                    Padding="10,7" Margin="0,0,6,0" FontSize="11">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="Versions" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Button>
+
+                                                            <!-- Official download page — only when there is no Store app for this vendor -->
+                                                            <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                                                    Command="{Binding DataContext.OpenGraphicsVendorSiteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Open the official driver download page"
+                                                                    Visibility="{Binding ShowOfficialSiteFallback, Converter={StaticResource BoolToVis}}"
+                                                                    Padding="9,7" Margin="0,0,6,0" FontSize="11">
+                                                                <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                                            </Button>
+                                                            <Button Style="{DynamicResource PrimaryButtonStyle}"
+                                                                    Command="{Binding DataContext.UpdateGraphicsDriverCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    IsEnabled="{Binding DataContext.IsInstallingGraphicsDriver, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBool}}"
+                                                                    ToolTip="{Binding ToolName, StringFormat='Install or update via {0}'}"
+                                                                    Padding="14,7" FontSize="11.5">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="Install" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -561,15 +648,15 @@
                                                 </StackPanel>
                                             </Button>
 
-                                            <!-- Install Button (When not installed, via PowerShell) -->
+                                            <!-- Install Button (When not installed, via PowerShell or portable downloader) -->
                                             <Button Style="{DynamicResource PrimaryButtonStyle}"
                                                     Command="{Binding InstallCommand}"
                                                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"
                                                     Visibility="{Binding IsNotInstalled, Converter={StaticResource BoolToVis}}"
-                                                    Padding="18,8" FontSize="12.5" ToolTip="Install this software via PowerShell">
+                                                    Padding="18,8" FontSize="12.5" ToolTip="{Binding InstallButtonTooltip}">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Install" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding InstallButtonText}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
 
@@ -580,17 +667,17 @@
                                                     Padding="14,8" FontSize="12.5" Margin="0,0,6,0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Open" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding OpenButtonText}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
 
-                                            <!-- Update Button (When installed, via PowerShell) -->
+                                            <!-- Update Button (When installed, via PowerShell or portable updater) -->
                                             <Button Style="{DynamicResource SecondaryButtonStyle}"
                                                     Command="{Binding UpdateCommand}"
                                                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"
                                                     Visibility="{Binding CanUpdate, Converter={StaticResource BoolToVis}}"
                                                     Padding="14,8" FontSize="12.5" Margin="0,0,6,0"
-                                                    ToolTip="Update this software to the latest release via PowerShell">
+                                                    ToolTip="{Binding UpdateButtonTooltip}">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
                                                     <TextBlock Text="Update" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -804,6 +891,145 @@
                         <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding ConfirmOpenWebLinkCommand}" Content="Open in Browser" Padding="20,9"/>
                     </StackPanel>
                 </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- NVIDIA Driver Version Selector & Rollback Modal Dialog -->
+        <Grid Grid.Row="0" Grid.RowSpan="4" Visibility="{Binding IsNvidiaPickerOpen, Converter={StaticResource BoolToVis}}"
+              Background="#D9000000" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Panel.ZIndex="1000">
+            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="1" CornerRadius="16" Width="620" Padding="28,24" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="35" ShadowDepth="8" Opacity="0.8" Color="#000000"/>
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Header -->
+                        <RowDefinition Height="Auto"/> <!-- Adapter info & variant toggle -->
+                        <RowDefinition Height="Auto"/> <!-- Dropdown Version Picker -->
+                        <RowDefinition Height="Auto"/> <!-- Selected Driver Notes Card -->
+                        <RowDefinition Height="Auto"/> <!-- Footer Actions -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- NVIDIA Badge Icon -->
+                        <Border Grid.Column="0" Width="44" Height="44" CornerRadius="12" Background="#1A76B900" BorderBrush="#3376B900" BorderThickness="1" Margin="0,0,14,0" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#76B900" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                <TextBlock Text="NVIDIA Driver Version &amp; Rollback" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,8,0"/>
+                                <Border Background="#1A76B900" BorderBrush="#3376B900" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                    <TextBlock Text="GAME READY" FontSize="9.5" FontWeight="Bold" Foreground="#76B900"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Choose a proven stable version or rollback if recent updates cause stuttering or bugs." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+
+                        <!-- Close ✕ -->
+                        <Button Grid.Column="2" Command="{Binding CloseNvidiaPickerCommand}" Width="30" Height="30" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top">
+                            <TextBlock Text="✕" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Current GPU Status Bar -->
+                    <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding SelectedNvidiaAdapter.Name}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="{Binding SelectedNvidiaAdapter.DriverDisplay, StringFormat='Installed: {0}'}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,1,0,0"/>
+                            </StackPanel>
+
+                            <!-- Laptop vs Desktop Toggle -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Variant:" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <RadioButton Content="Laptop" IsChecked="{Binding IsNotebookVariant}" Style="{StaticResource CategoryChipStyle}" Margin="0,0,6,0"/>
+                                <RadioButton Content="Desktop" IsChecked="{Binding IsNotebookVariant, Converter={StaticResource InverseBool}}" Style="{StaticResource CategoryChipStyle}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Dropdown Version Selector -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,14">
+                        <TextBlock Text="CHOOSE VERSION TO INSTALL OR ROLLBACK" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,6"/>
+                        <ComboBox Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding CuratedNvidiaDrivers}" SelectedItem="{Binding SelectedNvidiaDriver}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Version, StringFormat='v{0}'}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding ReleaseDate}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" CornerRadius="4" Padding="6,1" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Badge}" FontSize="10" FontWeight="Bold" Foreground="{Binding BadgeColorHex}"/>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Selected Driver Details Card -->
+                    <Border Grid.Row="3" Background="#0B0F17" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16,14" Margin="0,0,0,20">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <Border Background="#1A3B82F6" BorderBrush="#333B82F6" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="0,0,10,0">
+                                    <TextBlock Text="{Binding SelectedNvidiaDriver.Badge}" FontSize="10.5" FontWeight="Bold" Foreground="{Binding SelectedNvidiaDriver.BadgeColorHex}"/>
+                                </Border>
+                                <TextBlock Text="{Binding SelectedNvidiaDriver.ReleaseDate, StringFormat='Released: {0}'}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding SelectedNvidiaDriver.Description}" FontSize="13" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,8"/>
+                            <TextBlock Text="Direct clean WHQL installer downloaded straight from official NVIDIA content delivery servers." FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" FontStyle="Italic"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Footer Actions -->
+                    <Grid Grid.Row="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Link to NVIDIA Advanced Driver Search -->
+                        <Button Grid.Column="0" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenNvidiaAdvancedSearchCommand}" Padding="12,8" FontSize="12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="NVIDIA Archive Search" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding CloseNvidiaPickerCommand}" Content="Cancel" Padding="16,8" Margin="0,0,8,0"/>
+                            <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding InstallSelectedNvidiaDriverCommand}"
+                                    IsEnabled="{Binding IsDownloadingNvidiaDriver, Converter={StaticResource InverseBool}}"
+                                    Padding="20,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Download &amp; Run Installer" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

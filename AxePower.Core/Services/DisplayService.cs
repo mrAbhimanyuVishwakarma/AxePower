@@ -194,7 +194,128 @@ public class DisplayService
         uint numModeInfoArrayElements,
         DISPLAYCONFIG_MODE_INFO[] modeInfoArray,
         uint flags);
+
+    // HDR / wide-gamut state for a display target
+    private const uint DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct DISPLAYCONFIG_DEVICE_INFO_HEADER
+    {
+        public uint type;
+        public uint size;
+        public LUID adapterId;
+        public uint id;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO
+    {
+        public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+        public uint value;              // bit 0 advancedColorSupported, bit 1 advancedColorEnabled
+        public uint colorEncoding;
+        public uint bitsPerColorChannel;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO requestPacket);
+
+    [DllImport("user32.dll")]
+    private static extern int GetDisplayConfigBufferSizes(
+        uint flags,
+        ref uint numPathArrayElements,
+        ref uint numModeInfoArrayElements);
     #endregion
+
+    /// <summary>Primary display state shown on the dashboard status bar.</summary>
+    public class DisplayInfo
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public int CurrentRefreshRate { get; set; }
+
+        /// <summary>"On", "Off" or "Not supported".</summary>
+        public string HdrStatus { get; set; } = "Not supported";
+
+        public string ResolutionDisplay => Width > 0 && Height > 0 ? $"{Width}x{Height}" : "Unknown";
+
+        /// <summary>The rate the display is actually running at.</summary>
+        public string RefreshDisplay => CurrentRefreshRate > 0 ? $"{CurrentRefreshRate}Hz" : string.Empty;
+    }
+
+    /// <summary>Reads the primary display's real resolution, refresh rates and HDR state.</summary>
+    public DisplayInfo GetDisplayInfo()
+    {
+        var info = new DisplayInfo();
+
+        try
+        {
+            var mode = new DEVMODE();
+            mode.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
+            if (EnumDisplaySettings(null!, ENUM_CURRENT_SETTINGS, ref mode))
+            {
+                info.Width = mode.dmPelsWidth;
+                info.Height = mode.dmPelsHeight;
+                info.CurrentRefreshRate = mode.dmDisplayFrequency;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"[Display] Could not read current display mode: {ex.Message}");
+        }
+
+        info.HdrStatus = GetHdrStatus();
+        return info;
+    }
+
+    /// <summary>
+    /// Queries the active display paths for HDR support. Returns "On" when any display has
+    /// it enabled, "Off" when supported but disabled, otherwise "Not supported".
+    /// </summary>
+    private string GetHdrStatus()
+    {
+        try
+        {
+            uint pathCount = 0, modeCount = 0;
+            if (GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS, ref pathCount, ref modeCount) != 0)
+                return "Not supported";
+
+            var paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
+            var modes = new DISPLAYCONFIG_MODE_INFO[modeCount];
+            if (QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS, ref pathCount, paths, ref modeCount, modes, IntPtr.Zero) != 0)
+                return "Not supported";
+
+            bool supported = false;
+            for (int i = 0; i < pathCount; i++)
+            {
+                var request = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO
+                {
+                    header = new DISPLAYCONFIG_DEVICE_INFO_HEADER
+                    {
+                        type = DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO,
+                        size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO)),
+                        adapterId = paths[i].targetInfo.adapterId,
+                        id = paths[i].targetInfo.id
+                    }
+                };
+
+                if (DisplayConfigGetDeviceInfo(ref request) != 0)
+                    continue;
+
+                bool advancedColorSupported = (request.value & 0x1) != 0;
+                bool advancedColorEnabled = (request.value & 0x2) != 0;
+
+                if (advancedColorEnabled) return "On";
+                if (advancedColorSupported) supported = true;
+            }
+
+            return supported ? "Off" : "Not supported";
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"[Display] HDR query failed: {ex.Message}");
+            return "Not supported";
+        }
+    }
 
     public DisplayService(LogService logService)
     {

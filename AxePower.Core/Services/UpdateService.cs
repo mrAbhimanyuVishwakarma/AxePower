@@ -35,7 +35,7 @@ public class UpdateService
     }
 
     /// <summary>Single fallback when no assembly version is available; the assembly version is the source of truth.</summary>
-    public const string FallbackVersion = "1.6.0";
+    public const string FallbackVersion = "1.7.0";
 
     public string GetCurrentVersionString()
     {

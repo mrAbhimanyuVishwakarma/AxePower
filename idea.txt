@@ -2,6 +2,8 @@
 
 ---
 
+new option to add in software as to select which version to install for nvidia if new update is not good.
+
 ## ⚡ High-Priority Features (v1.5 - v2.0 Roadmap)
 
 ### 1. ☕ Keep Awake / Caffeine Mode (PowerToys Awake Style)
@@ -166,6 +168,42 @@
   * 🚀 **GPU Priority & HAGS Orchestration:** Set foreground game process scheduling priority to `High` / `Real-Time` with DirectX GPU preemption.
   * 🔕 **Windows Focus Assist & DND Auto-Trigger:** Automatically silence Windows 11 notifications, banners, and lock Windows Update driver installs during active gameplay.
   * 🎧 **Auto Audio Profile Switch:** Auto-apply competitive equalizer profiles (e.g. footsteps boost) or Dolby Atmos 3D audio when entering Game Mode.
+
+---
+
+### 14. 🪟 Winhance Engine Integration & Windows Optimization Suite (memstechtips/Winhance Blueprint)
+* **Description:** Advanced system enhancement, transparency, unattended deployment, and persistent update protection inspired by [Winhance](https://github.com/memstechtips/Winhance) (`winhance.net`).
+* **Key Capabilities & Synergies with AxePower:**
+  * 🛡️ **Windows Update Driver Lock & Bloatware Re-Install Immunity Shield:**
+    * **Driver Overwrite Protection:** Prevents Windows Update from silently overwriting custom OEM/NVIDIA/AMD GPU or audio drivers with generic Microsoft DCH drivers (`HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate` -> `ExcludeWUDriversInQualityUpdate = 1`).
+    * **Anti-Bloat Re-provisioning:** Uses scheduled de-provisioning hooks and `DisableWindowsConsumerFeatures = 1` so that monthly Windows cumulative updates cannot resurrect deleted UWP bloatware (Clipchamp, Copilot, Edge web apps, sponsored tiles).
+  * 🔍 **Interactive "Technical Inspector" & Registry Transparency Drawer (Zero Black Boxes):**
+    * Expandable "Inspect Tweak Details" flyout for every toggle in System Optimizer, System Doctor, and Game Mode.
+    * Displays exact Registry Key Paths, Property Names, Old vs New values, PowerShell equivalents, Service dependencies, and reboot requirements. Builds 100% trust with power users and system administrators.
+  * ⚡ **Core Isolation & VBS (Virtualization-Based Security) Gaming Mode Switcher:**
+    * 1-click toggle for Hypervisor-Enforced Code Integrity (HVCI) and Virtualization-Based Security (VBS) (`HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity` -> `Enabled = 0/1`).
+    * Unlocks 5%–15% CPU frame rate gains and lower 1% low frame drops in esports titles (CS2, Valorant, Warzone) during Beast/Game Mode, with 1-click restore for maximum security in Smart/Eco Mode.
+  * 🧼 **Clean Start Menu & Windows AI / Copilot Neutralizer:**
+    * **1-Click Clean Start:** Unpins all default sponsored bloatware tiles and hides the Windows 11 "Recommended" section (`HideRecommendedSection = 1`).
+    * **Disable Bing Web Search in Start:** Eliminates Start menu opening lag and web query latency by confining search strictly to local applications and files (`DisableSearchBoxSuggestions = 1`, `BingSearchEnabled = 0`).
+    * **AI Background Agent Disablement:** Strips background NPU/CPU activity for Windows Recall and telemetry analysis (`DisableAIDataAnalysis = 1`, `TurnOffWindowsCopilot = 1`).
+  * 📁 **Power-User File Explorer Studio & "Take Ownership" Integration:**
+    * **Take Ownership Context Menu:** Adds a 1-click "Take Ownership" right-click action for stubborn permission-locked files, game directories, and mod folders.
+    * **Explorer Quality-of-Life:** 1-click toggles for Show File Extensions (`HideFileExt = 0`), Show Hidden Files (`Hidden = 1`), and Compact View (`UseCompactMode = 1`).
+    * **Restart Windows Explorer:** Instant 1-click Explorer restart button in Title Bar / Tray for fast shell refreshing.
+  * 📜 **Visual Change Audit Timeline & Granular 1-Click Rollback:**
+    * Upgrades AxePower's log viewer into an interactive **Audit Trail & Rollback Timeline**.
+    * Chronologically logs every applied tweak with timestamp, user ID, exact before/after registry diffs, and provides an individual "Revert This Tweak" button backed by `%LocalAppData%\AxePower\tweak_rollback.json`.
+  * 📦 **AxePower Fresh-Start Builder & Unattended Deployment (`autounattend.xml`):**
+    * **Builder / Dry-Run Mode:** Configure AxePower settings, power plans, refresh rates, and debloat rules without immediately modifying the host machine.
+    * **Unattended Answer File Generator:** Export configurations into a standardized `autounattend.xml` file or post-install bootstrap script for zero-touch clean Windows installations on new laptops and gaming rigs.
+  * 🎨 **Dynamic Visual Effects (DWM) Performance Scaling:**
+    * Dynamic desktop composition scaling tied to AxePower Power Modes:
+      * **Eco Mode:** Automatically disables heavy drop shadows, window animations, and acrylic blurs to reduce GPU/DWM power draw and maximize battery life.
+      * **Smart / Beast Mode:** Restores smooth Fluent animations and font smoothing (`FontSmoothing = 2`) for a crisp visual experience.
+  * ⚙️ **Granular Windows Services Optimizer & Live State Inspector:**
+    * Visual service controller with live state indicators (Running, Stopped, Disabled) and risk ratings for non-essential services (`SysMain`, `WSearch`, `DiagTrack`, `MapsBroker`, `Spooler`, `Xbox Services`).
+* **Reference:** [Winhance (memstechtips/Winhance)](https://github.com/memstechtips/Winhance) & [winhance.net](https://winhance.net)
 
 ---
 

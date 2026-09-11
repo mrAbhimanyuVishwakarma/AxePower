@@ -7,12 +7,14 @@
         xmlns:viewmodels="clr-namespace:AxePower.App.ViewModels"
         xmlns:views="clr-namespace:AxePower.App.Views"
         xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:converters="clr-namespace:AxePower.App.Converters"
         mc:Ignorable="d"
         Title="AxePower" Height="840" Width="1280" MinWidth="1024" MinHeight="720"
         WindowStyle="SingleBorderWindow" AllowsTransparency="False" ResizeMode="CanResize"
         Background="{DynamicResource WindowBackgroundBrush}"
         WindowStartupLocation="CenterScreen"
-        Icon="/Resources/AxePower_white.ico">
+        Icon="/Resources/AxePower_white.ico"
+        Topmost="{Binding DashboardVm.IsWindowTopmost}">
         
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="112" GlassFrameThickness="0" CornerRadius="8" ResizeBorderThickness="6" UseAeroCaptionButtons="False" />
@@ -57,11 +59,13 @@
         </DataTemplate>
         
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
     </Window.Resources>
 
     <Grid Background="{DynamicResource WindowBackgroundBrush}">
         <!-- Subtle Glow Effects -->
-        <Ellipse Width="800" Height="800" Margin="-200,-300,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Opacity="0.1" IsHitTestVisible="False">
+        <Ellipse Width="800" Height="800" Margin="-200,-300,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Opacity="0.1" IsHitTestVisible="False"
+                 Visibility="{Binding DashboardVm.IsShrunk, Converter={StaticResource InverseBoolToVis}}">
             <Ellipse.Fill>
                 <RadialGradientBrush>
                     <GradientStop Color="#1A4A8A" Offset="0"/>
@@ -72,16 +76,18 @@
         
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="112"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
-            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Width="240"
+                    Visibility="{Binding DashboardVm.IsShrunk, Converter={StaticResource InverseBoolToVis}}"
+                    Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="96"/>
@@ -249,7 +255,8 @@
             </Border>
 
             <!-- Title Bar Region -->
-            <Grid Grid.Row="0" Grid.Column="1">
+            <Grid Grid.Row="0" Grid.Column="1" Height="112"
+                  Visibility="{Binding DashboardVm.IsShrunk, Converter={StaticResource InverseBoolToVis}}">
                 <!-- Battery Status Pill (3x Large Prominent Size: Live outline battery + percentage + power status) -->
                 <Border HorizontalAlignment="Left" VerticalAlignment="Center" Margin="40,0,0,0" Padding="24,14" CornerRadius="16" Background="{Binding BatteryVm.HeaderPillBackgroundBrush}" BorderBrush="{Binding BatteryVm.HeaderPillBorderBrush}" BorderThickness="1.5" WindowChrome.IsHitTestVisibleInChrome="True" DataContext="{Binding BatteryVm}" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
