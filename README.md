@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.6.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.7.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -18,10 +18,12 @@
 ## 🚀 Key Features
 
 - ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, **Beast**, and **Game** modes tailored for battery savings or extreme performance.
+- 🎮 **Game Mode Overhaul & Multi-Platform Library Scanner**: Comprehensive automatic scanner for **Steam**, **Epic Games**, **Xbox / PC Game Pass**, **Ubisoft Connect**, **EA App**, and **GOG Galaxy**. Dynamic high-resolution poster art (**SteamGridDB**) with aspect-ratio adaptive cards and responsive hover zoom.
+- 🕹️ **Controller Navigation (Xbox & PlayStation DualSense)**: Full gamepad-to-mouse emulation supporting Xbox (360 / One / Series X|S) and PlayStation (DualShock 4 / DualSense) controllers with in-app visual shortcut guides.
+- ⚡ **GPU Control Companion Integration**: Seamless 1-click companion launcher and auto-detection for **Lenovo Legion Toolkit**, **Lenovo Vantage**, **ASUS Armoury Crate**, and **MSI Center**.
 - 📊 **Live Hardware & Task Manager Performance Monitor**: Real-time 2x2 performance grid tracking **CPU** clock, **GPU** 3D engine utilization & temperature, **RAM** allocation, and **Internet** transfer speeds with precise zero-baseline sparkline graphs.
 - 🔋 **24-Hour Battery History**: Dedicated full-width battery diagnostics tracking 24-hour battery percentage trends with time-axis markers (`24h ago`, `12h ago`, `Now`).
 - ⚙️ **Smart Performance Defaults**: Out-of-the-box defaults set to **Smart Mode** for AC power and **Eco Mode** on battery, with custom dropdown configuration in Settings.
-- 🎮 **Controller Navigation (Gopher360)**: Full gamepad-to-mouse emulation with custom key shortcuts in Game Mode and smooth horizontal scrollable guide tabs.
 - 📌 **Steam-Style Taskbar Context Menu**: Dark Steam slate aesthetic with full-width dividers, direct 1-click power mode switching (Eco, Smart, Beast, Game Mode), and quick launcher shortcuts.
 - 📜 **Steam Update Banner & Scrollable Patch Notes**: Steam Cyan/Blue bottom banner with complete scrollable changelog feed, reaction bar (`👍 Rate Up`, `👎`, `💬 Discuss`, `🔗 Share`), and smooth scroll arrows.
 - 🚀 **Silent Background Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads in the background with zero disruption, and provides 1-click "Restart & Install".
@@ -52,7 +54,7 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **CONTROL** | | |
 | **Dashboard** | 📊 | Real-time system monitoring, power mode switching (Eco, Smart, Beast, Game Mode), live 2x2 performance grid (CPU, GPU, RAM, Internet), and 24h battery history. |
 | **Auto Switch** | 🔄 | Configure automated rules for AC (Plugged In) and DC (Battery) states and dynamic refresh rate switching. |
-| **Game Mode** | 🎮 | Manage background app suspension, game detection, and Controller Navigation (Gopher360). |
+| **Game Mode** | 🎮 | Multi-platform game library scanner, SteamGridDB vertical posters, GPU control companion, background app suspension, and Xbox / PS5 Controller Navigation. |
 | **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends with custom icon cards. |
 | **CONNECTION** | | |
 | **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |

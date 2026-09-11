@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.6.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.7.0-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -31,6 +31,22 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v1.7.0
+
+- 🎮 **Game Mode Redesign & Game Library Scanner**:
+  - **Comprehensive Multi-Platform Game Scanner**: Automatically detects and catalogs installed games across **Steam**, **Epic Games Launcher**, **Xbox / Microsoft Store (Game Pass)**, **Ubisoft Connect**, **EA App**, and **GOG Galaxy**.
+  - **High-Resolution Poster & Box Art (SteamGridDB)**: Dynamic poster artwork integration with local caching and graceful fallback graphics for all discovered titles.
+  - **Aspect-Ratio Game Cards**: Responsive grid presentation with fluid hover scaling, one-click launcher, and quick folder browsing.
+- 🕹️ **Controller Navigation (Xbox & PlayStation)**:
+  - Full gamepad navigation support for **Xbox (360 / One / Series X|S)** and **PlayStation (DualShock 4 / DualSense)** controllers.
+  - In-app interactive visual controller guide with button mappings for mouse movement, clicking, scrolling, and system controls.
+- ⚡ **GPU Control Companion Integration**:
+  - Direct integration and quick launch support for OEM hardware suites: **Lenovo Legion Toolkit**, **Lenovo Vantage**, **ASUS Armoury Crate**, and **MSI Center**.
+- 🛠️ **Performance & Automation Improvements**:
+  - Enhanced background service suspension during active gaming sessions and dynamic mode automation tests.
 
 ---
 
