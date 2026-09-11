@@ -74,12 +74,12 @@
         <!-- ─── 2. Segmented Tab Switcher (4 Equal-Sized Buttons) ─────────────── -->
         <Border Grid.Row="1" Padding="40,0,40,10">
             <UniformGrid Columns="4" HorizontalAlignment="Stretch">
-                <RadioButton Content="📂 LAN Drop (Wi-Fi Share)" Style="{StaticResource HubTabStyle}"
-                             IsChecked="{Binding IsLanDropTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="LanDrop" Margin="0,0,8,0"/>
-                <RadioButton Content="📱 Screen Mirror &amp; Control" Style="{StaticResource HubTabStyle}"
+                <RadioButton Content="📱 Phone Control" Style="{StaticResource HubTabStyle}"
                              IsChecked="{Binding IsScreenMirrorTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="ScreenMirror" Margin="0,0,8,0"/>
                 <RadioButton Content="🖥️ Second Monitor" Style="{StaticResource HubTabStyle}"
                              IsChecked="{Binding IsSecondMonitorTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="SecondMonitor" Margin="0,0,8,0"/>
+                <RadioButton Content="📂 LAN Drop" Style="{StaticResource HubTabStyle}"
+                             IsChecked="{Binding IsLanDropTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="LanDrop" Margin="0,0,8,0"/>
                 <RadioButton Content="🔗 Phone Link" Style="{StaticResource HubTabStyle}"
                              IsChecked="{Binding IsPhoneLinkTabActive, Mode=OneWay}" Command="{Binding SetTabCommand}" CommandParameter="PhoneLink" Margin="0,0,0,0"/>
             </UniformGrid>

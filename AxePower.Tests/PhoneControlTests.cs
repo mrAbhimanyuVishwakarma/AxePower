@@ -43,16 +43,16 @@ public class PhoneControlTests
 
         var vm = new PhoneHubViewModel(lan, android, notif);
 
-        Assert.Equal("LanDrop", vm.ActiveTab);
+        Assert.Equal("ScreenMirror", vm.ActiveTab);
         Assert.False(vm.IsServerRunning);
         Assert.NotEmpty(vm.AvailableResolutions);
         Assert.NotEmpty(vm.AvailableFps);
 
-        vm.SetTab("ScreenMirror");
-        Assert.Equal("ScreenMirror", vm.ActiveTab);
-
         vm.SetTab("LanDrop");
         Assert.Equal("LanDrop", vm.ActiveTab);
+
+        vm.SetTab("ScreenMirror");
+        Assert.Equal("ScreenMirror", vm.ActiveTab);
     }
 
     [Fact]

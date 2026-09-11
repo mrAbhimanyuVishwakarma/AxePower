@@ -30,7 +30,10 @@
     <Resource Include="Resources\icon_smart.png" />
     <Resource Include="Resources\Gamemode.png" />
     <Resource Include="Resources\Gamemode2.png" />
+    <Resource Include="Resources\xbox-controller.png" />
+    <Resource Include="Resources\ps5-controller.png" />
     <Resource Include="Resources\icons\*.png" />
+    <Resource Include="Resources\Posters\*.jpg" />
   </ItemGroup>
 
   <ItemGroup>

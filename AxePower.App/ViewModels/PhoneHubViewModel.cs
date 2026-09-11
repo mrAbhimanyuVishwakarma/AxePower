@@ -35,7 +35,7 @@ public partial class PhoneHubViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsScreenMirrorTabActive))]
     [NotifyPropertyChangedFor(nameof(IsSecondMonitorTabActive))]
     [NotifyPropertyChangedFor(nameof(IsPhoneLinkTabActive))]
-    private string _activeTab = "LanDrop"; // "LanDrop", "ScreenMirror", "SecondMonitor", "PhoneLink"
+    private string _activeTab = "ScreenMirror"; // "ScreenMirror", "SecondMonitor", "LanDrop", "PhoneLink"
 
     public bool IsLanDropTabActive => ActiveTab == "LanDrop";
     public bool IsScreenMirrorTabActive => ActiveTab == "ScreenMirror";
