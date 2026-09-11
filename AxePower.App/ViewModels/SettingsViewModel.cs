@@ -272,7 +272,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly UpdateService? _updateService;
     private readonly BatteryService? _batteryService;
 
-    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.6.0";
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.7.0";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]

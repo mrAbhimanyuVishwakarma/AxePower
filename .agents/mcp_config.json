@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "penpot": {
+      "url": "https://design.penpot.app/mcp/stream?userToken=eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2R0NNIn0.yoc9mfA7lRD_WfcmFuSbLQLNM3B8BBasTpdF0y1YU0oyYdGF4KguZA.G-Edww1hzVLFTmZx.MGrCCb2Yrg_6K9v-F7ZTEbmDwbfDATQa0k7YpdA6rX8EHfZWmPmzbumJBTjdLbinGy3YxbQXKKzX7KpNCPOBdSsoVWYUdGYGWLAVpiLPQ9mQXR4g24m70HKejhhO7RWEnl4nFDPCwIxc-HOM00A-a0annEttuDE-ToemG48gNCgBFjJANTpe_SP8oFRCdBhuonT3gE_pd9IT.K_83H5iuG1kDWRa-X-o38w",
+      "serverUrl": "https://design.penpot.app/mcp/stream?userToken=eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2R0NNIn0.yoc9mfA7lRD_WfcmFuSbLQLNM3B8BBasTpdF0y1YU0oyYdGF4KguZA.G-Edww1hzVLFTmZx.MGrCCb2Yrg_6K9v-F7ZTEbmDwbfDATQa0k7YpdA6rX8EHfZWmPmzbumJBTjdLbinGy3YxbQXKKzX7KpNCPOBdSsoVWYUdGYGWLAVpiLPQ9mQXR4g24m70HKejhhO7RWEnl4nFDPCwIxc-HOM00A-a0annEttuDE-ToemG48gNCgBFjJANTpe_SP8oFRCdBhuonT3gE_pd9IT.K_83H5iuG1kDWRa-X-o38w"
+    }
+  }
+}

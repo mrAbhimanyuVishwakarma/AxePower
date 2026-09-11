@@ -15,12 +15,34 @@ public enum ControllerNavigationState
     Failed
 }
 
+public enum ConnectedGamepadType
+{
+    None,
+    Xbox,
+    PlayStation5
+}
+
 /// <summary>
 /// Authentic Gopher360 Engine directly ported into C# for AxePower.
 /// Provides 100% native, offline, 150 FPS sub-pixel smoothed controller-to-mouse and keyboard navigation.
 /// </summary>
 public class ControllerNavigationService
 {
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RAWINPUTDEVICELIST
+    {
+        public IntPtr hDevice;
+        public uint dwType;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetRawInputDeviceList(IntPtr pRawInputDeviceList, ref uint puiNumDevices, uint cbSize);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern uint GetRawInputDeviceInfo(IntPtr hDevice, uint uiCommand, IntPtr pData, ref uint pcbSize);
+
+    private const uint RIDI_DEVICENAME = 0x20000007;
+    private const uint RIM_TYPEHID = 2;
     private readonly LogService _logService;
     private CancellationTokenSource? _cts;
     private Task? _pollingTask;
@@ -231,17 +253,22 @@ public class ControllerNavigationService
     public async Task<ControllerNavigationState> StopAsync()
     {
         _isRunning = false;
-        if (_cts != null)
+        var cts = _cts;
+        if (cts != null)
         {
-            _cts.Cancel();
-            _cts.Dispose();
-            _cts = null;
+            try { cts.Cancel(); } catch { }
         }
 
         if (_pollingTask != null)
         {
             try { await _pollingTask; } catch { }
             _pollingTask = null;
+        }
+
+        if (cts != null)
+        {
+            try { cts.Dispose(); } catch { }
+            _cts = null;
         }
 
         _logService.LogInfo("[ControllerNavigation] Gopher360 navigation stopped.");
@@ -258,6 +285,90 @@ public class ControllerNavigationService
         {
             return await StartAsync(ct);
         }
+    }
+
+    public bool CheckXInputConnected()
+    {
+        if (_xinputGetState == null)
+        {
+            InitializeXInput();
+        }
+
+        if (_xinputGetState == null) return false;
+
+        for (int i = 0; i < 4; i++)
+        {
+            var state = new XINPUT_STATE();
+            if (_xinputGetState(i, ref state) == 0) // ERROR_SUCCESS == 0
+                return true;
+        }
+
+        return false;
+    }
+
+    public ConnectedGamepadType DetectConnectedGamepad()
+    {
+        // 1. Check for Sony PlayStation DualSense / DualShock devices via RawInput
+        try
+        {
+            uint deviceCount = 0;
+            uint structSize = (uint)Marshal.SizeOf<RAWINPUTDEVICELIST>();
+            if (GetRawInputDeviceList(IntPtr.Zero, ref deviceCount, structSize) == 0 && deviceCount > 0)
+            {
+                IntPtr pList = Marshal.AllocHGlobal((int)(structSize * deviceCount));
+                try
+                {
+                    if (GetRawInputDeviceList(pList, ref deviceCount, structSize) != uint.MaxValue)
+                    {
+                        for (int i = 0; i < deviceCount; i++)
+                        {
+                            var item = Marshal.PtrToStructure<RAWINPUTDEVICELIST>(pList + (int)(i * structSize));
+                            if (item.dwType == RIM_TYPEHID)
+                            {
+                                uint nameLen = 0;
+                                GetRawInputDeviceInfo(item.hDevice, RIDI_DEVICENAME, IntPtr.Zero, ref nameLen);
+                                if (nameLen > 0)
+                                {
+                                    IntPtr pName = Marshal.AllocHGlobal((int)nameLen * 2);
+                                    try
+                                    {
+                                        if (GetRawInputDeviceInfo(item.hDevice, RIDI_DEVICENAME, pName, ref nameLen) != uint.MaxValue)
+                                        {
+                                            string? devName = Marshal.PtrToStringAuto(pName);
+                                            if (!string.IsNullOrEmpty(devName))
+                                            {
+                                                string upper = devName.ToUpperInvariant();
+                                                if (upper.Contains("VID_054C") || upper.Contains("VID&0002054C") || upper.Contains("DUALSENSE") || upper.Contains("PLAYSTATION"))
+                                                {
+                                                    return ConnectedGamepadType.PlayStation5;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        Marshal.FreeHGlobal(pName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(pList);
+                }
+            }
+        }
+        catch { }
+
+        // 2. Check for XInput / Xbox compatible controller
+        if (CheckXInputConnected())
+        {
+            return ConnectedGamepadType.Xbox;
+        }
+
+        return ConnectedGamepadType.None;
     }
 
     private void PollingLoop(CancellationToken token)
@@ -286,150 +397,165 @@ public class ControllerNavigationService
             lastIteration[buttonMask] = down;
         }
 
-        while (!token.IsCancellationRequested && _isRunning)
+        try
         {
-            bool controllerFound = false;
-
-            for (int i = 0; i < 4; i++)
+            while (!token.IsCancellationRequested && _isRunning)
             {
-                var state = new XINPUT_STATE();
-                int res = _xinputGetState!(i, ref state);
-                if (res == 0) // Controller connected
+                bool controllerFound = false;
+
+                for (int i = 0; i < 4; i++)
                 {
-                    controllerFound = true;
-                    var gp = state.Gamepad;
-                    ushort buttons = gp.wButtons;
-
-                    // 1. Mouse Movement (Left Thumbstick)
-                    short tx = gp.sThumbLX;
-                    short ty = gp.sThumbLY;
-
-                    if (Math.Abs(tx) > DEAD_ZONE || Math.Abs(ty) > DEAD_ZONE)
+                    var state = new XINPUT_STATE();
+                    int res = _xinputGetState!(i, ref state);
+                    if (res == 0) // Controller connected
                     {
-                        if (GetCursorPos(out POINT cursor))
+                        controllerFound = true;
+                        var gp = state.Gamepad;
+                        ushort buttons = gp.wButtons;
+
+                        // 1. Mouse Movement (Left Thumbstick)
+                        short tx = gp.sThumbLX;
+                        short ty = gp.sThumbLY;
+
+                        if (Math.Abs(tx) > DEAD_ZONE || Math.Abs(ty) > DEAD_ZONE)
                         {
-                            float x = cursor.X + xRest;
-                            float y = cursor.Y + yRest;
+                            if (GetCursorPos(out POINT cursor))
+                            {
+                                float x = cursor.X + xRest;
+                                float y = cursor.Y + yRest;
 
-                            float dx = GetDelta(tx, speed);
-                            float dy = GetDelta(ty, speed);
+                                float dx = GetDelta(tx, speed);
+                                float dy = GetDelta(ty, speed);
 
-                            x += dx;
-                            xRest = x - (float)((int)x);
+                                x += dx;
+                                y -= dy; // Invert Y axis for natural mouse feel
 
-                            y -= dy;
-                            yRest = y - (float)((int)y);
+                                int finalX = (int)Math.Round(x);
+                                int finalY = (int)Math.Round(y);
 
-                            SetCursorPos((int)x, (int)y);
+                                xRest = x - finalX;
+                                yRest = y - finalY;
+
+                                SetCursorPos(finalX, finalY);
+                            }
                         }
+                        else
+                        {
+                            xRest = 0.0f;
+                            yRest = 0.0f;
+                        }
+
+                        // 2. Mouse Wheel Scroll (Right Thumbstick)
+                        short ry = gp.sThumbRY;
+                        if (ry > SCROLL_DEAD_ZONE)
+                        {
+                            SendMouseEvent(MOUSEEVENTF_WHEEL, (uint)SCROLL_SPEED);
+                        }
+                        else if (ry < -SCROLL_DEAD_ZONE)
+                        {
+                            SendMouseEvent(MOUSEEVENTF_WHEEL, unchecked((uint)-SCROLL_SPEED));
+                        }
+
+                        // 3. Update Button Edge Detection
+                        SetButtonState(XINPUT_GAMEPAD_A, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_X, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_B, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_Y, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_LEFT_THUMB, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_RIGHT_THUMB, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_LEFT_SHOULDER, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_RIGHT_SHOULDER, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_DPAD_UP, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_DPAD_DOWN, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_DPAD_LEFT, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_DPAD_RIGHT, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_START, buttons);
+                        SetButtonState(XINPUT_GAMEPAD_BACK, buttons);
+
+                        // 4. Mouse Button Actions
+                        // A Button -> Left Mouse Click
+                        if (isDown[XINPUT_GAMEPAD_A]) SendMouseEvent(MOUSEEVENTF_LEFTDOWN);
+                        if (isUp[XINPUT_GAMEPAD_A]) SendMouseEvent(MOUSEEVENTF_LEFTUP);
+
+                        // X Button -> Right Mouse Click
+                        if (isDown[XINPUT_GAMEPAD_X]) SendMouseEvent(MOUSEEVENTF_RIGHTDOWN);
+                        if (isUp[XINPUT_GAMEPAD_X]) SendMouseEvent(MOUSEEVENTF_RIGHTUP);
+
+                        // Left Stick Click -> Middle Mouse Click
+                        if (isDown[XINPUT_GAMEPAD_LEFT_THUMB]) SendMouseEvent(MOUSEEVENTF_MIDDLEDOWN);
+                        if (isUp[XINPUT_GAMEPAD_LEFT_THUMB]) SendMouseEvent(MOUSEEVENTF_MIDDLEUP);
+
+                        // 5. Keyboard Navigation Mappings
+                        // B Button -> Enter
+                        if (isDown[XINPUT_GAMEPAD_B]) SendKeyboardEvent(VK_RETURN, 0);
+                        if (isUp[XINPUT_GAMEPAD_B]) SendKeyboardEvent(VK_RETURN, KEYEVENTF_KEYUP);
+
+                        // Y Button -> Open On-Screen Keyboard
+                        if (isDown[XINPUT_GAMEPAD_Y]) OpenOnScreenKeyboard();
+
+                        // Start Button -> Windows Key
+                        if (isDown[XINPUT_GAMEPAD_START]) SendKeyboardEvent(VK_LWIN, 0);
+                        if (isUp[XINPUT_GAMEPAD_START]) SendKeyboardEvent(VK_LWIN, KEYEVENTF_KEYUP);
+
+                        // Shoulders -> Browser Back / Forward
+                        if (isDown[XINPUT_GAMEPAD_LEFT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_BACK, 0);
+                        if (isUp[XINPUT_GAMEPAD_LEFT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_BACK, KEYEVENTF_KEYUP);
+                        if (isDown[XINPUT_GAMEPAD_RIGHT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_FORWARD, 0);
+                        if (isUp[XINPUT_GAMEPAD_RIGHT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_FORWARD, KEYEVENTF_KEYUP);
+
+                        // Triggers: Left Trigger = Space, Right Trigger = Backspace
+                        bool lTrigger = gp.bLeftTrigger > TRIGGER_DEAD_ZONE;
+                        if (lTrigger != lTriggerPrevious)
+                        {
+                            lTriggerPrevious = lTrigger;
+                            SendKeyboardEvent(VK_SPACE, lTrigger ? 0 : KEYEVENTF_KEYUP);
+                        }
+
+                        bool rTrigger = gp.bRightTrigger > TRIGGER_DEAD_ZONE;
+                        if (rTrigger != rTriggerPrevious)
+                        {
+                            rTriggerPrevious = rTrigger;
+                            SendKeyboardEvent(VK_BACK, rTrigger ? 0 : KEYEVENTF_KEYUP);
+                        }
+
+                        // D-Pad -> Arrow Keys
+                        if (isDown[XINPUT_GAMEPAD_DPAD_UP]) SendKeyboardEvent(VK_UP, 0);
+                        if (isUp[XINPUT_GAMEPAD_DPAD_UP]) SendKeyboardEvent(VK_UP, KEYEVENTF_KEYUP);
+
+                        if (isDown[XINPUT_GAMEPAD_DPAD_DOWN]) SendKeyboardEvent(VK_DOWN, 0);
+                        if (isUp[XINPUT_GAMEPAD_DPAD_DOWN]) SendKeyboardEvent(VK_DOWN, KEYEVENTF_KEYUP);
+
+                        if (isDown[XINPUT_GAMEPAD_DPAD_LEFT]) SendKeyboardEvent(VK_LEFT, 0);
+                        if (isUp[XINPUT_GAMEPAD_DPAD_LEFT]) SendKeyboardEvent(VK_LEFT, KEYEVENTF_KEYUP);
+
+                        if (isDown[XINPUT_GAMEPAD_DPAD_RIGHT]) SendKeyboardEvent(VK_RIGHT, 0);
+                        if (isUp[XINPUT_GAMEPAD_DPAD_RIGHT]) SendKeyboardEvent(VK_RIGHT, KEYEVENTF_KEYUP);
+
+                        // Speed cycle on Right Thumb Click
+                        if (isDown[XINPUT_GAMEPAD_RIGHT_THUMB])
+                        {
+                            if (Math.Abs(speed - SPEED_LOW) < 0.001f) speed = SPEED_MED;
+                            else if (Math.Abs(speed - SPEED_MED) < 0.001f) speed = SPEED_HIGH;
+                            else speed = SPEED_LOW;
+
+                            Vibrate(i, 20000, 150);
+                        }
+
+                        break; // Process primary active controller
                     }
-                    else
-                    {
-                        xRest = 0;
-                        yRest = 0;
-                    }
+                }
 
-                    // 2. Scrolling (Right Thumbstick)
-                    short ry = gp.sThumbRY;
-                    if (ry > SCROLL_DEAD_ZONE)
-                    {
-                        SendMouseEvent(MOUSEEVENTF_WHEEL, (uint)SCROLL_SPEED);
-                    }
-                    else if (ry < -SCROLL_DEAD_ZONE)
-                    {
-                        SendMouseEvent(MOUSEEVENTF_WHEEL, unchecked((uint)-SCROLL_SPEED));
-                    }
-
-                    // 3. Update button transition states
-                    SetButtonState(XINPUT_GAMEPAD_A, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_X, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_B, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_Y, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_LEFT_THUMB, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_RIGHT_THUMB, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_LEFT_SHOULDER, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_RIGHT_SHOULDER, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_START, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_BACK, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_DPAD_UP, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_DPAD_DOWN, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_DPAD_LEFT, buttons);
-                    SetButtonState(XINPUT_GAMEPAD_DPAD_RIGHT, buttons);
-
-                    // 4. Mouse Clicks
-                    // A Button -> Left Mouse Click
-                    if (isDown[XINPUT_GAMEPAD_A]) SendMouseEvent(MOUSEEVENTF_LEFTDOWN);
-                    if (isUp[XINPUT_GAMEPAD_A]) SendMouseEvent(MOUSEEVENTF_LEFTUP);
-
-                    // X Button -> Right Mouse Click
-                    if (isDown[XINPUT_GAMEPAD_X]) SendMouseEvent(MOUSEEVENTF_RIGHTDOWN);
-                    if (isUp[XINPUT_GAMEPAD_X]) SendMouseEvent(MOUSEEVENTF_RIGHTUP);
-
-                    // Left Stick Click -> Middle Mouse Click
-                    if (isDown[XINPUT_GAMEPAD_LEFT_THUMB]) SendMouseEvent(MOUSEEVENTF_MIDDLEDOWN);
-                    if (isUp[XINPUT_GAMEPAD_LEFT_THUMB]) SendMouseEvent(MOUSEEVENTF_MIDDLEUP);
-
-                    // 5. Keyboard Navigation Mappings
-                    // B Button -> Enter
-                    if (isDown[XINPUT_GAMEPAD_B]) SendKeyboardEvent(VK_RETURN, 0);
-                    if (isUp[XINPUT_GAMEPAD_B]) SendKeyboardEvent(VK_RETURN, KEYEVENTF_KEYUP);
-
-                    // Y Button -> Open On-Screen Keyboard
-                    if (isDown[XINPUT_GAMEPAD_Y]) OpenOnScreenKeyboard();
-
-                    // Start Button -> Windows Key
-                    if (isDown[XINPUT_GAMEPAD_START]) SendKeyboardEvent(VK_LWIN, 0);
-                    if (isUp[XINPUT_GAMEPAD_START]) SendKeyboardEvent(VK_LWIN, KEYEVENTF_KEYUP);
-
-                    // Shoulders -> Browser Back / Forward
-                    if (isDown[XINPUT_GAMEPAD_LEFT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_BACK, 0);
-                    if (isUp[XINPUT_GAMEPAD_LEFT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_BACK, KEYEVENTF_KEYUP);
-                    if (isDown[XINPUT_GAMEPAD_RIGHT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_FORWARD, 0);
-                    if (isUp[XINPUT_GAMEPAD_RIGHT_SHOULDER]) SendKeyboardEvent(VK_BROWSER_FORWARD, KEYEVENTF_KEYUP);
-
-                    // Triggers: Left Trigger = Space, Right Trigger = Backspace
-                    bool lTrigger = gp.bLeftTrigger > TRIGGER_DEAD_ZONE;
-                    if (lTrigger != lTriggerPrevious)
-                    {
-                        lTriggerPrevious = lTrigger;
-                        SendKeyboardEvent(VK_SPACE, lTrigger ? 0 : KEYEVENTF_KEYUP);
-                    }
-
-                    bool rTrigger = gp.bRightTrigger > TRIGGER_DEAD_ZONE;
-                    if (rTrigger != rTriggerPrevious)
-                    {
-                        rTriggerPrevious = rTrigger;
-                        SendKeyboardEvent(VK_BACK, rTrigger ? 0 : KEYEVENTF_KEYUP);
-                    }
-
-                    // D-Pad -> Arrow Keys
-                    if (isDown[XINPUT_GAMEPAD_DPAD_UP]) SendKeyboardEvent(VK_UP, 0);
-                    if (isUp[XINPUT_GAMEPAD_DPAD_UP]) SendKeyboardEvent(VK_UP, KEYEVENTF_KEYUP);
-
-                    if (isDown[XINPUT_GAMEPAD_DPAD_DOWN]) SendKeyboardEvent(VK_DOWN, 0);
-                    if (isUp[XINPUT_GAMEPAD_DPAD_DOWN]) SendKeyboardEvent(VK_DOWN, KEYEVENTF_KEYUP);
-
-                    if (isDown[XINPUT_GAMEPAD_DPAD_LEFT]) SendKeyboardEvent(VK_LEFT, 0);
-                    if (isUp[XINPUT_GAMEPAD_DPAD_LEFT]) SendKeyboardEvent(VK_LEFT, KEYEVENTF_KEYUP);
-
-                    if (isDown[XINPUT_GAMEPAD_DPAD_RIGHT]) SendKeyboardEvent(VK_RIGHT, 0);
-                    if (isUp[XINPUT_GAMEPAD_DPAD_RIGHT]) SendKeyboardEvent(VK_RIGHT, KEYEVENTF_KEYUP);
-
-                    // Speed cycle on Right Thumb Click
-                    if (isDown[XINPUT_GAMEPAD_RIGHT_THUMB])
-                    {
-                        if (Math.Abs(speed - SPEED_LOW) < 0.001f) speed = SPEED_MED;
-                        else if (Math.Abs(speed - SPEED_MED) < 0.001f) speed = SPEED_HIGH;
-                        else speed = SPEED_LOW;
-
-                        Vibrate(i, 20000, 150);
-                    }
-
-                    break; // Process primary active controller
+                if (token.WaitHandle.WaitOne(controllerFound ? SLEEP_AMOUNT : 50))
+                {
+                    break;
                 }
             }
-
-            Thread.Sleep(controllerFound ? SLEEP_AMOUNT : 200);
+        }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
+        catch (Exception ex)
+        {
+            _logService.LogError("[ControllerNavigation] PollingLoop exception", ex);
         }
     }
 

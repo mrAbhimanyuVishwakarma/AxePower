@@ -102,6 +102,77 @@ public class BatteryService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Reads real battery history for the last 24 hours from the Windows battery report
+    /// (the same system data Windows Settings' battery-usage graph is based on).
+    /// Returns null when unavailable (no battery, powercfg failure, empty report).
+    /// </summary>
+    private async Task<List<BatteryHistoryPoint>?> TryGetWindowsBatteryReportHistoryAsync()
+    {
+        string reportPath = Path.Combine(Path.GetTempPath(), $"AxePower_batteryreport_{Environment.ProcessId}.xml");
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "powercfg.exe",
+                Arguments = $"/batteryreport /xml /output \"{reportPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var proc = System.Diagnostics.Process.Start(psi);
+            if (proc == null) return null;
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            try
+            {
+                await proc.WaitForExitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                try { proc.Kill(true); } catch { }
+                return null;
+            }
+
+            if (proc.ExitCode != 0 || !File.Exists(reportPath)) return null;
+
+            var doc = System.Xml.Linq.XDocument.Load(reportPath);
+            var cutoffUtc = DateTime.UtcNow.AddHours(-24);
+            var list = new List<BatteryHistoryPoint>();
+
+            foreach (var entry in doc.Descendants().Where(e => e.Name.LocalName == "UsageEntry"))
+            {
+                // Timestamp attribute is UTC (e.g. "2026-08-27T23:12:17Z")
+                if (!DateTime.TryParse((string?)entry.Attribute("Timestamp"),
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                        out var utcTs)) continue;
+                if (utcTs < cutoffUtc) continue;
+                if (!double.TryParse((string?)entry.Attribute("ChargeCapacity"), out var charge)) continue;
+                if (!double.TryParse((string?)entry.Attribute("FullChargeCapacity"), out var full) || full <= 0) continue;
+
+                list.Add(new BatteryHistoryPoint
+                {
+                    Timestamp = utcTs,
+                    Percentage = (int)Math.Round(Math.Clamp(charge / full * 100.0, 0, 100)),
+                    IsPluggedIn = (string?)entry.Attribute("Ac") == "1"
+                });
+            }
+
+            list.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+            return list.Count >= 2 ? list : null;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"[Battery] Could not read Windows battery report: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            try { if (File.Exists(reportPath)) File.Delete(reportPath); } catch { }
+        }
+    }
+
     // Pre-seeds 25 plausible baseline points across the last 24 hours ending at the current percentage
     private static List<BatteryHistoryPoint> GenerateSeedHistory(int currentPercentage, bool isPluggedIn, DateTime now)
     {
@@ -131,7 +202,22 @@ public class BatteryService : IDisposable
         {
             if (_history.Count == 0)
             {
-                _history.AddRange(GenerateSeedHistory(currentPercentage, isPluggedIn, DateTime.UtcNow));
+                // Prefer the real 24h history Windows already recorded; fall back to a synthetic curve
+                var seed = await TryGetWindowsBatteryReportHistoryAsync();
+                if (seed != null)
+                {
+                    seed.Add(new BatteryHistoryPoint
+                    {
+                        Timestamp = DateTime.UtcNow,
+                        Percentage = currentPercentage,
+                        IsPluggedIn = isPluggedIn
+                    });
+                    _history.AddRange(seed);
+                }
+                else
+                {
+                    _history.AddRange(GenerateSeedHistory(currentPercentage, isPluggedIn, DateTime.UtcNow));
+                }
                 await SaveHistoryInternalAsync();
             }
         }

@@ -85,4 +85,8 @@ public class SystemServiceObject
     public bool IsRunning { get; set; }
 
     public bool IsSelected { get; set; }
+
+    public bool IsPaused { get; set; }
+
+    public string StatusText => IsPaused ? "Paused" : (IsRunning ? "Running" : "Stopped");
 }

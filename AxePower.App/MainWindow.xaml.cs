@@ -1,5 +1,8 @@
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Shell;
+using System.Windows.Threading;
+using System.Runtime.InteropServices;
 using System;
 using AxePower.App.ViewModels;
 using AxePower.App.Services;
@@ -28,6 +31,115 @@ public partial class MainWindow : Window
             if (IsVisible) _telemetryService.Resume();
             else _telemetryService.Pause();
         };
+
+        // Shrink/expand the window to match the dashboard's compact monitor widget
+        _expandedMinWidth = MinWidth;
+        _expandedMinHeight = MinHeight;
+        viewModel.DashboardVm.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(DashboardViewModel.IsShrunk))
+                ApplyShrinkState(viewModel.DashboardVm);
+        };
+    }
+
+    // Logical size of the monitor card; the window ends up at this times the card's render scale.
+    private const double CompactLogicalWidth = 344;
+    private const double CompactLogicalHeight = 704;
+    private const double ExpandedCaptionHeight = 112;
+
+    private Rect _expandedBounds;
+    private WindowState _expandedState = WindowState.Normal;
+    private double _expandedMinWidth;
+    private double _expandedMinHeight;
+    private bool _hasExpandedBounds;
+
+    /// <summary>
+    /// Collapses the window down to just the hardware monitor card, or restores the size and
+    /// position it had before shrinking. The card scales itself, so the window follows that scale.
+    /// </summary>
+    private void ApplyShrinkState(DashboardViewModel dashboardVm)
+    {
+        var chrome = WindowChrome.GetWindowChrome(this);
+
+        if (dashboardVm.IsShrunk)
+        {
+            _expandedState = WindowState == WindowState.Minimized ? WindowState.Normal : WindowState;
+            if (WindowState != WindowState.Normal) WindowState = WindowState.Normal;
+            _expandedBounds = new Rect(Left, Top, Width, Height);
+            _hasExpandedBounds = true;
+
+            // Relax the full-app minimums first, otherwise the widget size gets clamped away
+            MinWidth = 120;
+            MinHeight = 160;
+
+            var scale = dashboardVm.MonitorCardScale;
+            Width = CompactLogicalWidth * scale;
+            Height = CompactLogicalHeight * scale;
+            // Zero caption: the widget is dragged by its own strip instead, which keeps
+            // Windows from offering Snap / split view mid-drag
+            if (chrome != null) chrome.CaptionHeight = 0;
+
+            SetWindowCornerPreference(DWMWCP_ROUND);
+
+            var workArea = SystemParameters.WorkArea;
+            Left = workArea.Right - Width - 24;
+            Top = workArea.Top + 24;
+
+            // Trim the leftover space under the card once the shrunk layout has been measured
+            Dispatcher.BeginInvoke(new Action(FitHeightToWidget), DispatcherPriority.Loaded);
+        }
+        else
+        {
+            SizeToContent = SizeToContent.Manual;
+            SetWindowCornerPreference(DWMWCP_DEFAULT);
+            MinWidth = _expandedMinWidth;
+            MinHeight = _expandedMinHeight;
+            if (chrome != null) chrome.CaptionHeight = ExpandedCaptionHeight;
+
+            if (_hasExpandedBounds)
+            {
+                Width = _expandedBounds.Width;
+                Height = _expandedBounds.Height;
+                Left = _expandedBounds.Left;
+                Top = _expandedBounds.Top;
+            }
+
+            WindowState = _expandedState;
+        }
+    }
+
+    /// <summary>Snaps the widget's height to the card so no empty gap is left below it.</summary>
+    private void FitHeightToWidget()
+    {
+        var workArea = SystemParameters.WorkArea;
+        MaxHeight = workArea.Height - 48;
+        SizeToContent = SizeToContent.Height;
+        UpdateLayout();
+        SizeToContent = SizeToContent.Manual;
+        MaxHeight = double.PositiveInfinity;
+
+        Top = Math.Min(Top, workArea.Bottom - Height - 24);
+    }
+
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWCP_DEFAULT = 0;
+    private const int DWMWCP_ROUND = 2;
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+    /// <summary>
+    /// Rounds the widget's own window corners so the card is not clipped by a square frame.
+    /// This is a DWM hint rather than a window-style change, which would make Windows redraw
+    /// the native caption buttons over the widget.
+    /// </summary>
+    private void SetWindowCornerPreference(int preference)
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero) return;
+
+        // Ignored on Windows 10, which has no corner preference to set
+        DwmSetWindowAttribute(handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
     }
 
     protected override void OnSourceInitialized(EventArgs e)

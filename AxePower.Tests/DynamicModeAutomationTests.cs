@@ -92,4 +92,90 @@ public class DynamicModeAutomationTests
         Assert.True(vm.AutoRestoreOnEco);
         Assert.False(string.IsNullOrWhiteSpace(vm.MemorySummary));
     }
+
+    [Theory]
+    [InlineData("Lossless Scaling", true)]
+    [InlineData("Wallpaper Engine", true)]
+    [InlineData("OBS Studio", true)]
+    [InlineData("Steamworks Common Redistributables", true)]
+    [InlineData("Cyberpunk 2077", false)]
+    [InlineData("Delta Force", false)]
+    [InlineData("007 First Light", false)]
+    [InlineData("Grand Theft Auto V", false)]
+    public void GameScannerService_FiltersSoftwareCorrectly(string title, bool shouldBeSoftware)
+    {
+        bool isSoftware = GameScannerService.IsSoftwareOrUtility(title);
+        Assert.Equal(shouldBeSoftware, isSoftware);
+    }
+
+    [Fact]
+    public void GameModeViewModel_DoesNotAddDuplicatesOrSoftware()
+    {
+        var gameScanner = new GameScannerService(_logService);
+        var appKiller = new AppKillerService();
+        var systemServiceOptimizer = new SystemServiceOptimizer();
+        var displayService = new DisplayService(_logService);
+        var powerPlanService = new PowerPlanService(_logService, displayService, _settingsService);
+
+        var vm = new GameModeViewModel(
+            _settingsService,
+            _notificationService,
+            gameScanner,
+            appKiller,
+            systemServiceOptimizer,
+            powerPlanService,
+            controllerService: null,
+            automationService: _automationService,
+            throttlerService: _throttlerService,
+            memoryOptimizer: _memoryOptimizer);
+
+        // Ensure no software like "Lossless Scaling" exists in GameCards
+        Assert.DoesNotContain(vm.GameCards, c => GameScannerService.IsSoftwareOrUtility(c.DisplayName));
+
+        // Ensure no duplicates exist in GameCards
+        var names = vm.GameCards.Select(c => c.DisplayName.Trim().ToLowerInvariant()).ToList();
+        var distinctNames = names.Distinct().ToList();
+        Assert.Equal(distinctNames.Count, names.Count);
+    }
+
+    [Fact]
+    public void GameModeViewModel_MainToggle_SwitchesHeaderAndStats()
+    {
+        var gameScanner = new GameScannerService(_logService);
+        var appKiller = new AppKillerService();
+        var systemServiceOptimizer = new SystemServiceOptimizer();
+        var displayService = new DisplayService(_logService);
+        var powerPlanService = new PowerPlanService(_logService, displayService, _settingsService);
+
+        var vm = new GameModeViewModel(
+            _settingsService,
+            _notificationService,
+            gameScanner,
+            appKiller,
+            systemServiceOptimizer,
+            powerPlanService,
+            controllerService: null,
+            automationService: _automationService,
+            throttlerService: _throttlerService,
+            memoryOptimizer: _memoryOptimizer);
+
+        // When off by default
+        Assert.False(vm.IsManualGameModeActive);
+        Assert.Equal("TURN ON GAMEMODE", vm.GameModeStatusHeader);
+        Assert.Equal("0", vm.ServicesPausedCountText);
+        Assert.Equal("0 MB", vm.RamFreedText);
+        Assert.Equal("None", vm.ActiveGameName);
+
+        // Turn on GameMode
+        vm.IsManualGameModeActive = true;
+        Assert.Equal("GAMEMODE IS ACTIVE", vm.GameModeStatusHeader);
+        Assert.Equal("14", vm.ServicesPausedCountText);
+        Assert.Equal("2.3 GB", vm.RamFreedText);
+
+        // Turn off GameMode
+        vm.IsManualGameModeActive = false;
+        Assert.Equal("TURN ON GAMEMODE", vm.GameModeStatusHeader);
+        Assert.Equal("0", vm.ServicesPausedCountText);
+        Assert.Equal("0 MB", vm.RamFreedText);
+    }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -70,6 +71,9 @@ public partial class DashboardViewModel : ObservableObject
     private int _rawBatteryPercentage = 100;
 
     private readonly SystemTelemetryService? _telemetryService;
+    private readonly DisplayService? _displayService;
+    private readonly GraphicsDriverService? _graphicsDriverService;
+    private System.Collections.Generic.List<GraphicsAdapterInfo> _graphicsAdapters = new();
 
     // 4 Performance Metrics (2x2 Grid: CPU, GPU, RAM, WiFi)
     public ObservableCollection<double> CpuHistory { get; } = new();
@@ -78,28 +82,46 @@ public partial class DashboardViewModel : ObservableObject
     public ObservableCollection<double> NetworkHistory { get; } = new();
 
     [ObservableProperty]
-    private string _cpuDisplay = "0%  2.40 GHz";
+    private string _cpuDisplay = "—";
 
     [ObservableProperty]
     private string _gpuName = "GPU";
 
     [ObservableProperty]
-    private string _gpuDisplay = "0%";
+    private string _gpuDisplay = "—";
 
     [ObservableProperty]
-    private string _memoryDisplay = "0.0 GB (0%)";
+    private string _memoryDisplay = "—";
 
     [ObservableProperty]
-    private string _networkName = "WiFi";
+    private string _networkName = "NET";
 
     [ObservableProperty]
-    private string _networkDisplay = "↑0 bps ↓0 bps";
+    private string _networkDisplay = "—";
 
     public ObservableCollection<DiskDriveSnapshot> Disks { get; } = new();
+
+    // Status bar: real display + GPU hardware summary
+    [ObservableProperty]
+    private string _displaySummary = "—";
+
+    [ObservableProperty]
+    private string _hdrStatus = "—";
+
+    [ObservableProperty]
+    private string _cpuSummary = "—";
+
+    [ObservableProperty]
+    private string _gpuSummary = "—";
 
     public ObservableCollection<PowerMode> AvailableModes { get; } = new(new[] { PowerMode.Eco, PowerMode.Smart, PowerMode.Beast, PowerMode.GameMode });
 
     public ObservableCollection<double> BatteryTrendPoints { get; } = new();
+
+    public ObservableCollection<AppFeatureItem> NewFeatures { get; } = new();
+
+    [ObservableProperty]
+    private AppFeatureItem? _selectedFeature;
 
     public DashboardViewModel(
         PowerPlanService powerPlanService, 
@@ -109,7 +131,9 @@ public partial class DashboardViewModel : ObservableObject
         AppKillerService appKillerService,
         ControllerNavigationService? controllerService = null,
         UpdateService? updateService = null,
-        SystemTelemetryService? telemetryService = null)
+        SystemTelemetryService? telemetryService = null,
+        DisplayService? displayService = null,
+        GraphicsDriverService? graphicsDriverService = null)
     {
         _powerPlanService = powerPlanService;
         _batteryService = batteryService;
@@ -119,6 +143,8 @@ public partial class DashboardViewModel : ObservableObject
         _controllerService = controllerService;
         _updateService = updateService;
         _telemetryService = telemetryService;
+        _displayService = displayService;
+        _graphicsDriverService = graphicsDriverService;
 
         // Initialize 30 points for sparklines
         for (int i = 0; i < 30; i++)
@@ -140,6 +166,8 @@ public partial class DashboardViewModel : ObservableObject
         }
 
         LoadSettings();
+        RefreshHardwareSummary();
+        InitializeNewFeatures();
 
         _timer = new DispatcherTimer
         {
@@ -162,6 +190,8 @@ public partial class DashboardViewModel : ObservableObject
             NetworkName = snapshot.NetworkName;
             NetworkDisplay = snapshot.NetworkDisplay;
 
+            UpdateGpuSummary(snapshot.IsDedicatedGpuActive);
+
             PushHistoryPoint(CpuHistory, snapshot.CpuPercent);
             PushHistoryPoint(GpuHistory, snapshot.GpuPercent);
             PushHistoryPoint(MemoryHistory, snapshot.MemoryPercent);
@@ -175,6 +205,61 @@ public partial class DashboardViewModel : ObservableObject
 
             UpdateDisks(snapshot.Disks);
         });
+    }
+
+    /// <summary>Re-reads the live display mode (resolution, refresh rate, HDR).</summary>
+    private void RefreshDisplaySummary()
+    {
+        if (_displayService == null) return;
+
+        try
+        {
+            var display = _displayService.GetDisplayInfo();
+            var parts = new System.Collections.Generic.List<string> { display.ResolutionDisplay };
+            if (!string.IsNullOrEmpty(display.RefreshDisplay))
+                parts.Add(display.RefreshDisplay);
+
+            DisplaySummary = string.Join("  ", parts);
+            HdrStatus = display.HdrStatus;
+        }
+        catch
+        {
+            // Status bar is informational only — never let it break the dashboard
+        }
+    }
+
+    /// <summary>Reads the real display mode and installed GPUs for the status bar.</summary>
+    private void RefreshHardwareSummary()
+    {
+        try
+        {
+            RefreshDisplaySummary();
+
+            if (_telemetryService != null)
+                CpuSummary = _telemetryService.CpuName;
+
+            if (_graphicsDriverService != null)
+            {
+                _graphicsAdapters = _graphicsDriverService.DetectAdapters();
+                // Until the first telemetry tick says which GPU is busy, show the primary one
+                UpdateGpuSummary(_graphicsAdapters.Any(a => a.IsDedicated));
+            }
+        }
+        catch
+        {
+            // Status bar is informational only — never let it break the dashboard
+        }
+    }
+
+    /// <summary>Shows the GPU currently in use, matching the GPU card above.</summary>
+    private void UpdateGpuSummary(bool dedicatedActive)
+    {
+        if (_graphicsAdapters.Count == 0) return;
+
+        var adapter = _graphicsAdapters.FirstOrDefault(a => a.IsDedicated == dedicatedActive)
+                      ?? _graphicsAdapters[0];
+
+        GpuSummary = adapter.NameWithMemory;
     }
 
     private void UpdateDisks(System.Collections.Generic.List<DiskDriveSnapshot> latest)
@@ -295,6 +380,9 @@ public partial class DashboardViewModel : ObservableObject
         BatteryPercentage = $"{RawBatteryPercentage}%";
         PluggedInStatus = status.IsPluggedIn ? "Plugged In" : "On Battery";
 
+        // The refresh rate changes with power state, so keep the status bar current
+        RefreshDisplaySummary();
+
         var mode = await _powerPlanService.GetActivePowerModeAsync();
         CurrentMode = mode switch
         {
@@ -317,6 +405,8 @@ public partial class DashboardViewModel : ObservableObject
         {
             BatteryTrendPoints.Add(point.Percentage);
         }
+        // The graph Path binds through a converter, which only re-runs on PropertyChanged
+        OnPropertyChanged(nameof(BatteryTrendPoints));
     }
 
     [RelayCommand]
@@ -430,4 +520,138 @@ public partial class DashboardViewModel : ObservableObject
             mainVm.OpenToolHelp("Gopher360");
         }
     }
+
+    // ------------------------------------------------------------------
+    // Compact widget mode: shrinks the whole app down to the monitor card
+    // ------------------------------------------------------------------
+
+    /// <summary>Render scale of the monitor card once shrunk: half size, plus 25% so the
+    /// readouts stay readable.</summary>
+    public const double CompactScale = 0.625;
+
+    [ObservableProperty]
+    private bool _isShrunk;
+
+    [ObservableProperty]
+    private bool _isPinnedOnTop;
+
+    /// <summary>1.0 in the full app, <see cref="CompactScale"/> in widget mode.</summary>
+    public double MonitorCardScale => IsShrunk ? CompactScale : 1.0;
+
+    /// <summary>Pinning is a widget-only affordance, so the full window is never forced on top.</summary>
+    public bool IsWindowTopmost => IsShrunk && IsPinnedOnTop;
+
+    public string ShrinkGlyph => IsShrunk ? "\uE740" : "\uE73F";
+    public string ShrinkTooltip => IsShrunk ? "Expand back to the full app" : "Shrink to the monitor widget";
+    public string PinGlyph => IsPinnedOnTop ? "\uE77A" : "\uE718";
+    public string PinTooltip => IsPinnedOnTop ? "Unpin from top" : "Pin to top";
+
+    partial void OnIsShrunkChanged(bool value)
+    {
+        OnPropertyChanged(nameof(MonitorCardScale));
+        OnPropertyChanged(nameof(IsWindowTopmost));
+        OnPropertyChanged(nameof(ShrinkGlyph));
+        OnPropertyChanged(nameof(ShrinkTooltip));
+    }
+
+    partial void OnIsPinnedOnTopChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsWindowTopmost));
+        OnPropertyChanged(nameof(PinGlyph));
+        OnPropertyChanged(nameof(PinTooltip));
+    }
+
+    [RelayCommand]
+    private void ToggleShrink() => IsShrunk = !IsShrunk;
+
+    [RelayCommand]
+    private void TogglePinOnTop() => IsPinnedOnTop = !IsPinnedOnTop;
+
+    private void InitializeNewFeatures()
+    {
+        NewFeatures.Clear();
+        NewFeatures.Add(new AppFeatureItem
+        {
+            Title = "DLSS 5 Swapper",
+            Badge = "NEW GAMING TOOL",
+            BadgeColorHex = "#10B981",
+            Glyph = "\uE7FC",
+            Description = "1-Click portable downloader & runner. Swap DLSS, Streamline DLLs, RenoDX, and ReShade silently in games.",
+            TargetNavigation = "UpdatePc",
+            ButtonText = "Open in Software Hub ➔"
+        });
+        NewFeatures.Add(new AppFeatureItem
+        {
+            Title = "NVIDIA Driver Selector",
+            Badge = "ROLLBACK & STABLE",
+            BadgeColorHex = "#76B900",
+            Glyph = "\uE81C",
+            Description = "Choose proven stable Game Ready releases or rollback if new updates introduce stuttering or bugs.",
+            TargetNavigation = "UpdatePc",
+            ButtonText = "Open Graphics Hub ➔"
+        });
+        NewFeatures.Add(new AppFeatureItem
+        {
+            Title = "In-App WinGet Updates",
+            Badge = "PACKAGE MANAGER",
+            BadgeColorHex = "#60A5FA",
+            Glyph = "\uE777",
+            Description = "Batch upgrade installed applications with live progress logs and install gaming runtimes.",
+            TargetNavigation = "UpdatePc",
+            ButtonText = "View Software Hub ➔"
+        });
+        NewFeatures.Add(new AppFeatureItem
+        {
+            Title = "BIOS & UEFI Center",
+            Badge = "FIRMWARE SCAN",
+            BadgeColorHex = "#818CF8",
+            Glyph = "\uE950",
+            Description = "Inspect motherboard BIOS, check UEFI Secure Boot status, and scan for Windows firmware capsules.",
+            TargetNavigation = "UpdatePc",
+            ButtonText = "Check BIOS & UEFI ➔"
+        });
+        NewFeatures.Add(new AppFeatureItem
+        {
+            Title = "Phone Control & LanDrop",
+            Badge = "CROSS-DEVICE",
+            BadgeColorHex = "#F59E0B",
+            Glyph = "\uE8EA",
+            Description = "Instant Wi-Fi file transfers between PC and smartphone without cables, plus remote quick actions.",
+            TargetNavigation = "PhoneHub",
+            ButtonText = "Open Phone Control ➔"
+        });
+        NewFeatures.Add(new AppFeatureItem
+        {
+            Title = "System Doctor",
+            Badge = "HEALTH REPAIR",
+            BadgeColorHex = "#EC4899",
+            Glyph = "\uE958",
+            Description = "One-click Windows repair (SFC / DISM), DirectX/Vulkan shader cache cleaner, and DNS benchmark.",
+            TargetNavigation = "Doctor",
+            ButtonText = "Launch System Doctor ➔"
+        });
+        NewFeatures.Add(new AppFeatureItem
+        {
+            Title = "System Optimizer",
+            Badge = "GAMING LATENCY",
+            BadgeColorHex = "#06B6D4",
+            Glyph = "\uE90F",
+            Description = "Safe Windows debloating, background telemetry elimination, and low-latency gaming tweaks.",
+            TargetNavigation = "Optimizer",
+            ButtonText = "Open Optimizer ➔"
+        });
+
+        SelectedFeature = NewFeatures.FirstOrDefault();
+    }
+}
+
+public class AppFeatureItem
+{
+    public string Title { get; set; } = string.Empty;
+    public string Badge { get; set; } = "NEW";
+    public string BadgeColorHex { get; set; } = "#3B82F6";
+    public string Glyph { get; set; } = "\uE735";
+    public string Description { get; set; } = string.Empty;
+    public string TargetNavigation { get; set; } = "UpdatePc";
+    public string ButtonText { get; set; } = "Open Feature";
 }

@@ -155,6 +155,18 @@ public class WinGetHubService : IWinGetHubService
             WebUrl = "https://fitgirl-repacks.site/"
         });
 
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "dlss5swapper",
+            WinGetId = "rakanki911.DLSS5Swapper",
+            Name = "DLSS 5 Swapper",
+            Description = "Seamlessly upgrade and swap NVIDIA DLSS, Streamline DLLs, RenoDX add-on, and ReShade silently in modern games.",
+            Category = PackageCategory.Gaming,
+            Glyph = "\uE7FC",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "DLSS5-Swapper", "DLSS5-Swapper-portable.exe"),
+            WebUrl = "https://github.com/rakanki911/DLSS5-Swapper/releases"
+        });
+
         // 3. Hardware & Tuning
         _packages.Add(new SoftwarePackageItem
         {
@@ -512,6 +524,14 @@ public class WinGetHubService : IWinGetHubService
                     using (var k = Registry.CurrentUser.OpenSubKey(@"Software\MSI\Afterburner"))
                         if (k != null) return true;
                     break;
+                case "dlss5swapper":
+                    string dlssExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "DLSS5-Swapper", "DLSS5-Swapper-portable.exe");
+                    if (File.Exists(dlssExe))
+                    {
+                        pkg.LaunchProtocolOrExe = dlssExe;
+                        return true;
+                    }
+                    break;
             }
         }
         catch { }
@@ -530,6 +550,11 @@ public class WinGetHubService : IWinGetHubService
         string targetId = pkg?.WinGetId ?? wingetId;
         string displayName = pkg?.Name ?? targetId;
         string webUrl = pkg?.WebUrl ?? string.Empty;
+
+        if (pkg != null && pkg.Id == "dlss5swapper")
+        {
+            return await DownloadAndRunDlss5SwapperAsync(pkg, outputProgress);
+        }
 
         outputProgress.Report($"\n[Install] > {displayName} ({targetId})");
         _log.LogInfo($"[WinGetHub] Starting 1-click install for '{targetId}'...");
@@ -577,6 +602,11 @@ public class WinGetHubService : IWinGetHubService
         string targetId = pkg?.WinGetId ?? wingetId;
         string displayName = pkg?.Name ?? targetId;
 
+        if (pkg != null && pkg.Id == "dlss5swapper")
+        {
+            return await DownloadAndRunDlss5SwapperAsync(pkg, outputProgress);
+        }
+
         outputProgress.Report($"\n[Update] > {displayName} ({targetId})");
         _log.LogInfo($"[WinGetHub] Starting update for '{targetId}'...");
 
@@ -592,6 +622,27 @@ public class WinGetHubService : IWinGetHubService
     {
         var pkg = _packages.FirstOrDefault(p => p.WinGetId.Equals(wingetId, StringComparison.OrdinalIgnoreCase) || p.Id.Equals(wingetId, StringComparison.OrdinalIgnoreCase));
         string targetId = pkg?.WinGetId ?? wingetId;
+
+        if (pkg != null && pkg.Id == "dlss5swapper")
+        {
+            string toolsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "DLSS5-Swapper");
+            try
+            {
+                if (Directory.Exists(toolsDir))
+                {
+                    Directory.Delete(toolsDir, true);
+                }
+                pkg.IsInstalled = false;
+                outputProgress.Report("\n[DLSS 5 Swapper] ✓ Cleanly removed portable files from local tools directory.");
+                _log.LogInfo("[WinGetHub] Removed DLSS 5 Swapper portable directory.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                outputProgress.Report($"\n[DLSS 5 Swapper] Could not remove portable files: {ex.Message}");
+                return false;
+            }
+        }
 
         outputProgress.Report($"\n[Starting PowerShell Uninstall] > winget uninstall --id {targetId} --silent");
         _log.LogInfo($"[WinGetHub] Uninstalling package '{targetId}' via PowerShell...");
@@ -610,6 +661,109 @@ public class WinGetHubService : IWinGetHubService
         }
 
         return success;
+    }
+
+    private async Task<bool> DownloadAndRunDlss5SwapperAsync(SoftwarePackageItem pkg, IProgress<string> outputProgress)
+    {
+        string toolsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "DLSS5-Swapper");
+        Directory.CreateDirectory(toolsDir);
+        string exePath = Path.Combine(toolsDir, "DLSS5-Swapper-portable.exe");
+
+        outputProgress.Report("\n[DLSS 5 Swapper] Querying GitHub releases for latest portable executable...");
+        string downloadUrl = "https://github.com/rakanki911/DLSS5-Swapper/releases/download/v2.2.4/DLSS5-Swapper-2.2.4-portable.exe";
+        string versionTag = "v2.2.4";
+
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "AxePower-Client");
+            client.Timeout = TimeSpan.FromSeconds(10);
+            string apiJson = await client.GetStringAsync("https://api.github.com/repos/rakanki911/DLSS5-Swapper/releases/latest");
+            using var doc = System.Text.Json.JsonDocument.Parse(apiJson);
+            if (doc.RootElement.TryGetProperty("tag_name", out var tagProp))
+            {
+                versionTag = tagProp.GetString() ?? versionTag;
+            }
+            if (doc.RootElement.TryGetProperty("assets", out var assetsProp) && assetsProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var asset in assetsProp.EnumerateArray())
+                {
+                    string assetName = asset.GetProperty("name").GetString() ?? "";
+                    if (assetName.Contains("portable", StringComparison.OrdinalIgnoreCase) && assetName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    {
+                        downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? downloadUrl;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning($"[WinGetHub] GitHub API lookup for DLSS5-Swapper: {ex.Message}. Using direct release fallback.");
+        }
+
+        outputProgress.Report($"[DLSS 5 Swapper] Target release: {versionTag}");
+        outputProgress.Report($"[DLSS 5 Swapper] Downloading portable build from: {downloadUrl}");
+
+        try
+        {
+            using var downloadClient = new System.Net.Http.HttpClient();
+            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+            downloadClient.Timeout = TimeSpan.FromMinutes(10);
+
+            using var response = await downloadClient.GetAsync(downloadUrl, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            long? totalBytes = response.Content.Headers.ContentLength;
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            await using var file = new FileStream(exePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
+
+            byte[] buffer = new byte[81920];
+            long totalRead = 0;
+            int read;
+            int lastReport = -1;
+
+            while ((read = await stream.ReadAsync(buffer)) > 0)
+            {
+                await file.WriteAsync(buffer.AsMemory(0, read));
+                totalRead += read;
+
+                if (totalBytes.HasValue && totalBytes.Value > 0)
+                {
+                    int percent = (int)((totalRead * 100) / totalBytes.Value);
+                    if (percent != lastReport && percent % 15 == 0)
+                    {
+                        lastReport = percent;
+                        outputProgress.Report($"[Download Progress] {percent}% ({totalRead / (1024 * 1024)} MB / {totalBytes.Value / (1024 * 1024)} MB)");
+                    }
+                }
+            }
+
+            file.Flush();
+            file.Close();
+
+            outputProgress.Report($"\n[DLSS 5 Swapper] ✓ Download completed successfully ({totalRead / (1024 * 1024)} MB)!");
+            outputProgress.Report($"[DLSS 5 Swapper] 🚀 Launching DLSS 5 Swapper portable ({versionTag})...");
+
+            pkg.IsInstalled = true;
+            pkg.LaunchProtocolOrExe = exePath;
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = exePath,
+                UseShellExecute = true,
+                WorkingDirectory = toolsDir
+            });
+
+            _log.LogInfo($"[WinGetHub] Successfully downloaded and launched DLSS 5 Swapper from {exePath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            outputProgress.Report($"\n[ERROR] DLSS 5 Swapper download failed: {ex.Message}");
+            _log.LogError("[WinGetHub] DLSS 5 Swapper download failed", ex);
+            return false;
+        }
     }
 
     public async Task<bool> UpgradeAllPackagesAsync(IProgress<string> outputProgress)

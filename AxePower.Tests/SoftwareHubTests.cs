@@ -15,6 +15,7 @@ public class SoftwareHubTests
     private readonly DriverUpdateService _driverUpdateService;
     private readonly FirmwareUpdateService _firmwareUpdateService;
     private readonly NotificationService _notificationService;
+    private readonly GraphicsDriverService _graphicsDriverService;
 
     public SoftwareHubTests()
     {
@@ -24,6 +25,27 @@ public class SoftwareHubTests
         _driverUpdateService = new DriverUpdateService(_logService);
         _firmwareUpdateService = new FirmwareUpdateService(_logService);
         _notificationService = new NotificationService();
+        _graphicsDriverService = new GraphicsDriverService(_logService);
+    }
+
+    [Fact]
+    public void GraphicsDriverService_DetectsOnlyRealVendorAdapters()
+    {
+        var adapters = _graphicsDriverService.DetectAdapters();
+
+        foreach (var adapter in adapters)
+        {
+            Assert.NotEqual(GpuVendor.Unknown, adapter.Vendor);
+            Assert.False(string.IsNullOrWhiteSpace(adapter.Name));
+            Assert.False(string.IsNullOrWhiteSpace(adapter.VendorName));
+            // Every detected vendor must have an official source to install from
+            Assert.StartsWith("https://", adapter.OfficialUrl);
+            Assert.False(string.IsNullOrWhiteSpace(adapter.ToolName));
+        }
+
+        // A dedicated GPU is always listed before an integrated one
+        var ordered = adapters.OrderByDescending(a => a.IsDedicated).ToList();
+        Assert.Equal(ordered.Select(a => a.Name), adapters.Select(a => a.Name));
     }
 
     [Fact]
@@ -72,6 +94,7 @@ public class SoftwareHubTests
         Assert.Contains("ubisoft", ids);
         Assert.Contains("battlenet", ids);
         Assert.Contains("fitgirl", ids);
+        Assert.Contains("dlss5swapper", ids);
         Assert.Contains("afterburner", ids);
         Assert.Contains("7zip", ids);
         Assert.Contains("ninite", ids);
@@ -119,7 +142,8 @@ public class SoftwareHubTests
             _driverUpdateService,
             _firmwareUpdateService,
             _notificationService,
-            _logService);
+            _logService,
+            _graphicsDriverService);
 
         Assert.Equal("Updaters", vm.ActiveTab);
         Assert.Equal("All", vm.SelectedCategory);
@@ -154,7 +178,8 @@ public class SoftwareHubTests
             _driverUpdateService,
             _firmwareUpdateService,
             _notificationService,
-            _logService);
+            _logService,
+            _graphicsDriverService);
 
         Assert.Equal("Updaters", vm.ActiveTab);
 
@@ -180,7 +205,8 @@ public class SoftwareHubTests
             _driverUpdateService,
             _firmwareUpdateService,
             _notificationService,
-            _logService);
+            _logService,
+            _graphicsDriverService);
 
         vm.ConsoleOutput = "Some test logs...\n";
         vm.ClearConsoleCommand.Execute(null);
@@ -204,5 +230,67 @@ public class SoftwareHubTests
     {
         bool focused = _driverUpdateService.TryFocusExistingUpdateWindow();
         Assert.True(focused || !focused);
+    }
+
+    [Fact]
+    public void DLSS5SwapperPackage_HasPortableConfiguration()
+    {
+        var packages = _hubService.GetAvailablePackages();
+        var dlss = packages.FirstOrDefault(p => p.Id == "dlss5swapper");
+
+        Assert.NotNull(dlss);
+        Assert.Equal("DLSS 5 Swapper", dlss.Name);
+        Assert.Equal(PackageCategory.Gaming, dlss.Category);
+        Assert.Contains("portable", dlss.LaunchProtocolOrExe, System.StringComparison.OrdinalIgnoreCase);
+        Assert.StartsWith("https://github.com/rakanki911/DLSS5-Swapper", dlss.WebUrl);
+
+        var vm = new SoftwareHubViewModel(
+            _hubService,
+            _updateShieldService,
+            _driverUpdateService,
+            _firmwareUpdateService,
+            _notificationService,
+            _logService,
+            _graphicsDriverService);
+
+        var card = vm.AllPackages.FirstOrDefault(p => p.Id == "dlss5swapper");
+        Assert.NotNull(card);
+        Assert.Equal("Download & Run", card.InstallButtonText);
+        Assert.Equal("Run", card.OpenButtonText);
+    }
+
+    [Fact]
+    public void GraphicsDriverService_GetCuratedNvidiaDrivers_ReturnsValidReleases()
+    {
+        var drivers = _graphicsDriverService.GetCuratedNvidiaDrivers();
+
+        Assert.NotNull(drivers);
+        Assert.True(drivers.Count >= 5, "Expected at least 5 curated NVIDIA driver releases");
+
+        foreach (var driver in drivers)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(driver.Version));
+            Assert.False(string.IsNullOrWhiteSpace(driver.Badge));
+            Assert.False(string.IsNullOrWhiteSpace(driver.Description));
+            Assert.StartsWith("https://us.download.nvidia.com/Windows/", driver.DownloadUrlDesktop);
+            Assert.StartsWith("https://us.download.nvidia.com/Windows/", driver.DownloadUrlNotebook);
+            Assert.Contains(driver.Version, driver.DownloadUrlDesktop);
+        }
+    }
+
+    [Fact]
+    public void GraphicsDriverService_DetectAdapters_ReturnsAdaptersWithoutThrowing()
+    {
+        var adapters = _graphicsDriverService.DetectAdapters();
+
+        Assert.NotNull(adapters);
+        Assert.NotEmpty(adapters);
+        // On any Windows machine with real display drivers, adapters should be detected via WMI or Registry fallback
+        foreach (var adapter in adapters)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(adapter.Name));
+            Assert.False(string.IsNullOrWhiteSpace(adapter.VendorName));
+            Assert.NotEqual(GpuVendor.Unknown, adapter.Vendor);
+        }
     }
 }
