@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using AxePower.App.ViewModels;
 
 namespace AxePower.App.Views;
@@ -39,6 +40,19 @@ public partial class DashboardView : UserControl
         var shrunk = _viewModel?.IsShrunk == true;
         MainColumn.Width = shrunk ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
         RailColumn.Width = shrunk ? new GridLength(1, GridUnitType.Star) : new GridLength(320);
+    }
+
+    /// <summary>
+    /// "What's New" entries navigate on click rather than through a separate jump button.
+    /// The event isn't handled, so the ComboBox still commits the selection as usual; the
+    /// navigation is deferred because it swaps out the view hosting this very dropdown.
+    /// </summary>
+    private void FeatureItem_Clicked(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not ComboBoxItem { DataContext: AppFeatureItem feature }) return;
+        if (Window.GetWindow(this)?.DataContext is not MainViewModel main) return;
+
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => main.Navigate(feature.TargetNavigation)));
     }
 
     // --- Widget dragging -------------------------------------------------

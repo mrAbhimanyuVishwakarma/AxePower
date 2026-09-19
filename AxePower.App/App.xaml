@@ -19,6 +19,7 @@
             <localConverters:BatteryTrendConverter x:Key="BatteryTrendConverter" />
             <localConverters:BatteryPercentageToYConverter x:Key="BatteryPercentageToYConverter" />
             <localConverters:PercentageToGridLengthConverter x:Key="PercentageToGridLengthConverter" />
+            <localConverters:StringEqualsToBooleanConverter x:Key="StringEqualsToBool" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

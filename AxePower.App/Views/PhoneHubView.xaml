@@ -33,13 +33,18 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="10"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       FontWeight="{TemplateBinding FontWeight}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#090D16"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
@@ -48,6 +53,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
@@ -124,6 +134,7 @@
                                             <TextBlock FontSize="12" FontWeight="SemiBold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#FFFFFF"/>
                                                         <Setter Property="Text" Value="Start Server"/>
                                                         <Style.Triggers>
                                                              <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
@@ -181,7 +192,7 @@
                                     </Grid>
 
                                     <!-- Instruction Tip -->
-                                    <Border Background="#131B2A" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6">
+                                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -260,7 +271,7 @@
 
                                     <!-- Empty Shared Placeholder -->
                                     <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                                            CornerRadius="8" Padding="10,6" Background="#0C111C">
+                                            CornerRadius="8" Padding="10,6" Background="{DynamicResource ElevatedCardBackgroundBrush}">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -350,7 +361,7 @@
 
                                     <!-- Empty Received Placeholder -->
                                     <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                                            CornerRadius="8" Padding="10,6" Background="#0C111C">
+                                            CornerRadius="8" Padding="10,6" Background="{DynamicResource ElevatedCardBackgroundBrush}">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -471,9 +482,9 @@
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding Model}" FontWeight="SemiBold"/>
-                                                    <TextBlock Text=" (" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                    <TextBlock Text="{Binding Serial}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                    <TextBlock Text=")" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                    <TextBlock Text=" (" Opacity="0.75"/>
+                                                    <TextBlock Text="{Binding Serial}" Opacity="0.75"/>
+                                                    <TextBlock Text=")" Opacity="0.75"/>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
@@ -504,7 +515,7 @@
                                     </Grid>
 
                                     <!-- Direct APK Installer -->
-                                    <Border Background="#0C111C" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
+                                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14">
                                         <StackPanel>
                                             <TextBlock Text="📦 Install APK to Phone" FontSize="13.5" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                             <TextBlock Text="Directly sideload any APK package onto your connected device." FontSize="11.5" LineHeight="16" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>

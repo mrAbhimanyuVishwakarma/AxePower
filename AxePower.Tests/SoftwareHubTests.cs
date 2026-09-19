@@ -16,6 +16,8 @@ public class SoftwareHubTests
     private readonly FirmwareUpdateService _firmwareUpdateService;
     private readonly NotificationService _notificationService;
     private readonly GraphicsDriverService _graphicsDriverService;
+    private readonly TerminalService _terminalService;
+    private readonly RestorePointService _restorePointService;
 
     public SoftwareHubTests()
     {
@@ -26,6 +28,8 @@ public class SoftwareHubTests
         _firmwareUpdateService = new FirmwareUpdateService(_logService);
         _notificationService = new NotificationService();
         _graphicsDriverService = new GraphicsDriverService(_logService);
+        _terminalService = new TerminalService();
+        _restorePointService = new RestorePointService(_logService);
     }
 
     [Fact]
@@ -143,7 +147,9 @@ public class SoftwareHubTests
             _firmwareUpdateService,
             _notificationService,
             _logService,
-            _graphicsDriverService);
+            _graphicsDriverService,
+            _terminalService,
+            _restorePointService);
 
         Assert.Equal("Updaters", vm.ActiveTab);
         Assert.Equal("All", vm.SelectedCategory);
@@ -179,7 +185,9 @@ public class SoftwareHubTests
             _firmwareUpdateService,
             _notificationService,
             _logService,
-            _graphicsDriverService);
+            _graphicsDriverService,
+            _terminalService,
+            _restorePointService);
 
         Assert.Equal("Updaters", vm.ActiveTab);
 
@@ -206,7 +214,9 @@ public class SoftwareHubTests
             _firmwareUpdateService,
             _notificationService,
             _logService,
-            _graphicsDriverService);
+            _graphicsDriverService,
+            _terminalService,
+            _restorePointService);
 
         vm.ConsoleOutput = "Some test logs...\n";
         vm.ClearConsoleCommand.Execute(null);
@@ -251,7 +261,9 @@ public class SoftwareHubTests
             _firmwareUpdateService,
             _notificationService,
             _logService,
-            _graphicsDriverService);
+            _graphicsDriverService,
+            _terminalService,
+            _restorePointService);
 
         var card = vm.AllPackages.FirstOrDefault(p => p.Id == "dlss5swapper");
         Assert.NotNull(card);

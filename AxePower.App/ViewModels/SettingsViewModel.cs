@@ -118,6 +118,43 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>True when this process currently holds administrator rights.</summary>
+    public bool IsRunningElevated => _elevationService?.IsElevated ?? false;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRestartElevated))]
+    private bool _runAsAdministrator = true;
+
+    /// <summary>The restart action is only worth offering when it would actually change something.</summary>
+    public bool CanRestartElevated => RunAsAdministrator && !IsRunningElevated;
+
+    partial void OnRunAsAdministratorChanged(bool value)
+    {
+        if (CurrentSettings == null) return;
+
+        CurrentSettings.RunAsAdministrator = value;
+        // Saving re-registers the logon task at the matching run level via StartupService,
+        // which is what makes the choice survive a reboot without a UAC prompt.
+        _settingsService.SaveSettings(CurrentSettings);
+
+        _notificationService.Show(value
+            ? "AxePower will run as administrator. Restart to apply."
+            : "AxePower will run as a standard user. Restart to apply.");
+    }
+
+    /// <summary>Relaunches elevated now rather than making the user close and reopen the app.</summary>
+    [RelayCommand]
+    private void RestartElevated()
+    {
+        if (_elevationService == null) return;
+
+        // --force stops the elevated child from treating this closing instance as the live one
+        if (_elevationService.TryRelaunchElevated("--force") == ElevationService.RelaunchResult.Started)
+            System.Windows.Application.Current?.Shutdown();
+        else
+            _notificationService.Show("Administrator restart was cancelled.");
+    }
+
     [ObservableProperty]
     private bool _showNotifications = true;
 
@@ -271,8 +308,9 @@ public partial class SettingsViewModel : ObservableObject
 
     private readonly UpdateService? _updateService;
     private readonly BatteryService? _batteryService;
+    private readonly ElevationService? _elevationService;
 
-    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.7.0";
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.8.0";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]
@@ -312,7 +350,8 @@ public partial class SettingsViewModel : ObservableObject
         DisplayService displayService,
         PowerPlanService powerPlanService,
         UpdateService updateService,
-        BatteryService? batteryService = null)
+        BatteryService? batteryService = null,
+        ElevationService? elevationService = null)
     {
         _settingsService = settingsService;
         _notificationService = notificationService;
@@ -322,6 +361,7 @@ public partial class SettingsViewModel : ObservableObject
         _powerPlanService = powerPlanService;
         _updateService = updateService;
         _batteryService = batteryService;
+        _elevationService = elevationService;
         _currentSettings = _settingsService.GetSettings();
         _selectedTheme = _currentSettings.Theme;
         _selectedUnpluggedMode = _currentSettings.UnpluggedMode;
@@ -330,6 +370,7 @@ public partial class SettingsViewModel : ObservableObject
         _startWithLastSelectedMode = _currentSettings.StartWithLastSelectedMode;
         _startWithWindows = _currentSettings.StartWithWindows;
         _startMinimised = _currentSettings.StartMinimised;
+        _runAsAdministrator = _currentSettings.RunAsAdministrator;
         _showNotifications = _currentSettings.ShowNotifications;
         _notifyOnModeSwitch = _currentSettings.NotifyOnModeSwitch;
         _lowBatteryAlertSound = _currentSettings.LowBatteryAlertSound;

@@ -577,8 +577,7 @@ public partial class DashboardViewModel : ObservableObject
             BadgeColorHex = "#10B981",
             Glyph = "\uE7FC",
             Description = "1-Click portable downloader & runner. Swap DLSS, Streamline DLLs, RenoDX, and ReShade silently in games.",
-            TargetNavigation = "UpdatePc",
-            ButtonText = "Open in Software Hub ➔"
+            TargetNavigation = "UpdatePc:Apps:Gaming"
         });
         NewFeatures.Add(new AppFeatureItem
         {
@@ -587,8 +586,7 @@ public partial class DashboardViewModel : ObservableObject
             BadgeColorHex = "#76B900",
             Glyph = "\uE81C",
             Description = "Choose proven stable Game Ready releases or rollback if new updates introduce stuttering or bugs.",
-            TargetNavigation = "UpdatePc",
-            ButtonText = "Open Graphics Hub ➔"
+            TargetNavigation = "UpdatePc:Updaters"
         });
         NewFeatures.Add(new AppFeatureItem
         {
@@ -597,8 +595,7 @@ public partial class DashboardViewModel : ObservableObject
             BadgeColorHex = "#60A5FA",
             Glyph = "\uE777",
             Description = "Batch upgrade installed applications with live progress logs and install gaming runtimes.",
-            TargetNavigation = "UpdatePc",
-            ButtonText = "View Software Hub ➔"
+            TargetNavigation = "UpdatePc:Apps:All"
         });
         NewFeatures.Add(new AppFeatureItem
         {
@@ -607,8 +604,7 @@ public partial class DashboardViewModel : ObservableObject
             BadgeColorHex = "#818CF8",
             Glyph = "\uE950",
             Description = "Inspect motherboard BIOS, check UEFI Secure Boot status, and scan for Windows firmware capsules.",
-            TargetNavigation = "UpdatePc",
-            ButtonText = "Check BIOS & UEFI ➔"
+            TargetNavigation = "UpdatePc:Updaters"
         });
         NewFeatures.Add(new AppFeatureItem
         {
@@ -617,8 +613,7 @@ public partial class DashboardViewModel : ObservableObject
             BadgeColorHex = "#F59E0B",
             Glyph = "\uE8EA",
             Description = "Instant Wi-Fi file transfers between PC and smartphone without cables, plus remote quick actions.",
-            TargetNavigation = "PhoneHub",
-            ButtonText = "Open Phone Control ➔"
+            TargetNavigation = "PhoneHub"
         });
         NewFeatures.Add(new AppFeatureItem
         {
@@ -627,8 +622,7 @@ public partial class DashboardViewModel : ObservableObject
             BadgeColorHex = "#EC4899",
             Glyph = "\uE958",
             Description = "One-click Windows repair (SFC / DISM), DirectX/Vulkan shader cache cleaner, and DNS benchmark.",
-            TargetNavigation = "Doctor",
-            ButtonText = "Launch System Doctor ➔"
+            TargetNavigation = "Doctor"
         });
         NewFeatures.Add(new AppFeatureItem
         {
@@ -637,8 +631,7 @@ public partial class DashboardViewModel : ObservableObject
             BadgeColorHex = "#06B6D4",
             Glyph = "\uE90F",
             Description = "Safe Windows debloating, background telemetry elimination, and low-latency gaming tweaks.",
-            TargetNavigation = "Optimizer",
-            ButtonText = "Open Optimizer ➔"
+            TargetNavigation = "Optimizer"
         });
 
         SelectedFeature = NewFeatures.FirstOrDefault();
@@ -653,5 +646,4 @@ public class AppFeatureItem
     public string Glyph { get; set; } = "\uE735";
     public string Description { get; set; } = string.Empty;
     public string TargetNavigation { get; set; } = "UpdatePc";
-    public string ButtonText { get; set; } = "Open Feature";
 }

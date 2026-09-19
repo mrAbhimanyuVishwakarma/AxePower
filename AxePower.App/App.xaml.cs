@@ -49,7 +49,7 @@ public partial class App : Application
         try
         {
             var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
-            var existingProcesses = System.Diagnostics.Process.GetProcessesByName("AxePower.App")
+            var existingProcesses = System.Diagnostics.Process.GetProcessesByName("AxePower")
                 .Where(p => p.Id != currentProcess.Id && p.Id != Environment.ProcessId)
                 .ToList();
 
@@ -119,6 +119,10 @@ public partial class App : Application
             var settingsService = Services.GetRequiredService<SettingsService>();
             settingsService.LoadSettings();
 
+            // Elevation is decided before anything else is constructed: on success this process
+            // is replaced outright, so there is no point building services or showing a window.
+            if (TryElevateAndExit(settingsService, e.Args)) return;
+
             var themeService = Services.GetRequiredService<ThemeService>();
             themeService.ApplyTheme(settingsService.GetSettings().Theme);
 
@@ -171,6 +175,32 @@ public partial class App : Application
         }
     }
 
+    /// <summary>
+    /// Honours <see cref="AxePower.Core.Models.AppSettings.RunAsAdministrator"/> by relaunching
+    /// elevated. Returns true when an elevated copy took over and this process has exited.
+    ///
+    /// A refused UAC prompt is not an error: AxePower keeps running as a standard user, with the
+    /// sentinel argument on the relaunched command line making sure a denial cannot loop.
+    /// </summary>
+    private bool TryElevateAndExit(SettingsService settingsService, string[] args)
+    {
+        var elevation = Services.GetRequiredService<ElevationService>();
+
+        if (!settingsService.GetSettings().RunAsAdministrator) return false;
+        if (elevation.IsElevated) return false;
+        if (ElevationService.HasAttemptedElevation(args)) return false;
+
+        // --force keeps the elevated child from mistaking this still-closing process for a live
+        // instance and exiting again in the single-instance check.
+        var forwarded = args.Append("--force").ToArray();
+
+        if (elevation.TryRelaunchElevated(forwarded) != ElevationService.RelaunchResult.Started)
+            return false;
+
+        Environment.Exit(0);
+        return true;
+    }
+
     private static IServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
@@ -178,6 +208,8 @@ public partial class App : Application
         // Core Services
         services.AddSingleton<LogService>();
         services.AddSingleton<SettingsService>();
+        services.AddSingleton<ElevationService>();
+        services.AddSingleton<HardwareMonitorService>();
         services.AddSingleton<BatteryService>();
         services.AddSingleton<PowerPlanService>();
         services.AddSingleton<NotificationService>();
@@ -209,6 +241,8 @@ public partial class App : Application
         services.AddSingleton<FirmwareUpdateService>();
         services.AddSingleton<GraphicsDriverService>();
         services.AddSingleton<SystemTelemetryService>();
+        services.AddSingleton<TerminalService>();
+        services.AddSingleton<RestorePointService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
@@ -224,7 +258,7 @@ public partial class App : Application
         services.AddSingleton<IFileCleanupService, FileCleanupService>();
         services.AddSingleton<IProtectionService, ProtectionService>();
         services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
-        services.AddSingleton<SystemRestoreService>();
+        services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
         services.AddSingleton<ProcessDetectionService>();
 
         // ViewModels
@@ -242,6 +276,7 @@ public partial class App : Application
         services.AddTransient<SoftwareHubViewModel>();
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
+        services.AddTransient<TerminalViewModel>();
 
         // Views
         services.AddSingleton<MainWindow>();

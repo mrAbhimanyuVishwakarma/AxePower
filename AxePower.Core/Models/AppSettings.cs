@@ -60,12 +60,22 @@ public class AppSettings
     [JsonPropertyName("startMinimised")]
     public bool StartMinimised { get; set; } = true;
 
+    /// <summary>
+    /// Run AxePower elevated. On by default: the hardware sensors (CPU package temperature via
+    /// MSR), the tweak/debloat actions and the terminal all need administrator rights, and an
+    /// upgrade from a settings file written before this key existed lands on the default too.
+    /// The manifest stays asInvoker — elevation is acquired by relaunching, so the toggle can
+    /// still be turned off, and the startup task uses HighestAvailable so boot needs no prompt.
+    /// </summary>
+    [JsonPropertyName("runAsAdministrator")]
+    public bool RunAsAdministrator { get; set; } = true;
+
     [JsonPropertyName("closeBehaviour")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public CloseBehaviour CloseBehaviour { get; set; } = CloseBehaviour.MinimiseToTray;
 
     [JsonPropertyName("theme")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(AppThemeJsonConverter))]
     public AppTheme Theme { get; set; } = AppTheme.System;
 
     [JsonPropertyName("reduceMotion")]
@@ -138,6 +148,7 @@ public class AppSettings
             LowBatteryAlertSound = this.LowBatteryAlertSound,
             StartWithWindows = this.StartWithWindows,
             StartMinimised = this.StartMinimised,
+            RunAsAdministrator = this.RunAsAdministrator,
             CloseBehaviour = this.CloseBehaviour,
             Theme = this.Theme,
             ReduceMotion = this.ReduceMotion,

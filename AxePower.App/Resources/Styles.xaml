@@ -77,6 +77,11 @@
 
     <!-- Primary Button -->
     <Style TargetType="Button" x:Key="PrimaryButtonStyle">
+        <Style.Resources>
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#FFFFFF" />
+            </Style>
+        </Style.Resources>
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Foreground" Value="#FFFFFF" />
         <Setter Property="BorderThickness" Value="0" />
@@ -91,8 +96,10 @@
                     <Border x:Name="border" Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                            CornerRadius="10"
+                            TextElement.Foreground="{TemplateBinding Foreground}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"
+                                          TextBlock.Foreground="{TemplateBinding Foreground}" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -159,14 +166,14 @@
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Margin" Value="20,14,20,4" />
+        <Setter Property="Margin" Value="20,10,20,3" />
     </Style>
 
     <!-- Sidebar Expander Header Button (UTILITIES / SYSTEM) -->
     <Style TargetType="Button" x:Key="SidebarExpanderHeaderButtonStyle">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
-        <Setter Property="Height" Value="34" />
+        <Setter Property="Height" Value="30" />
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -202,7 +209,8 @@
     <Style TargetType="Button" x:Key="SidebarButtonStyle">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-        <Setter Property="Height" Value="42" />
+        <!-- Sized so the whole navigation fits the sidebar without a scrollbar; see MainWindow.xaml -->
+        <Setter Property="Height" Value="36" />
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Regular" />
@@ -242,7 +250,7 @@
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
                         <Border x:Name="border" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Margin="10,2">
-                            <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,9" />
+                            <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,7" />
                         </Border>
                         <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
                     </Grid>
@@ -258,7 +266,7 @@
 
     <!-- Sidebar Sub-Item Button (Indented for nested items) -->
     <Style TargetType="Button" x:Key="SidebarSubItemButtonStyle" BasedOn="{StaticResource SidebarButtonStyle}">
-        <Setter Property="Height" Value="38" />
+        <Setter Property="Height" Value="32" />
         <Setter Property="FontSize" Value="13.5" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
         <Setter Property="Template">
@@ -295,7 +303,7 @@
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
                         <Border x:Name="border" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Margin="16,2,10,2">
-                            <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,7" />
+                            <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,6" />
                         </Border>
                         <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
                     </Grid>
@@ -424,10 +432,10 @@
                                           TextElement.Foreground="{DynamicResource PrimaryTextBrush}" />
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
                             <Grid x:Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
-                                <Border x:Name="DropDownBorder" Background="#111827" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}" CornerRadius="10" Margin="0,4,0,0"
+                                <Border x:Name="DropDownBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}" CornerRadius="10" Margin="0,4,0,0"
                                         TextElement.Foreground="{DynamicResource PrimaryTextBrush}">
                                     <Border.Effect>
-                                        <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.5" Color="#000000"/>
+                                        <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.35" Color="#000000"/>
                                     </Border.Effect>
                                     <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
                                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
@@ -445,26 +453,45 @@
     <Style TargetType="ComboBox" BasedOn="{StaticResource AppComboBoxStyle}" />
 
     <Style TargetType="ComboBoxItem">
+        <Style.Resources>
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=ComboBoxItem}}" />
+            </Style>
+        </Style.Resources>
         <Setter Property="Padding" Value="12,8" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=ComboBoxItem}}" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
-                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" Margin="0,1"
-                            TextElement.Foreground="{TemplateBinding Foreground}">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" Margin="0,1">
                         <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
+                        <Trigger Property="IsHighlighted" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CardHoverBrush}" />
-                            <Setter Property="Foreground" Value="#FFFFFF" />
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
-                            <Setter Property="Foreground" Value="#090D16" />
+                            <Setter Property="Foreground" Value="#FFFFFF" />
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="True" />
+                                <Condition Property="IsHighlighted" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+                            <Setter Property="Foreground" Value="#FFFFFF" />
+                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -485,7 +512,7 @@
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border Background="{DynamicResource CardBorderBrush}" CornerRadius="4" Margin="2,0" />
+                                            <Border Background="{DynamicResource SecondaryTextBrush}" Opacity="0.4" CornerRadius="4" Margin="2,0" />
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -497,11 +524,51 @@
         </Setter>
     </Style>
 
-    <!-- Modern Fluent Dark ToolTip Style -->
+    <!-- Narrower variant of the bar above, for scrollers embedded inside a card where the
+         standard 8px reads as heavy. Used with OverlayScrollViewerStyle. -->
+    <Style x:Key="CompactScrollBarStyle" TargetType="ScrollBar" BasedOn="{StaticResource {x:Type ScrollBar}}">
+        <Setter Property="Width" Value="6" />
+    </Style>
+
+    <!--
+        A ScrollViewer whose bar floats over the content instead of taking layout space.
+
+        The default template puts the scrollbar in its own grid column, so the content reflows
+        sideways the moment the bar appears. For a list that crosses its scroll threshold as
+        items come and go (drives being mounted, say) that shift is distracting — here the bar
+        is drawn in the same cell as the content, and callers leave a right margin for it to
+        sit in, so nothing moves when it appears.
+    -->
+    <Style x:Key="OverlayScrollViewerStyle" TargetType="ScrollViewer">
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid>
+                        <ScrollContentPresenter Content="{TemplateBinding Content}"
+                                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                CanContentScroll="{TemplateBinding CanContentScroll}" />
+                        <!-- ScrollViewer wires this up by name; the bindings mirror the default template -->
+                        <ScrollBar x:Name="PART_VerticalScrollBar"
+                                   Style="{StaticResource CompactScrollBarStyle}"
+                                   Orientation="Vertical"
+                                   HorizontalAlignment="Right"
+                                   Value="{TemplateBinding VerticalOffset}"
+                                   Maximum="{TemplateBinding ScrollableHeight}"
+                                   ViewportSize="{TemplateBinding ViewportHeight}"
+                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Modern Fluent ToolTip Style -->
     <Style TargetType="ToolTip">
-        <Setter Property="Background" Value="#1E232A" />
-        <Setter Property="Foreground" Value="#F3F4F6" />
-        <Setter Property="BorderBrush" Value="#374151" />
+        <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="10,6" />
         <Setter Property="FontSize" Value="12.5" />
@@ -510,13 +577,13 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
-                    <Border Background="#1E232A"
-                            BorderBrush="#374151"
-                            BorderThickness="1"
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="6"
                             Padding="{TemplateBinding Padding}"
                             SnapsToDevicePixels="True">
-                        <ContentPresenter TextElement.Foreground="#F3F4F6"
+                        <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"
                                           TextElement.FontSize="12.5"
                                           TextElement.FontFamily="{StaticResource PrimaryFontFamily}"
                                           VerticalAlignment="Center" />

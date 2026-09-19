@@ -2,10 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Core Backgrounds -->
-    <Color x:Key="WindowBackgroundColor">#F3F4F6</Color>
+    <Color x:Key="WindowBackgroundColor">#F1F5F9</Color>
     <Color x:Key="WindowSecondaryBackgroundColor">#FFFFFF</Color>
     <Color x:Key="SidebarBackgroundColor">#FFFFFF</Color>
-    <Color x:Key="TitleBarBackgroundColor">#F3F4F6</Color>
+    <Color x:Key="TitleBarBackgroundColor">#F1F5F9</Color>
     
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}" />
     <SolidColorBrush x:Key="WindowSecondaryBackgroundBrush" Color="{StaticResource WindowSecondaryBackgroundColor}" />
@@ -15,24 +15,27 @@
     <!-- Surfaces -->
     <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
     <Color x:Key="ElevatedCardBackgroundColor">#FFFFFF</Color>
-    <Color x:Key="HoverSurfaceColor">#F3F4F6</Color>
+    <Color x:Key="HoverSurfaceColor">#E2E8F0</Color>
 
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}" />
     <SolidColorBrush x:Key="ElevatedCardBackgroundBrush" Color="{StaticResource ElevatedCardBackgroundColor}" />
     <SolidColorBrush x:Key="CardHoverBrush" Color="{StaticResource HoverSurfaceColor}" />
+    <SolidColorBrush x:Key="HoverBackgroundBrush" Color="{StaticResource HoverSurfaceColor}" />
+    <SolidColorBrush x:Key="CtaButtonBackgroundBrush" Color="#0F172A" />
+    <SolidColorBrush x:Key="CtaButtonForegroundBrush" Color="#FFFFFF" />
     
     <!-- Borders -->
-    <Color x:Key="CardBorderColor">#E5E7EB</Color>
-    <Color x:Key="DividerColor">#E5E7EB</Color>
+    <Color x:Key="CardBorderColor">#E2E8F0</Color>
+    <Color x:Key="DividerColor">#E2E8F0</Color>
 
     <SolidColorBrush x:Key="CardBorderBrush" Color="{StaticResource CardBorderColor}" />
     <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource DividerColor}" />
 
     <!-- Text -->
-    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#111827" />
-    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#4B5563" />
-    <SolidColorBrush x:Key="MutedTextBrush" Color="#6B7280" />
-    <SolidColorBrush x:Key="DisabledTextBrush" Color="#9CA3AF" />
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#000000" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#000000" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#000000" />
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#666666" />
 
     <!-- Accents -->
     <SolidColorBrush x:Key="PrimaryBlueBrush" Color="#2563EB" />
@@ -49,5 +52,16 @@
     <SolidColorBrush x:Key="EcoBrush" Color="#059669" />
     <SolidColorBrush x:Key="SmartBrush" Color="#2563EB" />
     <SolidColorBrush x:Key="BeastBrush" Color="#EA580C" />
+
+    <!-- Light Mode Taskbar Context Menu Theme -->
+    <SolidColorBrush x:Key="TrayMenuBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TrayMenuBorderBrush" Color="#CBD5E1" />
+    <SolidColorBrush x:Key="TrayMenuForegroundBrush" Color="#000000" />
+    <SolidColorBrush x:Key="TrayMenuHoverBackgroundBrush" Color="#E2E8F0" />
+    <SolidColorBrush x:Key="TrayMenuHoverForegroundBrush" Color="#000000" />
+    <SolidColorBrush x:Key="TrayMenuSeparatorBrush" Color="#E2E8F0" />
+
+    <!-- App Logo Icon -->
+    <BitmapImage x:Key="AppIconImage" UriSource="/Resources/AxePower_black.ico" />
 
 </ResourceDictionary>

@@ -14,6 +14,7 @@ public class SystemDoctorTests
     private readonly DnsOptimizerService _dnsService;
     private readonly SystemDoctorService _doctorService;
     private readonly NotificationService _notificationService;
+    private readonly TerminalService _terminalService;
 
     public SystemDoctorTests()
     {
@@ -22,6 +23,7 @@ public class SystemDoctorTests
         _dnsService = new DnsOptimizerService(_logService);
         _doctorService = new SystemDoctorService(_logService);
         _notificationService = new NotificationService();
+        _terminalService = new TerminalService();
     }
 
     [Fact]
@@ -77,7 +79,8 @@ public class SystemDoctorTests
             _cacheService, 
             _dnsService, 
             _notificationService, 
-            _logService);
+            _logService,
+            _terminalService);
 
         Assert.Equal("Doctor", vm.ActiveTab);
         Assert.NotNull(vm.ConsoleLogs);
@@ -102,7 +105,8 @@ public class SystemDoctorTests
             _cacheService, 
             _dnsService, 
             _notificationService, 
-            _logService);
+            _logService,
+            _terminalService);
 
         vm.ConsoleLogs = "Random long output...";
         vm.ClearConsoleCommand.Execute(null);

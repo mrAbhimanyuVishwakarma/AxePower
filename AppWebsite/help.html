@@ -493,6 +493,7 @@
 
       <!-- Quick Nav Pills -->
       <div class="help-nav-pills">
+        <a href="#terminal" class="help-pill">🖥️ Terminal, Admin &amp; Temperatures</a>
         <a href="#telemetry" class="help-pill">📊 2x2 Telemetry &amp; Battery</a>
         <a href="#gopher360" class="help-pill">🎮 Controller Navigation</a>
         <a href="#spacedesk" class="help-pill">🖥️ SpaceDesk Second Display</a>
@@ -510,6 +511,122 @@
 
   <!-- Main Content Guides -->
   <main class="container" style="padding-bottom: 80px;">
+
+    <!-- 0. TERMINAL, ADMIN RIGHTS & TEMPERATURES (v1.8.0) -->
+    <section class="help-guide-section" id="terminal">
+      <div class="guide-header-card">
+        <div class="guide-icon-badge">🖥️</div>
+        <div class="guide-title-wrap">
+          <h2 class="guide-title">
+            Terminal, Administrator Rights &amp; Temperatures
+            <span class="guide-credit-badge">Built into AxePower v1.8.0</span>
+          </h2>
+          <p class="guide-subtitle">The built-in CMD / PowerShell console, how AxePower elevates without nagging you, and why its temperature readings work where other tools show nothing.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3 class="guide-card-title">🖥️ Using the Built-In Terminal</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            Open <strong>Terminal</strong> under <em>Maintenance</em> in the sidebar. It runs a real, persistent shell — not a log window — and it is also where every command AxePower itself runs reports to, so nothing happens behind a spinner any more.
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Switch between <strong>PowerShell</strong> and <strong>Command Prompt</strong> at the top of the page.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Start an install from the <strong>Software Hub</strong> or a repair from <strong>System Doctor</strong> — AxePower jumps here and streams the live output.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span>Press <strong>Stop</strong> to cancel whatever is running, including a long diagnostic started from another page.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>The shell inherits AxePower's privilege level — run the app as administrator and the terminal is elevated too.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🛡️ Administrator Rights Without the UAC Nagging</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            Sensor reads, system tweaks, debloat actions and the terminal all need administrator rights. AxePower asks for them in a way you can still say no to.
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span><strong>Settings → Run as administrator</strong> is on by default. Turn it off and AxePower runs as a standard user — most tools do not let you.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Already running unelevated? Use <strong>Relaunch with Admin</strong> in the title bar, or <strong>Restart as administrator now</strong> in Settings. The button disappears once you are elevated.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>At boot there is <strong>no UAC prompt at all</strong> — the logon task is registered at <code>HighestAvailable</code> instead of the app demanding elevation in its manifest.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Dismissing a UAC prompt is safe — AxePower carries on as a standard user rather than asking again in a loop.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">🌡️ Why the Temperatures Actually Work</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            Most monitoring tools read CPU temperature through a kernel driver (WinRing0). On current Windows 11 that driver is on Microsoft's vulnerable-driver blocklist, so with <strong>Memory Integrity</strong> enabled — the default on new machines — it silently fails and the readings come back empty. AxePower tries three sources in order:
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span><strong>Lenovo firmware (ACPI-WMI)</strong> — the same interface Lenovo Vantage and Legion Toolkit use. No kernel driver, so Memory Integrity does not affect it. Needs administrator rights.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span><strong>MSI Afterburner</strong> — if it is running, AxePower reads the sensor table it already publishes. No driver of our own, no elevation needed, and the numbers match what Afterburner shows.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">3</span>
+              <span><strong>LibreHardwareMonitor</strong> — the traditional MSR route, used when the first two are unavailable.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>If only the ACPI chassis sensor can be read, AxePower says so rather than passing an ambient number off as your CPU die temperature.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3 class="guide-card-title">💾 Create a System Restore Point First</h3>
+          <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
+            Before debloating, tweaking or bulk-installing, take a checkpoint you can roll back to.
+          </p>
+          <ul class="guide-steps-list">
+            <li class="guide-step-item">
+              <span class="step-num">1</span>
+              <span>Make sure AxePower is elevated — creating a restore point requires administrator rights.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">2</span>
+              <span>Open the <strong>Software Hub</strong> and click <strong>Create Restore Point</strong>. Progress streams to the Terminal page.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>AxePower enables System Restore on the system drive and removes the once-per-24-hours throttle first, so the checkpoint is genuinely written instead of silently skipped.</span>
+            </li>
+            <li class="guide-step-item">
+              <span class="step-num">✓</span>
+              <span>Verify any time under <em>Windows → System Protection → System Restore</em>.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
 
     <!-- 1. CONTROLLER NAVIGATION (GOPHER360) -->
     <section class="help-guide-section" id="gopher360">
@@ -926,7 +1043,7 @@
         <div class="guide-title-wrap">
           <h2 class="guide-title">
             Task Manager Telemetry &amp; 24h Battery History
-            <span class="guide-credit-badge">Built into AxePower v1.7.0</span>
+            <span class="guide-credit-badge">Built into AxePower</span>
           </h2>
           <p class="guide-subtitle">Real-time CPU, GPU, RAM, and Internet performance tracking with zero-baseline live sparklines.</p>
         </div>
@@ -1041,7 +1158,7 @@
         <div class="guide-title-wrap">
           <h2 class="guide-title">
             Steam Context Menu &amp; Background Auto-Updater
-            <span class="guide-credit-badge">Built into AxePower v1.7.0</span>
+            <span class="guide-credit-badge">Built into AxePower</span>
           </h2>
           <p class="guide-subtitle">Dark Steam-style tray menu, silent background installer downloads, and interactive changelog feed.</p>
         </div>

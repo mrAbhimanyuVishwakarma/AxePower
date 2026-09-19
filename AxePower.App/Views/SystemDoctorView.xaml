@@ -33,13 +33,18 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="10"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       FontWeight="{TemplateBinding FontWeight}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
@@ -48,6 +53,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
@@ -172,39 +182,33 @@
                     </WrapPanel>
                 </Border>
 
-                <!-- Live Terminal Console Box -->
-                <Border Grid.Row="1" Background="#0F172A" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
+                <!-- Diagnostic output now streams to the central Terminal page -->
+                <Border Grid.Row="1" VerticalAlignment="Top" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20,16">
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                        <!-- Console Header -->
-                        <Grid Grid.Row="0" Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="10" Height="10" Fill="#EF4444" Margin="0,0,6,0"/>
-                                <Ellipse Width="10" Height="10" Fill="#F59E0B" Margin="0,0,6,0"/>
-                                <Ellipse Width="10" Height="10" Fill="#10B981" Margin="0,0,12,0"/>
-                                <TextBlock Text="Diagnostics Terminal Output" FontSize="12" Foreground="#94A3B8" FontWeight="SemiBold"/>
-                            </StackPanel>
-
-                            <TextBlock Grid.Column="0" HorizontalAlignment="Right" Text="{Binding DiagnosticStatusText}"
-                                       Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="SemiBold"
-                                       Visibility="{Binding IsDiagnosticRunning, Converter={StaticResource BoolToVis}}"/>
+                        <Grid Grid.Column="0" Width="40" Height="40" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <Ellipse Fill="#1A38BDF8" Stroke="#3338BDF8" StrokeThickness="1"/>
+                            <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
 
-                        <!-- Scrollable Log Output -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                            <TextBox Text="{Binding ConsoleLogs, Mode=OneWay}"
-                                     IsReadOnly="True"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Foreground="#38BDF8"
-                                     FontFamily="Consolas, Cascadia Code, Courier New"
-                                     FontSize="12.5"
-                                     TextWrapping="Wrap"/>
-                        </ScrollViewer>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Live output runs in the Terminal" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,3"/>
+                            <TextBlock Text="Starting a repair jumps to the Terminal page, where SFC / DISM output streams live. Use the Terminal's Stop button to cancel a running scan."
+                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}" VerticalAlignment="Center" Padding="16,9" FontSize="12.5"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Terminal">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Open Terminal" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </Grid>
                 </Border>
             </Grid>

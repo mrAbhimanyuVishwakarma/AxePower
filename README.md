@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.7.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.8.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -17,6 +17,11 @@
 
 ## 🚀 Key Features
 
+- 🖥️ **Built-In Terminal (CMD & PowerShell)**: A persistent interactive shell inside the app, and the single place every command AxePower runs reports to — Software Hub installs and System Doctor diagnostics stream their live output here, with a **Stop** button that cancels the running task.
+- 🛡️ **Administrator Mode Without the UAC Nagging**: A **Run as administrator** setting (on by default) plus a title-bar **Relaunch with Admin** button. The app ships an `asInvoker` manifest and registers its logon task at `HighestAvailable`, so it starts elevated at boot with **no UAC prompt** — and the toggle can still be switched off.
+- 🌡️ **Real CPU & GPU Temperatures (Driver-Free)**: A three-tier sensor stack — Lenovo's ACPI-WMI firmware interface, MSI Afterburner's shared memory, then LibreHardwareMonitor — so readings keep working on machines with **Memory Integrity / the vulnerable-driver blocklist enabled**, where MSR-only tools silently return nothing.
+- 💾 **One-Click System Restore Point**: Create a Windows restore point straight from the Software Hub before you change anything, with the 24-hour creation throttle lifted so the checkpoint is actually written.
+- 🪟 **Glass Theme (Mica & Acrylic)**: True Windows 11 DWM backdrops with an Acrylic blur-behind fallback for Windows 10, alongside System / Dark / Light.
 - ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, **Beast**, and **Game** modes tailored for battery savings or extreme performance.
 - 🎮 **Game Mode Overhaul & Multi-Platform Library Scanner**: Comprehensive automatic scanner for **Steam**, **Epic Games**, **Xbox / PC Game Pass**, **Ubisoft Connect**, **EA App**, and **GOG Galaxy**. Dynamic high-resolution poster art (**SteamGridDB**) with aspect-ratio adaptive cards and responsive hover zoom.
 - 🕹️ **Controller Navigation (Xbox & PlayStation DualSense)**: Full gamepad-to-mouse emulation supporting Xbox (360 / One / Series X|S) and PlayStation (DualShock 4 / DualSense) controllers with in-app visual shortcut guides.
@@ -61,13 +66,14 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **MAINTENANCE** | | |
 | **⚡ Optimizer** | ⚡ | Safe Windows debloat, telemetry removal, and system performance optimizations. |
 | **🩺 Doctor** | 🩺 | Windows system health repair (SFC/DISM), shader cache cleaner, and DNS benchmark. |
+| **🖥️ Terminal** | 🖥️ | Built-in CMD / PowerShell session and the shared output console for every command AxePower runs. |
 | **UTILITIES** | | |
 | **✈️ MSI Afterburner** | ✈️ | Dedicated GPU overclocking and OSD launcher with built-in guide modal *(Credit to MSI)*. |
 | **🗑️ Uninstaller Pro** | 🗑️ | Comprehensive app discovery, batch uninstallation, and leftover cleaner. |
 | **🔄 Update PC** | 🔄 | Elevated one-click driver and package updates. |
 | **🧹 Debloat** | 🧹 | Win11Debloat by Raphire integration. |
 | **FOOTER (PINNED)** | | |
-| **⚙️ Settings** | ⚙️ | Application preferences, performance defaults, startup toggles, and notification settings. |
+| **⚙️ Settings** | ⚙️ | Application preferences, performance defaults, theme (System / Dark / Light / Glass), **Run as administrator**, startup toggles, and notification settings. |
 | **ℹ️ About** | ℹ️ | License details, system compatibility, update checker, and official website links. |
 
 ---
@@ -129,6 +135,15 @@ flowchart TD
     HW_INT --> Battery[BatteryService (Win32 API)]
     HW_INT --> Display[DisplayService (ChangeDisplaySettingsEx)]
     HW_INT --> AppKiller[AppKillerService (Process/NT Suspend)]
+    HW_INT --> HwMon[HardwareMonitorService (3-tier sensor fallback)]
+
+    HwMon --> LenovoWmi[LenovoSensorReader (ACPI-WMI, driver-free)]
+    HwMon --> Afterburner[AfterburnerSensorReader (MAHM shared memory)]
+    HwMon --> LHM[LibreHardwareMonitor (MSR via kernel driver)]
+
+    OS_SVC --> Term[TerminalService (persistent shell & shared output bus)]
+    OS_SVC --> Elev[ElevationService (asInvoker + runas relaunch)]
+    OS_SVC --> Restore[RestorePointService (Checkpoint-Computer)]
 
     DATA --> Settings[SettingsService (Encrypted JSON)]
     DATA --> Log[LogService]
@@ -151,7 +166,7 @@ sequenceDiagram
     AboutView->>Vm: CheckForUpdatesCommand
     Vm->>Svc: CheckForUpdatesAsync()
     Svc->>GH: GET /repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest
-    GH-->>Svc: Latest Release JSON (v1.3.0, Assets: Setup.exe)
+    GH-->>Svc: Latest Release JSON (v1.8.0, Assets: Setup.exe)
     Svc-->>Vm: UpdateCheckResult (HasUpdate = true)
     Vm->>AboutView: Display "Update Available" Modal Dialog
     
@@ -201,8 +216,9 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 ### Creating the Inno Setup Installer
 1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
-2. Open `Installer/AxePowerSetup.iss`.
-3. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-Setup.exe`.
+2. Publish first (the script packages `AxePower.App/bin/Release/net8.0-windows/win-x64/publish/`).
+3. Open `Installer/AxePower.iss` — the full script, which also bootstraps the .NET 8 Desktop Runtime and removes older installs.
+4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v1.8.0-Setup.exe`.
 
 ---
 
