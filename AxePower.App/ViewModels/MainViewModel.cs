@@ -1,3 +1,5 @@
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,9 +17,14 @@ public partial class MainViewModel : ObservableObject
     private readonly AndroidControlService _androidControlService;
     private readonly UpdateService _updateService;
     private readonly SettingsService _settingsService;
+    private readonly TerminalService _terminalService;
 
     [ObservableProperty]
     private object? _currentView;
+
+    /// <summary>True when AxePower is already running elevated; hides the "Relaunch with Admin" button.</summary>
+    public bool IsElevated { get; }
+    public bool ShowRelaunchAdmin => !IsElevated;
 
     [ObservableProperty]
     private string _notificationMessage = string.Empty;
@@ -45,6 +52,7 @@ public partial class MainViewModel : ObservableObject
     public SystemDoctorViewModel DoctorVm { get; }
     public SoftwareHubViewModel SoftwareHubVm { get; }
     public PhoneHubViewModel PhoneHubVm { get; }
+    public TerminalViewModel TerminalVm { get; }
 
     [ObservableProperty]
     private bool _isMaintenanceExpanded;
@@ -64,6 +72,7 @@ public partial class MainViewModel : ObservableObject
     public Style? UninstallerActiveStyle => GetSubItemStyleForView(UninstallerVm);
     public Style? OptimizerActiveStyle => GetSubItemStyleForView(OptimizerVm);
     public Style? DoctorActiveStyle => GetSubItemStyleForView(DoctorVm);
+    public Style? TerminalActiveStyle => GetSubItemStyleForView(TerminalVm);
     public Style? SoftwareHubActiveStyle => GetStyleForView(SoftwareHubVm);
     public Style? UpdatePcActiveStyle => GetSubItemStyleForView(SoftwareHubVm);
     public Style? PhoneHubActiveStyle => (_currentNavSection is "PhoneHub" or "PhoneControl") && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
@@ -85,6 +94,7 @@ public partial class MainViewModel : ObservableObject
         SystemDoctorViewModel doctorVm,
         SoftwareHubViewModel softwareHubVm,
         PhoneHubViewModel phoneHubVm,
+        TerminalViewModel terminalVm,
         NotificationService notificationService,
         DriverUpdateService driverUpdateService,
         MsiAfterburnerService msiAfterburnerService,
@@ -92,6 +102,7 @@ public partial class MainViewModel : ObservableObject
         AndroidControlService androidControlService,
         UpdateService updateService,
         SettingsService settingsService,
+        TerminalService terminalService,
         AutoSwitchViewModel? autoSwitchVm = null)
     {
         DashboardVm = dashboardVm;
@@ -106,6 +117,14 @@ public partial class MainViewModel : ObservableObject
         DoctorVm = doctorVm;
         SoftwareHubVm = softwareHubVm;
         PhoneHubVm = phoneHubVm;
+        TerminalVm = terminalVm;
+        _terminalService = terminalService;
+        IsElevated = TerminalService.IsProcessElevated();
+
+        // Background features (Software Hub upgrades, Doctor diagnostics) ask to surface the Terminal.
+        _terminalService.NavigateToTerminalRequested += () =>
+            Application.Current?.Dispatcher?.BeginInvoke(new Action(() => Navigate("Terminal")));
+
         _notificationService = notificationService;
         _driverUpdateService = driverUpdateService;
         _msiAfterburnerService = msiAfterburnerService;
@@ -236,6 +255,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(UninstallerActiveStyle));
         OnPropertyChanged(nameof(OptimizerActiveStyle));
         OnPropertyChanged(nameof(DoctorActiveStyle));
+        OnPropertyChanged(nameof(TerminalActiveStyle));
         OnPropertyChanged(nameof(SoftwareHubActiveStyle));
         OnPropertyChanged(nameof(UpdatePcActiveStyle));
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
@@ -256,18 +276,25 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void Navigate(string viewName)
     {
-        _currentNavSection = viewName;
+        // A target may carry deep-link arguments, e.g. "UpdatePc:Apps:Gaming" jumps to the
+        // Software Hub's Gaming Runtimes tab with the Gaming category pre-selected.
+        var parts = (viewName ?? string.Empty).Split(':');
+        var baseKey = parts[0];
+        var arg1 = parts.Length > 1 ? parts[1] : null;
+        var arg2 = parts.Length > 2 ? parts[2] : null;
 
-        if (viewName is "Optimizer" or "Doctor" or "Maintenance")
+        _currentNavSection = baseKey;
+
+        if (baseKey is "Optimizer" or "Doctor" or "Maintenance" or "Terminal")
         {
             IsMaintenanceExpanded = true;
         }
-        else if (viewName is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities")
+        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities")
         {
             IsUtilitiesExpanded = true;
         }
 
-        CurrentView = viewName switch
+        CurrentView = baseKey switch
         {
             "Dashboard"   => DashboardVm,
             "AutoSwitch"  => DashboardVm,
@@ -281,10 +308,11 @@ public partial class MainViewModel : ObservableObject
             "Utilities"   => OptimizerVm,
             "Doctor"      => DoctorVm,
             "Maintenance" => DoctorVm,
-            "SoftwareHub" => SoftwareHubVm,
-            "UpdatePc"    => SoftwareHubVm,
-            "PhoneControl"=> SwitchPhoneHubTab("LanDrop"),
-            "PhoneHub"    => SwitchPhoneHubTab("LanDrop"),
+            "Terminal"    => TerminalVm,
+            "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
+            "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
+            "PhoneControl"=> SwitchPhoneHubTab("ScreenMirror"),
+            "PhoneHub"    => SwitchPhoneHubTab("ScreenMirror"),
             "SecondMonitor"=> SwitchPhoneHubTab("SecondMonitor"),
             "PhoneLink"   => SwitchPhoneHubTab("PhoneLink"),
             "LanDrop"     => SwitchPhoneHubTab("LanDrop"),
@@ -294,6 +322,41 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
         OnPropertyChanged(nameof(SecondMonitorActiveStyle));
+    }
+
+    /// <summary>Relaunch AxePower elevated (one UAC prompt), then close this instance.</summary>
+    [RelayCommand]
+    private void RelaunchAsAdmin()
+    {
+        try
+        {
+            var exe = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrEmpty(exe)) return;
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = exe,
+                UseShellExecute = true,
+                Verb = "runas"
+            });
+            Application.Current?.Shutdown();
+        }
+        catch (Win32Exception)
+        {
+            // User dismissed the UAC prompt — stay running as standard user.
+            ShowNotification("Admin relaunch cancelled.");
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Could not relaunch as admin: {ex.Message}");
+        }
+    }
+
+    private object SwitchSoftwareHubTab(string? tab, string? category)
+    {
+        if (!string.IsNullOrWhiteSpace(tab)) SoftwareHubVm.SetTab(tab);
+        if (!string.IsNullOrWhiteSpace(category)) SoftwareHubVm.SetCategory(category);
+        return SoftwareHubVm;
     }
 
     private object SwitchPhoneHubTab(string tab)
@@ -455,10 +518,13 @@ public partial class MainViewModel : ObservableObject
 
         switch (SelectedToolHelp.Id)
         {
+            case "PhoneControl":
             case "PhoneHub":
             case "AndroidControl":
-            case "LanDrop":
                 Navigate("PhoneHub");
+                break;
+            case "LanDrop":
+                Navigate("LanDrop");
                 break;
             case "MsiAfterburner":
                 await OpenMsiAfterburner();

@@ -29,16 +29,16 @@ public class StartupService
 
     private void SettingsService_OnSettingsChanged(object? sender, AppSettings e)
     {
-        SetStartup(e.StartWithWindows);
+        SetStartup(e.StartWithWindows, e.RunAsAdministrator);
     }
 
     public void Initialize()
     {
         var settings = _settingsService.GetSettings();
-        SetStartup(settings.StartWithWindows);
+        SetStartup(settings.StartWithWindows, settings.RunAsAdministrator);
     }
 
-    private void SetStartup(bool enable)
+    private void SetStartup(bool enable, bool runElevated)
     {
         try
         {
@@ -52,7 +52,7 @@ public class StartupService
             {
                 var executablePath = Process.GetCurrentProcess().MainModule?.FileName;
                 if (string.IsNullOrEmpty(executablePath)) return;
-                CreateStartupTask(executablePath);
+                CreateStartupTask(executablePath, runElevated);
             }
             else
             {
@@ -66,11 +66,16 @@ public class StartupService
         }
     }
 
-    private void CreateStartupTask(string executablePath)
+    private void CreateStartupTask(string executablePath, bool runElevated)
     {
         string userId = SecurityElement.Escape($"{Environment.UserDomainName}\\{Environment.UserName}") ?? string.Empty;
         string command = SecurityElement.Escape(executablePath) ?? string.Empty;
         string workingDir = SecurityElement.Escape(Path.GetDirectoryName(executablePath) ?? string.Empty) ?? string.Empty;
+
+        // The whole point of registering a task rather than a Startup shortcut: a HighestAvailable
+        // task starts elevated at logon with no UAC prompt, which is how "run as administrator"
+        // stays silent on boot. Registering one needs admin, so the task is written while elevated.
+        string runLevel = runElevated ? "HighestAvailable" : "LeastPrivilege";
 
         // XML instead of plain schtasks flags: only XML can express "no execution time limit"
         // (the CLI default kills the task after 72 hours) and battery-friendly settings.
@@ -87,7 +92,7 @@ public class StartupService
     <Principal id="Author">
       <UserId>{userId}</UserId>
       <LogonType>InteractiveToken</LogonType>
-      <RunLevel>LeastPrivilege</RunLevel>
+      <RunLevel>{runLevel}</RunLevel>
     </Principal>
   </Principals>
   <Settings>
@@ -114,7 +119,7 @@ public class StartupService
             File.WriteAllText(xmlPath, xml, System.Text.Encoding.Unicode);
             bool ok = RunSchTasks($"/Create /F /TN \"{TaskName}\" /XML \"{xmlPath}\"");
             if (ok)
-                _logService.LogInfo("Registered AxePower startup task (highest run level).");
+                _logService.LogInfo($"Registered AxePower startup task (run level: {runLevel}).");
             else
                 _logService.LogWarning("schtasks could not register the AxePower startup task.");
         }

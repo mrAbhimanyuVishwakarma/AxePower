@@ -376,9 +376,9 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <Button Grid.Column="1" Style="{StaticResource PrimaryButtonStyle}" 
+                <Button Grid.Column="1" Style="{DynamicResource PrimaryButtonStyle}" 
                         Command="{Binding SaveSettingsCommand}" 
-                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="32,8" Background="#222" BorderBrush="#444" BorderThickness="1">
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="32,8">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="✓" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Apply Changes" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>

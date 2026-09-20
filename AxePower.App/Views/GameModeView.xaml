@@ -84,6 +84,55 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Compact blue toggle used by the hero card automation switches -->
+        <Style x:Key="MiniToggleSwitchStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Background="Transparent">
+                            <Border x:Name="border" Width="46" Height="25" CornerRadius="12.5"
+                                    Background="#1E293B" BorderBrush="#334155" BorderThickness="1">
+                                <Ellipse x:Name="ellipse" Width="17" Height="17" Fill="#94A3B8" HorizontalAlignment="Left" Margin="3,0,0,0">
+                                    <Ellipse.RenderTransform>
+                                        <TranslateTransform x:Name="TranslateTransform" X="0" />
+                                    </Ellipse.RenderTransform>
+                                </Ellipse>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2E7FF0" />
+                                <Setter TargetName="border" Property="BorderThickness" Value="0" />
+                                <Setter TargetName="ellipse" Property="Fill" Value="#FFFFFF" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="TranslateTransform" Storyboard.TargetProperty="X" To="22" Duration="0:0:0.16" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="TranslateTransform" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.16" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -112,12 +161,12 @@
             <!-- ========================================================= -->
             <StackPanel Grid.Row="1">
 
-                    <!-- HERO CARD: Game Mode Master Activation & Dynamic Tuning (Matches Image 1 Layout) -->
-                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" 
-                            BorderBrush="#00D2FF" BorderThickness="1.5" CornerRadius="16" 
-                            Padding="22,18" Margin="0,0,0,16">
+                    <!-- HERO CARD: Game Mode wordmark, master toggle, live stats & quick automation -->
+                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                            BorderBrush="#00D2FF" BorderThickness="1.5" CornerRadius="16"
+                            Padding="18,14" Margin="0,0,0,16">
                         <Border.Effect>
-                            <DropShadowEffect Color="#00D2FF" BlurRadius="16" Opacity="0.22" ShadowDepth="0"/>
+                            <DropShadowEffect Color="#00D2FF" BlurRadius="18" Opacity="0.25" ShadowDepth="0"/>
                         </Border.Effect>
 
                         <Grid>
@@ -127,145 +176,146 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- ZONE 1: Circular Lion Emblem with Purple Neon Glow & Pulse Line -->
-                            <Grid Grid.Column="0" VerticalAlignment="Center" Margin="2,0,24,0">
-                                <Border Width="90" Height="90" CornerRadius="45" 
-                                        BorderBrush="#A855F7" BorderThickness="2.5" 
-                                        Background="#190F2C">
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="#A855F7" BlurRadius="18" Opacity="0.7" ShadowDepth="0"/>
-                                    </Border.Effect>
-                                    <Grid ClipToBounds="True">
-                                        <!-- Neon Heartbeat / Pulse Wave Line across Lion -->
-                                        <Path Data="M 0,45 L 20,45 L 26,31 L 32,59 L 38,37 L 44,53 L 50,45 L 90,45" 
-                                              Stroke="#C084FC" StrokeThickness="2" Opacity="0.75" 
-                                              VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                        <Image Source="/Resources/Gamemode.png" Stretch="Uniform" Margin="8" 
-                                               RenderOptions.BitmapScalingMode="HighQuality"/>
-                                    </Grid>
-                                </Border>
-                            </Grid>
+                            <!-- ZONE 1: Lion emblem (the artwork carries its own neon ring, so no extra chrome) -->
+                            <Image Grid.Column="0" Source="/Resources/Gamemode.png" Stretch="Uniform"
+                                   Width="112" Height="112" VerticalAlignment="Center" Margin="4,0,26,0"
+                                   RenderOptions.BitmapScalingMode="HighQuality">
+                                <Image.Effect>
+                                    <DropShadowEffect Color="#A855F7" BlurRadius="26" Opacity="0.7" ShadowDepth="0"/>
+                                </Image.Effect>
+                            </Image>
 
-                            <!-- ZONE 2: Middle Section - Header, Master Toggle & Gaming Stats -->
-                            <Grid Grid.Column="1" VerticalAlignment="Center" Margin="0,0,24,0">
+                            <!-- ZONE 2: Wordmark + master toggle above the live stat strip -->
+                            <Grid Grid.Column="1" VerticalAlignment="Center" Margin="0,0,26,0">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Top Row: "GAMEMODE IS ACTIVE" / "TURN ON GAMEMODE" with Master Purple Toggle -->
-                                <Grid Grid.Row="0">
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                                    <TextBlock Text="GAMEMODE" FontSize="38" FontWeight="Bold" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                <Style.Triggers>
+                                                    <!-- Wordmark lights up while Game Mode is engaged -->
+                                                    <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
+                                                        <Setter Property="Effect">
+                                                            <Setter.Value>
+                                                                <DropShadowEffect Color="#A855F7" BlurRadius="20" Opacity="0.9" ShadowDepth="0"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <CheckBox Style="{StaticResource MasterPurpleToggleSwitchStyle}"
+                                              IsChecked="{Binding IsManualGameModeActive, Mode=TwoWay}"
+                                              ToolTip="{Binding GameModeStatusHeader}"
+                                              VerticalAlignment="Center" Margin="26,4,0,0"/>
+                                </StackPanel>
+
+                                <!-- Stat strip: labels on row 0, values aligned together on row 1 -->
+                                <Grid Grid.Row="1">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <TextBlock Grid.Column="0" Text="{Binding GameModeStatusHeader}" 
-                                               Foreground="{DynamicResource PrimaryTextBrush}" 
-                                               FontWeight="Bold" FontSize="18" VerticalAlignment="Center"/>
-
-                                    <!-- Main Master Purple Toggle Switch -->
-                                    <CheckBox Grid.Column="1" Style="{StaticResource MasterPurpleToggleSwitchStyle}" 
-                                              IsChecked="{Binding IsManualGameModeActive, Mode=TwoWay}" 
-                                              VerticalAlignment="Center" Margin="14,0,0,0"/>
-                                </Grid>
-
-                                <!-- Subtle Horizontal Divider Line -->
-                                <Border Grid.Row="1" Height="1" Background="#222C3D" Margin="0,14,0,14"/>
-
-                                <!-- Bottom Row: 3 Stat Columns (ACTIVE GAME, SERVICES PAUSED, RAM FREED) -->
-                                <Grid Grid.Row="2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.5*"/>
+                                        <ColumnDefinition Width="1.6*"/>
                                         <ColumnDefinition Width="1*"/>
                                         <ColumnDefinition Width="1*"/>
                                     </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                                    <!-- Stat 1: ACTIVE GAME -->
-                                    <StackPanel Grid.Column="0" Margin="0,0,14,0">
-                                        <TextBlock Text="ACTIVE GAME" Foreground="#78889B" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                        <TextBlock Text="{Binding ActiveGameName}" Foreground="{DynamicResource PrimaryTextBrush}" 
-                                                   FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="ACTIVE GAME" VerticalAlignment="Bottom"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" FontWeight="SemiBold"
+                                               LineHeight="14" LineStackingStrategy="BlockLineHeight" Margin="0,0,16,7"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Bottom"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" FontWeight="SemiBold"
+                                               LineHeight="14" LineStackingStrategy="BlockLineHeight" Margin="0,0,16,7"><Run Text="SERVICES"/><LineBreak/><Run Text="PAUSED"/></TextBlock>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" VerticalAlignment="Bottom"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" FontWeight="SemiBold"
+                                               LineHeight="14" LineStackingStrategy="BlockLineHeight" Margin="0,0,0,7"><Run Text="RAM"/><LineBreak/><Run Text="FREED"/></TextBlock>
 
-                                    <!-- Stat 2: SERVICES PAUSED -->
-                                    <StackPanel Grid.Column="1" Margin="0,0,14,0">
-                                        <TextBlock Text="SERVICES" Foreground="#78889B" FontSize="11" FontWeight="SemiBold"/>
-                                        <TextBlock Text="PAUSED" Foreground="#78889B" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                        <TextBlock Text="{Binding ServicesPausedCountText}" Foreground="{DynamicResource PrimaryTextBrush}" 
-                                                   FontSize="16" FontWeight="SemiBold"/>
-                                    </StackPanel>
-
-                                    <!-- Stat 3: RAM FREED -->
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="RAM" Foreground="#78889B" FontSize="11" FontWeight="SemiBold"/>
-                                        <TextBlock Text="FREED" Foreground="#78889B" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                        <TextBlock Text="{Binding RamFreedText}" Foreground="{DynamicResource PrimaryTextBrush}" 
-                                                   FontSize="16" FontWeight="SemiBold"/>
-                                    </StackPanel>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding ActiveGameName}" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource PrimaryTextBrush}" FontSize="17" FontWeight="Bold" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ServicesPausedCountText}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}" FontSize="17" FontWeight="Bold" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding RamFreedText}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}" FontSize="17" FontWeight="Bold"/>
                                 </Grid>
                             </Grid>
 
-                            <!-- ZONE 3: Right Panel - Purge RAM Button + 3 Automated Option Toggles -->
-                            <Border Grid.Column="2" BorderBrush="#222C3D" BorderThickness="1,0,0,0" Padding="20,0,0,0" VerticalAlignment="Center">
-                                <StackPanel Width="195">
-                                    <!-- Top: Purge RAM Button (Purple pill with refresh icon matching Image 1) -->
-                                    <Button Command="{Binding OptimizeRamNowCommand}" Cursor="Hand" Margin="0,0,0,12" HorizontalAlignment="Stretch">
+                            <!-- ZONE 3: Purge RAM action + automation switches, split off by a hairline rule -->
+                            <Border Grid.Column="2" BorderBrush="#222C3D" BorderThickness="1,0,0,0" Padding="22,0,0,0" VerticalAlignment="Center">
+                                <StackPanel Width="205">
+                                    <Button Command="{Binding OptimizeRamNowCommand}" Cursor="Hand" Margin="0,0,0,14" HorizontalAlignment="Stretch"
+                                            ToolTip="Flush the standby memory list right now">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
-                                                <Border Background="#1C182F" BorderBrush="#8B5CF6" BorderThickness="1" 
-                                                        CornerRadius="8" Padding="14,6">
+                                                <Border x:Name="bd" Background="#1C182F" BorderBrush="#8B5CF6" BorderThickness="1"
+                                                        CornerRadius="9" Padding="14,8">
                                                     <Grid>
-                                                        <TextBlock Text="Purge RAM" Foreground="#C4B5FD" FontWeight="SemiBold" FontSize="13" 
+                                                        <TextBlock Text="Purge RAM" Foreground="#C4B5FD" FontWeight="SemiBold" FontSize="13.5"
                                                                    HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12" 
+                                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                                                    Foreground="#C4B5FD" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                                     </Grid>
                                                 </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#2A2246"/>
+                                                        <Setter TargetName="bd" Property="BorderBrush" Value="#A855F7"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#171328"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
                                     </Button>
 
                                     <!-- Switch 1: Auto-Pause Heavy Services -->
-                                    <Grid Margin="0,3,0,3">
+                                    <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="Auto-Pause" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"/>
-                                            <TextBlock Text="Heavy Services" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"/>
-                                        </StackPanel>
-                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" 
+                                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"
+                                                   LineHeight="15" LineStackingStrategy="BlockLineHeight"><Run Text="Auto-Pause"/><LineBreak/><Run Text="Heavy Services"/></TextBlock>
+                                        <CheckBox Grid.Column="1" Style="{StaticResource MiniToggleSwitchStyle}"
                                                   IsChecked="{Binding AutoPauseServicesInBeast, Mode=TwoWay}" VerticalAlignment="Center"/>
                                     </Grid>
 
                                     <!-- Switch 2: Auto-Flush Standby RAM -->
-                                    <Grid Margin="0,3,0,3">
+                                    <Grid Margin="0,4,0,4">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="Auto-Flush" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"/>
-                                            <TextBlock Text="Standby RAM" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"/>
-                                        </StackPanel>
-                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" 
+                                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"
+                                                   LineHeight="15" LineStackingStrategy="BlockLineHeight"><Run Text="Auto-Flush"/><LineBreak/><Run Text="Standby RAM"/></TextBlock>
+                                        <CheckBox Grid.Column="1" Style="{StaticResource MiniToggleSwitchStyle}"
                                                   IsChecked="{Binding AutoFlushRamOnGameLaunch, Mode=TwoWay}" VerticalAlignment="Center"/>
                                     </Grid>
 
                                     <!-- Switch 3: Auto-Restore on Exit -->
-                                    <Grid Margin="0,3,0,0">
+                                    <Grid Margin="0,4,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="Auto-Restore" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"/>
-                                            <TextBlock Text="on Exit" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"/>
-                                        </StackPanel>
-                                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" 
+                                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"
+                                                   LineHeight="15" LineStackingStrategy="BlockLineHeight"><Run Text="Auto-Restore"/><LineBreak/><Run Text="on Exit"/></TextBlock>
+                                        <CheckBox Grid.Column="1" Style="{StaticResource MiniToggleSwitchStyle}"
                                                   IsChecked="{Binding AutoRestoreOnEco, Mode=TwoWay}" VerticalAlignment="Center"/>
                                     </Grid>
                                 </StackPanel>
@@ -322,7 +372,7 @@
                                         <DataTemplate>
                                             <!-- Card Container (Landscape 16:9 Aspect Ratio, 3 per row) -->
                                             <Border x:Name="GameCardBorder" CornerRadius="10" Margin="5,6" 
-                                                    ClipToBounds="True" Background="#141822" BorderBrush="#253248" BorderThickness="1">
+                                                    ClipToBounds="True" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                                 <Grid>
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="Auto"/>
@@ -331,14 +381,14 @@
 
                                                     <!-- Top 16:9 Banner Image Area (Strict 16:9 ratio, no cropping) -->
                                                     <controls:AspectRatioBox Grid.Row="0" AspectRatio="1.7777777777777777" ClipToBounds="True">
-                                                        <Grid Background="#141822">
+                                                        <Grid Background="{DynamicResource CardBackgroundBrush}">
                                                             <!-- Poster / Banner Image (Uniform avoids cropping) -->
                                                             <Image Source="{Binding PosterImage}" Stretch="Uniform" 
                                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                                    Visibility="{Binding HasPoster, Converter={StaticResource BoolToVis}}"/>
 
                                                             <!-- Fallback Styled Banner if image loading/offline -->
-                                                            <Border Background="#161F2E" Visibility="{Binding HasPoster, Converter={StaticResource InverseBoolToVis}}">
+                                                            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" Visibility="{Binding HasPoster, Converter={StaticResource InverseBoolToVis}}">
                                                                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="8">
                                                                     <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="26" 
                                                                                Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" Margin="0,0,0,6"/>
@@ -408,7 +458,7 @@
                                                     </controls:AspectRatioBox>
 
                                                     <!-- Bottom Title Footer Bar -->
-                                                    <Border Grid.Row="1" Background="#161B24" Padding="10,0" BorderBrush="#1E2533" BorderThickness="0,1,0,0">
+                                                    <Border Grid.Row="1" Background="{DynamicResource ElevatedCardBackgroundBrush}" Padding="10,0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0">
                                                         <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" 
                                                                    FontWeight="SemiBold" FontSize="11.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                                                     </Border>
@@ -531,7 +581,7 @@
                             </Grid>
 
                             <!-- FEATURE 2: GOPHER CONTROLLER NAVIGATION (Bottom last row with single toggle & (i) help button) -->
-                            <Border Background="#0B132B" BorderBrush="#1E293B" BorderThickness="1" 
+                            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" 
                                     CornerRadius="12" Padding="12,10" Margin="0,14,0,0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -556,7 +606,7 @@
                                             ToolTip="Gopher360 Help &amp; Controller Shortcuts Guide"
                                             VerticalAlignment="Center" Margin="0,0,10,0" Padding="4">
                                         <Border Width="22" Height="22" CornerRadius="11" 
-                                                Background="#1E293B" BorderBrush="#334155" BorderThickness="1">
+                                                Background="{DynamicResource CardHoverBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                             <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" 
                                                        FontSize="11" Foreground="#38BDF8" 
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -614,12 +664,13 @@
                                         Padding="14,6" Height="28" FontSize="12" FontWeight="SemiBold" Cursor="Hand">
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                                    TextElement.Foreground="{TemplateBinding Foreground}">
                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                         </ControlTemplate>
                                     </Button.Template>
-                                    <TextBlock Text="Kill Selected Now" FontWeight="Bold"/>
+                                    <TextBlock Text="Kill Selected Now" FontWeight="Bold" Foreground="#FFFFFF"/>
                                 </Button>
                             </Grid>
 
@@ -752,14 +803,14 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- [CPU] Tile -->
-                                    <Border Grid.Row="0" Grid.Column="0" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,4,8">
+                                    <Border Grid.Row="0" Grid.Column="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,4,8">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,4">
                                                 <TextBlock Text="CPU" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12"/>
                                                 <TextBlock Text="{Binding CpuDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="38" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="38" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -786,14 +837,14 @@
                                     </Border>
 
                                     <!-- [GPU] Tile -->
-                                    <Border Grid.Row="0" Grid.Column="1" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="4,0,0,8">
+                                    <Border Grid.Row="0" Grid.Column="1" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="4,0,0,8">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,4">
                                                 <TextBlock Text="{Binding GpuName}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12"/>
                                                 <TextBlock Text="{Binding GpuDisplay}" Foreground="#C084FC" FontSize="10" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="38" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="38" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -820,14 +871,14 @@
                                     </Border>
 
                                     <!-- [RAM] Tile -->
-                                    <Border Grid.Row="1" Grid.Column="0" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,4,0">
+                                    <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,4,0">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,4">
                                                 <TextBlock Text="RAM" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12"/>
                                                 <TextBlock Text="{Binding MemoryDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="38" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="38" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -854,14 +905,14 @@
                                     </Border>
 
                                     <!-- [NET] Tile -->
-                                    <Border Grid.Row="1" Grid.Column="1" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="4,0,0,0">
+                                    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="4,0,0,0">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,4">
                                                 <TextBlock Text="{Binding NetworkName}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock Text="{Binding NetworkDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="38" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="38" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -892,7 +943,7 @@
                                 <ItemsControl ItemsSource="{Binding Disks}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10,7" Margin="0,0,0,6">
+                                            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,7" Margin="0,0,0,6">
                                                 <StackPanel>
                                                     <Grid Margin="0,0,0,5">
                                                         <Grid.ColumnDefinitions>
@@ -910,7 +961,7 @@
                                                     </Grid>
 
                                                     <!-- Storage Bar Track -->
-                                                    <Border Height="4.5" Background="#1E2430" CornerRadius="2.25" ClipToBounds="True">
+                                                    <Border Height="4.5" Background="{DynamicResource CardBorderBrush}" CornerRadius="2.25" ClipToBounds="True">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="{Binding UsedPercent, Converter={StaticResource PercentageToGridLengthConverter}}"/>

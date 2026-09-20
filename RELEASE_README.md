@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.7.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.8.0-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -29,8 +29,45 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🎮 **Game Mode:** Automatically detects running games across any drive, suspends background bloat, locks maximum display refresh rate, and offers Controller Navigation (Gopher360).
 - 📱 **Phone Control:** All-in-one mobile suite with offline **LAN Drop** Wi-Fi file sharing and **scrcpy** Android screen mirroring.
 - 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
+- 🖥️ **Built-In Terminal:** A real CMD / PowerShell window inside AxePower, where every command the app runs shows its live output.
+- 🌡️ **True CPU & GPU Temperatures:** Reads your machine's real sensors — and keeps working on Windows 11 PCs with Memory Integrity turned on, where most monitoring tools show nothing.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v1.8.0
+
+- 🖥️ **Built-In Terminal (CMD & PowerShell)**:
+  - A new **Terminal** page under *Maintenance* running a persistent interactive shell — switch between **PowerShell** and **Command Prompt**, type commands, and get real output.
+  - It is now the one place AxePower's own commands report to: **Software Hub** installs and upgrades and **System Doctor** diagnostics (SFC / DISM / DNS benchmark) stream their progress here instead of hiding it behind a spinner.
+  - A **Stop** button cancels whatever is running, including the long background diagnostics started from another page.
+  - The shell inherits AxePower's privilege level, so when the app is elevated the terminal is elevated too.
+- 🛡️ **Run as Administrator — Properly**:
+  - New **Run as administrator** toggle in *Settings* (on by default), plus a **Relaunch with Admin** button in the title bar that disappears once you are already elevated.
+  - AxePower keeps an `asInvoker` manifest and elevates by relaunching itself, so unlike most tools the setting can actually be switched **off**.
+  - The logon task is registered at `HighestAvailable`, which means AxePower starts elevated at boot with **no UAC prompt at all**.
+  - A refused UAC prompt no longer loops — the app simply carries on as a standard user.
+- 🌡️ **Real CPU & GPU Temperatures That Survive Memory Integrity**:
+  - New three-tier sensor stack, tried in order of reliability:
+    1. **Lenovo ACPI-WMI firmware** (`LENOVO_GAMEZONE_DATA`) — needs no kernel driver, the same interface Lenovo Vantage and Legion Toolkit use.
+    2. **MSI Afterburner shared memory** — free to read, no elevation required, and the numbers match what Afterburner already shows you.
+    3. **LibreHardwareMonitor** — the traditional MSR route via its own kernel driver.
+  - This matters: on current Windows 11 the MSR driver (WinRing0) is on Microsoft's vulnerable-driver blocklist, so with **Memory Integrity** enabled — the default on new machines — MSR-only tools silently report nothing. AxePower now falls through to a route that still works.
+  - The UI says so when a reading comes from the ACPI chassis zone rather than the processor die, instead of passing an ambient number off as your CPU temperature.
+- 💾 **One-Click System Restore Point**:
+  - Create a Windows restore point from the Software Hub before making changes. AxePower enables System Restore on the system drive and lifts the once-per-24-hours throttle first, so the checkpoint is genuinely written rather than silently skipped.
+- 🪟 **New Glass Theme (Mica & Acrylic)**:
+  - The old *Transparent* theme is replaced by **Glass**, built on the real Windows 11 DWM backdrops, with an Acrylic blur-behind fallback for Windows 10 and early Windows 11 builds.
+  - Existing settings files that still say `Transparent` migrate to `Glass` automatically — nothing to reconfigure.
+  - Light, Dark and System themes were retuned alongside it.
+- 🧭 **Dashboard Quick Actions Now Deep-Link**:
+  - Dashboard tiles jump straight to the exact destination — e.g. a Gaming Runtimes tile opens the Software Hub already on the *Apps* tab with the *Gaming* category selected, rather than dropping you on a generic page.
+  - Software Hub category chips now filter the list correctly when clicked.
+- 🧰 **Portability & Housekeeping**:
+  - Removed developer-machine paths that were baked into the shipped build — the Ninite launcher now resolves next to the installed executable, so it behaves the same for every user.
+  - NVIDIA / AMD control-panel launchers are resolved through the Windows folder constants instead of a literal `C:\Program Files`, so they work on machines where Windows is not installed on C:.
+  - Installer refreshed as **`AxePower-v1.8.0-Setup.exe`**, still bootstrapping the .NET 8 Desktop Runtime and cleanly removing older installs.
 
 ---
 

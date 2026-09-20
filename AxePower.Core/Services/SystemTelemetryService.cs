@@ -7,6 +7,8 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using AxePower.Core.Helpers;
+using AxePower.Core.Models;
 using Microsoft.Win32;
 
 namespace AxePower.Core.Services;
@@ -46,11 +48,28 @@ public class SystemTelemetrySnapshot
     public string NetworkDisplay { get; set; } = "↑0 bps ↓0 bps";
 
     public List<DiskDriveSnapshot> Disks { get; set; } = new();
+
+    /// <summary>
+    /// CPU package temperature in °C, or NaN when no sensor could be read. Exposed raw so
+    /// callers that need the number (graphs, thresholds) do not have to parse the display string.
+    /// </summary>
+    public double CpuTempC { get; set; } = double.NaN;
+
+    /// <summary>
+    /// False when <see cref="CpuTempC"/> came from the ACPI chassis zone rather than the
+    /// processor die, so the UI can say so instead of passing off an ambient reading as the CPU.
+    /// </summary>
+    public bool IsCpuTempFromDie { get; set; }
+
+    /// <summary>Discrete GPU temperature in °C, or NaN when unavailable.</summary>
+    public double GpuTempC { get; set; } = double.NaN;
 }
 
 public class SystemTelemetryService : IDisposable
 {
     private readonly LogService? _logService;
+    private readonly HardwareMonitorService? _hardwareMonitor;
+    private readonly SettingsService? _settingsService;
     private readonly Timer _timer;
     private bool _isDisposed;
 
@@ -100,15 +119,26 @@ public class SystemTelemetryService : IDisposable
     private string? _integratedGpuName;
     private string? _dedicatedGpuName;
 
-    // CPU temperature (ACPI thermal zone; often unavailable without admin — self-disables)
-    private bool _cpuTempUnavailable;
+    // CPU temperature. The die sensor comes from HardwareMonitorService (MSR, needs admin); the
+    // ACPI thermal zone is only a fallback and reads chassis temperature, not the processor.
+    private bool _acpiTempUnavailable;
     private double _cachedCpuTempC = double.NaN;
+    private bool _cpuTempIsFromDie;
+
+    // Live CPU clock. Preferred source is the per-core sensor set; the WMI performance counter
+    // below is the fallback and is only queried on the slow cadence — it used to run every tick.
+    private double _cachedCpuGhz = double.NaN;
 
     // Network latency (sampled on a slow cadence; NaN while offline/unreachable)
     private double _cachedPingMs = double.NaN;
 
     // GPU clock/temperature via nvidia-smi (sampled on a slow cadence; self-disables when absent)
     private bool _nvidiaSmiUnavailable;
+
+    // True once the sensor library has supplied the discrete GPU's readings, which makes the
+    // nvidia-smi process spawn redundant. Set per poll; _freshGpuSample drives the hysteresis.
+    private bool _gpuSensorsFromMonitor;
+    private bool _freshGpuSample;
     private double _gpuClockGhz = double.NaN;
     private double _gpuTempC = double.NaN;
     private double _gpuSmiUtil = double.NaN;
@@ -123,9 +153,14 @@ public class SystemTelemetryService : IDisposable
 
     public event Action<SystemTelemetrySnapshot>? TelemetryUpdated;
 
-    public SystemTelemetryService(LogService? logService = null)
+    public SystemTelemetryService(
+        LogService? logService = null,
+        HardwareMonitorService? hardwareMonitor = null,
+        SettingsService? settingsService = null)
     {
         _logService = logService;
+        _hardwareMonitor = hardwareMonitor;
+        _settingsService = settingsService;
         InitializeHardwareTopology();
 
         // The adapter set only changes on connect/disconnect — invalidate the cache then
@@ -256,27 +291,14 @@ public class SystemTelemetryService : IDisposable
             _hasCpuSample = true;
         }
 
-        // Live clock: base clock scaled by processor performance (Task Manager style)
-        double cpuGhz = _baseCpuMhz / 1000.0;
-        try
-        {
-            using var perfSearcher = new ManagementObjectSearcher(
-                "SELECT PercentProcessorPerformance FROM Win32_PerfFormattedData_Counters_ProcessorInformation WHERE Name='_Total'");
-            foreach (var obj in perfSearcher.Get())
-            {
-                if (ulong.TryParse(obj["PercentProcessorPerformance"]?.ToString(), out ulong perf) && perf > 0)
-                    cpuGhz = _baseCpuMhz * perf / 100.0 / 1000.0;
-                break;
-            }
-        }
-        catch { }
+        SampleCpuSensors();
 
-        SampleCpuTemperature();
+        double cpuGhz = double.IsNaN(_cachedCpuGhz) ? _baseCpuMhz / 1000.0 : _cachedCpuGhz;
 
         snapshot.CpuPercent = cpuPercent;
-        snapshot.CpuDisplay = double.IsNaN(_cachedCpuTempC)
-            ? $"{cpuGhz:0.00} GHz  {cpuPercent:0}%"
-            : $"{cpuGhz:0.00} GHz  {cpuPercent:0}%  {_cachedCpuTempC:0}°C";
+        snapshot.CpuTempC = _cachedCpuTempC;
+        snapshot.IsCpuTempFromDie = _cpuTempIsFromDie;
+        snapshot.CpuDisplay = $"{cpuGhz:0.00} GHz  {cpuPercent:0}%  {FormatTemp(_cachedCpuTempC)}";
 
         // 2. Memory (RAM)
         var memStatus = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };
@@ -304,9 +326,14 @@ public class SystemTelemetryService : IDisposable
             {
                 double totalSendBps = 0;
                 double totalRecvBps = 0;
+                double linkBitsPerSec = 0;
 
                 foreach (var ni in activeInterfaces)
                 {
+                    // Scale the meter against what the link can actually carry. Speed is -1 on
+                    // adapters that do not report it, and those are simply left out of the total.
+                    try { if (ni.Speed > 0) linkBitsPerSec += ni.Speed; } catch { }
+
                     var stats = ni.GetIPStatistics();
                     long currentSent = stats.BytesSent;
                     long currentRecv = stats.BytesReceived;
@@ -326,9 +353,11 @@ public class SystemTelemetryService : IDisposable
 
                 string sendStr = FormatBandwidth(totalSendBps);
                 string recvStr = FormatBandwidth(totalRecvBps);
-                double totalBps = totalSendBps + totalRecvBps;
-                // 10 Mbps scale for Task Manager percentage
-                snapshot.NetworkPercent = Math.Clamp((totalBps / (10.0 * 1024.0 * 1024.0)) * 100.0, 0, 100);
+                double totalBitsPerSec = (totalSendBps + totalRecvBps) * 8;
+                // Percentage of the negotiated link rate. The previous fixed 10 Mbps full-scale
+                // pinned the meter at 100% on any modern Wi-Fi or gigabit link.
+                double scaleBitsPerSec = linkBitsPerSec > 0 ? linkBitsPerSec : 100.0 * 1000 * 1000;
+                snapshot.NetworkPercent = Math.Clamp((totalBitsPerSec / scaleBitsPerSec) * 100.0, 0, 100);
                 // WiFi for a single wireless link, LAN for a single wired one, NET when several are active
                 snapshot.NetworkName = activeInterfaces.Count > 1
                     ? "NET"
@@ -366,14 +395,17 @@ public class SystemTelemetryService : IDisposable
         }
         catch { }
 
-        bool freshSmiSample = SampleNvidiaSmi();
+        // The sensor library, when elevated, already reported this GPU in SampleCpuSensors;
+        // nvidia-smi is only spawned when it did not.
+        bool freshGpuSample = _freshGpuSample || (!_gpuSensorsFromMonitor && SampleNvidiaSmi());
+        _freshGpuSample = false;
 
         double wmiActiveUtil = gpuUtilMap.Count > 0 ? Math.Clamp(gpuUtilMap.Values.Max(), 0, 100) : double.NaN;
 
-        // Decide which GPU is active from nvidia-smi alone — mixing it with the WMI counters
-        // compared a 5s-old number against a 1s-old one and oscillated. The state is re-evaluated
-        // only when a fresh smi sample arrives and is held steady in between.
-        if (_nvidiaSmiUnavailable || double.IsNaN(_gpuSmiUtil))
+        // Decide which GPU is active from the dedicated GPU's own utilization alone — mixing it
+        // with the WMI counters compared a 5s-old number against a 1s-old one and oscillated. The
+        // state is re-evaluated only when a fresh sample arrives and is held steady in between.
+        if (double.IsNaN(_gpuSmiUtil) || (_nvidiaSmiUnavailable && !_gpuSensorsFromMonitor))
         {
             _dedicatedActiveState = false;
         }
@@ -381,7 +413,7 @@ public class SystemTelemetryService : IDisposable
         {
             _dedicatedActiveState = true;                 // single-GPU (NVIDIA) system
         }
-        else if (freshSmiSample)
+        else if (freshGpuSample)
         {
             (_dedicatedActiveState, _dedicatedIdleSamples) =
                 EvaluateDedicatedGpuState(_dedicatedActiveState, _dedicatedIdleSamples, _gpuSmiUtil);
@@ -392,6 +424,11 @@ public class SystemTelemetryService : IDisposable
 
         snapshot.GpuName = "GPU";
 
+        // The discrete card has a real temperature whether or not it is the adapter currently
+        // doing the work, so the raw value is always carried even when the display follows the
+        // integrated adapter and shows no temperature of its own.
+        snapshot.GpuTempC = _gpuTempC;
+
         if (dedicatedActive)
         {
             // Prefer the 1s WMI sample (the busiest adapter is the dGPU here); smi refreshes only every 5s
@@ -401,14 +438,16 @@ public class SystemTelemetryService : IDisposable
         }
         else if (!double.IsNaN(wmiActiveUtil))
         {
-            // Integrated adapters expose no clock or temperature source, so those read zero.
-            // The nvidia-smi values are not reused here — they describe the idle discrete GPU.
+            // Load and clock follow whichever adapter is doing the work, but temperature always
+            // describes the discrete card — it is the only one with a sensor, and an idle GPU
+            // still has a real temperature worth showing. The integrated adapter reports no
+            // clock at all, so that stays blank rather than reading as zero.
             snapshot.GpuPercent = wmiActiveUtil;
-            snapshot.GpuDisplay = FormatGpuDisplay(double.NaN, wmiActiveUtil, double.NaN);
+            snapshot.GpuDisplay = FormatGpuDisplay(double.NaN, wmiActiveUtil, _gpuTempC);
         }
         else
         {
-            // No sample from any source — keep the layout stable with zeros
+            // No sample from any source — keep the layout stable, but do not claim a reading
             snapshot.GpuPercent = 0;
             snapshot.GpuDisplay = FormatGpuDisplay(double.NaN, 0, double.NaN);
         }
@@ -488,13 +527,81 @@ public class SystemTelemetryService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Fills the cached CPU temperature and clock. Refreshed every 5th tick — neither moves
+    /// meaningfully on a 1s scale, and both sources are comparatively expensive.
+    ///
+    /// Temperature is taken from the processor's own die sensors first. The ACPI thermal zone
+    /// used as the fallback is a chassis sensor: on this class of machine it reports roughly
+    /// 28 °C regardless of CPU load, so it is flagged as not-from-die and the UI must not
+    /// present it as a processor temperature.
+    /// </summary>
+    private void SampleCpuSensors()
+    {
+        bool haveReading = !double.IsNaN(_cachedCpuTempC) || !double.IsNaN(_cachedCpuGhz);
+        if (haveReading && _tickCount % 5 != 1) return;
+
+        // Sample() is called unconditionally: it decides internally which backend to use, and the
+        // Afterburner path stays viable even after the driver-backed one has disabled itself
+        // (the user can start Afterburner at any point during the session).
+        if (_hardwareMonitor != null)
+        {
+            var hw = _hardwareMonitor.Sample();
+
+            double die = !double.IsNaN(hw.CpuPackageTempC) ? hw.CpuPackageTempC : hw.CpuMaxCoreTempC;
+            if (!double.IsNaN(die))
+            {
+                _cachedCpuTempC = die;
+                _cpuTempIsFromDie = true;
+            }
+
+            if (!double.IsNaN(hw.CpuClockGhz))
+                _cachedCpuGhz = hw.CpuClockGhz;
+
+            // The same poll already carries the discrete GPU's sensors — no reason to also
+            // spawn nvidia-smi when this succeeded.
+            if (!double.IsNaN(hw.GpuTempC)) _gpuTempC = hw.GpuTempC;
+            if (!double.IsNaN(hw.GpuClockGhz)) _gpuClockGhz = hw.GpuClockGhz;
+            if (!double.IsNaN(hw.GpuLoadPercent))
+            {
+                _gpuSmiUtil = hw.GpuLoadPercent;
+                _gpuSensorsFromMonitor = true;
+                _freshGpuSample = true;
+            }
+            if (!string.IsNullOrWhiteSpace(hw.GpuName)) _dedicatedGpuName ??= hw.GpuName;
+
+            if (_cpuTempIsFromDie) { SampleCpuClockFallback(); return; }
+        }
+
+        SampleAcpiThermalZone();
+        SampleCpuClockFallback();
+    }
+
+    // Base clock scaled by processor performance (Task Manager style). Only used when the
+    // per-core sensors are unavailable — on hybrid P/E-core parts this ratio is an approximation.
+    private void SampleCpuClockFallback()
+    {
+        if (!double.IsNaN(_cachedCpuGhz)) return;
+
+        try
+        {
+            using var perfSearcher = new ManagementObjectSearcher(
+                "SELECT PercentProcessorPerformance FROM Win32_PerfFormattedData_Counters_ProcessorInformation WHERE Name='_Total'");
+            foreach (var obj in perfSearcher.Get())
+            {
+                if (ulong.TryParse(obj["PercentProcessorPerformance"]?.ToString(), out ulong perf) && perf > 0)
+                    _cachedCpuGhz = _baseCpuMhz * perf / 100.0 / 1000.0;
+                break;
+            }
+        }
+        catch { }
+    }
+
     // Thermal-zone performance counters report Kelvin and, unlike the ACPI WMI class
     // (MSAcpi_ThermalZoneTemperature), are readable without administrator rights.
-    // Refreshed every 5th tick — temperature doesn't move on a 1s scale.
-    private void SampleCpuTemperature()
+    private void SampleAcpiThermalZone()
     {
-        if (_cpuTempUnavailable) return;
-        if (!double.IsNaN(_cachedCpuTempC) && _tickCount % 5 != 1) return;
+        if (_acpiTempUnavailable) return;
 
         try
         {
@@ -511,13 +618,34 @@ public class SystemTelemetryService : IDisposable
                 }
             }
 
-            if (double.IsNaN(max)) _cpuTempUnavailable = true;
-            else _cachedCpuTempC = max;
+            if (double.IsNaN(max))
+            {
+                _acpiTempUnavailable = true;
+            }
+            else
+            {
+                _cachedCpuTempC = max;
+                _cpuTempIsFromDie = false;
+            }
         }
         catch
         {
-            _cpuTempUnavailable = true;
+            _acpiTempUnavailable = true;
         }
+    }
+
+    /// <summary>
+    /// Renders a temperature in the unit the user picked, or an em dash when there is no
+    /// reading. A missing sensor must never render as "0°C" — that reads as a real measurement.
+    /// </summary>
+    private string FormatTemp(double celsius)
+    {
+        if (double.IsNaN(celsius)) return "—";
+
+        var unit = _settingsService?.GetSettings().TemperatureUnit ?? TemperatureUnit.Celsius;
+        return unit == TemperatureUnit.Fahrenheit
+            ? $"{TemperatureHelper.ToFahrenheit(celsius):0}°F"
+            : $"{celsius:0}°C";
     }
 
     // GPU clock and temperature are only exposed by the vendor tool; nvidia-smi covers NVIDIA machines.
@@ -599,14 +727,14 @@ public class SystemTelemetryService : IDisposable
     }
 
     /// <summary>
-    /// Always renders clock / load / temperature so the card keeps one layout.
-    /// Values with no source available read as zero rather than being dropped.
+    /// Always renders clock / load / temperature so the card keeps one layout. A value with no
+    /// source available renders as an em dash: integrated adapters expose neither a clock nor a
+    /// temperature, and showing those as "0.00 GHz  0°C" claimed a measurement that was never taken.
     /// </summary>
-    private static string FormatGpuDisplay(double clockGhz, double percent, double tempC)
+    private string FormatGpuDisplay(double clockGhz, double percent, double tempC)
     {
-        double clock = double.IsNaN(clockGhz) ? 0 : clockGhz;
-        double temp = double.IsNaN(tempC) ? 0 : tempC;
-        return $"{clock:0.00} GHz  {percent:0}%  {temp:0}°C";
+        string clock = double.IsNaN(clockGhz) ? "—" : $"{clockGhz:0.00} GHz";
+        return $"{clock}  {percent:0}%  {FormatTemp(tempC)}";
     }
 
     private static string FormatBandwidth(double bytesPerSec)

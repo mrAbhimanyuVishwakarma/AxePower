@@ -18,6 +18,7 @@ public partial class SystemDoctorViewModel : ObservableObject
     private readonly IDnsOptimizerService _dnsService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
+    private readonly TerminalService _terminalService;
 
     private CancellationTokenSource? _diagnosticCts;
 
@@ -69,13 +70,15 @@ public partial class SystemDoctorViewModel : ObservableObject
         ICacheCleanerService cacheCleanerService,
         IDnsOptimizerService dnsService,
         NotificationService notificationService,
-        LogService logService)
+        LogService logService,
+        TerminalService terminalService)
     {
         _doctorService = doctorService;
         _cacheCleanerService = cacheCleanerService;
         _dnsService = dnsService;
         _notificationService = notificationService;
         _logService = logService;
+        _terminalService = terminalService;
 
         LoadDnsProviders();
         _ = InitializeDataAsync();
@@ -143,12 +146,19 @@ public partial class SystemDoctorViewModel : ObservableObject
         DiagnosticStatusText = $"Running {taskName}...";
         _diagnosticCts = new CancellationTokenSource();
 
+        // Diagnostic output streams to the shared Terminal page; jump there and let its Stop
+        // button cancel this task while the buttons here are off-screen.
+        _terminalService.ActiveExternalCancel = () => _diagnosticCts?.Cancel();
+        _terminalService.AppendExternalLine($"\n[{DateTime.Now:HH:mm:ss}] >>> Starting {taskName} <<<");
+        _terminalService.RequestNavigateToTerminal();
+
         var sb = new StringBuilder(ConsoleLogs);
         sb.AppendLine($"\n[{DateTime.Now:HH:mm:ss}] >>> Starting {taskName} <<<");
         ConsoleLogs = sb.ToString();
 
         var progress = new Progress<string>(line =>
         {
+            _terminalService.AppendExternalLine(line);
             App.Current?.Dispatcher?.BeginInvoke(() =>
             {
                 ConsoleLogs += line + "\n";
@@ -176,6 +186,7 @@ public partial class SystemDoctorViewModel : ObservableObject
         {
             IsDiagnosticRunning = false;
             DiagnosticStatusText = string.Empty;
+            _terminalService.ActiveExternalCancel = null;
             _diagnosticCts?.Dispose();
             _diagnosticCts = null;
         }

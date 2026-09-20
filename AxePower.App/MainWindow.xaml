@@ -9,11 +9,12 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:converters="clr-namespace:AxePower.App.Converters"
         mc:Ignorable="d"
-        Title="AxePower" Height="840" Width="1280" MinWidth="1024" MinHeight="720"
+        Title="AxePower" Height="840" Width="1280" MinWidth="1024" MinHeight="760"
         WindowStyle="SingleBorderWindow" AllowsTransparency="False" ResizeMode="CanResize"
         Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
         WindowStartupLocation="CenterScreen"
-        Icon="/Resources/AxePower_white.ico"
+        Icon="{DynamicResource AppIconImage}"
         Topmost="{Binding DashboardVm.IsWindowTopmost}">
         
     <WindowChrome.WindowChrome>
@@ -47,6 +48,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:SystemDoctorViewModel}">
             <views:SystemDoctorView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:TerminalViewModel}">
+            <views:TerminalView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:SoftwareHubViewModel}">
             <views:SoftwareHubView />
@@ -90,27 +94,32 @@
                     Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="96"/>
+                        <RowDefinition Height="88"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
                     <!-- Branding -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="28,24,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <Image Source="/Resources/AxePower_white.ico" Width="42" Height="42" />
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="28,20,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Image Source="{DynamicResource AppIconImage}" Width="42" Height="42" />
                         <TextBlock Text="AxePower" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="22" FontWeight="SemiBold" Margin="12,0,0,0" />
                     </StackPanel>
                     
-                    <!-- Scrollable Navigation Groups -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" WindowChrome.IsHitTestVisibleInChrome="True" Padding="0,0,0,8">
-                        <StackPanel Margin="0,4,0,0">
+                    <!-- Navigation groups. No scroll viewer: every item is sized to fit the sidebar outright, and the
+                         window's MinHeight is set so the list can never be squeezed shorter than it needs. -->
+                    <StackPanel Grid.Row="1" Margin="0,2,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
                             <!-- 1. CONTROL GROUP -->
                             <TextBlock Text="CONTROL" Style="{StaticResource SidebarGroupHeaderTextStyle}" />
 
                             <!-- Dashboard -->
                             <Button Style="{Binding DashboardActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Source="/Resources/icons/Dashboards.png" Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
+                                               Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                        <Rectangle.OpacityMask>
+                                            <ImageBrush ImageSource="/Resources/icons/Dashboards.png" Stretch="Uniform"/>
+                                        </Rectangle.OpacityMask>
+                                    </Rectangle>
                                     <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
@@ -118,7 +127,12 @@
                             <!-- Game Mode -->
                             <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Source="/Resources/icons/controller.png" Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
+                                               Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                        <Rectangle.OpacityMask>
+                                            <ImageBrush ImageSource="/Resources/icons/controller.png" Stretch="Uniform"/>
+                                        </Rectangle.OpacityMask>
+                                    </Rectangle>
                                     <TextBlock Text="Game Mode" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
@@ -126,13 +140,18 @@
                             <!-- Battery -->
                             <Button Style="{Binding BatteryActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Battery">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Source="/Resources/icons/battery.png" Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
+                                               Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                        <Rectangle.OpacityMask>
+                                            <ImageBrush ImageSource="/Resources/icons/battery.png" Stretch="Uniform"/>
+                                        </Rectangle.OpacityMask>
+                                    </Rectangle>
                                     <TextBlock Text="Battery" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
                             <!-- 2. CONNECTION GROUP -->
-                            <TextBlock Text="CONNECTION" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="20,16,20,4"/>
+                            <TextBlock Text="CONNECTION" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="20,10,20,3"/>
 
                             <!-- Phone Control -->
                             <Button Style="{Binding PhoneHubActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="PhoneHub" ToolTip="Phone Control: Screen mirroring, Wi-Fi LAN drop &amp; remote tools">
@@ -151,7 +170,7 @@
                             </Button>
 
                             <!-- 3. MAINTENANCE GROUP (Collapsible) -->
-                            <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleMaintenanceGroupCommand}" Margin="10,14,10,2">
+                            <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleMaintenanceGroupCommand}" Margin="10,8,10,2">
                                 <Grid VerticalAlignment="Center">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -179,10 +198,18 @@
                                         <TextBlock Text="Doctor" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
+
+                                <!-- Terminal -->
+                                <Button Style="{Binding TerminalActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Terminal" ToolTip="Built-in CMD / PowerShell terminal — the central place command output runs">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Terminal" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
 
                             <!-- 4. UTILITIES GROUP (Collapsible) -->
-                            <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleUtilitiesGroupCommand}" Margin="10,14,10,2">
+                            <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleUtilitiesGroupCommand}" Margin="10,8,10,2">
                                 <Grid VerticalAlignment="Center">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -198,7 +225,12 @@
                                 <!-- MSI Afterburner -->
                                 <Button Style="{StaticResource SidebarSubItemButtonStyle}" Command="{Binding OpenMsiAfterburnerCommand}" ToolTip="Open MSI Afterburner with hardware monitoring">
                                     <StackPanel Orientation="Horizontal">
-                                        <Image Source="/Resources/icons/MSI Afterburner.png" Width="16" Height="16" Margin="0,0,12,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                        <Rectangle Width="16" Height="16" Margin="0,0,12,0" VerticalAlignment="Center"
+                                                   Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                            <Rectangle.OpacityMask>
+                                                <ImageBrush ImageSource="/Resources/icons/MSI Afterburner.png" Stretch="Uniform"/>
+                                            </Rectangle.OpacityMask>
+                                        </Rectangle>
                                         <TextBlock Text="MSI Afterburner" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
@@ -227,13 +259,12 @@
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
-                        </StackPanel>
-                    </ScrollViewer>
+                    </StackPanel>
 
                     <!-- Bottom Fixed Navigation (Settings & About) -->
-                    <StackPanel Grid.Row="2" Margin="0,0,0,16" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <StackPanel Grid.Row="2" Margin="0,0,0,10" WindowChrome.IsHitTestVisibleInChrome="True">
                         <!-- Divider -->
-                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="20,0,20,8" Opacity="0.4"/>
+                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="20,0,20,6" Opacity="0.4"/>
 
                         <!-- Settings (Above About) -->
                         <Button Style="{Binding SettingsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings">
@@ -278,6 +309,27 @@
 
                 <!-- Window Controls -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <!-- Relaunch with Admin (Left of Help) — hidden once already elevated -->
+                    <Button Command="{Binding RelaunchAsAdminCommand}" ToolTip="Restart AxePower with administrator rights for full system access"
+                            Background="Transparent" BorderThickness="0" Height="36" Padding="14,0" Margin="0,0,6,0" Cursor="Hand"
+                            Visibility="{Binding ShowRelaunchAdmin, Converter={StaticResource BoolToVis}}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="adminBtnBorder" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE7EF;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#F59E0B" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                        <TextBlock Text="Relaunch with Admin" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="adminBtnBorder" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
                     <!-- ? Help Button (Left of Minimize) -->
                     <Button Command="{Binding OpenToolHelpCommand}" ToolTip="Help &amp; Documentation"
                             Background="Transparent" BorderThickness="0" Height="36" Padding="14,0" Margin="0,0,6,0" Cursor="Hand">
@@ -299,21 +351,70 @@
                     </Button>
 
                     <!-- Minimize Window Button -->
-                    <Button Content="—" FontFamily="Segoe UI" ToolTip="Minimize" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="MinimizeButton_Click"/>
+                    <Button Content="—" FontFamily="Segoe UI" ToolTip="Minimize" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="MinimizeButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="btnBorder" Background="{TemplateBinding Background}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="btnBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <!-- Maximize Window Button -->
-                    <Button Content="◻" FontFamily="Segoe UI" ToolTip="Maximize" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="16" Click="MaximizeButton_Click"/>
+                    <Button Content="◻" FontFamily="Segoe UI" ToolTip="Maximize" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="16" Click="MaximizeButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="btnBorder" Background="{TemplateBinding Background}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="btnBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <!-- Close (Minimizes to System Tray) Button -->
                     <Button Content="✕" FontFamily="Segoe UI" ToolTip="Minimize to System Tray" Foreground="{DynamicResource SecondaryTextBrush}" Background="Transparent" BorderThickness="0" Width="48" Height="36" FontSize="14" Click="CloseButton_Click">
                         <Button.Style>
                             <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#E81123"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </Trigger>
-                                </Style.Triggers>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="btnBorder" Background="{TemplateBinding Background}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="btnBorder" Property="Background" Value="#E81123"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                             </Style>
                         </Button.Style>
                     </Button>
@@ -1345,8 +1446,8 @@
                             </Button>
 
                             <!-- App Icon Badge -->
-                            <Border Width="36" Height="36" CornerRadius="4" Background="#1E2833" BorderBrush="#2C3A48" BorderThickness="1" Margin="0,8,0,0">
-                                <Image Source="/Resources/AxePower_white.ico" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Width="36" Height="36" CornerRadius="4" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,8,0,0">
+                                <Image Source="{DynamicResource AppIconImage}" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </StackPanel>
                     </Grid>
@@ -1355,16 +1456,20 @@
 
             <!-- Tray Icon -->
             <tb:TaskbarIcon x:Name="AppTrayIcon"
-                            IconSource="/Resources/AxePower_white.ico"
+                            IconSource="{DynamicResource AppIconImage}"
                             ToolTipText="AxePower"
                             TrayMouseDoubleClick="AppTrayIcon_TrayMouseDoubleClick">
                 <tb:TaskbarIcon.ContextMenu>
-                    <ContextMenu MinWidth="210" Background="Transparent" BorderThickness="0">
+                    <ContextMenu MinWidth="255" Background="Transparent" BorderThickness="0">
                         <ContextMenu.Template>
                             <ControlTemplate TargetType="ContextMenu">
-                                <Border Background="#171D25" BorderBrush="#2E3F53" BorderThickness="1" CornerRadius="6" Padding="4,5">
+                                <Border Background="{DynamicResource TrayMenuBackgroundBrush}" 
+                                        BorderBrush="{DynamicResource TrayMenuBorderBrush}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="0" 
+                                        Padding="1,2">
                                     <Border.Effect>
-                                        <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="3" Opacity="0.45"/>
+                                        <DropShadowEffect Color="#000000" BlurRadius="10" ShadowDepth="3" Opacity="0.5"/>
                                     </Border.Effect>
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                                 </Border>
@@ -1372,31 +1477,31 @@
                         </ContextMenu.Template>
                         <ContextMenu.Resources>
                             <Style TargetType="MenuItem">
-                                <Setter Property="Height" Value="31"/>
+                                <Setter Property="Height" Value="28"/>
                                 <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="#C6D4DF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TrayMenuForegroundBrush}"/>
                                 <Setter Property="Cursor" Value="Hand"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="MenuItem">
-                                            <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="4" Margin="2,1" Padding="10,0">
+                                            <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="0" Margin="0,0" Padding="12,0">
                                                 <Grid VerticalAlignment="Center">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="22"/>
+                                                        <ColumnDefinition Width="24"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock x:Name="IconText" Grid.Column="0" Text="{TemplateBinding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Left" Opacity="0.9"/>
-                                                    <TextBlock x:Name="HeaderText" Grid.Column="1" Text="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" FontSize="13" FontFamily="Segoe UI Variable, Segoe UI, Arial" FontWeight="Normal" VerticalAlignment="Center" Margin="4,0,8,0"/>
+                                                    <TextBlock x:Name="IconText" Grid.Column="0" Text="{TemplateBinding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                                    <TextBlock x:Name="HeaderText" Grid.Column="1" Text="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" FontSize="12.5" FontFamily="Segoe UI Variable Text, Segoe UI, Arial" FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,8,0"/>
                                                 </Grid>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsHighlighted" Value="True">
-                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#28405A"/>
-                                                    <Setter TargetName="HeaderText" Property="Foreground" Value="#FFFFFF"/>
-                                                    <Setter TargetName="IconText" Property="Foreground" Value="#66C0F4"/>
+                                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource TrayMenuHoverBackgroundBrush}"/>
+                                                    <Setter TargetName="HeaderText" Property="Foreground" Value="{DynamicResource TrayMenuHoverForegroundBrush}"/>
+                                                    <Setter TargetName="IconText" Property="Foreground" Value="{DynamicResource TrayMenuHoverForegroundBrush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#1C2D40"/>
+                                                    <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource TrayMenuSeparatorBrush}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -1407,22 +1512,22 @@
                                 <Setter Property="OverridesDefaultStyle" Value="True"/>
                                 <Setter Property="SnapsToDevicePixels" Value="True"/>
                                 <Setter Property="Height" Value="1"/>
-                                <Setter Property="Margin" Value="0,4"/>
+                                <Setter Property="Margin" Value="0,2"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Separator">
-                                            <Border Height="1" Background="#283A4D" HorizontalAlignment="Stretch" Margin="0,0"/>
+                                            <Border Height="1" Background="{DynamicResource TrayMenuSeparatorBrush}" HorizontalAlignment="Stretch" Margin="0,0"/>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
                             </Style>
                         </ContextMenu.Resources>
 
-                        <!-- Group 1: Modes (Steam Blue / Accent Style) -->
-                        <MenuItem Header="Eco" Icon="&#xE706;" Foreground="#4ADE80" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Eco"/>
-                        <MenuItem Header="Smart" Icon="&#xE72C;" Foreground="#60A5FA" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Smart"/>
-                        <MenuItem Header="Beast" Icon="&#xE7FC;" Foreground="#F87171" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Beast"/>
-                        <MenuItem Header="Game Mode" Icon="&#xE7FC;" Foreground="#A78BFA" Command="{Binding ApplyPowerModeCommand}" CommandParameter="GameMode"/>
+                        <!-- Group 1: Modes -->
+                        <MenuItem Header="Eco" Icon="&#xE706;" Foreground="{DynamicResource EcoBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Eco"/>
+                        <MenuItem Header="Smart" Icon="&#xE72C;" Foreground="{DynamicResource SmartBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Smart"/>
+                        <MenuItem Header="Beast" Icon="&#xE7FC;" Foreground="{DynamicResource BeastBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Beast"/>
+                        <MenuItem Header="Game Mode" Icon="&#xE7FC;" Foreground="{DynamicResource AccentBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="GameMode"/>
 
                         <Separator/>
 

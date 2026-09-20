@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -112,8 +112,7 @@ public partial class PackageCardViewModel : ObservableObject
             LocalInstallerPath,
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ninite Installer.exe"),
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Ninite Installer.exe"),
-            Path.Combine(Directory.GetCurrentDirectory(), "Ninite Installer.exe"),
-            @"C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\Ninite Installer.exe"
+            Path.Combine(Directory.GetCurrentDirectory(), "Ninite Installer.exe")
         };
 
         string? foundPath = candidatePaths.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p) && File.Exists(p));
@@ -256,6 +255,8 @@ public partial class SoftwareHubViewModel : ObservableObject
     private readonly GraphicsDriverService _graphicsDriverService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
+    private readonly TerminalService _terminalService;
+    private readonly RestorePointService _systemRestoreService;
 
     [ObservableProperty]
     private string _activeTab = "Updaters"; // "Updaters", "Apps", "Updates", "Console"
@@ -345,6 +346,9 @@ public partial class SoftwareHubViewModel : ObservableObject
     [ObservableProperty]
     private bool _isUpgradingAll;
 
+    [ObservableProperty]
+    private bool _isCreatingRestorePoint;
+
     public SoftwareHubViewModel(
         IWinGetHubService hubService,
         IWindowsUpdateShieldService updateShieldService,
@@ -352,7 +356,9 @@ public partial class SoftwareHubViewModel : ObservableObject
         FirmwareUpdateService firmwareUpdateService,
         NotificationService notificationService,
         LogService logService,
-        GraphicsDriverService graphicsDriverService)
+        GraphicsDriverService graphicsDriverService,
+        TerminalService terminalService,
+        RestorePointService systemRestoreService)
     {
         _hubService = hubService;
         _updateShieldService = updateShieldService;
@@ -361,6 +367,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         _notificationService = notificationService;
         _logService = logService;
         _graphicsDriverService = graphicsDriverService;
+        _terminalService = terminalService;
+        _systemRestoreService = systemRestoreService;
 
         LoadPackages();
         LoadShieldSettings();
@@ -594,11 +602,17 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public void SetCategory(string category)
     {
+        // OnSelectedCategoryChanged runs the filter.
         SelectedCategory = category;
-        ApplyFilter();
     }
 
     partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
+
+    // Category chips bind two-way to SelectedCategory, so filter whenever it changes.
+    partial void OnSelectedCategoryChanged(string value)
     {
         ApplyFilter();
     }
@@ -664,7 +678,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         IsUpgradingAll = true;
         try
         {
-            ActiveTab = "Console";
+            // Live progress now streams to the shared Terminal page.
+            _terminalService.RequestNavigateToTerminal();
             var progress = new Progress<string>(AppendLog);
             bool ok = await _hubService.UpgradeAllPackagesAsync(progress);
             if (ok)
@@ -817,6 +832,32 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    public async Task CreateRestorePointAsync()
+    {
+        if (IsCreatingRestorePoint) return;
+
+        if (!TerminalService.IsProcessElevated())
+        {
+            Notify("Creating a restore point needs admin — click \"Relaunch with Admin\" (top bar), then try again.");
+            return;
+        }
+
+        IsCreatingRestorePoint = true;
+        try
+        {
+            _terminalService.RequestNavigateToTerminal();
+            var progress = new Progress<string>(AppendLog);
+            var stamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+            bool ok = await _systemRestoreService.CreateRestorePointAsync($"AxePower Restore Point — {stamp}", progress);
+            Notify(ok ? "✓ System Restore point created." : "Restore point finished with notices. Check the Terminal.");
+        }
+        finally
+        {
+            IsCreatingRestorePoint = false;
+        }
+    }
+
     public void AppendLog(string message)
     {
         if (string.IsNullOrEmpty(message)) return;
@@ -827,6 +868,9 @@ public partial class SoftwareHubViewModel : ObservableObject
             sb.Remove(0, 5000);
         }
         LiveLogs = sb.ToString();
+
+        // Mirror into the central Terminal page so it's the one place output appears.
+        _terminalService.AppendExternalLine(message);
     }
 
     public void Notify(string message)

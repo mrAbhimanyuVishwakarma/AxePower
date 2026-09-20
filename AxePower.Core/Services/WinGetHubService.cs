@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -167,6 +167,18 @@ public class WinGetHubService : IWinGetHubService
             WebUrl = "https://github.com/rakanki911/DLSS5-Swapper/releases"
         });
 
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "wemod",
+            WinGetId = "WeMod.WeMod",
+            Name = "WeMod",
+            Description = "Popular game trainer app with mods, cheats, and unlimited health/ammo for thousands of single-player titles.",
+            Category = PackageCategory.Gaming,
+            Glyph = "",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WeMod", "WeMod.exe"),
+            WebUrl = "https://www.wemod.com/"
+        });
+
         // 3. Hardware & Tuning
         _packages.Add(new SoftwarePackageItem
         {
@@ -237,7 +249,7 @@ public class WinGetHubService : IWinGetHubService
             Description = "Install and update popular Windows apps automatically at once with no toolbars or clicking next.",
             Category = PackageCategory.Utilities,
             Glyph = "\uE896",
-            LocalInstallerPath = @"C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\Ninite Installer.exe",
+            LocalInstallerPath = Path.Combine(AppContext.BaseDirectory, "Ninite Installer.exe"),
             CustomWebUrl = "https://ninite.com/",
             WebUrl = "https://ninite.com/"
         });

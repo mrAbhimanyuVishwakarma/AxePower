@@ -238,15 +238,18 @@
             <Button Grid.Row="2" 
                     Command="{Binding ApplyModeCommand}" 
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToVis}}"
-                    Margin="0,32,0,0" HorizontalAlignment="Center" Padding="48,16" Background="White" Foreground="Black" BorderThickness="0">
+                    Margin="0,32,0,0" HorizontalAlignment="Center" Padding="48,16" 
+                    Background="{DynamicResource CtaButtonBackgroundBrush}" 
+                    Foreground="{DynamicResource CtaButtonForegroundBrush}" 
+                    BorderThickness="0" Cursor="Hand">
                 <Button.Resources>
                     <Style TargetType="Border">
                         <Setter Property="CornerRadius" Value="28"/>
                     </Style>
                 </Button.Resources>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="✓" Foreground="Black" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBlock Text="Apply" Foreground="Black" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Text="✓" Foreground="{DynamicResource CtaButtonForegroundBrush}" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <TextBlock Text="Apply" Foreground="{DynamicResource CtaButtonForegroundBrush}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
         </Grid>
@@ -370,7 +373,7 @@
                         </UniformGrid>
 
                         <!-- CARD 1: WHAT'S NEW -->
-                        <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,10" Margin="0,0,0,10"
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,10" Margin="0,0,0,10"
                                 Visibility="{Binding IsShrunk, Converter={StaticResource InverseBoolToVis}}">
                             <StackPanel>
                                 <!-- Header -->
@@ -387,33 +390,29 @@
                                     </Border>
                                 </Grid>
 
-                                <!-- Features Dropdown -->
+                                <!-- Features Dropdown: picking an item jumps straight to that feature. -->
                                 <ComboBox Style="{DynamicResource AppComboBoxStyle}"
                                           ItemsSource="{Binding NewFeatures}"
-                                          SelectedItem="{Binding SelectedFeature}"
-                                          Margin="0,0,0,8">
+                                          SelectedItem="{Binding SelectedFeature}">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+                                            <EventSetter Event="PreviewMouseLeftButtonUp" Handler="FeatureItem_Clicked"/>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" Margin="0,2">
                                                 <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
-
-                                <!-- Quick Jump Action Button -->
-                                <Button Style="{DynamicResource PrimaryButtonStyle}"
-                                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding SelectedFeature.TargetNavigation}"
-                                        HorizontalAlignment="Right" Padding="12,5" FontSize="11">
-                                    <TextBlock Text="{Binding SelectedFeature.ButtonText}" FontWeight="SemiBold"/>
-                                </Button>
                             </StackPanel>
                         </Border>
 
                         <!-- CARD 2: CPU & GPU TELEMETRY -->
-                        <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,10" Margin="0,0,0,10">
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,10" Margin="0,0,0,10">
                             <StackPanel>
                                 <!-- Header -->
                                 <Grid Margin="0,0,0,8">
@@ -441,14 +440,14 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- [CPU] Tile -->
-                                    <Border Grid.Row="0" Grid.Column="0" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="0,0,3,6">
+                                    <Border Grid.Row="0" Grid.Column="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="0,0,3,6">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,3">
                                                 <TextBlock Text="CPU" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="11.5"/>
                                                 <TextBlock Text="{Binding CpuDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="9.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="36" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="36" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -475,14 +474,14 @@
                                     </Border>
 
                                     <!-- [GPU] Tile -->
-                                    <Border Grid.Row="0" Grid.Column="1" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="3,0,0,6">
+                                    <Border Grid.Row="0" Grid.Column="1" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="3,0,0,6">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,3">
                                                 <TextBlock Text="GPU" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="11.5"/>
                                                 <TextBlock Text="{Binding GpuDisplay}" Foreground="#C084FC" FontSize="9.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="36" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="36" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -509,14 +508,14 @@
                                     </Border>
 
                                     <!-- [RAM] Tile -->
-                                    <Border Grid.Row="1" Grid.Column="0" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="0,0,3,0">
+                                    <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="0,0,3,0">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,3">
                                                 <TextBlock Text="RAM" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="11.5"/>
                                                 <TextBlock Text="{Binding MemoryDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="9.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="36" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="36" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -543,14 +542,14 @@
                                     </Border>
 
                                     <!-- [WiFi speed] Tile -->
-                                    <Border Grid.Row="1" Grid.Column="1" Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="3,0,0,0">
+                                    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="3,0,0,0">
                                         <StackPanel>
                                             <StackPanel Margin="0,0,0,3">
                                                 <TextBlock Text="{Binding NetworkName}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="11.5" TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock Text="{Binding NetworkDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="9.5" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <!-- Sparkline Graph -->
-                                            <Border Height="36" Background="#10131A" BorderBrush="#1C222E" BorderThickness="1" CornerRadius="4">
+                                            <Border Height="36" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4">
                                                 <Grid ClipToBounds="True">
                                                     <Grid Opacity="0.18">
                                                         <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
@@ -577,48 +576,55 @@
                                     </Border>
                                 </Grid>
 
-                                <!-- Disks Storage inside Card 2 -->
-                                <ItemsControl ItemsSource="{Binding Disks}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#161B24" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10,7" Margin="0,0,0,6">
-                                                <StackPanel>
-                                                    <!-- Header: Disk Name on left (size data below it), Usage % on right -->
-                                                    <Grid Margin="0,0,0,5">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <TextBlock Text="&#xEDA2;" FontFamily="Segoe MDL2 Assets" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                                <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="11.5" VerticalAlignment="Center"/>
-                                                            </StackPanel>
-                                                            <TextBlock Text="{Binding FreeSpaceDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="9.5" Margin="16,1,0,0"/>
-                                                        </StackPanel>
-                                                        <TextBlock Grid.Column="1" Text="{Binding UsageDisplay}" Foreground="{Binding StatusColorHex}" FontWeight="SemiBold" FontSize="10" VerticalAlignment="Center"/>
-                                                    </Grid>
-
-                                                    <!-- Storage Bar Track -->
-                                                    <Border Height="4.5" Background="#1E2430" CornerRadius="2.25" ClipToBounds="True">
-                                                        <Grid>
+                                <!-- Disks Storage inside Card 2.
+                                     Capped at four rows: a machine with ten drives would otherwise grow this
+                                     card until the Battery card below it was pushed out of a rail that cannot
+                                     scroll. Each row is a fixed 56px + 6px margin, so MaxHeight=248 shows
+                                     exactly four and the bar appears — via Auto — only from the fifth on. -->
+                                <ScrollViewer Style="{DynamicResource OverlayScrollViewerStyle}" MaxHeight="248">
+                                    <!-- Gutter for the overlay scrollbar, reserved so rows never shift -->
+                                    <ItemsControl ItemsSource="{Binding Disks}" Margin="0,0,8,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Height="56" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,7" Margin="0,0,0,6">
+                                                    <StackPanel>
+                                                        <!-- Header: Disk Name on left (size data below it), Usage % on right -->
+                                                        <Grid Margin="0,0,0,5">
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="{Binding UsedPercent, Converter={StaticResource PercentageToGridLengthConverter}}"/>
-                                                                <ColumnDefinition Width="{Binding FreePercent, Converter={StaticResource PercentageToGridLengthConverter}}"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
-                                                            <Border Grid.Column="0" Background="{Binding StatusColorHex}" CornerRadius="2.25"/>
+                                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="&#xEDA2;" FontFamily="Segoe MDL2 Assets" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="11.5" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding FreeSpaceDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="9.5" Margin="16,1,0,0"/>
+                                                            </StackPanel>
+                                                            <TextBlock Grid.Column="1" Text="{Binding UsageDisplay}" Foreground="{Binding StatusColorHex}" FontWeight="SemiBold" FontSize="10" VerticalAlignment="Center"/>
                                                         </Grid>
-                                                    </Border>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+
+                                                        <!-- Storage Bar Track -->
+                                                        <Border Height="4.5" Background="{DynamicResource CardHoverBrush}" CornerRadius="2.25" ClipToBounds="True">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="{Binding UsedPercent, Converter={StaticResource PercentageToGridLengthConverter}}"/>
+                                                                    <ColumnDefinition Width="{Binding FreePercent, Converter={StaticResource PercentageToGridLengthConverter}}"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <Border Grid.Column="0" Background="{Binding StatusColorHex}" CornerRadius="2.25"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
                             </StackPanel>
                         </Border>
 
                         <!-- CARD 3: BATTERY -->
-                        <Border Background="#12161E" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,10" Margin="0,0,0,0">
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12,10" Margin="0,0,0,0">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -657,7 +663,7 @@
                                     </Grid>
 
                                     <!-- High-Resolution Timeline Sparkline Canvas with Glowing Gradient -->
-                                    <Border Grid.Column="1" Height="82" Background="#14181F" BorderBrush="#252D3B" BorderThickness="1" CornerRadius="8">
+                                    <Border Grid.Column="1" Height="82" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8">
                                         <Grid ClipToBounds="True">
                                             <!-- Background Grid Lines -->
                                             <Grid Opacity="0.12">

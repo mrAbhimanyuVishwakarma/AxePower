@@ -20,6 +20,9 @@
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}" />
     <SolidColorBrush x:Key="ElevatedCardBackgroundBrush" Color="{StaticResource ElevatedCardBackgroundColor}" />
     <SolidColorBrush x:Key="CardHoverBrush" Color="{StaticResource HoverSurfaceColor}" />
+    <SolidColorBrush x:Key="HoverBackgroundBrush" Color="{StaticResource HoverSurfaceColor}" />
+    <SolidColorBrush x:Key="CtaButtonBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="CtaButtonForegroundBrush" Color="#090A0D" />
     
     <!-- Borders -->
     <Color x:Key="CardBorderColor">#2A2D35</Color>
@@ -49,5 +52,16 @@
     <SolidColorBrush x:Key="EcoBrush" Color="#10B981" />
     <SolidColorBrush x:Key="SmartBrush" Color="#3B82F6" />
     <SolidColorBrush x:Key="BeastBrush" Color="#F97316" />
+
+    <!-- Steam Taskbar Context Menu Theme -->
+    <SolidColorBrush x:Key="TrayMenuBackgroundBrush" Color="#3D4450" />
+    <SolidColorBrush x:Key="TrayMenuBorderBrush" Color="#282828" />
+    <SolidColorBrush x:Key="TrayMenuForegroundBrush" Color="#DCDEDF" />
+    <SolidColorBrush x:Key="TrayMenuHoverBackgroundBrush" Color="#DCDEDF" />
+    <SolidColorBrush x:Key="TrayMenuHoverForegroundBrush" Color="#1E2228" />
+    <SolidColorBrush x:Key="TrayMenuSeparatorBrush" Color="#5E6063" />
+
+    <!-- App Logo Icon -->
+    <BitmapImage x:Key="AppIconImage" UriSource="/Resources/AxePower_white.ico" />
 
 </ResourceDictionary>

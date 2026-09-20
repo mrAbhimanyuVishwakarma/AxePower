@@ -146,6 +146,15 @@ public partial class MainWindow : Window
     {
         base.OnSourceInitialized(e);
         _themeService.ApplyWindowEffects(this, _settingsService.GetSettings().Theme);
+        UpdateTrayIcon();
+        UpdateWindowIcon();
+
+        _themeService.ThemeChanged += OnThemeChanged;
+        try
+        {
+            Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+        }
+        catch { }
     }
 
     private void OpenApp_Click(object sender, RoutedEventArgs e)
@@ -284,5 +293,75 @@ public partial class MainWindow : Window
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
         this.Close();
+    }
+
+    private void OnThemeChanged(AxePower.Core.Models.AppTheme actualTheme)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            UpdateTrayIcon();
+            UpdateWindowIcon();
+        });
+    }
+
+    private void OnUserPreferenceChanged(object sender, Microsoft.Win32.UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == Microsoft.Win32.UserPreferenceCategory.General || e.Category == Microsoft.Win32.UserPreferenceCategory.Color)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                UpdateTrayIcon();
+                UpdateWindowIcon();
+                if (_settingsService.GetSettings().Theme == AxePower.Core.Models.AppTheme.System)
+                {
+                    _themeService.ApplyTheme(AxePower.Core.Models.AppTheme.System);
+                }
+            });
+        }
+    }
+
+    public void UpdateTrayIcon()
+    {
+        try
+        {
+            var settings = _settingsService.GetSettings();
+            bool isLight = _themeService.IsTaskbarLight(settings.Theme);
+            var uri = new Uri(isLight
+                ? "pack://application:,,,/Resources/AxePower_black.ico"
+                : "pack://application:,,,/Resources/AxePower_white.ico", UriKind.Absolute);
+
+            AppTrayIcon.IconSource = new System.Windows.Media.Imaging.BitmapImage(uri);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[UpdateTrayIcon] {ex.Message}");
+        }
+    }
+
+    public void UpdateWindowIcon()
+    {
+        try
+        {
+            var actual = _themeService.ResolveActualTheme(_settingsService.GetSettings().Theme);
+            var uri = new Uri(actual == AxePower.Core.Models.AppTheme.Light
+                ? "pack://application:,,,/Resources/AxePower_black.ico"
+                : "pack://application:,,,/Resources/AxePower_white.ico", UriKind.Absolute);
+            this.Icon = new System.Windows.Media.Imaging.BitmapImage(uri);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[UpdateWindowIcon] {ex.Message}");
+        }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _themeService.ThemeChanged -= OnThemeChanged;
+        try
+        {
+            Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+        }
+        catch { }
+        base.OnClosed(e);
     }
 }

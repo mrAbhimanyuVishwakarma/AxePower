@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -78,6 +78,10 @@ public class GpuControlAppService
         };
     }
 
+    private static string ProgramFiles => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+    private static string ProgramFilesX86 => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+    private static string ProgramData => Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+
     public bool OpenGraphicsSettings()
     {
         var vendor = DetectVendor();
@@ -85,10 +89,12 @@ public class GpuControlAppService
         if (vendor == DetectedGpuVendor.Nvidia || vendor == DetectedGpuVendor.Unknown)
         {
             // 1. Try NVIDIA App
+            // Built from the shell's folder constants rather than spelled out: Windows is not
+            // always installed on C:, and on those machines a literal path finds nothing.
             string[] nvidiaAppPaths = {
-                @"C:\Program Files\NVIDIA Corporation\NVIDIA App\CEF\NVIDIA App.exe",
-                @"C:\Program Files (x86)\NVIDIA Corporation\NVIDIA App\CEF\NVIDIA App.exe",
-                @"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\NVIDIA App.lnk"
+                Path.Combine(ProgramFiles, @"NVIDIA Corporation\NVIDIA App\CEF\NVIDIA App.exe"),
+                Path.Combine(ProgramFilesX86, @"NVIDIA Corporation\NVIDIA App\CEF\NVIDIA App.exe"),
+                Path.Combine(ProgramData, @"Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\NVIDIA App.lnk")
             };
 
             foreach (var path in nvidiaAppPaths)
@@ -109,7 +115,7 @@ public class GpuControlAppService
             }
 
             // 2. Try GeForce Experience
-            string gfePath = @"C:\Program Files\NVIDIA Corporation\NVIDIA GeForce Experience\NVIDIA GeForce Experience.exe";
+            string gfePath = Path.Combine(ProgramFiles, @"NVIDIA Corporation\NVIDIA GeForce Experience\NVIDIA GeForce Experience.exe");
             if (File.Exists(gfePath))
             {
                 try
@@ -132,8 +138,8 @@ public class GpuControlAppService
         if (vendor == DetectedGpuVendor.Amd || vendor == DetectedGpuVendor.Unknown)
         {
             string[] amdPaths = {
-                @"C:\Program Files\AMD\CNext\CNext\RadeonSoftware.exe",
-                @"C:\Program Files\AMD\CNext\CNext\amdair.exe"
+                Path.Combine(ProgramFiles, @"AMD\CNext\CNext\RadeonSoftware.exe"),
+                Path.Combine(ProgramFiles, @"AMD\CNext\CNext\amdair.exe")
             };
 
             foreach (var path in amdPaths)

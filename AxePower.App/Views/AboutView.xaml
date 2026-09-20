@@ -49,8 +49,8 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Main Icon -->
-                                    <Border Grid.Column="0" Width="80" Height="80" CornerRadius="40" Background="#141A23" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,20,0" VerticalAlignment="Top">
-                                        <Image Source="/Resources/AxePower_white.ico" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <Border Grid.Column="0" Width="80" Height="80" CornerRadius="40" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,20,0" VerticalAlignment="Top">
+                                        <Image Source="{DynamicResource AppIconImage}" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                                     </Border>
 
                                     <!-- Product Info -->

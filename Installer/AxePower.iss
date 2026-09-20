@@ -1,8 +1,8 @@
 #define AppName "AxePower"
-#define AppVersion "1.7.0"
+#define AppVersion "1.8.0"
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
-#define AppExeName "AxePower.App.exe"
+#define AppExeName "AxePower.exe"
 #define OutputDir "Output"
 #define AppId "{2A4A87C1-1B8D-4F7F-9C8F-7C94829377B8}"
 
@@ -25,7 +25,7 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
-OutputBaseFilename=AxePower-v1.7.0-Setup
+OutputBaseFilename=AxePower-v1.8.0-Setup
 SetupIconFile=..\AxePower.App\Resources\AxePower_white.ico
 Compression=lzma
 SolidCompression=yes
@@ -46,6 +46,15 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "install-dotnet.ps1"; Flags: dontcopy
 Source: "..\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion restartreplace
 Source: "..\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
+
+[InstallDelete]
+; v1.7 and earlier shipped the launcher as AxePower.App.exe — drop the stale files
+; on upgrade so only AxePower.exe is left behind.
+Type: files; Name: "{app}\AxePower.App.exe"
+Type: files; Name: "{app}\AxePower.App.dll"
+Type: files; Name: "{app}\AxePower.App.deps.json"
+Type: files; Name: "{app}\AxePower.App.runtimeconfig.json"
+Type: files; Name: "{app}\AxePower.App.pdb"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
