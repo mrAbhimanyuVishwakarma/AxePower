@@ -49,7 +49,7 @@ public partial class NowPlayingViewModel : ObservableObject
         _settings = settings;
         _dispatcher = dispatcher;
 
-        _isHeaderPlayerOpen = settings.GetSettings().Music.HeaderPlayerExpanded;
+        _isHeaderPlayerOpen = settings.GetSettings().Music.DashboardPlayerExpanded;
         _allowBoost = settings.GetSettings().Music.AllowVolumeBoost;
 
         _player.StateChanged += (_, state) => _dispatcher.Post(() => Apply(state));
@@ -214,11 +214,28 @@ public partial class NowPlayingViewModel : ObservableObject
 
     public string HeaderToggleGlyph => IsHeaderPlayerOpen ? "" : "";
 
+    private bool _headerOnDashboard;
+    private bool _applyingHeaderPage;
+
+    /// <summary>
+    /// Called on every navigation. The card opens on the Dashboard as the user last left it
+    /// there (open by default) and starts closed on every other page; opening or closing it
+    /// away from the Dashboard lasts until the next navigation and is not saved.
+    /// </summary>
+    public void SetHeaderPlayerPage(bool isDashboard)
+    {
+        _headerOnDashboard = isDashboard;
+        _applyingHeaderPage = true;
+        try { IsHeaderPlayerOpen = isDashboard && _settings.GetSettings().Music.DashboardPlayerExpanded; }
+        finally { _applyingHeaderPage = false; }
+    }
+
     partial void OnIsHeaderPlayerOpenChanged(bool value)
     {
+        if (_applyingHeaderPage || !_headerOnDashboard) return;
         var settings = _settings.GetSettings();
-        if (settings.Music.HeaderPlayerExpanded == value) return;
-        settings.Music.HeaderPlayerExpanded = value;
+        if (settings.Music.DashboardPlayerExpanded == value) return;
+        settings.Music.DashboardPlayerExpanded = value;
         // UI-only state: no service needs to react, so listeners are not notified
         _settings.SaveSettings(settings, notifyListeners: false);
     }

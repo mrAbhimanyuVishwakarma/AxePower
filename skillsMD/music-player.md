@@ -45,7 +45,7 @@ DecoderFactory (MF / WAV / AIFF / Vorbis / Opus)
 
 ## Surfaces
 - **Sidebar → Music:** the Now Playing card, the queue drawer (double-click / Enter to play, Del to remove, Alt+↑/↓ or drag to reorder), Open files / Open folder, and an empty state.
-- **Title bar "Music ▾":** opens and collapses the glass player; the state is saved in `music.headerPlayerExpanded`. The player sits beside the window controls in the tall Dashboard header and drops down below them elsewhere (`MainWindow.PositionHeaderPlayer`). It is hidden on the Music page and in the shrunk widget.
+- **Title bar "Music ▾":** opens and collapses the glass player. On the Dashboard it is open by default and the choice is saved in `music.dashboardPlayerExpanded`; every other page starts with it closed, and toggling it there lasts until the next navigation (`NowPlayingViewModel.SetHeaderPlayerPage`). On the Dashboard the card sits in the header between the battery pill and the monitor rail, dropping below the window controls if they reach over it; elsewhere, or when the window is too narrow, it drops down at the right edge (`MainWindow.PositionHeaderPlayer`). It is hidden on the Music page and in the shrunk widget.
 - **Windows:** media keys, the volume/media flyout and the lock screen, through SMTC `GetForWindow`; thumbnail buttons and progress on the taskbar icon.
 - **Keyboard (Music page):** Space play/pause, Ctrl+←/→ previous/next, Ctrl+↑/↓ volume ±5 %.
 

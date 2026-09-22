@@ -7,75 +7,95 @@
              xmlns:helpers="clr-namespace:AxePower.App.Helpers"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance music:NowPlayingViewModel, IsDesignTimeCreatable=False}"
-             Width="336"
+             Width="296" Height="132"
              AutomationProperties.Name="Now playing">
 
-    <!-- Compact glass player shown from the title bar's "Music" toggle -->
-    <Border Style="{StaticResource MusicGlassCardStyle}" Padding="10">
+    <!-- Compact glass player shown from the title bar's "Music" toggle (layout from ui reference/dashboard_music.png) -->
+    <Border Style="{StaticResource MusicGlassCardStyle}" CornerRadius="14">
         <Grid>
-            <!-- Soft top sheen for the glass look -->
-            <Border CornerRadius="16" Margin="-10" IsHitTestVisible="False">
+            <!-- Glass reflection: a brighter top-left pane with a crisp diagonal edge -->
+            <Border CornerRadius="13" IsHitTestVisible="False">
                 <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#1AFFFFFF" Offset="0" />
-                        <GradientStop Color="#00FFFFFF" Offset="0.55" />
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0.9,0.65">
+                        <GradientStop Color="#21FFFFFF" Offset="0" />
+                        <GradientStop Color="#0CFFFFFF" Offset="0.44" />
+                        <GradientStop Color="#03FFFFFF" Offset="0.45" />
+                        <GradientStop Color="#00FFFFFF" Offset="1" />
                     </LinearGradientBrush>
                 </Border.Background>
             </Border>
+            <!-- Lit rim, brightest at the top-left -->
+            <Border CornerRadius="13" BorderThickness="1" IsHitTestVisible="False">
+                <Border.BorderBrush>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#40FFFFFF" Offset="0" />
+                        <GradientStop Color="#0FFFFFFF" Offset="0.6" />
+                        <GradientStop Color="#1AFFFFFF" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.BorderBrush>
+            </Border>
 
-            <Grid>
+            <Grid Margin="20,0,18,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Artwork; click opens the Music page -->
-                <Button Grid.Column="0" Width="80" Height="80" Margin="0,0,12,0" Cursor="Hand"
+                <Button Grid.Column="0" Width="82" Height="82" Margin="0,0,22,0" VerticalAlignment="Center" Cursor="Hand"
                         Command="{Binding OpenMusicPageCommand}"
                         ToolTip="Open the Music page" AutomationProperties.Name="Open the Music page">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="frame" Style="{StaticResource MusicArtFrameStyle}" CornerRadius="10">
-                                <Grid>
-                                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="#E6FFFFFF"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Visibility="{Binding HasCover, Converter={StaticResource InverseBoolToVis}}" />
-                                    <Image Source="{Binding Cover}" Stretch="UniformToFill"
-                                           RenderOptions.BitmapScalingMode="HighQuality" />
-                                </Grid>
-                            </Border>
+                            <Grid>
+                                <Border Style="{StaticResource MusicArtFrameStyle}" CornerRadius="8">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="14" ShadowDepth="3" Direction="250" Opacity="0.5" Color="#000000" />
+                                    </Border.Effect>
+                                    <Grid>
+                                        <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="#E6FFFFFF"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Visibility="{Binding HasCover, Converter={StaticResource InverseBoolToVis}}" />
+                                        <Image Source="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality">
+                                            <Image.Clip>
+                                                <RectangleGeometry Rect="0,0,82,82" RadiusX="8" RadiusY="8" />
+                                            </Image.Clip>
+                                        </Image>
+                                    </Grid>
+                                </Border>
+                                <Border x:Name="focus" CornerRadius="8" BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" Visibility="Collapsed" />
+                            </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="frame" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
-                                    <Setter TargetName="frame" Property="BorderThickness" Value="2" />
+                                    <Setter TargetName="focus" Property="Visibility" Value="Visible" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
 
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <!-- Title line -->
-                    <TextBlock HorizontalAlignment="Center" TextAlignment="Center" TextTrimming="CharacterEllipsis"
-                               FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"
-                               ToolTip="{Binding ArtistAndAlbum}">
-                        <Run Text="{Binding Title, Mode=OneWay}" /><Run Text="  ·  " Foreground="{DynamicResource MutedTextBrush}" /><Run Text="{Binding Artist, Mode=OneWay}" Foreground="{DynamicResource SecondaryTextBrush}" FontWeight="Normal" />
+                <Grid Grid.Column="1" Margin="0,12,0,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Title -->
+                    <TextBlock Grid.Row="0" Text="{Binding Title}" HorizontalAlignment="Center" TextAlignment="Center" TextTrimming="CharacterEllipsis"
+                               FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}">
+                        <TextBlock.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ArtistAndAlbum}" />
+                            </StackPanel>
+                        </TextBlock.ToolTip>
                     </TextBlock>
 
-                    <!-- Transport -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
-                        <Button Style="{StaticResource MusicIconButtonStyle}" Width="30" Height="30" Content="&#xE892;" Command="{Binding PreviousCommand}"
-                                IsEnabled="{Binding CanPrevious}" ToolTip="Previous" AutomationProperties.Name="Previous" />
-                        <Button Style="{StaticResource MusicPlayButtonStyle}" Width="32" Height="32" FontSize="13" Margin="10,0"
-                                Background="{DynamicResource PrimaryTextBrush}" Foreground="{DynamicResource MusicPlayGlyphBrush}"
-                                Content="{Binding PlayPauseGlyph}" Command="{Binding PlayPauseCommand}" IsEnabled="{Binding HasCurrent}"
-                                ToolTip="{Binding PlayPauseLabel}" AutomationProperties.Name="{Binding PlayPauseLabel}" />
-                        <Button Style="{StaticResource MusicIconButtonStyle}" Width="30" Height="30" Content="&#xE893;" Command="{Binding NextCommand}"
-                                IsEnabled="{Binding CanNext}" ToolTip="Next" AutomationProperties.Name="Next" />
-                    </StackPanel>
-
                     <!-- Seek -->
-                    <Slider Style="{StaticResource MusicSliderStyle}" Height="12"
+                    <Slider Grid.Row="1" Style="{StaticResource MusicThinSliderStyle}" Height="10" Margin="0,3,0,0"
                             Minimum="0" Maximum="{Binding SeekMaximum}" Value="{Binding PositionSeconds, Mode=TwoWay}"
                             SmallChange="5" LargeChange="5" IsEnabled="{Binding HasCurrent}"
                             helpers:MusicSeekBehavior.IsEnabled="True"
@@ -87,29 +107,70 @@
                         </Slider.ToolTip>
                     </Slider>
 
-                    <!-- Small controls row -->
-                    <Grid Margin="0,0,0,0">
+                    <!-- Transport: ⏪ ▶ ⏩ spread across the column -->
+                    <UniformGrid Grid.Row="2" Columns="3" VerticalAlignment="Center">
+                        <Button Style="{StaticResource MusicShapeButtonStyle}" Width="38" Height="34"
+                                Command="{Binding PreviousCommand}" IsEnabled="{Binding CanPrevious}"
+                                ToolTip="Previous" AutomationProperties.Name="Previous">
+                            <Path Data="M 10,0 L 0,5.5 L 10,11 Z M 20,0 L 10,5.5 L 20,11 Z" Effect="{StaticResource MusicGlyphGlow}"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                        <Button Style="{StaticResource MusicShapeButtonStyle}" Width="38" Height="38"
+                                Command="{Binding PlayPauseCommand}" IsEnabled="{Binding HasCurrent}"
+                                ToolTip="{Binding PlayPauseLabel}" AutomationProperties.Name="{Binding PlayPauseLabel}">
+                            <Grid Effect="{StaticResource MusicGlyphGlow}">
+                                <Path Data="M 0,0 L 19,11.5 L 0,23 Z" Margin="3,0,0,0" StrokeLineJoin="Round" StrokeThickness="1.5"
+                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      Visibility="{Binding IsPlaying, Converter={StaticResource InverseBoolToVis}}" />
+                                <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVis}}">
+                                    <Path.Data>
+                                        <GeometryGroup>
+                                            <RectangleGeometry Rect="0,0,6,21" RadiusX="1.5" RadiusY="1.5" />
+                                            <RectangleGeometry Rect="11,0,6,21" RadiusX="1.5" RadiusY="1.5" />
+                                        </GeometryGroup>
+                                    </Path.Data>
+                                </Path>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource MusicShapeButtonStyle}" Width="38" Height="34"
+                                Command="{Binding NextCommand}" IsEnabled="{Binding CanNext}"
+                                ToolTip="Next" AutomationProperties.Name="Next">
+                            <Path Data="M 0,0 L 10,5.5 L 0,11 Z M 10,0 L 20,5.5 L 10,11 Z" Effect="{StaticResource MusicGlyphGlow}"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </Button>
+                    </UniformGrid>
+
+                    <!-- Volume -->
+                    <Grid Grid.Row="3" Height="16">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-
-                        <ToggleButton Grid.Column="0" Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="24" FontSize="11"
-                                      Content="&#xE8B1;" IsChecked="{Binding IsShuffle, Mode=TwoWay}"
-                                      ToolTip="{Binding ShuffleLabel}" AutomationProperties.Name="{Binding ShuffleLabel}" />
-                        <ToggleButton Grid.Column="1" Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="24" FontSize="11"
-                                      Content="{Binding RepeatGlyph}" IsChecked="{Binding IsRepeatOn, Mode=TwoWay}"
-                                      ToolTip="{Binding RepeatLabel}" AutomationProperties.Name="{Binding RepeatLabel}" />
-                        <Button Grid.Column="2" Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="24" FontSize="11"
+                        <Button Grid.Column="0" Style="{StaticResource MusicIconButtonStyle}" Width="18" Height="16" FontSize="10"
                                 Content="{Binding VolumeGlyph}" Command="{Binding ToggleMuteCommand}"
                                 ToolTip="{Binding VolumeLabel}" AutomationProperties.Name="Mute" />
-                        <Slider Grid.Column="3" Style="{StaticResource MusicSliderStyle}" Height="14" Margin="2,0,6,0" VerticalAlignment="Center"
+                        <Slider Grid.Column="1" Style="{StaticResource MusicThinSliderStyle}" Margin="4,0" VerticalAlignment="Center"
                                 Minimum="0" Maximum="{Binding VolumeMaximum}" Value="{Binding VolumePercent, Mode=TwoWay}"
                                 SmallChange="5" LargeChange="10" ToolTip="{Binding VolumeLabel}" AutomationProperties.Name="Volume" />
-                        <Button Grid.Column="4" x:Name="MoreButton" Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="24" FontSize="12"
+                        <TextBlock Grid.Column="2" Text="&#xE995;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" IsHitTestVisible="False" />
+                    </Grid>
+
+                    <!-- Small controls row -->
+                    <UniformGrid Grid.Row="4" Columns="4" Margin="0,2,0,0">
+                        <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="22" FontSize="11"
+                                      Content="&#xE8B1;" IsChecked="{Binding IsShuffle, Mode=TwoWay}"
+                                      ToolTip="{Binding ShuffleLabel}" AutomationProperties.Name="{Binding ShuffleLabel}" />
+                        <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="22" FontSize="11"
+                                      Content="{Binding RepeatGlyph}" IsChecked="{Binding IsRepeatOn, Mode=TwoWay}"
+                                      ToolTip="{Binding RepeatLabel}" AutomationProperties.Name="{Binding RepeatLabel}" />
+                        <Button Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="22" FontSize="11"
+                                Content="&#xE921;" Command="{Binding ToggleHeaderPlayerCommand}"
+                                ToolTip="Hide player" AutomationProperties.Name="Hide player" />
+                        <Button x:Name="MoreButton" Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="22" FontSize="12"
                                 Content="&#xE712;" ToolTip="More" AutomationProperties.Name="More options" Click="MoreButton_Click">
                             <Button.ContextMenu>
                                 <ContextMenu>
@@ -120,8 +181,8 @@
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>
-                    </Grid>
-                </StackPanel>
+                    </UniformGrid>
+                </Grid>
             </Grid>
         </Grid>
     </Border>

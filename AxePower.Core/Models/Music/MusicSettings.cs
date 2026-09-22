@@ -84,9 +84,13 @@ public class MusicSettings
 
     // ── Surfaces ────────────────────────────────────────────────────────────
 
-    /// <summary>Whether the compact Now Playing card in the title bar is open ("Music ▾" toggles it).</summary>
-    [JsonPropertyName("headerPlayerExpanded")]
-    public bool HeaderPlayerExpanded { get; set; } = true;
+    /// <summary>
+    /// Whether the compact Now Playing card is open on the Dashboard ("Music ▾" toggles it there).
+    /// Other pages always start with it closed. Replaces the old "headerPlayerExpanded", which
+    /// was saved from any page, so that key is deliberately not read.
+    /// </summary>
+    [JsonPropertyName("dashboardPlayerExpanded")]
+    public bool DashboardPlayerExpanded { get; set; } = true;
 
     [JsonPropertyName("miniPlayer")]
     public MiniPlayerSettings MiniPlayer { get; set; } = new();
@@ -140,7 +144,7 @@ public class MusicSettings
             PauseOnDeviceRemoved = PauseOnDeviceRemoved,
             ExclusiveMode = ExclusiveMode,
             ExclusiveMatchSourceRate = ExclusiveMatchSourceRate,
-            HeaderPlayerExpanded = HeaderPlayerExpanded,
+            DashboardPlayerExpanded = DashboardPlayerExpanded,
             MiniPlayer = (MiniPlayer ?? new MiniPlayerSettings()).Clone(),
             UniversalControllerEnabled = UniversalControllerEnabled,
             RemoteControlEnabled = RemoteControlEnabled,

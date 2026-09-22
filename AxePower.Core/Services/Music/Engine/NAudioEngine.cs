@@ -43,6 +43,7 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
     private OutputSettings _outputSettings = new(null, false, false, 60);
     private bool _outputSettingsChanged;
     private bool _pipelineInvalid;
+    private DeviceWatcher? _deviceWatcher;
     private bool _disposed;
 
     // Read from any thread
@@ -313,14 +314,26 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
     private void RebuildPipelineIfInvalid()
     {
         if (!_pipelineInvalid || _chain == null) return;
+        MoveToCurrentDevice(resume: false);
+    }
 
-        var current = _chain.Current;
+    /// <summary>
+    /// Worker thread. Rebuilds the pipeline on the device <see cref="ResolveDevice"/> picks now
+    /// (the Windows default unless one is chosen) and carries the current track over at its
+    /// position, optionally resuming. Used when the default device changes — e.g. headphones
+    /// are plugged in — so sound follows the user instead of staying on the old endpoint.
+    /// </summary>
+    private void MoveToCurrentDevice(bool resume)
+    {
+        var current = _chain?.Current;
         var position = Position;
-        var next = _chain.SetNext(null);
+
+        var next = _chain?.SetNext(null);
         if (next != null) next.Decoder.Dispose();
         _preparedNextKey = null;
 
         DisposeOutput();
+        _isPlaying = false;
         _device?.Dispose();
         _device = null;
         _chain = null;
@@ -332,7 +345,65 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
         {
             current.Decoder.Seek(position);
             _chain!.SetCurrent(CreateSource(current.Key, current.Decoder, position));
+            if (_chain.IsNearEnd) PrepareNext();
+            if (resume) StartOutput();
         }
+    }
+
+    /// <summary>
+    /// True when no specific device is chosen and Windows' default render device is no longer
+    /// the one the pipeline was built for.
+    /// </summary>
+    private bool DefaultDeviceMoved()
+    {
+        if (!string.IsNullOrEmpty(_outputSettings.DeviceId) || _device == null || _enumerator == null) return false;
+
+        try
+        {
+            using var current = _enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+            return !string.Equals(current.ID, _device.ID, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void OnDefaultRenderDeviceChanged(string? deviceId)
+    {
+        _worker.Post(() =>
+        {
+            if (_disposed || _chain == null || !string.IsNullOrEmpty(_outputSettings.DeviceId)) return;
+            if (string.Equals(deviceId, _device?.ID, StringComparison.OrdinalIgnoreCase)) return;
+
+            try
+            {
+                _log.LogInfo("[Music] Windows default output changed; moving playback to it.");
+                MoveToCurrentDevice(resume: _isPlaying);
+            }
+            catch (Exception ex)
+            {
+                ReportOutputFailure(ex);
+            }
+        });
+    }
+
+    /// <summary>Forwards Windows' default-device notifications (arrive on a COM thread) to the engine.</summary>
+    private sealed class DeviceWatcher : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient
+    {
+        private readonly NAudioEngine _owner;
+
+        public DeviceWatcher(NAudioEngine owner) => _owner = owner;
+
+        public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
+        {
+            if (flow == DataFlow.Render && role == Role.Multimedia) _owner.OnDefaultRenderDeviceChanged(defaultDeviceId);
+        }
+
+        public void OnDeviceStateChanged(string deviceId, DeviceState newState) { }
+        public void OnDeviceAdded(string pwstrDeviceId) { }
+        public void OnDeviceRemoved(string deviceId) { }
+        public void OnPropertyValueChanged(string pwstrDeviceId, NAudio.CoreAudioApi.PropertyKey key) { }
     }
 
     /// <summary>Worker thread. Resolves the device and builds the sample pipeline in its mix format.</summary>
@@ -351,7 +422,21 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
 
         if (_chain != null) return;
 
-        _enumerator ??= new MMDeviceEnumerator();
+        if (_enumerator == null)
+        {
+            _enumerator = new MMDeviceEnumerator();
+            try
+            {
+                _deviceWatcher = new DeviceWatcher(this);
+                _enumerator.RegisterEndpointNotificationCallback(_deviceWatcher);
+            }
+            catch (Exception ex)
+            {
+                _deviceWatcher = null;
+                _log.LogWarning($"[Music] Device change notifications unavailable: {ex.Message}");
+            }
+        }
+
         _device = ResolveDevice();
 
         using (var client = _device.AudioClient)
@@ -392,6 +477,15 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
         RebuildPipelineIfInvalid();
         if (_chain?.Current == null) return;
 
+        // A default-device change can be missed while paused (or before notifications were
+        // registered); never start playing on an endpoint the user has moved away from
+        if (DefaultDeviceMoved())
+        {
+            _log.LogInfo("[Music] Windows default output changed while paused; moving playback to it.");
+            MoveToCurrentDevice(resume: false);
+            if (_chain?.Current == null) return;
+        }
+
         if (_outputSettingsChanged && _output != null)
         {
             // Latency changes need a fresh client; the pipeline itself is unchanged
@@ -406,8 +500,10 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
             _output.Init(_converter!);
         }
 
+        bool wasPlaying = _isPlaying;
         _output.Play();
         _isPlaying = true;
+        if (!wasPlaying) _log.LogInfo($"[Music] Playing on {_device?.FriendlyName ?? "the default output"}.");
     }
 
     /// <summary>Worker thread.</summary>
@@ -531,6 +627,10 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
                 if (_chain != null)
                 {
                     Retire(_chain.SetCurrent(null));
+                }
+                if (_deviceWatcher != null)
+                {
+                    try { _enumerator?.UnregisterEndpointNotificationCallback(_deviceWatcher); } catch { }
                 }
                 _device?.Dispose();
                 _enumerator?.Dispose();

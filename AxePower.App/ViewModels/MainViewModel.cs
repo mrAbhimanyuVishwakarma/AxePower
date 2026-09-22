@@ -168,6 +168,7 @@ public partial class MainViewModel : ObservableObject
         IsUtilitiesExpanded = startupSettings.SidebarUtilitiesExpanded;
 
         _currentView = DashboardVm;
+        NowPlaying?.SetHeaderPlayerPage(isDashboard: true);
 
         InitializeToolGuides();
 
@@ -293,6 +294,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(GameModeActiveStyle));
         OnPropertyChanged(nameof(BatteryActiveStyle));
         OnPropertyChanged(nameof(MusicActiveStyle));
+        NowPlaying?.SetHeaderPlayerPage(isDashboard: value == DashboardVm);
         OnPropertyChanged(nameof(ShowHeaderPlayer));
         OnPropertyChanged(nameof(LogsActiveStyle));
         OnPropertyChanged(nameof(SettingsActiveStyle));

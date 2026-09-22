@@ -18,8 +18,9 @@ public partial class MainWindow : Window
 
     public MainWindow(MainViewModel viewModel, ThemeService themeService, SettingsService settingsService, SystemTelemetryService? telemetryService = null)
     {
-        InitializeComponent();
+        // Set before the XAML loads so the tray menu never binds against the TaskbarIcon itself
         DataContext = viewModel;
+        InitializeComponent();
         _themeService = themeService;
         _settingsService = settingsService;
         _telemetryService = telemetryService;
@@ -61,23 +62,34 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// In the tall Dashboard header the player sits beside the window controls, as in the
-    /// design; when the header is short or there is no room beside the battery pill it drops
-    /// down below the controls instead.
+    /// On the Dashboard the player sits in the tall header between the battery pill and the
+    /// right-hand monitor rail, as in the design. It moves down below the window controls if
+    /// they reach over it (e.g. "Relaunch with Admin"), and drops down at the right edge on
+    /// other pages or when the window is too narrow to fit it beside the pill.
     /// </summary>
     private void PositionHeaderPlayer()
     {
         if (DataContext is not MainViewModel vm) return;
 
-        const double gap = 10;
-        double controls = WindowControls.ActualWidth;
+        const double railWidth = 320; // DashboardView's RailColumn
+        const double gap = 14;
+        double width = TitleBar.ActualWidth;
         double card = HeaderPlayerHost.ActualWidth > 0 ? HeaderPlayerHost.ActualWidth : HeaderPlayerHost.Width;
         double pillRight = BatteryPill.IsVisible ? BatteryPill.Margin.Left + BatteryPill.ActualWidth : 0;
-        double room = TitleBar.ActualWidth - controls - pillRight - 2 * gap;
+        double cardRight = width - railWidth - gap;
+        double cardLeft = cardRight - card;
 
-        HeaderPlayerHost.Margin = vm.ShowBatteryPill && room >= card
-            ? new Thickness(0, 4, controls + gap, 0)
-            : new Thickness(0, CompactCaptionHeight, 12, 0);
+        if (vm.ShowBatteryPill && cardLeft >= pillRight + gap)
+        {
+            double controlsLeft = width - WindowControls.ActualWidth;
+            double top = controlsLeft < cardRight ? WindowControls.ActualHeight + 8 : 16;
+            HeaderPlayerHost.Margin = new Thickness(0, top, railWidth + gap, 0);
+        }
+        else
+        {
+            // Over the Dashboard rail, line up with the rail cards' right edge
+            HeaderPlayerHost.Margin = new Thickness(0, CompactCaptionHeight, vm.ShowBatteryPill ? 32 : 12, 0);
+        }
     }
 
     // Logical size of the monitor card; the window ends up at this times the card's render scale.
