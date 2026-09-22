@@ -64,4 +64,15 @@
     <!-- App Logo Icon -->
     <BitmapImage x:Key="AppIconImage" UriSource="/Resources/AxePower_white.ico" />
 
+    <!-- AxePower Music -->
+    <SolidColorBrush x:Key="MusicAccentBrush" Color="#3B82F6" />
+    <SolidColorBrush x:Key="MusicGlassSurfaceBrush" Color="#E61A1C23" />
+    <SolidColorBrush x:Key="MusicTrackBrush" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="MusicPlayGlyphBrush" Color="#0B0D12" />
+    <LinearGradientBrush x:Key="MusicPlaceholderArtBrush" StartPoint="1,0" EndPoint="0,1">
+        <GradientStop Color="#3B82F6" Offset="0" />
+        <GradientStop Color="#7C5CE6" Offset="0.55" />
+        <GradientStop Color="#EC4899" Offset="1" />
+    </LinearGradientBrush>
+
 </ResourceDictionary>

@@ -11,6 +11,7 @@
         <converters:InverseBooleanConverter x:Key="InverseBool" />
         <!-- Declared locally as well as in App.xaml so the view can be constructed standalone -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:NullToVisibilityConverter x:Key="NotNullToVis" Invert="True" />
     </UserControl.Resources>
 
     <Grid>
@@ -271,6 +272,39 @@
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Last checked" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="{Binding LastCheckedDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Music (playback group; more groups arrive with later music features) -->
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20"
+                                DataContext="{Binding Music}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Music" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Playback preferences for AxePower Music." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                        <TextBlock Text="Allow volume boost up to 200%" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="A limiter keeps boosted audio from clipping. Windows' own volume is never changed." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowVolumeBoost}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Allow volume boost up to 200%"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                        <TextBlock Text="Resume playback on startup" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="When off, your last queue and position come back paused." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ResumePlaybackOnStartup}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Resume playback on startup"/>
                                 </Grid>
                             </StackPanel>
                         </Border>

@@ -46,9 +46,38 @@ public partial class MainWindow : Window
         viewModel.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.ShowBatteryPill))
+            {
                 ApplyCaptionHeight();
+                PositionHeaderPlayer();
+            }
         };
         ApplyCaptionHeight();
+
+        // The title-bar music player follows the window controls and the available width
+        WindowControls.SizeChanged += (s, e) => PositionHeaderPlayer();
+        TitleBar.SizeChanged += (s, e) => PositionHeaderPlayer();
+        BatteryPill.SizeChanged += (s, e) => PositionHeaderPlayer();
+        HeaderPlayerHost.SizeChanged += (s, e) => PositionHeaderPlayer();
+    }
+
+    /// <summary>
+    /// In the tall Dashboard header the player sits beside the window controls, as in the
+    /// design; when the header is short or there is no room beside the battery pill it drops
+    /// down below the controls instead.
+    /// </summary>
+    private void PositionHeaderPlayer()
+    {
+        if (DataContext is not MainViewModel vm) return;
+
+        const double gap = 10;
+        double controls = WindowControls.ActualWidth;
+        double card = HeaderPlayerHost.ActualWidth > 0 ? HeaderPlayerHost.ActualWidth : HeaderPlayerHost.Width;
+        double pillRight = BatteryPill.IsVisible ? BatteryPill.Margin.Left + BatteryPill.ActualWidth : 0;
+        double room = TitleBar.ActualWidth - controls - pillRight - 2 * gap;
+
+        HeaderPlayerHost.Margin = vm.ShowBatteryPill && room >= card
+            ? new Thickness(0, 4, controls + gap, 0)
+            : new Thickness(0, CompactCaptionHeight, 12, 0);
     }
 
     // Logical size of the monitor card; the window ends up at this times the card's render scale.

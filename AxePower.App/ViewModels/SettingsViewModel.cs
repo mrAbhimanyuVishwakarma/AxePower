@@ -346,11 +346,16 @@ public partial class SettingsViewModel : ObservableObject
     /// CurrentSettings is a snapshot taken at construction, so first pull in the state the
     /// sidebar has saved since then; otherwise any Settings change would revert it.
     /// </summary>
+    /// <summary>The Music settings group (null in minimal test setups, which hides it).</summary>
+    public AxePower.App.ViewModels.Music.MusicSettingsViewModel? Music { get; }
+
     private void SaveCurrentSettings()
     {
         var latest = _settingsService.GetSettings();
         CurrentSettings.SidebarMaintenanceExpanded = latest.SidebarMaintenanceExpanded;
         CurrentSettings.SidebarUtilitiesExpanded = latest.SidebarUtilitiesExpanded;
+        // The music section is edited elsewhere (Music group, header player); never save a stale copy of it
+        CurrentSettings.Music = latest.Music;
         _settingsService.SaveSettings(CurrentSettings);
     }
 
@@ -363,8 +368,10 @@ public partial class SettingsViewModel : ObservableObject
         PowerPlanService powerPlanService,
         UpdateService updateService,
         BatteryService? batteryService = null,
-        ElevationService? elevationService = null)
+        ElevationService? elevationService = null,
+        AxePower.App.ViewModels.Music.MusicSettingsViewModel? music = null)
     {
+        Music = music;
         _settingsService = settingsService;
         _notificationService = notificationService;
         _timeoutService = timeoutService;

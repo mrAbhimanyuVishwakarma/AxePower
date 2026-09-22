@@ -63,6 +63,12 @@ public interface IAudioEngine : IAsyncDisposable
     /// <summary>Volume 0.0–2.0. Values above 1.0 are honoured only when boost is allowed.</summary>
     void SetVolume(double volume, bool muted);
 
+    /// <summary>
+    /// Ramps a gain multiplier on top of the volume (1 = normal) — used for ducking and
+    /// fade-outs. Completes when the target is reached, or at once while nothing is playing.
+    /// </summary>
+    Task FadeToAsync(double gain, TimeSpan duration, CancellationToken ct);
+
     /// <summary>Applied live; stages turn into pass-throughs when neutral.</summary>
     void SetDsp(DspSettings dsp);
 

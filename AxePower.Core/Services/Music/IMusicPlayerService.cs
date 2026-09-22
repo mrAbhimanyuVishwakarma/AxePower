@@ -23,6 +23,9 @@ public interface IMusicPlayerService
     Task InitializeAsync(CancellationToken ct);
     Task OpenAsync(IReadOnlyList<Track> tracks, int startIndex = 0, bool play = true, bool shuffle = false, CancellationToken ct = default);
     Task OpenPathsAsync(IEnumerable<string> filesOrFolders, bool play = true, CancellationToken ct = default);
+
+    /// <summary>Appends files (and the audio files inside folders) to the end of the queue.</summary>
+    Task AddPathsAsync(IEnumerable<string> filesOrFolders, CancellationToken ct = default);
     Task PlayAsync();
     Task PauseAsync();
     Task TogglePlayPauseAsync();

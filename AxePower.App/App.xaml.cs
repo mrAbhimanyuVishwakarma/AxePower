@@ -12,6 +12,7 @@ using AxePower.Core.Services.Uninstaller;
 using AxePower.Core.Services.Music;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
+using AxePower.App.ViewModels.Music;
 using AxePower.App.Helpers;
 
 namespace AxePower.App;
@@ -162,6 +163,10 @@ public partial class App : Application
 
             // Start listening for other instances
             Task.Run(ListenForOtherInstances);
+
+            // AxePower Music: media controls need the window handle; restoring the last session
+            // (reading tags) runs in the background and never blocks the UI
+            _ = InitializeMusicAsync(new WindowInteropHelper(mainWindow).EnsureHandle());
         }
         catch (Exception ex)
         {
@@ -264,6 +269,23 @@ public partial class App : Application
 
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton(new MusicStoragePaths());
+        services.AddSingleton<ITagReader, TagLibTagReader>();
+        services.AddSingleton<LooseTrackReader>();
+        services.AddSingleton<ICoverArtService, CoverArtService>();
+        services.AddSingleton<IAudioEngine, NAudioEngine>();
+        services.AddSingleton<PlaybackStateStore>();
+        services.AddSingleton<IMusicPlayerService, MusicPlayerService>();
+        services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
+        services.AddSingleton<PlayerIntegrationHost>();
+
+        // AxePower Music — App
+        services.AddSingleton<MusicDispatcher>();
+        services.AddSingleton<FileDropHelper>();
+        services.AddSingleton<IPlayerIntegration, TaskbarMediaIntegration>();
+        services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
+        services.AddTransient<MusicViewModel>();
+        services.AddTransient<MusicSettingsViewModel>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -304,6 +326,10 @@ public partial class App : Application
         var clock = sp.GetRequiredService<IClock>();
         var music = sp.GetRequiredService<SettingsService>().GetSettings().Music;
         Console.WriteLine($"AxePower Music Initialized: clock {clock.UtcNow:O}, {music.LibraryFolders.Count} library folder(s).");
+        var musicPlayer = sp.GetRequiredService<IMusicPlayerService>();
+        Console.WriteLine($"Music player resolved: {musicPlayer.GetType().Name}, queue {musicPlayer.State.Queue.Count} item(s).");
+        var nowPlaying = sp.GetRequiredService<NowPlayingViewModel>();
+        Console.WriteLine($"NowPlayingViewModel resolved: '{nowPlaying.Title}'.");
 
         try
         {
@@ -382,10 +408,36 @@ public partial class App : Application
         }
     }
 
+    private async Task InitializeMusicAsync(IntPtr hwnd)
+    {
+        try
+        {
+            // On the UI thread: Windows media controls attach to the window here
+            await Services.GetRequiredService<PlayerIntegrationHost>().InitializeAsync(hwnd, CancellationToken.None);
+
+            var player = Services.GetRequiredService<IMusicPlayerService>();
+            await Task.Run(() => player.InitializeAsync(CancellationToken.None));
+        }
+        catch (Exception ex)
+        {
+            Services.GetService<LogService>()?.LogError("[Music] Startup failed.", ex);
+        }
+    }
+
     private void Application_Exit(object sender, ExitEventArgs e)
     {
         if (Services != null)
         {
+            try
+            {
+                // Saves the queue and position, then releases the audio device. Run off the UI
+                // thread so its awaits cannot wait on this (blocked) dispatcher.
+                var player = Services.GetService<IMusicPlayerService>();
+                if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
+                Services.GetService<PlayerIntegrationHost>()?.Dispose();
+            }
+            catch { }
+
             var autoSwitchService = Services.GetService<AutoSwitchService>();
             autoSwitchService?.Stop();
 

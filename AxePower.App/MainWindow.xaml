@@ -8,6 +8,8 @@
         xmlns:views="clr-namespace:AxePower.App.Views"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:converters="clr-namespace:AxePower.App.Converters"
+        xmlns:musicvm="clr-namespace:AxePower.App.ViewModels.Music"
+        xmlns:musicviews="clr-namespace:AxePower.App.Views.Music"
         mc:Ignorable="d"
         Title="AxePower" Height="840" Width="1280" MinWidth="1024" MinHeight="760"
         WindowStyle="SingleBorderWindow" AllowsTransparency="False" ResizeMode="CanResize"
@@ -60,6 +62,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:LanDropViewModel}">
             <views:LanDropView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type musicvm:MusicViewModel}">
+            <musicviews:MusicView />
         </DataTemplate>
         
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -147,6 +152,15 @@
                                         </Rectangle.OpacityMask>
                                     </Rectangle>
                                     <TextBlock Text="Battery" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Music -->
+                            <Button Style="{Binding MusicActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Music"
+                                    ToolTip="Music: play your music files" AutomationProperties.Name="Music">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Music" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
 
@@ -287,7 +301,7 @@
 
             <!-- Title Bar Region -->
             <!-- Tall only while the battery pill shows; MainWindow.xaml.cs keeps CaptionHeight in step -->
-            <Grid Grid.Row="0" Grid.Column="1"
+            <Grid x:Name="TitleBar" Grid.Row="0" Grid.Column="1"
                   Visibility="{Binding DashboardVm.IsShrunk, Converter={StaticResource InverseBoolToVis}}">
                 <Grid.Style>
                     <Style TargetType="Grid">
@@ -300,7 +314,7 @@
                     </Style>
                 </Grid.Style>
                 <!-- Battery Status Pill (3x Large Prominent Size: Live outline battery + percentage + power status) -->
-                <Border HorizontalAlignment="Left" VerticalAlignment="Center" Margin="40,0,0,0" Padding="24,14" CornerRadius="16" Background="{Binding BatteryVm.HeaderPillBackgroundBrush}" BorderBrush="{Binding BatteryVm.HeaderPillBorderBrush}" BorderThickness="1.5" WindowChrome.IsHitTestVisibleInChrome="True" DataContext="{Binding BatteryVm}" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <Border x:Name="BatteryPill" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="40,0,0,0" Padding="24,14" CornerRadius="16" Background="{Binding BatteryVm.HeaderPillBackgroundBrush}" BorderBrush="{Binding BatteryVm.HeaderPillBorderBrush}" BorderThickness="1.5" WindowChrome.IsHitTestVisibleInChrome="True" DataContext="{Binding BatteryVm}" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Battery Icon with Live Level Fill (3x Size) -->
                         <Grid VerticalAlignment="Center" Margin="0,0,16,0">
@@ -319,7 +333,7 @@
                 </Border>
 
                 <!-- Window Controls -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel x:Name="WindowControls" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" WindowChrome.IsHitTestVisibleInChrome="True">
                     <!-- Relaunch with Admin (Left of Help) — hidden once already elevated -->
                     <Button Command="{Binding RelaunchAsAdminCommand}" ToolTip="Restart AxePower with administrator rights for full system access"
                             Background="Transparent" BorderThickness="0" Height="36" Padding="14,0" Margin="0,0,6,0" Cursor="Hand"
@@ -340,6 +354,19 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
+
+                    <!-- Music ▾ — opens and collapses the title-bar player -->
+                    <ToggleButton Style="{StaticResource MusicHeaderToggleStyle}" Margin="0,0,6,0"
+                                  DataContext="{Binding NowPlaying}"
+                                  Visibility="{Binding Converter={StaticResource NotNullToVis}}"
+                                  IsChecked="{Binding IsHeaderPlayerOpen, Mode=TwoWay}"
+                                  ToolTip="Show or hide the music player" AutomationProperties.Name="Music player">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Music" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding HeaderToggleGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="10" Margin="8,2,0,0"
+                                       Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ToggleButton>
 
                     <!-- ? Help Button (Left of Minimize) -->
                     <Button Command="{Binding OpenToolHelpCommand}" ToolTip="Help &amp; Documentation"
@@ -434,6 +461,15 @@
 
             <!-- Main Content -->
             <ContentControl Grid.Row="1" Grid.Column="1" Content="{Binding CurrentView}" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+
+            <!-- Title-bar music player: sits beside the window controls (inside the tall Dashboard
+                 header) and drops over the page elsewhere. In-window on purpose — a WPF Popup would
+                 float above other apps. MainWindow.xaml.cs keeps it left of the controls. -->
+            <musicviews:HeaderPlayer x:Name="HeaderPlayerHost" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,300,0"
+                                     DataContext="{Binding NowPlaying}"
+                                     WindowChrome.IsHitTestVisibleInChrome="True"
+                                     Visibility="{Binding DataContext.ShowHeaderPlayer, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" />
 
             <!-- Notification Snackbar -->
             <Border Grid.Row="1" Grid.Column="1" 

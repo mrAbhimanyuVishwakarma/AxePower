@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
+using AxePower.App.ViewModels.Music;
 
 namespace AxePower.App.ViewModels;
 
@@ -53,6 +54,17 @@ public partial class MainViewModel : ObservableObject
     public SoftwareHubViewModel SoftwareHubVm { get; }
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
+    public MusicViewModel? MusicVm { get; }
+
+    /// <summary>Shared Now Playing state for the title-bar player (null only in minimal test setups).</summary>
+    public NowPlayingViewModel? NowPlaying { get; }
+
+    /// <summary>
+    /// The title-bar player shows when opened with "Music ▾" — except on the Music page, which
+    /// has the full player, and in the shrunk monitor-widget window.
+    /// </summary>
+    public bool ShowHeaderPlayer =>
+        NowPlaying?.IsHeaderPlayerOpen == true && !DashboardVm.IsShrunk && (MusicVm == null || CurrentView != MusicVm);
 
     [ObservableProperty]
     private bool _isMaintenanceExpanded;
@@ -66,6 +78,7 @@ public partial class MainViewModel : ObservableObject
     public Style? AutoSwitchActiveStyle => AutoSwitchVm != null ? GetStyleForView(AutoSwitchVm) : null;
     public Style? GameModeActiveStyle => GetStyleForView(GameModeVm);
     public Style? BatteryActiveStyle => GetStyleForView(BatteryVm);
+    public Style? MusicActiveStyle => MusicVm != null ? GetStyleForView(MusicVm) : GetStyleForView(new object());
     public Style? LogsActiveStyle => GetStyleForView(LogsVm);
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
     public Style? AboutActiveStyle => GetStyleForView(AboutVm);
@@ -103,8 +116,25 @@ public partial class MainViewModel : ObservableObject
         UpdateService updateService,
         SettingsService settingsService,
         TerminalService terminalService,
-        AutoSwitchViewModel? autoSwitchVm = null)
+        AutoSwitchViewModel? autoSwitchVm = null,
+        MusicViewModel? musicVm = null,
+        NowPlayingViewModel? nowPlaying = null)
     {
+        MusicVm = musicVm;
+        NowPlaying = nowPlaying;
+        if (NowPlaying != null)
+        {
+            NowPlaying.NavigateToMusic = () => Navigate("Music");
+            NowPlaying.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(NowPlayingViewModel.IsHeaderPlayerOpen)) OnPropertyChanged(nameof(ShowHeaderPlayer));
+            };
+        }
+        dashboardVm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DashboardViewModel.IsShrunk)) OnPropertyChanged(nameof(ShowHeaderPlayer));
+        };
+
         DashboardVm = dashboardVm;
         AutoSwitchVm = autoSwitchVm;
         GameModeVm = gameModeVm;
@@ -262,6 +292,8 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(AutoSwitchActiveStyle));
         OnPropertyChanged(nameof(GameModeActiveStyle));
         OnPropertyChanged(nameof(BatteryActiveStyle));
+        OnPropertyChanged(nameof(MusicActiveStyle));
+        OnPropertyChanged(nameof(ShowHeaderPlayer));
         OnPropertyChanged(nameof(LogsActiveStyle));
         OnPropertyChanged(nameof(SettingsActiveStyle));
         OnPropertyChanged(nameof(AboutActiveStyle));
@@ -313,6 +345,7 @@ public partial class MainViewModel : ObservableObject
             "AutoSwitch"  => DashboardVm,
             "GameMode"    => GameModeVm,
             "Battery"     => BatteryVm,
+            "Music"       => (object?)MusicVm ?? DashboardVm,
             "Settings"    => SettingsVm,
             "Logs"        => LogsVm,
             "About"       => AboutVm,

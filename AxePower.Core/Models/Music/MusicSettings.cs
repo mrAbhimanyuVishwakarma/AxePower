@@ -84,6 +84,10 @@ public class MusicSettings
 
     // ── Surfaces ────────────────────────────────────────────────────────────
 
+    /// <summary>Whether the compact Now Playing card in the title bar is open ("Music ▾" toggles it).</summary>
+    [JsonPropertyName("headerPlayerExpanded")]
+    public bool HeaderPlayerExpanded { get; set; } = true;
+
     [JsonPropertyName("miniPlayer")]
     public MiniPlayerSettings MiniPlayer { get; set; } = new();
 
@@ -136,6 +140,7 @@ public class MusicSettings
             PauseOnDeviceRemoved = PauseOnDeviceRemoved,
             ExclusiveMode = ExclusiveMode,
             ExclusiveMatchSourceRate = ExclusiveMatchSourceRate,
+            HeaderPlayerExpanded = HeaderPlayerExpanded,
             MiniPlayer = (MiniPlayer ?? new MiniPlayerSettings()).Clone(),
             UniversalControllerEnabled = UniversalControllerEnabled,
             RemoteControlEnabled = RemoteControlEnabled,
