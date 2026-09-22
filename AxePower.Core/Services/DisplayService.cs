@@ -504,19 +504,27 @@ public class DisplayService : IRefreshRateController
                 return false;
             }
 
-            for (int i = 0; i < pathCount; i++)
+            // Only the primary display (its source sits at the desktop origin). Writing the rate
+            // onto every path forced the laptop panel's Hz onto second screens and virtual
+            // displays such as spacedesk, and SDC_SAVE_TO_DATABASE then persisted whatever mode
+            // Windows fell back to — which is how their resolution/layout kept getting "reset".
+            int primary = Array.FindIndex(paths, p =>
+                p.sourceInfo.modeInfoIdx < modeCount &&
+                modes[p.sourceInfo.modeInfoIdx].infoType == 1 && // 1 = SOURCE
+                modes[p.sourceInfo.modeInfoIdx].modeInfo.sourceMode.position is { x: 0, y: 0 });
+            if (primary < 0)
             {
-                paths[i].targetInfo.refreshRate.Numerator = (uint)(targetFrequency * 1000);
-                paths[i].targetInfo.refreshRate.Denominator = 1000;
+                return false;
             }
 
-            for (int i = 0; i < modeCount; i++)
+            paths[primary].targetInfo.refreshRate.Numerator = (uint)(targetFrequency * 1000);
+            paths[primary].targetInfo.refreshRate.Denominator = 1000;
+
+            uint targetModeIdx = paths[primary].targetInfo.modeInfoIdx;
+            if (targetModeIdx < modeCount && modes[targetModeIdx].infoType == 2) // 2 = TARGET
             {
-                if (modes[i].infoType == 2) // 2 = TARGET
-                {
-                    modes[i].modeInfo.targetMode.targetVideoSignalInfo.vSyncFreq.Numerator = (uint)(targetFrequency * 1000);
-                    modes[i].modeInfo.targetMode.targetVideoSignalInfo.vSyncFreq.Denominator = 1000;
-                }
+                modes[targetModeIdx].modeInfo.targetMode.targetVideoSignalInfo.vSyncFreq.Numerator = (uint)(targetFrequency * 1000);
+                modes[targetModeIdx].modeInfo.targetMode.targetVideoSignalInfo.vSyncFreq.Denominator = 1000;
             }
 
             uint setFlags = SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_ALLOW_CHANGES | SDC_SAVE_TO_DATABASE;

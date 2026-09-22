@@ -49,6 +49,14 @@ public sealed class WpfApplicationFixture : IDisposable
                     var app = new AxePower.App.App();
                     app.InitializeComponent();
 
+                    // App.xaml wires Startup to AxePower's real startup, and WPF raises it as soon
+                    // as this thread's dispatcher runs. That would do the single-instance check
+                    // against a running AxePower, relaunch this test host elevated via UAC when
+                    // "Run as administrator" is on (exiting the host mid-run), show the tray icon
+                    // and write the user's settings. The tests only need App's resources.
+                    app.Startup -= (StartupEventHandler)Delegate.CreateDelegate(
+                        typeof(StartupEventHandler), app, "Application_Startup");
+
                     // App.xaml declares OnMainWindowClose; no window is ever shown here, and an
                     // explicit shutdown mode keeps WPF from tearing the Application down on its own.
                     app.ShutdownMode = ShutdownMode.OnExplicitShutdown;

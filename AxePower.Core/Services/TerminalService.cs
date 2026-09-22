@@ -103,7 +103,8 @@ public class TerminalService
     }
 
     /// <summary>Writes a user command to the live shell's stdin, starting a session if needed.</summary>
-    public void SendCommand(string command)
+    /// <remarks>Virtual so tests can capture commands instead of running them.</remarks>
+    public virtual void SendCommand(string command)
     {
         lock (_lock)
         {

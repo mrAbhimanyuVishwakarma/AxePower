@@ -16,7 +16,7 @@ public class SoftwareHubTests
     private readonly FirmwareUpdateService _firmwareUpdateService;
     private readonly NotificationService _notificationService;
     private readonly GraphicsDriverService _graphicsDriverService;
-    private readonly TerminalService _terminalService;
+    private readonly RecordingTerminalService _terminalService;
     private readonly RestorePointService _restorePointService;
 
     public SoftwareHubTests()
@@ -28,7 +28,7 @@ public class SoftwareHubTests
         _firmwareUpdateService = new FirmwareUpdateService(_logService);
         _notificationService = new NotificationService();
         _graphicsDriverService = new GraphicsDriverService(_logService);
-        _terminalService = new TerminalService();
+        _terminalService = new RecordingTerminalService();
         _restorePointService = new RestorePointService(_logService);
     }
 
@@ -385,6 +385,20 @@ public class SoftwareHubTests
         vm.InstallSelectedViaTerminalCommand.Execute(null);
 
         Assert.True(navigationRequested, "Terminal navigation should be triggered for batch install");
+        var script = Assert.Single(_terminalService.Commands);
+        // CamStudio has no WinGet manifest, so the script goes straight to its download page
+        Assert.DoesNotContain("CamStudio.CamStudio", script);
+        Assert.Contains("https://camstudio.org/", script);
+    }
+
+    /// <summary>
+    /// Captures what would be typed into the Terminal. The real service runs it in PowerShell,
+    /// which from a test would install software and open browser windows on the machine.
+    /// </summary>
+    private sealed class RecordingTerminalService : TerminalService
+    {
+        public List<string> Commands { get; } = new();
+        public override void SendCommand(string command) => Commands.Add(command);
     }
 }
 

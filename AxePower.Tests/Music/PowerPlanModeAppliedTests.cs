@@ -103,10 +103,10 @@ public class PowerPlanModeAppliedTests
         Assert.Equal(new[] { PowerMode.Beast }, raised);
     }
 
-    private static (PowerPlanService Service, FakeSchemes Schemes, FakeDisplay Display) Create()
+    private static (PowerPlanService Service, FakePowerSchemes Schemes, FakeRefreshRate Display) Create()
     {
-        var schemes = new FakeSchemes();
-        var display = new FakeDisplay();
+        var schemes = new FakePowerSchemes();
+        var display = new FakeRefreshRate();
         var log = new LogService();
         var service = new PowerPlanService(log, display, new SettingsService(log), schemes);
         return (service, schemes, display);
@@ -117,57 +117,5 @@ public class PowerPlanModeAppliedTests
         var raised = new List<PowerMode>();
         service.ModeApplied += (_, mode) => raised.Add(mode);
         return raised;
-    }
-
-    private sealed class FakeSchemes : IPowerSchemeApi
-    {
-        public Guid? Active { get; set; } = PowerPlanService.HighPerformanceGuid;
-        public List<Guid> Schemes { get; } = new() { PowerPlanService.BalancedGuid, PowerPlanService.PowerSaverGuid, PowerPlanService.HighPerformanceGuid };
-        public Dictionary<Guid, string> Names { get; } = new()
-        {
-            [PowerPlanService.BalancedGuid] = "Balanced",
-            [PowerPlanService.PowerSaverGuid] = "Power saver",
-            [PowerPlanService.HighPerformanceGuid] = "High performance"
-        };
-
-        public bool NativeCallSucceeds { get; set; } = true;
-        public bool NativeCallTakesEffect { get; set; } = true;
-        public bool PowercfgWorks { get; set; }
-        public bool PowercfgReportsSuccess { get; set; }
-        public int DuplicateCalls { get; private set; }
-
-        public Guid? GetActiveScheme() => Active;
-
-        public bool SetActiveScheme(Guid scheme)
-        {
-            if (!NativeCallSucceeds) return false;
-            if (NativeCallTakesEffect) Active = scheme;
-            return true;
-        }
-
-        public List<Guid> EnumerateSchemes() => new(Schemes);
-
-        public string? ReadFriendlyName(Guid scheme) => Names.TryGetValue(scheme, out var name) ? name : null;
-
-        public Task<bool> DuplicateSchemeAsync(Guid template)
-        {
-            DuplicateCalls++;
-            return Task.FromResult(false);
-        }
-
-        public Task<bool> SetActiveSchemeWithPowercfgAsync(Guid scheme)
-        {
-            if (PowercfgWorks) Active = scheme;
-            return Task.FromResult(PowercfgWorks || PowercfgReportsSuccess);
-        }
-    }
-
-    private sealed class FakeDisplay : IRefreshRateController
-    {
-        public int SmartCalls { get; private set; }
-
-        public bool SetRefreshRate(int targetFrequency) => true;
-
-        public void SetSmartRefreshRate(bool useLowest) => SmartCalls++;
     }
 }

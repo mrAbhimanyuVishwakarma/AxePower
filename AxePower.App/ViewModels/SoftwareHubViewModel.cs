@@ -182,7 +182,9 @@ public partial class PackageCardViewModel : ObservableObject
             }
             else
             {
-                _parent.Notify($"Installation of {Name} did not complete. Opening website...");
+                _parent.Notify(Id == "camstudio"
+                    ? "CamStudio isn't on WinGet. Download it from the page that just opened, then Refresh."
+                    : $"Installation of {Name} did not complete. Opening website...");
             }
         }
         finally
@@ -818,7 +820,8 @@ public partial class SoftwareHubViewModel : ObservableObject
             }
             else if (card.Id == "camstudio")
             {
-                sb.AppendLine("winget install --id CamStudio.CamStudio --exact --accept-source-agreements --accept-package-agreements; if ($LASTEXITCODE -ne 0) { Write-Host 'WinGet manifest not found. Opening official CamStudio website...' -ForegroundColor DarkYellow; Start-Process 'https://camstudio.org/' }");
+                // Not published on WinGet: go straight to the official download page
+                sb.AppendLine("Write-Host 'CamStudio is not on WinGet. Opening the official download page...' -ForegroundColor DarkYellow; Start-Process 'https://camstudio.org/'");
             }
             else if (!string.IsNullOrEmpty(card.WinGetId))
             {
@@ -925,6 +928,25 @@ public partial class SoftwareHubViewModel : ObservableObject
                 : "Default Windows reboot behavior restored.");
             AppendLog($"[Policy Changed] No Forced Reboot: {newState}");
         }
+    }
+
+    [RelayCommand]
+    public async Task ResetUpdateCacheAsync()
+    {
+        // Stopping the update services and clearing SoftwareDistribution needs admin rights
+        if (!TerminalService.IsProcessElevated())
+        {
+            Notify("Run AxePower as administrator to reset the Windows Update cache.");
+            AppendLog("\n[Update Cache Reset] Skipped: administrator rights are required.");
+            return;
+        }
+
+        AppendLog("\n>>> [Update Cache Reset] Stopping services, clearing the download cache, restarting services...");
+        var progress = new Progress<string>(AppendLog);
+        bool ok = await _updateShieldService.ResetWindowsUpdateCacheAsync(progress);
+        Notify(ok
+            ? "Windows Update cache reset. Check for updates again."
+            : "Windows Update cache reset did not complete. See the console for details.");
     }
 
     [RelayCommand]
