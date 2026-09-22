@@ -331,9 +331,9 @@
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
                                                             <TextBlock Text="{Binding FileName}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                                             <TextBlock FontSize="10.5" Foreground="{DynamicResource SecondaryTextBrush}">
-                                                                <Run Text="{Binding FormattedSize}"/>
+                                                                <Run Text="{Binding FormattedSize, Mode=OneWay}"/>
                                                                 <Run Text=" • From "/>
-                                                                <Run Text="{Binding DeviceName}" FontWeight="SemiBold"/>
+                                                                <Run Text="{Binding DeviceName, Mode=OneWay}" FontWeight="SemiBold"/>
                                                             </TextBlock>
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -411,9 +411,9 @@
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,6,0">
                                                             <TextBlock Text="{Binding Content}" FontSize="11.5" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
                                                             <TextBlock FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}">
-                                                                <Run Text="{Binding SenderDevice}"/>
+                                                                <Run Text="{Binding SenderDevice, Mode=OneWay}"/>
                                                                 <Run Text=" • "/>
-                                                                <Run Text="{Binding Timestamp, StringFormat=HH:mm:ss}"/>
+                                                                <Run Text="{Binding Timestamp, StringFormat=HH:mm:ss, Mode=OneWay}"/>
                                                             </TextBlock>
                                                         </StackPanel>
                                                         <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"

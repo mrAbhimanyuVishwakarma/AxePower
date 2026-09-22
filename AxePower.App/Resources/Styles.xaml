@@ -465,7 +465,7 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=ComboBoxItem}}" />
+                    <TextBlock Text="{Binding}" Foreground="{Binding Path=(TextElement.Foreground), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" />
                 </DataTemplate>
             </Setter.Value>
         </Setter>

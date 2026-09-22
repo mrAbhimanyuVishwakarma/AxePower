@@ -314,7 +314,7 @@
                     </Style>
                 </Grid.Style>
                 <!-- Battery Status Pill (3x Large Prominent Size: Live outline battery + percentage + power status) -->
-                <Border x:Name="BatteryPill" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="40,0,0,0" Padding="24,14" CornerRadius="16" Background="{Binding BatteryVm.HeaderPillBackgroundBrush}" BorderBrush="{Binding BatteryVm.HeaderPillBorderBrush}" BorderThickness="1.5" WindowChrome.IsHitTestVisibleInChrome="True" DataContext="{Binding BatteryVm}" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                <Border x:Name="BatteryPill" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="40,0,0,0" Padding="24,14" CornerRadius="16" DataContext="{Binding BatteryVm}" WindowChrome.IsHitTestVisibleInChrome="True" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Battery Icon with Live Level Fill (3x Size) -->
                         <Grid VerticalAlignment="Center" Margin="0,0,16,0">
@@ -528,7 +528,7 @@
                                     <Grid>
                                         <TextBlock Text="{Binding SelectedToolHelp.IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Visibility="{Binding SelectedToolHelp.ImageIconSource, Converter={StaticResource NullToVis}}"/>
-                                        <Image Source="{Binding SelectedToolHelp.ImageIconSource}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
+                                        <Image Source="{Binding SelectedToolHelp.ImageIconSource, TargetNullValue={x:Null}}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
                                                Visibility="{Binding SelectedToolHelp.ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
                                     </Grid>
                                 </Border>
@@ -592,7 +592,7 @@
                                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                                             <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"
                                                                                        Visibility="{Binding ImageIconSource, Converter={StaticResource NullToVis}}"/>
-                                                                            <Image Source="{Binding ImageIconSource}" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
+                                                                            <Image Source="{Binding ImageIconSource, TargetNullValue={x:Null}}" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
                                                                                    Visibility="{Binding ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
                                                                             <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                                                                         </StackPanel>
@@ -697,7 +697,7 @@
                                 <!-- Right Buttons: Close & Launch -->
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding CloseToolHelpCommand}" Content="Close" Height="34" Padding="16,0" Margin="0,0,8,0"/>
-                                    <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding LaunchSelectedToolAsyncCommand}" Content="{Binding SelectedToolHelp.LaunchButtonText}" Height="34" Padding="16,0"/>
+                                    <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding LaunchSelectedToolCommand}" Content="{Binding SelectedToolHelp.LaunchButtonText}" Height="34" Padding="16,0"/>
                                 </StackPanel>
                             </Grid>
                         </Border>

@@ -332,16 +332,29 @@ public partial class DashboardViewModel : ObservableObject
         collection.Add(value);
     }
 
+    // Set while LoadSettings copies values in. Each property's change handler saves every field,
+    // so without this the first assignments saved the not-yet-loaded ones as defaults — e.g.
+    // StartWithWindows = false, which deleted the startup task on every launch.
+    private bool _loadingSettings;
+
     private void LoadSettings()
     {
         var settings = _settingsService.GetSettings();
-        AutoSwitchEnabled = settings.AutoSwitchEnabled;
-        PluggedInMode = settings.PluggedInMode;
-        PluggedOutMode = settings.UnpluggedMode;
-        LowBatteryMode = settings.LowBatteryMode;
-        ShowNotifications = settings.ShowNotifications;
-        StartWithWindows = settings.StartWithWindows;
-        IsFnLockEnabled = settings.FnLockEnabled;
+        _loadingSettings = true;
+        try
+        {
+            AutoSwitchEnabled = settings.AutoSwitchEnabled;
+            PluggedInMode = settings.PluggedInMode;
+            PluggedOutMode = settings.UnpluggedMode;
+            LowBatteryMode = settings.LowBatteryMode;
+            ShowNotifications = settings.ShowNotifications;
+            StartWithWindows = settings.StartWithWindows;
+            IsFnLockEnabled = settings.FnLockEnabled;
+        }
+        finally
+        {
+            _loadingSettings = false;
+        }
     }
 
     partial void OnAutoSwitchEnabledChanged(bool value) => SaveSettings();
@@ -352,6 +365,8 @@ public partial class DashboardViewModel : ObservableObject
     partial void OnStartWithWindowsChanged(bool value) => SaveSettings();
     partial void OnIsFnLockEnabledChanged(bool value)
     {
+        // Loading the saved value is not a user toggle: no hardware write, save or toast
+        if (_loadingSettings) return;
         _batteryService.SetFnLock(value);
         SaveSettings();
         _notificationService.Show(
@@ -360,6 +375,8 @@ public partial class DashboardViewModel : ObservableObject
 
     private void SaveSettings()
     {
+        if (_loadingSettings) return;
+
         var settings = _settingsService.GetSettings();
         settings.AutoSwitchEnabled = AutoSwitchEnabled;
         settings.PluggedInMode = PluggedInMode;

@@ -465,7 +465,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="&#xE836;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Text="Chemistry" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="2" Text="{Binding Chemistry}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="2" Text="{Binding DeviceChemistry}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" HorizontalAlignment="Right"/>
                             </Grid>
                             
                             <Grid Margin="0,0,0,12">

@@ -303,7 +303,7 @@
                 <TextBlock HorizontalAlignment="Right"
                            Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"
                            Visibility="{Binding IsSelectedCountVisible, Converter={StaticResource BoolToVis}}">
-                    <Run Text="{Binding SelectedCount}"/>
+                    <Run Text="{Binding SelectedCount, Mode=OneWay}"/>
                     <Run Text="selected"/>
                 </TextBlock>
             </Grid>
@@ -633,11 +633,11 @@
                         <TextBlock FontSize="16" FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}">
                             <Run Text="🔍 Leftovers Found — "/>
-                            <Run Text="{Binding LeftoverApplicationName}"/>
+                            <Run Text="{Binding LeftoverApplicationName, Mode=OneWay}"/>
                         </TextBlock>
                         <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
                                    Margin="0,2,0,0">
-                            <Run Text="{Binding LeftoverItems.Count}"/>
+                            <Run Text="{Binding LeftoverItems.Count, Mode=OneWay}"/>
                             <Run Text="items found. Review and select items to clean."/>
                         </TextBlock>
                     </StackPanel>
