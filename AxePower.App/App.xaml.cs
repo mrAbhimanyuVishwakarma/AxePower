@@ -9,6 +9,7 @@ using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
+using AxePower.Core.Services.Music;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
 using AxePower.App.Helpers;
@@ -201,7 +202,7 @@ public partial class App : Application
         return true;
     }
 
-    private static IServiceProvider ConfigureServices()
+    internal static IServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
 
@@ -261,6 +262,9 @@ public partial class App : Application
         services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
         services.AddSingleton<ProcessDetectionService>();
 
+        // AxePower Music — Core (each phase registers the services it implements)
+        services.AddSingleton<IClock, SystemClock>();
+
         // ViewModels
         services.AddTransient<MainViewModel>();
         services.AddTransient<DashboardViewModel>();
@@ -296,6 +300,10 @@ public partial class App : Application
         var discovery = sp.GetRequiredService<IApplicationDiscoveryService>();
         var apps = Task.Run(async () => await discovery.DiscoverApplicationsAsync()).GetAwaiter().GetResult();
         Console.WriteLine($"Uninstaller Pro Initialized: Discovered {apps.Count} applications.");
+
+        var clock = sp.GetRequiredService<IClock>();
+        var music = sp.GetRequiredService<SettingsService>().GetSettings().Music;
+        Console.WriteLine($"AxePower Music Initialized: clock {clock.UtcNow:O}, {music.LibraryFolders.Count} library folder(s).");
 
         try
         {

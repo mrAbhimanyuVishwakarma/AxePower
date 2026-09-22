@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace AxePower.Core.Services;
 
-public class DisplayService
+public class DisplayService : IRefreshRateController
 {
     private readonly LogService _logService;
 

@@ -216,7 +216,7 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 ### Creating the Inno Setup Installer
 1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
-2. Publish first (the script packages `AxePower.App/bin/Release/net8.0-windows/win-x64/publish/`).
+2. Publish first (the script packages `AxePower.App/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish/`).
 3. Open `Installer/AxePower.iss` — the full script, which also bootstraps the .NET 8 Desktop Runtime and removes older installs.
 4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v1.8.0-Setup.exe`.
 

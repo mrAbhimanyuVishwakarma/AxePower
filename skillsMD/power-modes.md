@@ -35,7 +35,7 @@ If no plan resolves, the service falls back to Balanced.
 1. Resolve the target GUID as in the table.
 2. Call `PowerInterop.SetActiveScheme`, then **verify** by reading the active scheme back.
 3. If that fails, run `powercfg /setactive <guid>` and verify again.
-4. On success, set the display refresh rate:
+4. On success, raise `ModeApplied` (the event AxePower Music listens to) and set the display refresh rate. **Known gap:** when step 2 succeeds, the method returns before reaching the refresh-rate code, so the refresh rate only syncs when the `powercfg` fallback was needed. The intended behaviour is:
    - `AppSettings.DisplayRefreshRate > 0`: that fixed rate.
    - `0` (Auto): `SetSmartRefreshRate(useLowest: mode == Eco)`. Eco picks the lowest supported rate but never below 60 Hz when 60 is available; every other mode picks the highest rate.
    - `DisplayService.SetRefreshRate` calls both CCD (`SetDisplayConfig`) and GDI (`ChangeDisplaySettingsEx`), and reports success if either works.

@@ -48,7 +48,8 @@ These gaps are in the code today, and each one is also described in its feature 
 5. **LAN Drop:** there is no authentication, so anyone on the LAN can upload, download, or lock the PC ([phone-control.md](phone-control.md)).
 6. **Game Mode:** services set to manual start are not restored when Game Mode is turned off ([game-mode.md](game-mode.md)).
 7. **Auto-updater:** it re-downloads the installer every hour until it is installed ([auto-updater.md](auto-updater.md)).
-8. **README claims the code doesn't back up:**
+8. **Power modes:** the display refresh rate only syncs when the `powercfg` fallback was used, because the native success path returns early ([power-modes.md](power-modes.md)).
+9. **README claims the code doesn't back up:**
    - SteamGridDB posters (art comes from Steam only).
    - Ubisoft and EA library scanning.
    - Legion Toolkit, Vantage, Armoury Crate and MSI Center launchers.

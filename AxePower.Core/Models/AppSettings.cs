@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using AxePower.Core.Models.Music;
 
 namespace AxePower.Core.Models;
 
@@ -127,6 +128,10 @@ public class AppSettings
     [JsonPropertyName("notifyOnNewRelease")]
     public bool NotifyOnNewRelease { get; set; } = true;
 
+    /// <summary>AxePower Music preferences. A settings file without this key loads the defaults.</summary>
+    [JsonPropertyName("music")]
+    public MusicSettings Music { get; set; } = new();
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -166,7 +171,9 @@ public class AppSettings
             TouchpadEnabled = this.TouchpadEnabled,
             AutoCheckUpdates = this.AutoCheckUpdates,
             AutoDownloadUpdates = this.AutoDownloadUpdates,
-            NotifyOnNewRelease = this.NotifyOnNewRelease
+            NotifyOnNewRelease = this.NotifyOnNewRelease,
+            // An explicit "music": null in the file must not leave callers with a null section
+            Music = (this.Music ?? new MusicSettings()).Clone()
         };
     }
 }

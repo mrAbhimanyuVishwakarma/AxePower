@@ -21,6 +21,18 @@ public class AppMonitorService : IDisposable
     private bool _isRunning = false;
     private string? _activeTrackedApp = null;
 
+    /// <summary>
+    /// Raised with the process name when an app rule matches and its mode is being applied.
+    /// Fires on a WMI thread; handlers must marshal to the UI thread themselves.
+    /// </summary>
+    public event EventHandler<string>? TrackedAppStarted;
+
+    /// <summary>
+    /// Raised with the process name when the tracked app exits, or when app rules are turned
+    /// off while one was running. Fires on a WMI or settings thread.
+    /// </summary>
+    public event EventHandler<string>? TrackedAppStopped;
+
     public AppMonitorService(
         SettingsService settingsService,
         AutoSwitchService autoSwitchService,
@@ -120,8 +132,10 @@ public class AppMonitorService : IDisposable
             // If we were tracking an app, revert immediately
             if (_activeTrackedApp != null)
             {
+                string stoppedApp = _activeTrackedApp;
                 _activeTrackedApp = null;
                 _autoSwitchService.Resume();
+                RaiseTrackedAppEvent(TrackedAppStopped, stoppedApp);
             }
         }
     }
@@ -160,6 +174,8 @@ public class AppMonitorService : IDisposable
                 await _powerPlanService.ApplyModeAsync(rule.TargetMode);
                 _notificationService.Show($"Game Mode: Switched to {rule.TargetMode}");
             });
+
+            RaiseTrackedAppEvent(TrackedAppStarted, processName);
         }
     }
 
@@ -189,6 +205,26 @@ public class AppMonitorService : IDisposable
             }
 
             _notificationService.Show("Game Mode: App closed, reverting power mode.");
+
+            RaiseTrackedAppEvent(TrackedAppStopped, processName);
+        }
+    }
+
+    /// <summary>Subscriber failures are logged, never allowed to break the rule engine.</summary>
+    private void RaiseTrackedAppEvent(EventHandler<string>? handlers, string processName)
+    {
+        if (handlers == null) return;
+
+        foreach (EventHandler<string> handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                handler(this, processName);
+            }
+            catch (Exception ex)
+            {
+                _logService.LogError($"A tracked-app event subscriber failed for {processName}.", ex);
+            }
         }
     }
 
