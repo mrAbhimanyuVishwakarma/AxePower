@@ -54,7 +54,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.UnpluggedMode = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -66,7 +66,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.PluggedInMode = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -78,7 +78,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.FanModeOnBattery = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -90,7 +90,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.StartWithLastSelectedMode = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -102,7 +102,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.StartWithWindows = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -114,7 +114,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.StartMinimised = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -135,7 +135,7 @@ public partial class SettingsViewModel : ObservableObject
         CurrentSettings.RunAsAdministrator = value;
         // Saving re-registers the logon task at the matching run level via StartupService,
         // which is what makes the choice survive a reboot without a UAC prompt.
-        _settingsService.SaveSettings(CurrentSettings);
+        SaveCurrentSettings();
 
         _notificationService.Show(value
             ? "AxePower will run as administrator. Restart to apply."
@@ -163,7 +163,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.ShowNotifications = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -175,7 +175,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.NotifyOnModeSwitch = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -187,7 +187,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.LowBatteryAlertSound = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -200,7 +200,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             CurrentSettings.Theme = value;
             _themeService.ApplyTheme(value);
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -231,7 +231,7 @@ public partial class SettingsViewModel : ObservableObject
             : TemperatureUnit.Celsius;
 
         CurrentSettings.TemperatureUnit = unit;
-        _settingsService.SaveSettings(CurrentSettings);
+        SaveCurrentSettings();
         _notificationService.Show($"Temperature unit set to {value}.");
     }
 
@@ -242,7 +242,7 @@ public partial class SettingsViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(value) || value.StartsWith("Auto", StringComparison.OrdinalIgnoreCase))
         {
             CurrentSettings.DisplayRefreshRate = 0;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
 
             Task.Run(async () =>
             {
@@ -257,7 +257,7 @@ public partial class SettingsViewModel : ObservableObject
             if (int.TryParse(numStr, out int hz))
             {
                 CurrentSettings.DisplayRefreshRate = hz;
-                _settingsService.SaveSettings(CurrentSettings);
+                SaveCurrentSettings();
 
                 _displayService.SetRefreshRate(hz);
                 _notificationService.Show($"Display refresh rate set to {hz} Hz.");
@@ -285,7 +285,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.TouchpadEnabled = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
 
         _batteryService?.SetTouchpad(value);
@@ -326,7 +326,7 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.AutoCheckUpdates = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
     }
 
@@ -338,8 +338,20 @@ public partial class SettingsViewModel : ObservableObject
         if (CurrentSettings != null)
         {
             CurrentSettings.AutoDownloadUpdates = value;
-            _settingsService.SaveSettings(CurrentSettings);
+            SaveCurrentSettings();
         }
+    }
+
+    /// <summary>
+    /// CurrentSettings is a snapshot taken at construction, so first pull in the state the
+    /// sidebar has saved since then; otherwise any Settings change would revert it.
+    /// </summary>
+    private void SaveCurrentSettings()
+    {
+        var latest = _settingsService.GetSettings();
+        CurrentSettings.SidebarMaintenanceExpanded = latest.SidebarMaintenanceExpanded;
+        CurrentSettings.SidebarUtilitiesExpanded = latest.SidebarUtilitiesExpanded;
+        _settingsService.SaveSettings(CurrentSettings);
     }
 
     public SettingsViewModel(

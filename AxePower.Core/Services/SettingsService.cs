@@ -77,7 +77,11 @@ public class SettingsService
         return false;
     }
 
-    public void SaveSettings(AppSettings settings)
+    /// <param name="notifyListeners">
+    /// False for UI-only state (e.g. sidebar group expansion) that no service reacts to, so a
+    /// click doesn't re-evaluate the power mode or rewrite the startup task.
+    /// </param>
+    public void SaveSettings(AppSettings settings, bool notifyListeners = true)
     {
         try
         {
@@ -102,7 +106,10 @@ public class SettingsService
             
             _logService.LogInfo("Settings saved successfully.");
             
-            OnSettingsChanged?.Invoke(this, _currentSettings);
+            if (notifyListeners)
+            {
+                OnSettingsChanged?.Invoke(this, _currentSettings);
+            }
         }
         catch (Exception ex)
         {

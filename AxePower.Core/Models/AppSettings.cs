@@ -128,6 +128,13 @@ public class AppSettings
     [JsonPropertyName("notifyOnNewRelease")]
     public bool NotifyOnNewRelease { get; set; } = true;
 
+    /// <summary>Sidebar group state, remembered across launches. Both groups start expanded.</summary>
+    [JsonPropertyName("sidebarMaintenanceExpanded")]
+    public bool SidebarMaintenanceExpanded { get; set; } = true;
+
+    [JsonPropertyName("sidebarUtilitiesExpanded")]
+    public bool SidebarUtilitiesExpanded { get; set; } = true;
+
     /// <summary>AxePower Music preferences. A settings file without this key loads the defaults.</summary>
     [JsonPropertyName("music")]
     public MusicSettings Music { get; set; } = new();
@@ -172,6 +179,8 @@ public class AppSettings
             AutoCheckUpdates = this.AutoCheckUpdates,
             AutoDownloadUpdates = this.AutoDownloadUpdates,
             NotifyOnNewRelease = this.NotifyOnNewRelease,
+            SidebarMaintenanceExpanded = this.SidebarMaintenanceExpanded,
+            SidebarUtilitiesExpanded = this.SidebarUtilitiesExpanded,
             // An explicit "music": null in the file must not leave callers with a null section
             Music = (this.Music ?? new MusicSettings()).Clone()
         };

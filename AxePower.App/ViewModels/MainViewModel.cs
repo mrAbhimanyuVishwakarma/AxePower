@@ -133,6 +133,10 @@ public partial class MainViewModel : ObservableObject
         _updateService = updateService;
         _settingsService = settingsService;
 
+        var startupSettings = _settingsService.GetSettings();
+        IsMaintenanceExpanded = startupSettings.SidebarMaintenanceExpanded;
+        IsUtilitiesExpanded = startupSettings.SidebarUtilitiesExpanded;
+
         _currentView = DashboardVm;
 
         InitializeToolGuides();
@@ -236,12 +240,20 @@ public partial class MainViewModel : ObservableObject
     private void ToggleMaintenanceGroup()
     {
         IsMaintenanceExpanded = !IsMaintenanceExpanded;
+
+        var settings = _settingsService.GetSettings();
+        settings.SidebarMaintenanceExpanded = IsMaintenanceExpanded;
+        _settingsService.SaveSettings(settings, notifyListeners: false);
     }
 
     [RelayCommand]
     private void ToggleUtilitiesGroup()
     {
         IsUtilitiesExpanded = !IsUtilitiesExpanded;
+
+        var settings = _settingsService.GetSettings();
+        settings.SidebarUtilitiesExpanded = IsUtilitiesExpanded;
+        _settingsService.SaveSettings(settings, notifyListeners: false);
     }
 
     partial void OnCurrentViewChanged(object? value)
