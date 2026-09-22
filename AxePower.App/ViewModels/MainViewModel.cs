@@ -219,7 +219,8 @@ public partial class MainViewModel : ObservableObject
         return Application.Current.TryFindResource(styleName) as Style;
     }
 
-    public bool ShowBatteryPill => CurrentView != AboutVm;
+    // Battery status lives on the Dashboard only; other pages get the title bar space back
+    public bool ShowBatteryPill => CurrentView == DashboardVm;
 
     partial void OnIsMaintenanceExpandedChanged(bool value)
     {

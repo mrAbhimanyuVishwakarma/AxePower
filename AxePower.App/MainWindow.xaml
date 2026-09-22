@@ -286,8 +286,19 @@
             </Border>
 
             <!-- Title Bar Region -->
-            <Grid Grid.Row="0" Grid.Column="1" Height="112"
+            <!-- Tall only while the battery pill shows; MainWindow.xaml.cs keeps CaptionHeight in step -->
+            <Grid Grid.Row="0" Grid.Column="1"
                   Visibility="{Binding DashboardVm.IsShrunk, Converter={StaticResource InverseBoolToVis}}">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Height" Value="44"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ShowBatteryPill}" Value="True">
+                                <Setter Property="Height" Value="112"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
                 <!-- Battery Status Pill (3x Large Prominent Size: Live outline battery + percentage + power status) -->
                 <Border HorizontalAlignment="Left" VerticalAlignment="Center" Margin="40,0,0,0" Padding="24,14" CornerRadius="16" Background="{Binding BatteryVm.HeaderPillBackgroundBrush}" BorderBrush="{Binding BatteryVm.HeaderPillBorderBrush}" BorderThickness="1.5" WindowChrome.IsHitTestVisibleInChrome="True" DataContext="{Binding BatteryVm}" Visibility="{Binding DataContext.ShowBatteryPill, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

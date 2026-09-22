@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -445,6 +445,18 @@ public class WinGetHubService : IWinGetHubService
             LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "SteelSeries", "GG", "SteelSeriesGG.exe"),
             WebUrl = "https://steelseries.com/gg/sonar"
         });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "camstudio",
+            WinGetId = "CamStudio.CamStudio",
+            Name = "CamStudio",
+            Description = "Open-source screen & gameplay video recorder with AVI/MP4 encoding and microphone capture.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE714",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio", "Recorder.exe"),
+            WebUrl = "https://camstudio.org/"
+        });
     }
 
     public IReadOnlyList<SoftwarePackageItem> GetAvailablePackages() => _packages.AsReadOnly();
@@ -535,6 +547,21 @@ public class WinGetHubService : IWinGetHubService
                 case "afterburner":
                     using (var k = Registry.CurrentUser.OpenSubKey(@"Software\MSI\Afterburner"))
                         if (k != null) return true;
+                    break;
+                case "camstudio":
+                    string[] camCandidatePaths = new[]
+                    {
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio", "Recorder.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio", "CamStudio.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "CamStudio", "Recorder.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "CamStudio", "Recorder.exe")
+                    };
+                    string? camFound = camCandidatePaths.FirstOrDefault(File.Exists);
+                    if (camFound != null)
+                    {
+                        pkg.LaunchProtocolOrExe = camFound;
+                        return true;
+                    }
                     break;
                 case "dlss5swapper":
                     string dlssExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "DLSS5-Swapper", "DLSS5-Swapper-portable.exe");
@@ -634,6 +661,22 @@ public class WinGetHubService : IWinGetHubService
     {
         var pkg = _packages.FirstOrDefault(p => p.WinGetId.Equals(wingetId, StringComparison.OrdinalIgnoreCase) || p.Id.Equals(wingetId, StringComparison.OrdinalIgnoreCase));
         string targetId = pkg?.WinGetId ?? wingetId;
+
+        if (pkg != null && pkg.Id == "camstudio")
+        {
+            string camToolsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio");
+            if (Directory.Exists(camToolsDir))
+            {
+                try
+                {
+                    Directory.Delete(camToolsDir, true);
+                    pkg.IsInstalled = false;
+                    outputProgress.Report("\n[CamStudio] ✓ Removed local files.");
+                    return true;
+                }
+                catch { }
+            }
+        }
 
         if (pkg != null && pkg.Id == "dlss5swapper")
         {

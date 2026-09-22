@@ -40,12 +40,31 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(DashboardViewModel.IsShrunk))
                 ApplyShrinkState(viewModel.DashboardVm);
         };
+
+        // The title bar collapses to just the window buttons on pages without the battery pill,
+        // so the drag region has to follow or it swallows clicks on the top of the page
+        viewModel.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.ShowBatteryPill))
+                ApplyCaptionHeight();
+        };
+        ApplyCaptionHeight();
     }
 
     // Logical size of the monitor card; the window ends up at this times the card's render scale.
     private const double CompactLogicalWidth = 344;
     private const double CompactLogicalHeight = 704;
-    private const double ExpandedCaptionHeight = 112;
+    // Must match the title bar heights in MainWindow.xaml
+    private const double PillCaptionHeight = 112;
+    private const double CompactCaptionHeight = 44;
+
+    /// <summary>Keeps the drag region the same height as the title bar, which is only tall while the battery pill shows.</summary>
+    private void ApplyCaptionHeight()
+    {
+        var chrome = WindowChrome.GetWindowChrome(this);
+        if (chrome == null || DataContext is not MainViewModel vm || vm.DashboardVm.IsShrunk) return;
+        chrome.CaptionHeight = vm.ShowBatteryPill ? PillCaptionHeight : CompactCaptionHeight;
+    }
 
     private Rect _expandedBounds;
     private WindowState _expandedState = WindowState.Normal;
@@ -94,7 +113,7 @@ public partial class MainWindow : Window
             SetWindowCornerPreference(DWMWCP_DEFAULT);
             MinWidth = _expandedMinWidth;
             MinHeight = _expandedMinHeight;
-            if (chrome != null) chrome.CaptionHeight = ExpandedCaptionHeight;
+            ApplyCaptionHeight();
 
             if (_hasExpandedBounds)
             {

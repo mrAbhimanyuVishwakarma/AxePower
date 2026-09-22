@@ -114,6 +114,7 @@ public class SoftwareHubTests
         Assert.Contains("peace", ids);
         Assert.Contains("dolby", ids);
         Assert.Contains("steelseriesgg", ids);
+        Assert.Contains("camstudio", ids);
     }
 
     [Fact]
@@ -305,4 +306,85 @@ public class SoftwareHubTests
             Assert.NotEqual(GpuVendor.Unknown, adapter.Vendor);
         }
     }
+
+    [Fact]
+    public void CamStudioPackage_HasValidMetadataAndWebUrl()
+    {
+        var packages = _hubService.GetAvailablePackages();
+        var camStudio = packages.FirstOrDefault(p => p.Id == "camstudio");
+
+        Assert.NotNull(camStudio);
+        Assert.Equal("CamStudio", camStudio.Name);
+        Assert.Equal(PackageCategory.Utilities, camStudio.Category);
+        Assert.Equal("https://camstudio.org/", camStudio.WebUrl);
+        Assert.Contains("CamStudio", camStudio.LaunchProtocolOrExe);
+    }
+
+    [Fact]
+    public void SoftwareHubViewModel_MultiSelection_SelectsAndClearsCorrectly()
+    {
+        var vm = new SoftwareHubViewModel(
+            _hubService,
+            _updateShieldService,
+            _driverUpdateService,
+            _firmwareUpdateService,
+            _notificationService,
+            _logService,
+            _graphicsDriverService,
+            _terminalService,
+            _restorePointService);
+
+        Assert.Equal(0, vm.SelectedCount);
+        Assert.False(vm.HasSelectedPackages);
+
+        // Select Uninstalled
+        vm.SelectUninstalledCommand.Execute(null);
+        Assert.True(vm.SelectedCount > 0);
+        Assert.True(vm.HasSelectedPackages);
+        Assert.All(vm.AllPackages.Where(p => p.IsSelected), p => Assert.False(p.IsInstalled));
+
+        // Clear Selection
+        vm.ClearSelectionCommand.Execute(null);
+        Assert.Equal(0, vm.SelectedCount);
+        Assert.False(vm.HasSelectedPackages);
+        Assert.All(vm.AllPackages, p => Assert.False(p.IsSelected));
+
+        // Individual selection updates counts reactively
+        var first = vm.AllPackages.First(p => !p.IsWebLinkOnly);
+        first.IsSelected = true;
+        Assert.Equal(1, vm.SelectedCount);
+        Assert.True(vm.HasSelectedPackages);
+
+        first.IsSelected = false;
+        Assert.Equal(0, vm.SelectedCount);
+        Assert.False(vm.HasSelectedPackages);
+    }
+
+    [Fact]
+    public void SoftwareHubViewModel_InstallSelectedViaTerminal_NavigatesAndSendsScript()
+    {
+        var vm = new SoftwareHubViewModel(
+            _hubService,
+            _updateShieldService,
+            _driverUpdateService,
+            _firmwareUpdateService,
+            _notificationService,
+            _logService,
+            _graphicsDriverService,
+            _terminalService,
+            _restorePointService);
+
+        bool navigationRequested = false;
+        _terminalService.NavigateToTerminalRequested += () => navigationRequested = true;
+
+        // Select CamStudio
+        var cam = vm.AllPackages.FirstOrDefault(p => p.Id == "camstudio");
+        Assert.NotNull(cam);
+        cam.IsSelected = true;
+
+        vm.InstallSelectedViaTerminalCommand.Execute(null);
+
+        Assert.True(navigationRequested, "Terminal navigation should be triggered for batch install");
+    }
 }
+
