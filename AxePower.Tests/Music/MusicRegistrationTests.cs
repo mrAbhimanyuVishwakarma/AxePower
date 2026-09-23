@@ -57,6 +57,12 @@ public class MusicRegistrationTests
         Assert.Same(registry.ById("youtube"), provider.GetRequiredService<YouTubeProvider>());
 
         Assert.IsType<StreamResolver>(provider.GetRequiredService<IStreamResolver>());
+
+        // Resolving these must not open or create the database: the library is opened on the
+        // first read, so a cold start never pays for it.
+        Assert.NotNull(provider.GetRequiredService<LibraryDatabase>());
+        Assert.NotNull(provider.GetRequiredService<MusicLibraryRepository>());
+        Assert.Same(provider.GetRequiredService<MusicLibraryRepository>(), provider.GetRequiredService<MusicLibraryRepository>());
         Assert.IsType<DpapiSecretStore>(provider.GetRequiredService<ISecretStore>());
         Assert.NotNull(provider.GetRequiredService<StreamCache>());
     }

@@ -295,6 +295,8 @@ public partial class App : Application
         services.AddSingleton<ICoverArtService, CoverArtService>();
         services.AddSingleton<IAudioEngine, NAudioEngine>();
         services.AddSingleton<PlaybackStateStore>();
+        services.AddSingleton<LibraryDatabase>();
+        services.AddSingleton<MusicLibraryRepository>();
 
         // AxePower Music — Sources. Providers are registered here, never loaded from disk:
         // AxePower runs elevated, so third-party code must not end up inside this process.
@@ -396,6 +398,13 @@ public partial class App : Application
         Console.WriteLine(
             $"Phone portal: token {(sp.GetRequiredService<PortalAccessToken>().Value.Length)} chars, " +
             $"music remote {sp.GetRequiredService<MusicRemote>().GetType().Name} ready.");
+
+        // Reported without opening it: the library is created on first use, and a self-test
+        // should not be the thing that brings it into existence.
+        var libraryDb = sp.GetRequiredService<LibraryDatabase>();
+        Console.WriteLine(
+            $"Music library: schema v{LibraryDatabase.SchemaVersion}, " +
+            $"{(System.IO.File.Exists(libraryDb.FilePath) ? "present" : "not created yet")} at {libraryDb.FilePath}.");
 
         var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
         var shareTools = sp.GetRequiredService<IShareToolProvider>();
