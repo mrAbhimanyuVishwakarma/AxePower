@@ -88,6 +88,39 @@ public static class DecoderFactory
         return false;
     }
 
+    /// <summary>
+    /// Opens a decoder for a queued track. A local track is read from its own path; a track
+    /// from a streaming source is read from the URL its provider resolved, which Media
+    /// Foundation fetches in the background as playback moves through it.
+    /// </summary>
+    internal static IDecoder Open(Models.Music.Track track)
+    {
+        var stream = track.ResolvedStream;
+        if (stream is null || stream.IsFile)
+            return Open(stream?.Url ?? track.Path);
+
+        return OpenRemote(stream.Url);
+    }
+
+    /// <summary>
+    /// Opens an http(s) audio stream. Media Foundation does the ranged fetching and buffering,
+    /// so playback starts as soon as the first packets arrive instead of after a full download.
+    /// </summary>
+    internal static IDecoder OpenRemote(string url)
+    {
+        StartMediaFoundation();
+
+        var reader = new MediaFoundationReader(url, new MediaFoundationReader.MediaFoundationReaderSettings
+        {
+            RequestFloatOutput = true,
+
+            // A signed URL is single-use for the session: reopening it mid-playback to seek
+            // would fail, so the reader keeps the one connection it has.
+            SingleReaderObject = true
+        });
+        return new WaveStreamDecoder(reader);
+    }
+
     /// <summary>Opens a decoder positioned at the start. Call on a background (MTA) thread.</summary>
     internal static IDecoder Open(string path)
     {
@@ -109,16 +142,19 @@ public static class DecoderFactory
     private static readonly object MfStartupLock = new();
     private static bool _mfStarted;
 
-    private static IDecoder OpenMediaFoundation(string path)
+    private static void StartMediaFoundation()
     {
         lock (MfStartupLock)
         {
-            if (!_mfStarted)
-            {
-                NAudio.MediaFoundation.MediaFoundationApi.Startup();
-                _mfStarted = true;
-            }
+            if (_mfStarted) return;
+            NAudio.MediaFoundation.MediaFoundationApi.Startup();
+            _mfStarted = true;
         }
+    }
+
+    private static IDecoder OpenMediaFoundation(string path)
+    {
+        StartMediaFoundation();
 
         var reader = new MediaFoundationReader(path, new MediaFoundationReader.MediaFoundationReaderSettings
         {

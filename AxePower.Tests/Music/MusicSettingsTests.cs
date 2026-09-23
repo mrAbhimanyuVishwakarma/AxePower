@@ -236,4 +236,62 @@ public class MusicSettingsTests
             SpotifyClientId = "abc123"
         }
     };
+
+    [Fact]
+    public void Providers_DefaultToLocalAndYouTube()
+    {
+        var providers = new MusicSettings().Providers;
+
+        Assert.Equal(new[] { "local", "youtube" }, providers.Enabled);
+        Assert.Equal("youtube", providers.ActiveStreaming);
+        Assert.Equal("youtube", providers.ActiveMetadata);
+        Assert.Equal(60, providers.StreamExpiryMinutes);
+        Assert.Equal(3, providers.StreamResolutionRetries);
+        Assert.False(providers.CacheStreamsToDisk);
+        Assert.Equal(1024, providers.StreamCacheMaxMb);
+    }
+
+    [Fact]
+    public void Providers_SurviveACloneWithoutSharingTheirList()
+    {
+        var original = new MusicSettings();
+        original.Providers.Enabled.Add("spotify");
+        original.Providers.ActiveMetadata = "spotify";
+        original.Providers.CacheStreamsToDisk = true;
+
+        var copy = original.Clone();
+        copy.Providers.Enabled.Add("something-else");
+
+        Assert.Equal("spotify", copy.Providers.ActiveMetadata);
+        Assert.True(copy.Providers.CacheStreamsToDisk);
+        Assert.DoesNotContain("something-else", original.Providers.Enabled);
+    }
+
+    [Fact]
+    public void Providers_RoundTripThroughJson()
+    {
+        var original = new MusicSettings();
+        original.Providers.ActiveStreaming = "youtube";
+        original.Providers.ActiveMetadata = "spotify";
+        original.Providers.Enabled.Add("spotify");
+        original.Providers.StreamExpiryMinutes = 15;
+
+        string json = JsonSerializer.Serialize(original, WriteOptions);
+        var loaded = JsonSerializer.Deserialize<MusicSettings>(json, ReadOptions)!;
+
+        Assert.Equal("spotify", loaded.Providers.ActiveMetadata);
+        Assert.Equal(15, loaded.Providers.StreamExpiryMinutes);
+        Assert.Contains("spotify", loaded.Providers.Enabled);
+    }
+
+    [Fact]
+    public void SettingsWrittenBeforeSourcesExisted_LoadWithTheDefaultSources()
+    {
+        // Upgrading from an earlier build must not leave the player with no source at all.
+        var loaded = JsonSerializer.Deserialize<MusicSettings>("{\"allowVolumeBoost\":true}", ReadOptions)!;
+
+        Assert.True(loaded.AllowVolumeBoost);
+        Assert.NotNull(loaded.Providers);
+        Assert.Equal("youtube", loaded.Providers.ActiveStreaming);
+    }
 }

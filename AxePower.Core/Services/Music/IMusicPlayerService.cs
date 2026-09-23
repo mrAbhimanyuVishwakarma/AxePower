@@ -49,6 +49,13 @@ public interface IMusicPlayerService
     /// <summary>Auto-extends the queue from the local library (Phase 6).</summary>
     void SetMix(bool on);
 
+    /// <summary>
+    /// Plays a streamed queue entry from a different source than the one that was matched
+    /// automatically — the fix for a live take or a cover when the studio version was wanted.
+    /// Does nothing for a local file or an unknown candidate.
+    /// </summary>
+    Task SelectCandidateAsync(int index, string candidateId);
+
     /// <summary>Used by the sleep timer.</summary>
     Task FadeOutAndPauseAsync(TimeSpan duration);
 

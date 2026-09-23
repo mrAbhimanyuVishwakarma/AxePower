@@ -60,6 +60,12 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
     private CancellationTokenSource? _loadCts;
     private bool _shutDown;
 
+    /// <summary>Null in tests and in builds with no streaming sources: every track is then local.</summary>
+    private readonly IStreamResolver? _resolver;
+
+    /// <summary>Cancels a preload that a newer "next track" has made pointless.</summary>
+    private CancellationTokenSource? _nextCts;
+
     public MusicPlayerService(
         IAudioEngine engine,
         PlaybackStateStore store,
@@ -67,8 +73,9 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         SettingsService settings,
         NotificationService notifications,
         LogService log,
-        IClock clock)
-        : this(engine, store, trackReader, settings, notifications, log, clock, new PlaybackQueue())
+        IClock clock,
+        IStreamResolver? resolver = null)
+        : this(engine, store, trackReader, settings, notifications, log, clock, new PlaybackQueue(), resolver)
     {
     }
 
@@ -80,8 +87,10 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         NotificationService notifications,
         LogService log,
         IClock clock,
-        PlaybackQueue queue)
+        PlaybackQueue queue,
+        IStreamResolver? resolver = null)
     {
+        _resolver = resolver;
         _engine = engine;
         _store = store;
         _trackReader = trackReader;
@@ -594,7 +603,22 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
 
         try
         {
-            await _engine.LoadAsync(item, start, play, ct);
+            item = await ResolveAsync(item, preferLocalCopy: false, ct);
+
+            try
+            {
+                await _engine.LoadAsync(item, start, play, ct);
+            }
+            catch (Exception ex) when (!item.Track.IsLocal && !ct.IsCancellationRequested)
+            {
+                // A remote stream that will not open progressively is worth one more try as a
+                // downloaded file: some sources refuse ranged requests, and a slow start beats
+                // skipping the track.
+                _log.LogWarning($"[Music] Streaming '{item.Track.Title}' failed ({ex.Message}); downloading it instead.");
+                item = await ResolveAsync(item, preferLocalCopy: true, ct);
+                await _engine.LoadAsync(item, start, play, ct);
+            }
+
             _loadedKey = item.Key;
             _playing = play;
             _completed = false;
@@ -609,9 +633,52 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         }
         catch (Exception ex)
         {
-            _log.LogWarning($"[Music] Could not open '{Path.GetFileName(item.Track.Path)}': {ex.Message}");
+            _log.LogWarning($"[Music] Could not open '{item.Track.DisplayName}': {ex.Message}");
             if (countFailure) await HandleFailureAsync(item, play);
         }
+    }
+
+    /// <summary>
+    /// Gives a queue entry a playable stream, and writes the result back into the queue so the
+    /// candidate list is there for the UI and is not searched for again on the next play.
+    /// </summary>
+    public Task SelectCandidateAsync(int index, string candidateId) => RunGatedAsync(async () =>
+    {
+        if (_resolver is null || index < 0 || index >= _queue.Items.Count) return;
+
+        var item = _queue.Items[index];
+        var track = _resolver.SelectCandidate(item.Track, candidateId);
+        if (ReferenceEquals(track, item.Track)) return;
+
+        if (_queue.Replace(item.Key, track)) _queueDirty = true;
+
+        // Switching the source of the track that is playing restarts it from the beginning on
+        // the new one; any other entry simply takes effect when its turn comes.
+        if (_loadedKey == item.Key)
+        {
+            bool wasPlaying = _playing;
+            _consecutiveFailures = 0;
+            await LoadCurrentAsync(TimeSpan.Zero, wasPlaying, countFailure: true);
+        }
+        else if (_queue.PeekAfterEnd()?.Key == item.Key)
+        {
+            UpdateNext();
+        }
+
+        Publish();
+    });
+
+    private async Task<QueueItem> ResolveAsync(QueueItem item, bool preferLocalCopy, CancellationToken ct)
+    {
+        if (_resolver is null || item.Track.IsLocal) return item;
+
+        var track = await _resolver.PrepareAsync(item.Track, preferLocalCopy, ct);
+        if (ReferenceEquals(track, item.Track)) return item;
+
+        // The published state keeps a cached copy of the queue, so a track swapped in place has
+        // to mark it stale or the candidates and the resolved source never reach any surface.
+        if (_queue.Replace(item.Key, track)) _queueDirty = true;
+        return item with { Track = track };
     }
 
     /// <summary>
@@ -648,6 +715,8 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
     private async Task StopEngineAsync()
     {
         _loadCts?.Cancel();
+        _nextCts?.Cancel();
+        _nextCts = null;
         await _engine.StopAsync();
         _loadedKey = null;
         _playing = false;
@@ -661,7 +730,50 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
     {
         var next = _queue.PeekAfterEnd();
         _repeatOneKey = _queue.Repeat == RepeatMode.One ? next?.Key : null;
-        _engine.SetNext(next);
+
+        _nextCts?.Cancel();
+        _nextCts = null;
+
+        if (_resolver is null || next is null || next.Track.IsLocal)
+        {
+            _engine.SetNext(next);
+            return;
+        }
+
+        // A streamed track has to be resolved before it can be preloaded, and that is a network
+        // call. Nothing is preloaded until it finishes, so the engine is told "no next track"
+        // first: the worst case is a gap, never a stall on the caller's thread.
+        _engine.SetNext(null);
+
+        var cts = new CancellationTokenSource();
+        _nextCts = cts;
+        _ = PrepareNextAsync(next, cts);
+    }
+
+    private async Task PrepareNextAsync(QueueItem next, CancellationTokenSource cts)
+    {
+        try
+        {
+            var resolved = await ResolveAsync(next, preferLocalCopy: false, cts.Token);
+
+            // Between the call starting and finishing the queue may have moved on, in which
+            // case this preload is stale and must not overwrite a newer one.
+            if (!cts.IsCancellationRequested && ReferenceEquals(_nextCts, cts))
+                _engine.SetNext(resolved);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            // Not fatal: the track is loaded normally (and reported) when its turn comes.
+            _log.LogWarning($"[Music] Could not prepare '{next.Track.DisplayName}': {ex.Message}");
+        }
+        finally
+        {
+            if (ReferenceEquals(_nextCts, cts)) _nextCts = null;
+            cts.Dispose();
+        }
     }
 
     private void ApplyMusicSettings(MusicSettings music)

@@ -424,6 +424,13 @@ public partial class NowPlayingViewModel : ObservableObject
     [RelayCommand]
     private void ClearQueue() => _player.ClearQueue();
 
+    /// <summary>Plays a queued track from a different source than the one matched for it.</summary>
+    [RelayCommand]
+    private Task SelectCandidate(StreamCandidateViewModel? candidate) =>
+        candidate == null
+            ? Task.CompletedTask
+            : _player.SelectCandidateAsync(candidate.QueueIndex, candidate.Id);
+
     public void MoveEntry(int from, int to) => _player.Move(from, to);
 
     public Task OpenPathsAsync(IEnumerable<string> paths)
@@ -433,6 +440,18 @@ public partial class NowPlayingViewModel : ObservableObject
     }
 
     public Task AddPathsAsync(IEnumerable<string> paths) => _player.AddPathsAsync(paths);
+
+    /// <summary>
+    /// Plays tracks that did not come from a file picker — search results and imported
+    /// playlists. Their audio is resolved by the player when each one starts.
+    /// </summary>
+    public Task OpenTracksAsync(IReadOnlyList<Track> tracks, int startIndex = 0)
+    {
+        if (IsSpotifyMode) DisableSpotifyMode();
+        return tracks.Count == 0 ? Task.CompletedTask : _player.OpenAsync(tracks, startIndex);
+    }
+
+    public void QueueTracks(IEnumerable<Track> tracks) => _player.AddToQueue(tracks);
 
     // ── State → view ────────────────────────────────────────────────────────
 

@@ -318,6 +318,20 @@ public sealed class PlaybackQueue
         if (current != null) Index = IndexOfKey(current.Key);
     }
 
+    /// <summary>
+    /// Swaps the track behind one queue entry, keeping its key and its place. Used after a
+    /// streaming source resolves, so the candidate list and the resolved URL survive in the
+    /// queue instead of being recomputed on every play.
+    /// </summary>
+    public bool Replace(Guid key, Track track)
+    {
+        int index = IndexOfKey(key);
+        if (index < 0) return false;
+
+        _items[index] = _items[index] with { Track = track };
+        return true;
+    }
+
     public void Clear()
     {
         _items.Clear();

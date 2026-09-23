@@ -35,11 +35,24 @@ public partial class MusicViewModel : ObservableObject
     private readonly TagLibTagReader _tagReader = new();
     private readonly SettingsService? _settingsService;
     private readonly SpotifyController _spotifyController = new();
+    private readonly ProviderRegistry? _providers;
+    private readonly IStreamResolver? _resolver;
 
-    public MusicViewModel(NowPlayingViewModel nowPlaying, SettingsService? settingsService = null)
+    /// <summary>Cancels a search that a newer one has replaced.</summary>
+    private CancellationTokenSource? _searchCts;
+
+    public MusicViewModel(
+        NowPlayingViewModel nowPlaying,
+        SettingsService? settingsService = null,
+        ProviderRegistry? providers = null,
+        IStreamResolver? resolver = null)
     {
         NowPlaying = nowPlaying;
-        _settingsService = settingsService ?? (Application.Current as App)?.Services?.GetService<SettingsService>();
+        var services = (Application.Current as App)?.Services;
+        _settingsService = settingsService ?? services?.GetService<SettingsService>();
+        _providers = providers ?? services?.GetService<ProviderRegistry>();
+        _resolver = resolver ?? services?.GetService<IStreamResolver>();
+        Sources = services?.GetService<SourcesViewModel>();
 
         NowPlaying.PropertyChanged += (_, e) =>
         {
@@ -56,6 +69,9 @@ public partial class MusicViewModel : ObservableObject
     }
 
     public NowPlayingViewModel NowPlaying { get; }
+
+    /// <summary>The Sources list shown in Music Settings. Null only in a design-time view.</summary>
+    public SourcesViewModel? Sources { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(QueueToggleLabel), nameof(LibraryColumns))]
@@ -145,103 +161,91 @@ public partial class MusicViewModel : ObservableObject
     {
         if (item == null || item.Songs.Count == 0) return;
         SelectLibraryItem(item);
-        if (item.Songs.Any(s => s.Path.StartsWith("yt:", StringComparison.OrdinalIgnoreCase)))
-        {
-            await PlaySong(item.Songs.FirstOrDefault());
-            return;
-        }
-        var paths = item.Songs.Select(s => s.Path).Where(File.Exists).ToList();
-        if (paths.Count > 0)
-            await NowPlaying.OpenPathsAsync(paths);
+        await PlayListAsync(item.Songs, item.Songs[0]);
     }
 
     [RelayCommand]
-    public async Task PlaySelectedSongs()
+    public Task PlaySelectedSongs() =>
+        SelectedSongs.Count == 0 ? Task.CompletedTask : PlayListAsync(SelectedSongs, SelectedSongs[0]);
+
+    [RelayCommand]
+    public Task QueueSelectedSongs()
     {
-        if (SelectedSongs.Count == 0) return;
-        if (SelectedSongs.Any(s => s.Path.StartsWith("yt:", StringComparison.OrdinalIgnoreCase)))
-        {
-            await PlaySong(SelectedSongs.FirstOrDefault());
-            return;
-        }
-        var paths = SelectedSongs.Select(s => s.Path).Where(File.Exists).ToList();
-        if (paths.Count > 0)
-            await NowPlaying.OpenPathsAsync(paths);
+        var tracks = ToTracks(SelectedSongs);
+        if (tracks.Count > 0) NowPlaying.QueueTracks(tracks);
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
-    public async Task QueueSelectedSongs()
-    {
-        if (SelectedSongs.Count == 0) return;
-        var paths = SelectedSongs.Select(s => s.Path).Where(File.Exists).ToList();
-        if (paths.Count > 0)
-            await NowPlaying.AddPathsAsync(paths);
-    }
+    public Task PlaySong(SongItemViewModel? song) =>
+        song == null ? Task.CompletedTask : PlayListAsync(SelectedSongs, song);
 
-    [RelayCommand]
-    public async Task PlaySong(SongItemViewModel? song)
+    /// <summary>
+    /// Plays a list starting at one row. The whole list becomes the queue, so "play this one"
+    /// still leaves the rest of the album or the search results behind it.
+    /// </summary>
+    private async Task PlayListAsync(IReadOnlyList<SongItemViewModel> list, SongItemViewModel start)
     {
-        if (song == null) return;
         NowPlaying.DisableSpotifyMode();
+        NowPlaying.ErrorMessage = null;
 
-        if (song.Path.StartsWith("yt:", StringComparison.OrdinalIgnoreCase))
+        var rows = list.Contains(start) ? list.ToList() : new List<SongItemViewModel> { start };
+        var tracks = ToTracks(rows);
+        if (tracks.Count == 0)
         {
-            string videoId = song.Path["yt:".Length..];
-            NowPlaying.Title = song.Title;
-            NowPlaying.Artist = "Streaming from YouTube Music...";
-            NowPlaying.Album = "YouTube Music";
-            NowPlaying.HasCurrent = true;
-            NowPlaying.ErrorMessage = null;
-
-            string? cachedFile = await _ytService.GetOrDownloadAudioStreamAsync(videoId);
-            if (cachedFile != null && File.Exists(cachedFile))
-            {
-                await NowPlaying.OpenPathsAsync(new[] { cachedFile });
-                NowPlaying.Title = song.Title;
-                NowPlaying.Artist = song.Artist;
-                NowPlaying.Album = "YouTube Music";
-            }
-            else
-            {
-                NowPlaying.ErrorMessage = "Failed to stream audio from YouTube Music.";
-            }
+            NowPlaying.ErrorMessage = "These tracks are no longer available.";
             return;
         }
 
-        if (!File.Exists(song.Path)) return;
-        var allPaths = SelectedSongs.Select(s => s.Path).Where(File.Exists).ToList();
-        if (allPaths.Count > 0)
-        {
-            await NowPlaying.OpenPathsAsync(allPaths);
-            int idx = allPaths.IndexOf(song.Path);
-            if (idx > 0)
-            {
-                var entry = NowPlaying.Queue.FirstOrDefault(q => q.Index == idx);
-                if (entry != null)
-                    await NowPlaying.JumpCommand.ExecuteAsync(entry);
-            }
-        }
-        else
-        {
-            await NowPlaying.OpenPathsAsync(new[] { song.Path });
-        }
+        // The index has to be found in the list that survived filtering, not the original one.
+        int index = Math.Max(0, rows.Where(Playable).ToList().IndexOf(start));
+        await NowPlaying.OpenTracksAsync(tracks, index);
     }
 
-    [RelayCommand]
-    public async Task QueueSong(SongItemViewModel? song)
-    {
-        if (song == null) return;
-        if (song.Path.StartsWith("yt:", StringComparison.OrdinalIgnoreCase))
-        {
-            string videoId = song.Path["yt:".Length..];
-            string? cachedFile = await _ytService.GetOrDownloadAudioStreamAsync(videoId);
-            if (cachedFile != null && File.Exists(cachedFile))
-                await NowPlaying.AddPathsAsync(new[] { cachedFile });
-            return;
-        }
+    /// <summary>Rows that can actually be played: a file that still exists, or a source track.</summary>
+    private static bool Playable(SongItemViewModel song) =>
+        song.Track is { IsLocal: false } || File.Exists(song.Path);
 
-        if (!File.Exists(song.Path)) return;
-        await NowPlaying.AddPathsAsync(new[] { song.Path });
+    private List<Track> ToTracks(IEnumerable<SongItemViewModel> songs)
+    {
+        var tracks = new List<Track>();
+        foreach (var song in songs)
+        {
+            if (song.Track is { IsLocal: false } remote) { tracks.Add(remote); continue; }
+            if (!File.Exists(song.Path)) continue;
+
+            // A local row only carries its path; the player reads the file's own tags when it
+            // opens it, so a placeholder track here would be overwritten anyway.
+            tracks.Add(song.Track ?? ReadLocalTrack(song));
+        }
+        return tracks;
+    }
+
+    private Track ReadLocalTrack(SongItemViewModel song) => new(
+        Id: 0,
+        Path: song.Path,
+        Title: song.Title,
+        Artists: new[] { song.Artist },
+        Album: song.Album,
+        AlbumArtist: null,
+        TrackNumber: song.Number,
+        DiscNumber: null,
+        Year: null,
+        Genres: Array.Empty<string>(),
+        Duration: song.Duration,
+        Format: new AudioFormatInfo(Path.GetExtension(song.Path).TrimStart('.').ToUpperInvariant(), 0, 0, 2, 0, false),
+        ReplayGain: null,
+        CoverKey: null,
+        Liked: false);
+
+    [RelayCommand]
+    public Task QueueSong(SongItemViewModel? song)
+    {
+        if (song == null) return Task.CompletedTask;
+
+        var tracks = ToTracks(new[] { song });
+        if (tracks.Count > 0) NowPlaying.QueueTracks(tracks);
+        return Task.CompletedTask;
     }
 
     // ── Playlist Path & Creation ─────────────────────────────────────────────
@@ -343,9 +347,7 @@ public partial class MusicViewModel : ObservableObject
         }
     }
 
-    // ── Spotify & YouTube Music Integration ────────────────────────────────
-
-    private readonly YouTubeMusicService _ytService = new();
+    // ── Online sources ─────────────────────────────────────────────
 
     [ObservableProperty]
     private string _searchYouTubeText = string.Empty;
@@ -353,62 +355,154 @@ public partial class MusicViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSearchingYouTube;
 
+    /// <summary>The source answering searches right now, for the search box placeholder.</summary>
+    public string SearchSourceName =>
+        _providers?.Active<IMetadataProvider>(ProviderKind.Metadata)?.Info.Name ?? "no source";
+
     [RelayCommand]
     public Task LaunchAndMinimizeSpotifyAsync()
     {
         return NowPlaying.EnableSpotifyModeAsync();
     }
 
+    /// <summary>
+    /// Searches whichever source is active. The command keeps its old name so the existing
+    /// bindings and the search box carry on working.
+    /// </summary>
     [RelayCommand]
     public async Task SearchYouTubeAsync(string? query = null)
     {
+        var provider = _providers?.Active<IMetadataProvider>(ProviderKind.Metadata);
+        if (provider == null)
+        {
+            NowPlaying.ErrorMessage = "No search source is switched on. Turn one on in Music Settings.";
+            return;
+        }
+
         string q = string.IsNullOrWhiteSpace(query) ? SearchYouTubeText : query;
         if (string.IsNullOrWhiteSpace(q)) q = "Top Trending Songs";
+
+        _searchCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _searchCts = cts;
+
         IsSearchingYouTube = true;
         try
         {
-            var tracks = await _ytService.SearchTracksAsync(q, limit: 30);
-            var ytCard = LibraryItems.FirstOrDefault(i => i.Title == "YouTube Music");
-            if (ytCard == null)
+            var tracks = await provider.SearchTracksAsync(q, limit: 30, cts.Token);
+            if (cts.IsCancellationRequested) return;
+
+            string name = provider.Info.Name;
+            var card = LibraryItems.FirstOrDefault(i => i.Title == name);
+            if (card == null)
             {
-                ytCard = new LibraryItemViewModel
+                card = new LibraryItemViewModel
                 {
-                    Title = "YouTube Music",
-                    Subtitle = $"{tracks.Count} tracks • Online",
-                    IconGlyph = "\uE768",
-                    GradientBrush = CreateGradient("#DC2626", "#7F1D1D")
+                    Title = name,
+                    IconGlyph = GlyphFor(provider.Info.Id),
+                    GradientBrush = GradientFor(provider.Info.Id)
                 };
-                LibraryItems.Insert(0, ytCard);
+                LibraryItems.Insert(0, card);
             }
 
-            ytCard.Songs.Clear();
-            int num = 1;
-            foreach (var t in tracks)
+            Fill(card, tracks, name);
+            card.Subtitle = Summary(card.Songs.Count, name);
+            SelectLibraryItem(card);
+            OnPropertyChanged(nameof(LibraryItemsSummary));
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            NowPlaying.ErrorMessage = provider.Info.Name + " search failed: " + ex.Message;
+        }
+        finally
+        {
+            if (ReferenceEquals(_searchCts, cts)) IsSearchingYouTube = false;
+            cts.Dispose();
+        }
+    }
+
+    /// <summary>Brings the playlists of the active source in as library cards.</summary>
+    [RelayCommand]
+    public async Task ImportSourcePlaylists()
+    {
+        var provider = _providers?.Active<IMetadataProvider>(ProviderKind.Metadata);
+        if (provider == null) return;
+
+        try
+        {
+            var playlists = await provider.GetPlaylistsAsync(CancellationToken.None);
+            if (playlists.Count == 0)
             {
-                ytCard.Songs.Add(new SongItemViewModel
-                {
-                    Number = num++,
-                    Title = t.Title,
-                    Artist = t.Artist,
-                    Album = "YouTube Music",
-                    Duration = t.Duration ?? TimeSpan.FromMinutes(3),
-                    Path = $"yt:{t.VideoId}"
-                });
+                NowPlaying.ErrorMessage = provider.Info.Name + " has no playlists to import.";
+                return;
             }
 
-            ytCard.Subtitle = $"{ytCard.Songs.Count} tracks • Online";
-            SelectLibraryItem(ytCard);
+            foreach (var playlist in playlists)
+            {
+                var tracks = await provider.GetPlaylistTracksAsync(playlist.Id, 500, CancellationToken.None);
+                if (tracks.Count == 0) continue;
+
+                var card = new LibraryItemViewModel
+                {
+                    Title = playlist.Name,
+                    Subtitle = Summary(tracks.Count, provider.Info.Name),
+                    IconGlyph = GlyphFor(provider.Info.Id),
+                    GradientBrush = GradientFor(provider.Info.Id)
+                };
+                Fill(card, tracks, playlist.Name);
+
+                // Re-importing replaces the old card rather than stacking a duplicate beside it.
+                var existing = LibraryItems.FirstOrDefault(i => i.Title == card.Title);
+                if (existing != null) LibraryItems.Remove(existing);
+                LibraryItems.Insert(0, card);
+            }
+
             OnPropertyChanged(nameof(LibraryItemsSummary));
         }
         catch (Exception ex)
         {
-            NowPlaying.ErrorMessage = $"YouTube search error: {ex.Message}";
-        }
-        finally
-        {
-            IsSearchingYouTube = false;
+            NowPlaying.ErrorMessage = provider.Info.Name + " playlists could not be loaded: " + ex.Message;
         }
     }
+
+    private static void Fill(LibraryItemViewModel card, IReadOnlyList<Track> tracks, string fallbackAlbum)
+    {
+        card.Songs.Clear();
+        int number = 1;
+        foreach (var track in tracks)
+        {
+            card.Songs.Add(new SongItemViewModel
+            {
+                Number = number++,
+                Title = track.Title,
+                Artist = track.Artists.Count > 0 ? track.Artists[0] : string.Empty,
+                Album = track.Album ?? fallbackAlbum,
+                Duration = track.Duration,
+                Path = string.Empty,
+                Track = track
+            });
+        }
+    }
+
+    private static string Summary(int count, string sourceName) =>
+        count + " track" + (count == 1 ? "" : "s") + " \u2022 " + sourceName;
+
+    private static string GlyphFor(string providerId) => providerId switch
+    {
+        "youtube" => "\uE768",
+        "spotify" => "\uE8D6",
+        _ => "\uE8D6"
+    };
+
+    private static Brush GradientFor(string providerId) => providerId switch
+    {
+        "youtube" => CreateGradient("#DC2626", "#7F1D1D"),
+        "spotify" => CreateGradient("#1DB954", "#0F6B31"),
+        _ => CreateGradient("#6B7280", "#374151")
+    };
 
     [RelayCommand]
     public async Task AddFolderToLibrary()

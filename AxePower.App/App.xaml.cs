@@ -1,6 +1,7 @@
 using System;
 using System.IO.Pipes;
 using System.Linq;
+using AxePower.Core.Models.Music;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -294,6 +295,20 @@ public partial class App : Application
         services.AddSingleton<ICoverArtService, CoverArtService>();
         services.AddSingleton<IAudioEngine, NAudioEngine>();
         services.AddSingleton<PlaybackStateStore>();
+
+        // AxePower Music — Sources. Providers are registered here, never loaded from disk:
+        // AxePower runs elevated, so third-party code must not end up inside this process.
+        services.AddSingleton<ISecretStore, DpapiSecretStore>();
+        services.AddSingleton<StreamCache>();
+        services.AddSingleton<ProviderRegistry>();
+        services.AddSingleton<IStreamResolver, StreamResolver>();
+        services.AddSingleton<SpotifyAuth>();
+        services.AddSingleton<LocalFileProvider>();
+        services.AddSingleton<YouTubeProvider>();
+        services.AddSingleton<SpotifyProvider>();
+        services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<LocalFileProvider>());
+        services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<YouTubeProvider>());
+        services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<SpotifyProvider>());
         services.AddSingleton<IMusicPlayerService, MusicPlayerService>();
         services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
         services.AddSingleton<PlayerIntegrationHost>();
@@ -305,6 +320,7 @@ public partial class App : Application
         services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
         services.AddTransient<MusicViewModel>();
         services.AddTransient<MusicSettingsViewModel>();
+        services.AddSingleton<SourcesViewModel>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -351,6 +367,16 @@ public partial class App : Application
         Console.WriteLine($"Music player resolved: {musicPlayer.GetType().Name}, queue {musicPlayer.State.Queue.Count} item(s).");
         var nowPlaying = sp.GetRequiredService<NowPlayingViewModel>();
         Console.WriteLine($"NowPlayingViewModel resolved: '{nowPlaying.Title}'.");
+
+        var sources = sp.GetRequiredService<ProviderRegistry>();
+        var names = sources.All.Select(p => $"{p.Info.Name}{(sources.IsEnabled(p.Info.Id) ? string.Empty : " (off)")}");
+        Console.WriteLine(
+            $"Music sources: {string.Join(", ", names)}; " +
+            $"search via {sources.ActiveId(ProviderKind.Metadata) ?? "none"}, " +
+            $"audio via {sources.ActiveId(ProviderKind.Streaming) ?? "none"}.");
+        Console.WriteLine(
+            $"Stream resolver resolved: {sp.GetRequiredService<IStreamResolver>().GetType().Name}, " +
+            $"cache {sp.GetRequiredService<StreamCache>().SizeBytes() / 1024} KB.");
 
         var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
         var shareTools = sp.GetRequiredService<IShareToolProvider>();
