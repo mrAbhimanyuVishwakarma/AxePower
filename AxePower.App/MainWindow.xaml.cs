@@ -18,8 +18,9 @@ public partial class MainWindow : Window
 
     public MainWindow(MainViewModel viewModel, ThemeService themeService, SettingsService settingsService, SystemTelemetryService? telemetryService = null)
     {
-        InitializeComponent();
+        // Set before the XAML loads so the tray menu never binds against the TaskbarIcon itself
         DataContext = viewModel;
+        InitializeComponent();
         _themeService = themeService;
         _settingsService = settingsService;
         _telemetryService = telemetryService;
@@ -40,12 +41,71 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(DashboardViewModel.IsShrunk))
                 ApplyShrinkState(viewModel.DashboardVm);
         };
+
+        // The title bar collapses to just the window buttons on pages without the battery pill,
+        // so the drag region has to follow or it swallows clicks on the top of the page
+        viewModel.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.ShowBatteryPill))
+            {
+                ApplyCaptionHeight();
+                PositionHeaderPlayer();
+            }
+        };
+        ApplyCaptionHeight();
+
+        // The title-bar music player follows the window controls and the available width
+        WindowControls.SizeChanged += (s, e) => PositionHeaderPlayer();
+        TitleBar.SizeChanged += (s, e) => PositionHeaderPlayer();
+        BatteryPill.SizeChanged += (s, e) => PositionHeaderPlayer();
+        HeaderPlayerHost.SizeChanged += (s, e) => PositionHeaderPlayer();
+    }
+
+    /// <summary>
+    /// On the Dashboard the player sits in the tall header between the battery pill and the
+    /// right-hand monitor rail, as in the design. It moves down below the window controls if
+    /// they reach over it (e.g. "Relaunch with Admin"), and drops down at the right edge on
+    /// other pages or when the window is too narrow to fit it beside the pill.
+    /// </summary>
+    private void PositionHeaderPlayer()
+    {
+        if (DataContext is not MainViewModel vm) return;
+
+        const double railWidth = 320; // DashboardView's RailColumn
+        const double gap = 14;
+        double width = TitleBar.ActualWidth;
+        double card = HeaderPlayerHost.ActualWidth > 0 ? HeaderPlayerHost.ActualWidth : HeaderPlayerHost.Width;
+        double pillRight = BatteryPill.IsVisible ? BatteryPill.Margin.Left + BatteryPill.ActualWidth : 0;
+        double cardRight = width - railWidth - gap;
+        double cardLeft = cardRight - card;
+
+        if (vm.ShowBatteryPill && cardLeft >= pillRight + gap)
+        {
+            double controlsLeft = width - WindowControls.ActualWidth;
+            double top = controlsLeft < cardRight ? WindowControls.ActualHeight + 8 : 16;
+            HeaderPlayerHost.Margin = new Thickness(0, top, railWidth + gap, 0);
+        }
+        else
+        {
+            // Over the Dashboard rail, line up with the rail cards' right edge
+            HeaderPlayerHost.Margin = new Thickness(0, CompactCaptionHeight, vm.ShowBatteryPill ? 32 : 12, 0);
+        }
     }
 
     // Logical size of the monitor card; the window ends up at this times the card's render scale.
     private const double CompactLogicalWidth = 344;
     private const double CompactLogicalHeight = 704;
-    private const double ExpandedCaptionHeight = 112;
+    // Must match the title bar heights in MainWindow.xaml
+    private const double PillCaptionHeight = 112;
+    private const double CompactCaptionHeight = 44;
+
+    /// <summary>Keeps the drag region the same height as the title bar, which is only tall while the battery pill shows.</summary>
+    private void ApplyCaptionHeight()
+    {
+        var chrome = WindowChrome.GetWindowChrome(this);
+        if (chrome == null || DataContext is not MainViewModel vm || vm.DashboardVm.IsShrunk) return;
+        chrome.CaptionHeight = vm.ShowBatteryPill ? PillCaptionHeight : CompactCaptionHeight;
+    }
 
     private Rect _expandedBounds;
     private WindowState _expandedState = WindowState.Normal;
@@ -94,7 +154,7 @@ public partial class MainWindow : Window
             SetWindowCornerPreference(DWMWCP_DEFAULT);
             MinWidth = _expandedMinWidth;
             MinHeight = _expandedMinHeight;
-            if (chrome != null) chrome.CaptionHeight = ExpandedCaptionHeight;
+            ApplyCaptionHeight();
 
             if (_hasExpandedBounds)
             {

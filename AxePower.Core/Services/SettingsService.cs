@@ -17,10 +17,15 @@ public class SettingsService
     public string SettingsDirectory { get; }
 
     public SettingsService(LogService logService)
+        : this(logService, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower"))
+    {
+    }
+
+    /// <summary>Keeps settings in <paramref name="settingsDirectory"/>; tests use a temp folder so they never touch the real file.</summary>
+    public SettingsService(LogService logService, string settingsDirectory)
     {
         _logService = logService;
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        SettingsDirectory = Path.Combine(localAppData, "AxePower");
+        SettingsDirectory = settingsDirectory;
         Directory.CreateDirectory(SettingsDirectory);
         
         _settingsFilePath = Path.Combine(SettingsDirectory, "settings.json");
@@ -77,7 +82,11 @@ public class SettingsService
         return false;
     }
 
-    public void SaveSettings(AppSettings settings)
+    /// <param name="notifyListeners">
+    /// False for UI-only state (e.g. sidebar group expansion) that no service reacts to, so a
+    /// click doesn't re-evaluate the power mode or rewrite the startup task.
+    /// </param>
+    public void SaveSettings(AppSettings settings, bool notifyListeners = true)
     {
         try
         {
@@ -102,7 +111,10 @@ public class SettingsService
             
             _logService.LogInfo("Settings saved successfully.");
             
-            OnSettingsChanged?.Invoke(this, _currentSettings);
+            if (notifyListeners)
+            {
+                OnSettingsChanged?.Invoke(this, _currentSettings);
+            }
         }
         catch (Exception ex)
         {

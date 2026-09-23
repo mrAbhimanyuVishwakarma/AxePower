@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using AxePower.Core.Models.Music;
+using AxePower.Core.Models.Uninstaller;
+using AxePower.Core.Models.ShareScreen;
 
 namespace AxePower.Core.Models;
 
@@ -127,6 +130,25 @@ public class AppSettings
     [JsonPropertyName("notifyOnNewRelease")]
     public bool NotifyOnNewRelease { get; set; } = true;
 
+    /// <summary>Sidebar group state, remembered across launches. Both groups start expanded.</summary>
+    [JsonPropertyName("sidebarMaintenanceExpanded")]
+    public bool SidebarMaintenanceExpanded { get; set; } = true;
+
+    [JsonPropertyName("sidebarUtilitiesExpanded")]
+    public bool SidebarUtilitiesExpanded { get; set; } = true;
+
+    /// <summary>AxePower Music preferences. A settings file without this key loads the defaults.</summary>
+    [JsonPropertyName("music")]
+    public MusicSettings Music { get; set; } = new();
+
+    /// <summary>Uninstaller Pro preferences. A settings file without this key loads the defaults.</summary>
+    [JsonPropertyName("uninstaller")]
+    public UninstallerSettings Uninstaller { get; set; } = new();
+
+    /// <summary>Share Screen preferences. A settings file without this key loads the defaults.</summary>
+    [JsonPropertyName("shareScreen")]
+    public ShareScreenSettings ShareScreen { get; set; } = new();
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -166,7 +188,13 @@ public class AppSettings
             TouchpadEnabled = this.TouchpadEnabled,
             AutoCheckUpdates = this.AutoCheckUpdates,
             AutoDownloadUpdates = this.AutoDownloadUpdates,
-            NotifyOnNewRelease = this.NotifyOnNewRelease
+            NotifyOnNewRelease = this.NotifyOnNewRelease,
+            SidebarMaintenanceExpanded = this.SidebarMaintenanceExpanded,
+            SidebarUtilitiesExpanded = this.SidebarUtilitiesExpanded,
+            // An explicit "music": null in the file must not leave callers with a null section
+            Music = (this.Music ?? new MusicSettings()).Clone(),
+            Uninstaller = (this.Uninstaller ?? new UninstallerSettings()).Clone(),
+            ShareScreen = (this.ShareScreen ?? new ShareScreenSettings()).Clone()
         };
     }
 }

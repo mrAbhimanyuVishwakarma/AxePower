@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -38,6 +38,14 @@ public partial class PackageCardViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isBusy;
+
+    [ObservableProperty]
+    private bool _isSelected;
+
+    partial void OnIsSelectedChanged(bool value)
+    {
+        _parent.NotifySelectionChanged();
+    }
 
     public bool IsNotInstalled => !IsInstalled && !IsWebLinkOnly && !HasCustomInstaller;
     public bool CanOpen => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
@@ -174,7 +182,9 @@ public partial class PackageCardViewModel : ObservableObject
             }
             else
             {
-                _parent.Notify($"Installation of {Name} did not complete. Opening website...");
+                _parent.Notify(Id == "camstudio"
+                    ? "CamStudio isn't on WinGet. Download it from the page that just opened, then Refresh."
+                    : $"Installation of {Name} did not complete. Opening website...");
             }
         }
         finally
@@ -348,6 +358,18 @@ public partial class SoftwareHubViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isCreatingRestorePoint;
+
+    [ObservableProperty]
+    private int _selectedCount;
+
+    [ObservableProperty]
+    private bool _hasSelectedPackages;
+
+    [ObservableProperty]
+    private bool _isBatchInstalling;
+
+    [ObservableProperty]
+    private string _batchInstallStatus = string.Empty;
 
     public SoftwareHubViewModel(
         IWinGetHubService hubService,
@@ -644,6 +666,184 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
     }
 
+    public void NotifySelectionChanged()
+    {
+        SelectedCount = AllPackages.Count(p => p.IsSelected);
+        HasSelectedPackages = SelectedCount > 0;
+    }
+
+    [RelayCommand]
+    public void SelectAll()
+    {
+        foreach (var pkg in FilteredPackages)
+        {
+            if (!pkg.IsWebLinkOnly)
+            {
+                pkg.IsSelected = true;
+            }
+        }
+        NotifySelectionChanged();
+    }
+
+    [RelayCommand]
+    public void SelectUninstalled()
+    {
+        foreach (var pkg in FilteredPackages)
+        {
+            if (!pkg.IsInstalled && !pkg.IsWebLinkOnly)
+            {
+                pkg.IsSelected = true;
+            }
+            else
+            {
+                pkg.IsSelected = false;
+            }
+        }
+        NotifySelectionChanged();
+    }
+
+    [RelayCommand]
+    public void ClearSelection()
+    {
+        foreach (var pkg in AllPackages)
+        {
+            pkg.IsSelected = false;
+        }
+        NotifySelectionChanged();
+    }
+
+    [RelayCommand]
+    public async Task InstallSelectedDirectAsync()
+    {
+        if (IsBatchInstalling) return;
+
+        var toInstall = AllPackages.Where(p => p.IsSelected && !p.IsInstalled && !p.IsWebLinkOnly).ToList();
+        if (toInstall.Count == 0)
+        {
+            Notify("No uninstalled packages selected for installation.");
+            return;
+        }
+
+        IsBatchInstalling = true;
+        try
+        {
+            Notify($"Starting batch installation of {toInstall.Count} selected packages...");
+            AppendLog("\n=======================================================");
+            AppendLog($"  Starting Batch Installation ({toInstall.Count} packages)");
+            AppendLog("=======================================================");
+
+            int current = 0;
+            int successful = 0;
+
+            foreach (var card in toInstall)
+            {
+                current++;
+                BatchInstallStatus = $"Installing ({current}/{toInstall.Count}): {card.Name}...";
+                Notify($"[{current}/{toInstall.Count}] Installing {card.Name}...");
+                AppendLog($"\n>>> [{current}/{toInstall.Count}] Installing {card.Name} ({card.WinGetId})...");
+
+                var progress = new Progress<string>(AppendLog);
+                card.IsBusy = true;
+                bool ok = false;
+                try
+                {
+                    if (card.HasCustomInstaller)
+                    {
+                        card.LaunchLocalInstaller();
+                        ok = true;
+                    }
+                    else
+                    {
+                        ok = await _hubService.InstallPackageAsync(card.WinGetId, progress);
+                    }
+                }
+                finally
+                {
+                    card.IsBusy = false;
+                }
+
+                if (ok)
+                {
+                    card.IsInstalled = true;
+                    successful++;
+                    AppendLog($"[Success] ✓ {card.Name} installed.");
+                }
+                else
+                {
+                    AppendLog($"[Notice] Installation completed with notices for {card.Name}.");
+                }
+            }
+
+            Notify($"✓ Batch installation complete: {successful}/{toInstall.Count} installed.");
+            AppendLog("\n=======================================================");
+            AppendLog($"  Batch Installation Complete: {successful}/{toInstall.Count} succeeded");
+            AppendLog("=======================================================\n");
+
+            // Deselect successfully installed packages
+            foreach (var card in toInstall.Where(c => c.IsInstalled))
+            {
+                card.IsSelected = false;
+            }
+            NotifySelectionChanged();
+        }
+        finally
+        {
+            IsBatchInstalling = false;
+            BatchInstallStatus = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    public void InstallSelectedViaTerminal()
+    {
+        var toInstall = AllPackages.Where(p => p.IsSelected && !p.IsInstalled && !p.IsWebLinkOnly).ToList();
+        if (toInstall.Count == 0)
+        {
+            Notify("No uninstalled packages selected for terminal installation.");
+            return;
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Write-Host '=======================================================' -ForegroundColor Cyan");
+        sb.AppendLine($"Write-Host '  AxePower Software Hub — Batch Installation ({toInstall.Count} packages)' -ForegroundColor Cyan");
+        sb.AppendLine("Write-Host '=======================================================' -ForegroundColor Cyan");
+
+        int index = 0;
+        foreach (var card in toInstall)
+        {
+            index++;
+            sb.AppendLine($"Write-Host '`n[{index}/{toInstall.Count}] Installing {card.Name}...' -ForegroundColor Yellow");
+
+            if (card.Id == "dlss5swapper")
+            {
+                sb.AppendLine("Start-Process 'https://github.com/rakanki911/DLSS5-Swapper/releases'");
+            }
+            else if (card.Id == "camstudio")
+            {
+                // Not published on WinGet: go straight to the official download page
+                sb.AppendLine("Write-Host 'CamStudio is not on WinGet. Opening the official download page...' -ForegroundColor DarkYellow; Start-Process 'https://camstudio.org/'");
+            }
+            else if (!string.IsNullOrEmpty(card.WinGetId))
+            {
+                string source = System.Text.RegularExpressions.Regex.IsMatch(card.WinGetId, "^9[A-Z0-9]{11}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                    ? "msstore" : "winget";
+                sb.AppendLine($"winget install --id '{card.WinGetId}' --exact --source {source} --accept-source-agreements --accept-package-agreements");
+            }
+            else if (!string.IsNullOrEmpty(card.WebUrl))
+            {
+                sb.AppendLine($"Start-Process '{card.WebUrl}'");
+            }
+        }
+
+        sb.AppendLine("Write-Host '`n=======================================================' -ForegroundColor Green");
+        sb.AppendLine("Write-Host '  All batch installation commands executed!' -ForegroundColor Green");
+        sb.AppendLine("Write-Host '=======================================================' -ForegroundColor Green");
+
+        Notify($"Switched to Terminal. Running installation of {toInstall.Count} packages...");
+        _terminalService.RequestNavigateToTerminal();
+        _terminalService.SendCommand(sb.ToString());
+    }
+
     [RelayCommand]
     public void LaunchElevatedDriverUpdate()
     {
@@ -728,6 +928,25 @@ public partial class SoftwareHubViewModel : ObservableObject
                 : "Default Windows reboot behavior restored.");
             AppendLog($"[Policy Changed] No Forced Reboot: {newState}");
         }
+    }
+
+    [RelayCommand]
+    public async Task ResetUpdateCacheAsync()
+    {
+        // Stopping the update services and clearing SoftwareDistribution needs admin rights
+        if (!TerminalService.IsProcessElevated())
+        {
+            Notify("Run AxePower as administrator to reset the Windows Update cache.");
+            AppendLog("\n[Update Cache Reset] Skipped: administrator rights are required.");
+            return;
+        }
+
+        AppendLog("\n>>> [Update Cache Reset] Stopping services, clearing the download cache, restarting services...");
+        var progress = new Progress<string>(AppendLog);
+        bool ok = await _updateShieldService.ResetWindowsUpdateCacheAsync(progress);
+        Notify(ok
+            ? "Windows Update cache reset. Check for updates again."
+            : "Windows Update cache reset did not complete. See the console for details.");
     }
 
     [RelayCommand]

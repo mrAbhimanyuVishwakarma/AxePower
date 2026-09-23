@@ -4,38 +4,61 @@ using System.IO;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using AxePower.App.Services;
 using AxePower.Core.Models.Uninstaller;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
 
-
 namespace AxePower.App.ViewModels;
 
 /// <summary>
-/// ViewModel for the main Uninstaller Pro page.
-/// Handles application discovery, filtering, sorting, and batch uninstall orchestration.
+/// ViewModel for the main Uninstaller Pro page: discovery, filtering, the confirmed and verified
+/// uninstall batch, and its settings. The leftover review and history live in
+/// UninstallerViewModel.Leftovers.cs.
 /// </summary>
 public sealed partial class UninstallerViewModel : ObservableObject
 {
     private readonly IApplicationDiscoveryService _discoveryService;
     private readonly IBatchUninstallService _batchService;
     private readonly ILeftoverScannerService _leftoverScanner;
+    private readonly ILeftoverCleanupService _leftoverCleanup;
     private readonly IUninstallHistoryService _historyService;
     private readonly IRegistryBackupService _registryBackup;
-    private readonly IFileCleanupService _fileCleanup;
     private readonly IProtectionService _protectionService;
+    private readonly IInstallStateVerifier _verifier;
+    private readonly IFileSystemProbe _fs;
+    private readonly BackupManifestStore _manifests;
+    private readonly SettingsService _settingsService;
+    private readonly ElevationService _elevation;
+    private readonly IUninstallerPrompts _prompts;
     private readonly NotificationService _notification;
     private readonly LogService _log;
 
     private readonly ObservableCollection<InstalledApplicationViewModel> _allApplications = new();
-    private ICollectionView _applicationsView = null!;
+    private readonly ICollectionView _applicationsView;
     private CancellationTokenSource? _discoveryCts;
-    private UninstallerSettings _settings = new();
+    private CancellationTokenSource? _batchCts;
+    private CancellationTokenSource? _scanCts;
+    private UninstallBatchControl? _batchControl;
+    private UninstallerSettings _settings;
+    private bool _loadingSettings;
 
     // ── Observable Properties ─────────────────────────────────────────────────
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UninstallSelectedCommand), nameof(UninstallThisCommand),
+        nameof(ScanLeftoversForSelectedCommand), nameof(CleanSelectedLeftoversCommand))]
     private bool _isLoading;
+
+    /// <summary>A batch, scan, cleanup or restore is running; starting another is disabled.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RefreshCommand), nameof(UninstallSelectedCommand), nameof(UninstallThisCommand),
+        nameof(ScanLeftoversForSelectedCommand), nameof(CleanSelectedLeftoversCommand), nameof(RestoreSessionCommand))]
+    private bool _isBusy;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
+    private bool _isCancellable;
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
@@ -53,6 +76,7 @@ public sealed partial class UninstallerViewModel : ObservableObject
     private int _selectedCount;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UninstallThisCommand), nameof(ScanLeftoversForSelectedCommand))]
     private InstalledApplicationViewModel? _selectedApplication;
 
     [ObservableProperty]
@@ -64,36 +88,39 @@ public sealed partial class UninstallerViewModel : ObservableObject
     [ObservableProperty]
     private bool _showSettingsPanel;
 
-    // Leftover review state
     [ObservableProperty]
-    private ObservableCollection<LeftoverItemViewModel> _leftoverItems = new();
-
-    [ObservableProperty]
-    private bool _isLeftoverReviewVisible;
-
-    [ObservableProperty]
-    private string _leftoverApplicationName = string.Empty;
+    private bool _showHistoryPanel;
 
     [ObservableProperty]
     private UninstallSession? _lastSession;
 
+    /// <summary>Per-app outcomes of the last batch.</summary>
+    public ObservableCollection<UninstallResult> BatchResults { get; } = new();
+
+    [ObservableProperty]
+    private bool _isResultsVisible;
+
     public ICollectionView ApplicationsView => _applicationsView;
 
-    public string[] FilterOptions { get; } = ["All", "Win32", "MSI", "Store Apps", "WinGet", "Orphaned", "Protected"];
+    public string[] FilterOptions { get; } = ["All", "Win32", "MSI", "Store Apps", "Broken", "Protected"];
 
     public UninstallerSettings Settings => _settings;
 
+    public bool IsElevated => _elevation.IsElevated;
+
     // Computed properties for XAML bindings
-    public bool IsDetailPanelVisible        => SelectedApplication is not null;
+    public bool IsDetailPanelVisible        => SelectedApplication is not null && !ShowSettingsPanel && !ShowHistoryPanel;
     public bool IsSelectedProtected         => SelectedApplication?.IsProtected ?? false;
+    public string SelectedProtectionReason  => SelectedApplication is null
+        ? string.Empty
+        : _protectionService.GetProtectionReason(SelectedApplication.Application) ?? string.Empty;
     public bool IsSelectedCountVisible      => SelectedCount > 0;
-    public string SelectedLeftoverCount     => $"{LeftoverItems.Count(i => i.IsSelected)} items selected";
     public bool IsAllSelected
     {
         get => _allApplications.Where(a => a.CanUninstall).All(a => a.IsSelected);
         set
         {
-            foreach (var a in _allApplications.Where(x => x.CanUninstall))
+            foreach (var a in _allApplications.Where(x => x.CanUninstall && _applicationsView.Filter(x)))
                 a.IsSelected = value;
         }
     }
@@ -104,22 +131,37 @@ public sealed partial class UninstallerViewModel : ObservableObject
         IApplicationDiscoveryService discoveryService,
         IBatchUninstallService batchService,
         ILeftoverScannerService leftoverScanner,
+        ILeftoverCleanupService leftoverCleanup,
         IUninstallHistoryService historyService,
         IRegistryBackupService registryBackup,
-        IFileCleanupService fileCleanup,
         IProtectionService protectionService,
+        IInstallStateVerifier verifier,
+        IFileSystemProbe fs,
+        BackupManifestStore manifests,
+        SettingsService settingsService,
+        ElevationService elevation,
+        IUninstallerPrompts prompts,
         NotificationService notification,
         LogService log)
     {
         _discoveryService = discoveryService;
         _batchService     = batchService;
         _leftoverScanner  = leftoverScanner;
+        _leftoverCleanup  = leftoverCleanup;
         _historyService   = historyService;
         _registryBackup   = registryBackup;
-        _fileCleanup      = fileCleanup;
         _protectionService = protectionService;
+        _verifier         = verifier;
+        _fs               = fs;
+        _manifests        = manifests;
+        _settingsService  = settingsService;
+        _elevation        = elevation;
+        _prompts          = prompts;
         _notification     = notification;
         _log              = log;
+
+        _settings = (settingsService.GetSettings().Uninstaller ?? new UninstallerSettings()).Clone();
+        LoadSettingProperties();
 
         _applicationsView = CollectionViewSource.GetDefaultView(_allApplications);
         _applicationsView.Filter = FilterApplications;
@@ -128,9 +170,11 @@ public sealed partial class UninstallerViewModel : ObservableObject
                 ListSortDirection.Ascending));
     }
 
-    // ── Commands ──────────────────────────────────────────────────────────────
+    private bool CanStartWork() => !IsBusy && !IsLoading;
 
-    [RelayCommand]
+    // ── Discovery ─────────────────────────────────────────────────────────────
+
+    [RelayCommand(CanExecute = nameof(CanRefresh))]
     private async Task RefreshAsync()
     {
         _discoveryCts?.Cancel();
@@ -140,51 +184,32 @@ public sealed partial class UninstallerViewModel : ObservableObject
         IsLoading = true;
         StatusMessage = "Discovering applications...";
 
-        void SafeClear()
-        {
-            foreach (var vm in _allApplications)
-                vm.PropertyChanged -= OnApplicationSelectionChanged;
-            _allApplications.Clear();
-            SelectedCount = 0;
-        }
-
-        if (System.Windows.Application.Current?.Dispatcher is { } d && !d.CheckAccess())
-            d.Invoke(SafeClear);
-        else
-            SafeClear();
-
         try
         {
             var apps = await _discoveryService.DiscoverApplicationsAsync(ct);
+            if (ct.IsCancellationRequested) return;
 
-            var viewModels = new List<InstalledApplicationViewModel>();
-            foreach (var app in apps)
+            var selectedIds = _allApplications.Where(a => a.IsSelected).Select(a => a.Application.Id).ToHashSet();
+            var viewModels = apps.Select(app =>
             {
-                if (!_settings.ShowProtectedApplications && app.IsProtected) continue;
-                if (!_settings.ShowOrphanedApplications  &&
-                    app.ApplicationType == ApplicationType.Orphaned) continue;
-
-                var vm = new InstalledApplicationViewModel(app);
+                var vm = new InstalledApplicationViewModel(app) { IsSelected = selectedIds.Contains(app.Id) };
                 vm.PropertyChanged += OnApplicationSelectionChanged;
-                viewModels.Add(vm);
-            }
+                return vm;
+            }).ToList();
 
-            void SafePopulate()
+            OnUiThread(() =>
             {
+                foreach (var vm in _allApplications)
+                    vm.PropertyChanged -= OnApplicationSelectionChanged;
                 _allApplications.Clear();
                 foreach (var vm in viewModels)
                     _allApplications.Add(vm);
 
-                AppCount = _allApplications.Count;
+                UpdateCounts();
                 StatusMessage = $"{AppCount} applications found";
-            }
+            });
 
-            if (System.Windows.Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
-                dispatcher.Invoke(SafePopulate);
-            else
-                SafePopulate();
-
-            _log.LogInfo($"[Uninstaller] Discovery complete: {AppCount} apps.");
+            _log.LogInfo($"[Uninstaller] Discovery complete: {apps.Count} entries, {AppCount} shown.");
         }
         catch (OperationCanceledException)
         {
@@ -201,10 +226,14 @@ public sealed partial class UninstallerViewModel : ObservableObject
         }
     }
 
+    // Refresh is independent of a running batch, but not allowed during one (it would change
+    // the list under the queue).
+    private bool CanRefresh() => !IsBusy;
+
     [RelayCommand]
     private void SelectAll()
     {
-        foreach (var vm in _allApplications.Where(a => a.CanUninstall))
+        foreach (var vm in _allApplications.Where(a => a.CanUninstall && _applicationsView.Filter(a)))
             vm.IsSelected = true;
     }
 
@@ -215,11 +244,14 @@ public sealed partial class UninstallerViewModel : ObservableObject
             vm.IsSelected = false;
     }
 
-    [RelayCommand]
+    // ── Uninstall ─────────────────────────────────────────────────────────────
+
+    /// <summary>Uninstalls the checked rows.</summary>
+    [RelayCommand(CanExecute = nameof(CanStartWork))]
     private async Task UninstallSelectedAsync()
     {
         var selected = _allApplications
-            .Where(a => a.IsSelected && a.CanUninstall)
+            .Where(a => a.IsSelected && a.Application.CanUninstall)
             .Select(a => a.Application)
             .ToList();
 
@@ -229,53 +261,87 @@ public sealed partial class UninstallerViewModel : ObservableObject
             return;
         }
 
-        // Check for protected selection
-        foreach (var app in selected)
+        await RunBatchAsync(selected);
+    }
+
+    /// <summary>The details panel's button: acts on the app being viewed, whatever is checked.</summary>
+    [RelayCommand(CanExecute = nameof(CanUninstallThis))]
+    private async Task UninstallThisAsync()
+    {
+        if (SelectedApplication is null) return;
+        await RunBatchAsync([SelectedApplication.Application]);
+    }
+
+    private bool CanUninstallThis() => CanStartWork() && SelectedApplication is { CanUninstall: true };
+
+    /// <summary>From the results list: the app is still registered but its uninstaller is gone.</summary>
+    [RelayCommand(CanExecute = nameof(CanStartWork))]
+    private async Task RemoveBrokenEntryAsync(UninstallResult? result)
+    {
+        if (result is null) return;
+        await RefreshAsync();
+        var broken = _allApplications.FirstOrDefault(a => a.Application.Id == result.ApplicationId && a.IsBroken);
+        if (broken is null)
         {
-            var reason = _protectionService.GetProtectionReason(app);
-            if (reason is not null)
-            {
-                _notification.Show(reason);
-                return;
-            }
+            _notification.Show($"{result.ApplicationName} is no longer listed as a broken entry.");
+            return;
+        }
+        await RunBatchAsync([broken.Application]);
+    }
+
+    private async Task RunBatchAsync(IReadOnlyList<InstalledApplication> requested)
+    {
+        // Protected apps are skipped one by one instead of aborting the whole batch
+        var skipped = requested
+            .Select(a => (App: a, Reason: _protectionService.GetProtectionReason(a)))
+            .Where(x => x.Reason is not null)
+            .Select(x => (x.App, x.Reason!))
+            .ToList();
+        var runnable = requested.Where(a => skipped.All(s => !ReferenceEquals(s.App, a))).ToList();
+
+        if (runnable.Count == 0)
+        {
+            _notification.Show(skipped.Count == 1 ? skipped[0].Item2 : "All selected applications are protected.");
+            return;
         }
 
-        IsProgressVisible = true;
-        IsLeftoverReviewVisible = false;
-        StatusMessage = $"Uninstalling {selected.Count} application(s)...";
+        var settings = _settings.Clone();
+        var plans = runnable.Select(a => (a, UninstallCommandBuilder.Build(a, settings.PreferQuietUninstall, _fs))).ToList();
+        if (!_prompts.ConfirmBatch(plans, skipped, settings.CreateSystemRestorePoint, settings.DryRunMode))
+            return;
 
+        IsBusy = true;
+        IsCancellable = true;
+        IsProgressVisible = true;
+        IsResultsVisible = false;
+        IsLeftoverReviewVisible = false;
+        StatusMessage = $"Uninstalling {runnable.Count} application(s)...";
+
+        _batchControl = new UninstallBatchControl();
+        _batchCts = new CancellationTokenSource();
         var progressReporter = new Progress<UninstallProgress>(p =>
         {
             CurrentProgress = p;
             StatusMessage = p.StatusMessage;
         });
 
-        _discoveryCts?.Cancel();
-        _discoveryCts = new CancellationTokenSource();
-
         try
         {
             var session = await _batchService.ExecuteBatchAsync(
-                selected, _settings, progressReporter, _discoveryCts.Token);
+                runnable, settings, progressReporter, new PromptInteraction(_prompts), _batchControl, _batchCts.Token);
 
             LastSession = session;
+            BatchResults.Clear();
+            foreach (var result in session.Results) BatchResults.Add(result);
+            IsResultsVisible = BatchResults.Count > 0;
 
-            var successMsg = $"Uninstalled: {session.SuccessCount}, Failed: {session.FailedCount}";
-            StatusMessage = successMsg;
-            _notification.Show($"✓ {successMsg}");
+            StatusMessage = session.OutcomeSummary;
+            _notification.Show(session.WasCancelled ? $"Stopped. {session.OutcomeSummary}" : session.OutcomeSummary);
 
-            // Show leftover review if items were found
             if (session.LeftoverItems.Count > 0)
-            {
                 PrepareLeftoverReview(session);
-            }
 
-            // Refresh the application list
             await RefreshAsync();
-        }
-        catch (OperationCanceledException)
-        {
-            StatusMessage = "Uninstall cancelled.";
         }
         catch (Exception ex)
         {
@@ -285,126 +351,61 @@ public sealed partial class UninstallerViewModel : ObservableObject
         }
         finally
         {
+            _batchControl = null;
+            _batchCts?.Dispose();
+            _batchCts = null;
+            IsCancellable = false;
             IsProgressVisible = false;
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Stops the queue after the current app. If an uninstaller is running, asks whether to stop
+    /// waiting for it (and, for silent uninstalls only, whether to stop it). Never kills silently.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(IsCancellable))]
+    private void Cancel()
+    {
+        _scanCts?.Cancel();
+
+        var control = _batchControl;
+        if (control is null) return;
+
+        control.RequestStop();
+        StatusMessage = "Stopping after the current app...";
+
+        if (!control.IsUninstallerRunning) return;
+        switch (_prompts.AskStopWaiting(control.CurrentApplicationName, control.IsCurrentQuiet))
+        {
+            case StopWaitingChoice.StopWaiting:
+                control.AbandonCurrentWait();
+                break;
+            case StopWaitingChoice.StopUninstaller:
+                control.StopCurrentUninstaller();
+                break;
         }
     }
 
     [RelayCommand]
-    private async Task ScanLeftoversForSelectedAsync()
-    {
-        if (SelectedApplication is null) return;
-
-        var app = SelectedApplication.Application;
-        StatusMessage = $"Scanning leftovers for {app.DisplayName}...";
-
-        try
-        {
-            _discoveryCts?.Cancel();
-            _discoveryCts = new CancellationTokenSource();
-
-            var leftovers = await _leftoverScanner.ScanAsync(
-                app, _settings.DefaultScanMode, _settings, _discoveryCts.Token);
-
-            var fakeSession = new UninstallSession
-            {
-                ApplicationNames = [app.DisplayName],
-                LeftoverItems = leftovers.ToList(),
-            };
-            PrepareLeftoverReview(fakeSession);
-
-            StatusMessage = $"Found {leftovers.Count} potential leftover(s) for {app.DisplayName}.";
-        }
-        catch (OperationCanceledException)
-        {
-            StatusMessage = "Leftover scan cancelled.";
-        }
-        catch (Exception ex)
-        {
-            _log.LogError("[Uninstaller] Leftover scan failed", ex);
-            _notification.Show("Leftover scan failed. Check Logs.");
-        }
-    }
+    private void CloseResults() => IsResultsVisible = false;
 
     [RelayCommand]
-    private async Task CleanSelectedLeftoversAsync()
+    private void OpenLog(UninstallResult? result)
     {
-        var toDelete = LeftoverItems.Where(i => i.IsSelected && !i.IsProtected).ToList();
-        if (toDelete.Count == 0)
+        if (result is null || string.IsNullOrEmpty(result.LogPath) || !File.Exists(result.LogPath))
         {
-            _notification.Show("No leftover items selected for cleanup.");
+            _notification.Show("No log was written for this uninstall.");
             return;
         }
-
-        int cleaned = 0;
-        int failed  = 0;
-
-        foreach (var item in toDelete)
-        {
-            try
-            {
-                switch (item.Source.ItemType)
-                {
-                    case LeftoverItemType.RegistryKey:
-                    case LeftoverItemType.RegistryValue:
-                        if (!_settings.DryRunMode)
-                        {
-                            // Backup first
-                            await _registryBackup.BackupAsync(
-                                Guid.NewGuid().ToString(),
-                                item.Source.ApplicationId,
-                                item.Source.ApplicationName,
-                                item.Source.Path.Split('\\')[0],
-                                string.Join("\\", item.Source.Path.Split('\\').Skip(1)));
-
-                            DeleteRegistryKey(item.Source.Path);
-                        }
-                        cleaned++;
-                        break;
-
-                    case LeftoverItemType.File:
-                        if (await _fileCleanup.DeleteFileAsync(item.Source.Path, _settings))
-                            cleaned++;
-                        else failed++;
-                        break;
-
-                    case LeftoverItemType.Folder:
-                        if (await _fileCleanup.DeleteFolderAsync(item.Source.Path, _settings))
-                            cleaned++;
-                        else failed++;
-                        break;
-
-                    default:
-                        cleaned++; // Count startup entries etc. as handled
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.LogError($"[Uninstaller] Failed to clean: {item.Source.Path}", ex);
-                failed++;
-            }
-        }
-
-        var msg = $"Cleaned {cleaned} item(s).";
-        if (failed > 0) msg += $" {failed} item(s) failed.";
-        _notification.Show(msg);
-        StatusMessage = msg;
-
-        IsLeftoverReviewVisible = false;
-        LeftoverItems.Clear();
-    }
-
-    [RelayCommand]
-    private void CloseLeftoverReview()
-    {
-        IsLeftoverReviewVisible = false;
-        LeftoverItems.Clear();
+        ShellOpen(result.LogPath);
     }
 
     [RelayCommand]
     private void ToggleSettings()
     {
         ShowSettingsPanel = !ShowSettingsPanel;
+        if (ShowSettingsPanel) ShowHistoryPanel = false;
     }
 
     [RelayCommand]
@@ -412,27 +413,22 @@ public sealed partial class UninstallerViewModel : ObservableObject
     {
         var path = SelectedApplication?.Application.InstallLocation;
         if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "explorer.exe",
-                    Arguments = $"\"{path}\"",
-                    UseShellExecute = true,
-                });
-            }
-            catch { }
-        }
+            ShellOpen(path);
     }
 
     // ── Filter Logic ──────────────────────────────────────────────────────────
 
     partial void OnSelectedApplicationChanged(InstalledApplicationViewModel? value)
     {
+        if (value is not null)
+            value.PlanDescription = UninstallCommandBuilder.Build(value.Application, _settings.PreferQuietUninstall, _fs).Description;
         OnPropertyChanged(nameof(IsDetailPanelVisible));
         OnPropertyChanged(nameof(IsSelectedProtected));
+        OnPropertyChanged(nameof(SelectedProtectionReason));
     }
+
+    partial void OnShowSettingsPanelChanged(bool value) => OnPropertyChanged(nameof(IsDetailPanelVisible));
+    partial void OnShowHistoryPanelChanged(bool value) => OnPropertyChanged(nameof(IsDetailPanelVisible));
 
     [RelayCommand]
     private void SelectFilter(string filter)
@@ -440,18 +436,27 @@ public sealed partial class UninstallerViewModel : ObservableObject
         SelectedFilter = filter;
     }
 
-    partial void OnSearchTextChanged(string value)
-        => _applicationsView.Refresh();
+    partial void OnSearchTextChanged(string value) => RefreshView();
 
-    partial void OnSelectedFilterChanged(string value)
-        => _applicationsView.Refresh();
+    partial void OnSelectedFilterChanged(string value) => RefreshView();
 
+    private void RefreshView()
+    {
+        _applicationsView.Refresh();
+        UpdateCounts();
+    }
 
     private bool FilterApplications(object obj)
     {
         if (obj is not InstalledApplicationViewModel vm) return false;
+        var app = vm.Application;
 
-        // Text filter
+        // Visibility settings (the Protected chip always shows protected apps)
+        if (app.IsProtected && !_settings.ShowProtectedApplications && SelectedFilter != "Protected") return false;
+        if (vm.IsBroken && !_settings.ShowOrphanedApplications && SelectedFilter != "Broken") return false;
+        if (app.IsSystemComponent && !_settings.ShowSystemComponents) return false;
+        if (app.IsUpdate && !_settings.ShowUpdates) return false;
+
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
             var search = SearchText.Trim();
@@ -460,110 +465,77 @@ public sealed partial class UninstallerViewModel : ObservableObject
             if (!matchesText) return false;
         }
 
-        // Category filter
         return SelectedFilter switch
         {
-            "Win32"      => vm.Application.ApplicationType == ApplicationType.Win32,
-            "MSI"        => vm.Application.ApplicationType == ApplicationType.MSI,
-            "Store Apps" => vm.Application.ApplicationType is ApplicationType.AppX or ApplicationType.MSIX,
-            "WinGet"     => vm.Application.ApplicationType == ApplicationType.WinGet,
-            "Orphaned"   => vm.Application.ApplicationType == ApplicationType.Orphaned,
-            "Protected"  => vm.Application.IsProtected,
+            "Win32"      => vm.ApplicationTypeLabel == "Win32",
+            "MSI"        => vm.ApplicationTypeLabel == "MSI",
+            "Store Apps" => vm.ApplicationTypeLabel == "AppX",
+            "Broken"     => vm.IsBroken,
+            "Protected"  => app.IsProtected,
             _            => true, // All
         };
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private void OnApplicationSelectionChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnApplicationSelectionChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(InstalledApplicationViewModel.IsSelected))
-            SelectedCount = _allApplications.Count(a => a.IsSelected);
-    }
-
-    private void PrepareLeftoverReview(UninstallSession session)
-    {
-        void Populate()
         {
-            LeftoverItems.Clear();
-            foreach (var item in session.LeftoverItems)
-                LeftoverItems.Add(new LeftoverItemViewModel(item));
-
-            LeftoverApplicationName = string.Join(", ", session.ApplicationNames.Take(3));
-            IsLeftoverReviewVisible = true;
+            SelectedCount = _allApplications.Count(a => a.IsSelected);
+            OnPropertyChanged(nameof(IsSelectedCountVisible));
         }
-
-        if (System.Windows.Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
-            dispatcher.Invoke(Populate);
-        else
-            Populate();
     }
 
-    private void DeleteRegistryKey(string fullPath)
+    private void UpdateCounts()
+    {
+        AppCount = _allApplications.Count(a => _applicationsView.Filter(a));
+        SelectedCount = _allApplications.Count(a => a.IsSelected);
+        OnPropertyChanged(nameof(IsSelectedCountVisible));
+    }
+
+    private static void OnUiThread(Action action)
+    {
+        if (System.Windows.Application.Current?.Dispatcher is { } d && !d.CheckAccess())
+            d.Invoke(action);
+        else
+            action();
+    }
+
+    private void ShellOpen(string path)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(fullPath)) return;
-            if (_protectionService.IsPathProtected(fullPath))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                _log.LogWarning($"[Uninstaller] Prevented deletion of protected registry path: {fullPath}");
-                return;
-            }
-
-            Microsoft.Win32.RegistryKey? baseKey = null;
-            string subPath;
-
-            if (fullPath.StartsWith("HKCU\\", StringComparison.OrdinalIgnoreCase))
-            {
-                baseKey = Microsoft.Win32.Registry.CurrentUser;
-                subPath = fullPath[5..];
-            }
-            else if (fullPath.StartsWith("HKLM\\", StringComparison.OrdinalIgnoreCase))
-            {
-                baseKey = Microsoft.Win32.Registry.LocalMachine;
-                subPath = fullPath[5..];
-            }
-            else return;
-
-            // Strict safety: Never delete root or shallow keys (must have at least 2 path segments, e.g. Software\AppName)
-            var segments = subPath.Trim('\\', '/').Split('\\');
-            if (segments.Length < 2)
-            {
-                _log.LogWarning($"[Uninstaller] Refusing to delete shallow registry path: {fullPath}");
-                return;
-            }
-
-            baseKey?.DeleteSubKeyTree(subPath, throwOnMissingSubKey: false);
+                FileName = path,
+                UseShellExecute = true,
+            });
         }
         catch (Exception ex)
         {
-            _log.LogError($"[Uninstaller] Failed to delete registry key: {fullPath}", ex);
+            _log.LogError($"[Uninstaller] Could not open {path}", ex);
         }
     }
-}
 
-/// <summary>ViewModel wrapping a LeftoverItem with selection state for the review UI.</summary>
-public sealed partial class LeftoverItemViewModel : ObservableObject
-{
-    public LeftoverItem Source { get; }
-
-    [ObservableProperty]
-    private bool _isSelected;
-
-    public LeftoverItemViewModel(LeftoverItem source)
+    /// <summary>Answers the batch's questions with the page's prompts, on the UI thread.</summary>
+    private sealed class PromptInteraction : IUninstallInteraction
     {
-        Source = source;
-        _isSelected = source.IsSelected || (source.ConfidenceScore >= 80 && !source.IsProtected && !source.IsSharedComponent);
+        private readonly IUninstallerPrompts _prompts;
+
+        public PromptInteraction(IUninstallerPrompts prompts) => _prompts = prompts;
+
+        public Task<RunningAppDecision> ResolveRunningApplicationAsync(InstalledApplication app,
+            IReadOnlyList<RunningProcessInfo> processes, bool closeAttemptFailed, CancellationToken cancellationToken) =>
+            OnUi(() => _prompts.AskRunningApp(app, processes, closeAttemptFailed));
+
+        public Task<bool> ShouldStopStalledUninstallerAsync(InstalledApplication app, TimeSpan elapsed,
+            CancellationToken cancellationToken) =>
+            OnUi(() => _prompts.AskStopStalledUninstaller(app, elapsed));
+
+        private static Task<T> OnUi<T>(Func<T> ask) =>
+            System.Windows.Application.Current?.Dispatcher is { } d && !d.CheckAccess()
+                ? d.InvokeAsync(ask).Task
+                : Task.FromResult(ask());
     }
-
-    public string Path          => Source.Path;
-    public string TypeLabel     => Source.ItemType.ToString();
-    public int ConfidenceScore  => Source.ConfidenceScore;
-    public string ConfidenceLabel => Source.ConfidenceLabel;
-    public string Reason        => Source.ConfidenceReason;
-    public string DisplaySize   => Source.DisplaySize;
-    public bool IsProtected     => Source.IsProtected;
-    public bool IsNotProtected  => !Source.IsProtected;
-    public bool IsShared        => Source.IsSharedComponent;
-
 }

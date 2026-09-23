@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -15,9 +16,13 @@ namespace AxePower.App.ViewModels;
 public partial class BatteryViewModel : ObservableObject
 {
     private readonly BatteryService _batteryService;
+    private readonly PowerPlanService? _powerPlanService;
     private readonly SettingsService? _settingsService;
     private readonly NotificationService? _notificationService;
     private readonly DispatcherTimer _timer;
+
+    [ObservableProperty]
+    private string _currentMode = "Smart";
 
     [ObservableProperty]
     private string _batteryPercentage = "0%";
@@ -103,10 +108,12 @@ public partial class BatteryViewModel : ObservableObject
 
     public BatteryViewModel(
         BatteryService batteryService,
+        PowerPlanService? powerPlanService = null,
         SettingsService? settingsService = null,
         NotificationService? notificationService = null)
     {
         _batteryService = batteryService;
+        _powerPlanService = powerPlanService;
         _settingsService = settingsService;
         _notificationService = notificationService;
 
@@ -243,6 +250,58 @@ public partial class BatteryViewModel : ObservableObject
         foreach (var point in history)
         {
             BatteryTrendPoints.Add(point.Percentage);
+        }
+
+        if (_powerPlanService != null)
+        {
+            try
+            {
+                var mode = await _powerPlanService.GetActivePowerModeAsync();
+                CurrentMode = mode switch
+                {
+                    PowerMode.Eco => "Eco",
+                    PowerMode.Smart => "Smart",
+                    PowerMode.Beast => "Beast",
+                    _ => mode.ToString()
+                };
+            }
+            catch { }
+        }
+    }
+
+    [RelayCommand]
+    private void OpenPowerSettings()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "ms-settings:powersleep",
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "ms-settings:batterysaver",
+                    UseShellExecute = true
+                });
+            }
+            catch
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "ms-settings:",
+                        UseShellExecute = true
+                    });
+                }
+                catch { }
+            }
         }
     }
 }

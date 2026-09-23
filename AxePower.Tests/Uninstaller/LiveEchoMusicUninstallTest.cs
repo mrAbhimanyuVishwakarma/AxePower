@@ -4,18 +4,21 @@ using AxePower.Core.Services.Uninstaller;
 
 namespace AxePower.Tests.Uninstaller;
 
+/// <summary>
+/// Uninstalls a real application. It is skipped in every automated run; remove the Skip locally
+/// to run it by hand on a disposable machine.
+/// </summary>
+[Trait("Category", "Live")]
 public class LiveEchoMusicUninstallTest
 {
-    [Fact]
+    [Fact(Skip = "Live test: uninstalls a real app. Run manually only.")]
     public async Task RunControlledUninstallAndScan_EchoMusic()
     {
         var log = new LogService();
         var discovery = new ApplicationDiscoveryService();
         var protection = new ProtectionService();
-        var confidence = new LeftoverConfidenceService();
-        var scanner = new LeftoverScannerService(confidence, protection);
+        var scanner = new LeftoverScannerService(protection);
         var restore = new SystemRestoreService(log);
-        var backup = new RegistryBackupService();
         var executor = new Win32UninstallExecutor();
         var settings = new UninstallerSettings
         {
@@ -43,8 +46,8 @@ public class LiveEchoMusicUninstallTest
 
         // 3. Uninstall
         Console.WriteLine($"[EXECUTING UNINSTALL] Command: {echoApp.QuietUninstallString ?? echoApp.UninstallString}");
-        var uninstallResult = await executor.ExecuteAsync(echoApp, settings);
-        Console.WriteLine($"[UNINSTALL RESULT] Success: {uninstallResult.Success}, ExitCode: {uninstallResult.ExitCode}, Duration: {uninstallResult.Duration.TotalSeconds:F1}s");
+        var uninstallResult = await executor.ExecuteAsync(echoApp, settings, new UninstallRunContext());
+        Console.WriteLine($"[UNINSTALL RESULT] Verdict: {uninstallResult.Verdict}, ExitCode: {uninstallResult.ExitCode}, Duration: {uninstallResult.Duration.TotalSeconds:F1}s");
 
         // Allow OS/disk to settle
         await Task.Delay(2000);

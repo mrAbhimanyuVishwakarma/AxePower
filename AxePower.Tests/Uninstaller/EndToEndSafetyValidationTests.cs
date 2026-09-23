@@ -1,3 +1,5 @@
+using System.IO;
+using AxePower.App.Services;
 using AxePower.App.ViewModels;
 using AxePower.Core.Models.Uninstaller;
 using AxePower.Core.Services;
@@ -6,223 +8,309 @@ using AxePower.Core.Services.Uninstaller;
 namespace AxePower.Tests.Uninstaller;
 
 /// <summary>
-/// End-to-end safe validation suite verifying all 16 safety and UI interaction requirements
-/// without executing destructive operations.
+/// View-model safety checks with every destructive service faked: nothing is uninstalled and
+/// nothing on the machine changes.
 /// </summary>
-public class EndToEndSafetyValidationTests
+[Collection(WpfCollection.Name)]
+public class EndToEndSafetyValidationTests : IDisposable
 {
-    private static (UninstallerViewModel vm, InstalledApplication testApp, InstalledApplication protectedApp) CreateTestHarness()
-    {
-        var log = new LogService();
-        var discovery = new ApplicationDiscoveryService();
-        var executorFactory = new UninstallExecutorFactory(
-            new Win32UninstallExecutor(),
-            new MsiUninstallExecutor(),
-            new WingetUninstallExecutor(),
-            new AppxUninstallExecutor());
+    private readonly WpfApplicationFixture _wpf;
+    private readonly List<TempFolder> _tempFolders = new();
 
-        var processDetection = new ProcessDetectionService();
+    public EndToEndSafetyValidationTests(WpfApplicationFixture wpf) => _wpf = wpf;
+
+    public void Dispose()
+    {
+        foreach (var folder in _tempFolders) folder.Dispose();
+    }
+
+    private sealed class FakePrompts : IUninstallerPrompts
+    {
+        public bool Confirm { get; set; } = true;
+        public int ConfirmCalls { get; private set; }
+        public IReadOnlyList<(InstalledApplication App, string Reason)> LastSkipped { get; private set; } = [];
+
+        public bool ConfirmBatch(IReadOnlyList<(InstalledApplication App, UninstallPlan Plan)> plans,
+            IReadOnlyList<(InstalledApplication App, string Reason)> skipped, bool restorePoint, bool dryRun)
+        {
+            ConfirmCalls++;
+            LastSkipped = skipped;
+            return Confirm;
+        }
+
+        public RunningAppDecision AskRunningApp(InstalledApplication app, IReadOnlyList<RunningProcessInfo> processes, bool closeAttemptFailed) => RunningAppDecision.Skip;
+        public StopWaitingChoice AskStopWaiting(string applicationName, bool isQuiet) => StopWaitingChoice.KeepWaiting;
+        public bool AskStopStalledUninstaller(InstalledApplication app, TimeSpan elapsed) => false;
+        public bool ConfirmCleanLeftovers(int count, int needsAdmin, bool dryRun, bool recycle) => false;
+        public bool ConfirmRestore(string sessionDescription) => false;
+        public bool ConfirmRelaunchAsAdmin(int itemsNeedingAdmin) => false;
+    }
+
+    /// <summary>Records what it was asked to uninstall and, optionally, blocks until released.</summary>
+    private sealed class RecordingBatch : IBatchUninstallService
+    {
+        public List<string> Requested { get; } = new();
+        public TaskCompletionSource? Gate { get; set; }
+
+        public async Task<UninstallSession> ExecuteBatchAsync(IReadOnlyList<InstalledApplication> applications,
+            UninstallerSettings settings, IProgress<UninstallProgress>? progress = null, IUninstallInteraction? interaction = null,
+            UninstallBatchControl? control = null, CancellationToken cancellationToken = default)
+        {
+            Requested.AddRange(applications.Select(a => a.DisplayName));
+            if (Gate is not null) await Gate.Task;
+            return new UninstallSession
+            {
+                ApplicationNames = applications.Select(a => a.DisplayName).ToList(),
+                Results = applications.Select(a => new UninstallResult { ApplicationId = a.Id, ApplicationName = a.DisplayName, Outcome = UninstallOutcome.DryRun }).ToList(),
+            };
+        }
+    }
+
+    private (UninstallerViewModel Vm, RecordingBatch Batch, FakePrompts Prompts, FakeDiscovery Discovery) CreateHarness()
+    {
+        var temp = new TempFolder();
+        _tempFolders.Add(temp);
+        var log = new LogService();
         var protection = new ProtectionService();
-        var restore = new SystemRestoreService(log);
-        var backup = new RegistryBackupService();
-        var fileCleanup = new FileCleanupService();
-        var confidence = new LeftoverConfidenceService();
-        var scanner = new LeftoverScannerService(confidence, protection);
-        var history = new UninstallHistoryService();
-        var batch = new BatchUninstallService(executorFactory, scanner, backup, history, restore, processDetection, log);
-        var notification = new NotificationService();
+        var discovery = new FakeDiscovery();
+        var batch = new RecordingBatch();
+        var prompts = new FakePrompts();
+        var manifests = new BackupManifestStore(temp.Combine("history"));
+        var backup = new RegistryBackupService(manifests);
 
         var vm = new UninstallerViewModel(
-            discovery, batch, scanner, history, backup, fileCleanup, protection, notification, log);
+            discovery, batch, new FakeScanner(),
+            new LeftoverCleanupService(protection, backup, new FileCleanupService(), manifests),
+            new InMemoryHistory(), backup, protection, new FakeVerifier(), new FakeFileSystemProbe(), manifests,
+            new SettingsService(log, temp.Combine("settings")),
+            new ElevationService(), prompts, new NotificationService(), log);
 
-        var testApp = new InstalledApplication
-        {
-            Id = "test-app-id",
-            DisplayName = "Test Notepad Plus",
-            Publisher = "Don Ho",
-            Version = "8.5.8",
-            ApplicationType = ApplicationType.Win32,
-            InstallLocation = @"C:\Program Files\Notepad++",
-            UninstallString = @"C:\Program Files\Notepad++\uninstall.exe",
-            CanUninstall = true,
-            IsProtected = false
-        };
-
-        var protectedApp = new InstalledApplication
-        {
-            Id = "axe-power-id",
-            DisplayName = "AxePower Optimizer",
-            Publisher = "Abhimanyu Vishwakarma",
-            ApplicationType = ApplicationType.Win32,
-            CanUninstall = false,
-            IsProtected = true
-        };
-
-        return (vm, testApp, protectedApp);
+        return (vm, batch, prompts, discovery);
     }
 
-    // ── Requirement 4: Test Search Filtering ─────────────────────────────────
-    [Fact]
-    public void Requirement4_SearchFilter_MatchesCorrectly()
+    private static InstalledApplication App(string name, bool isProtected = false, UninstallerKind kind = UninstallerKind.Unknown) => new()
     {
-        var (vm, testApp, _) = CreateTestHarness();
-        var appVm1 = new InstalledApplicationViewModel(testApp);
+        Id = $@"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{name}",
+        RegistryKeyPath = $@"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{name}",
+        DisplayName = name,
+        Publisher = "Test Publisher",
+        UninstallerKind = kind,
+        ApplicationType = InstalledApplication.ApplicationTypeFor(kind),
+        IsProtected = isProtected,
+        CanUninstall = true,
+    };
+
+    [Fact]
+    public void SearchFilter_MatchesNameAndPublisher()
+    {
+        var appVm1 = new InstalledApplicationViewModel(new InstalledApplication { DisplayName = "Test Notepad Plus", Publisher = "Don Ho" });
         var appVm2 = new InstalledApplicationViewModel(new InstalledApplication { DisplayName = "VLC Media Player", Publisher = "VideoLAN" });
 
-        // Search match
-        vm.SearchText = "Notepad";
-        Assert.True(appVm1.DisplayName.Contains("Notepad", StringComparison.OrdinalIgnoreCase));
-        Assert.False(appVm2.DisplayName.Contains("Notepad", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("Notepad", appVm1.DisplayName);
+        Assert.DoesNotContain("Notepad", appVm2.DisplayName);
     }
 
-    // ── Requirement 5: Test Application Category Filters ─────────────────────
     [Theory]
-    [InlineData(ApplicationType.Win32, "Win32", true)]
-    [InlineData(ApplicationType.MSI, "MSI", true)]
-    [InlineData(ApplicationType.AppX, "Store Apps", true)]
-    [InlineData(ApplicationType.MSIX, "Store Apps", true)]
-    [InlineData(ApplicationType.WinGet, "WinGet", true)]
-    [InlineData(ApplicationType.Orphaned, "Orphaned", true)]
-    public void Requirement5_CategoryFilters_CategorizeCorrectly(ApplicationType type, string filterName, bool shouldMatch)
+    [InlineData(UninstallerKind.Unknown, "Win32")]
+    [InlineData(UninstallerKind.Nsis, "Win32")]
+    [InlineData(UninstallerKind.BurnBundle, "Win32")]
+    [InlineData(UninstallerKind.Msi, "MSI")]
+    [InlineData(UninstallerKind.StoreApp, "AppX")]
+    [InlineData(UninstallerKind.BrokenEntry, "Broken")]
+    public void CategoryChips_FollowTheUninstallerKind(UninstallerKind kind, string expected)
     {
-        var app = new InstalledApplication { ApplicationType = type };
-        var appVm = new InstalledApplicationViewModel(app);
+        var vm = new InstalledApplicationViewModel(App("X", kind: kind));
+        Assert.Equal(expected, vm.ApplicationTypeLabel);
+    }
 
-        bool matches = filterName switch
+    [Fact]
+    public void BrokenEntries_OfferRemoveBrokenEntry_NotUninstall()
+    {
+        Assert.Equal("Remove broken entry", new InstalledApplicationViewModel(App("X", kind: UninstallerKind.BrokenEntry)).ActionLabel);
+        Assert.Equal("Uninstall", new InstalledApplicationViewModel(App("X", kind: UninstallerKind.Msi)).ActionLabel);
+    }
+
+    [Fact]
+    public void SelectingAnApp_ShowsTheDetailsPanel()
+    {
+        _wpf.Invoke(() =>
         {
-            "All" => true,
-            "Win32" => appVm.Application.ApplicationType == ApplicationType.Win32,
-            "MSI" => appVm.Application.ApplicationType == ApplicationType.MSI,
-            "Store Apps" => appVm.Application.ApplicationType is ApplicationType.AppX or ApplicationType.MSIX,
-            "WinGet" => appVm.Application.ApplicationType == ApplicationType.WinGet,
-            "Orphaned" => appVm.Application.ApplicationType == ApplicationType.Orphaned,
-            _ => false
-        };
+            var (vm, _, _, _) = CreateHarness();
+            var appVm = new InstalledApplicationViewModel(App("Test Notepad Plus"));
 
-        Assert.Equal(shouldMatch, matches);
+            vm.SelectedApplication = appVm;
+
+            Assert.True(vm.IsDetailPanelVisible);
+            Assert.False(string.IsNullOrEmpty(appVm.PlanDescription));
+        });
     }
 
-    // ── Requirement 6: Test Sorting ──────────────────────────────────────────
     [Fact]
-    public void Requirement6_Sorting_OrdersAlphabetically()
+    public async Task D11_DetailsPanelUninstall_ActsOnTheViewedApp_NotTheCheckedRows()
     {
-        var list = new List<InstalledApplicationViewModel>
+        await _wpf.RunAsync(async () =>
         {
-            new(new InstalledApplication { DisplayName = "Zebra" }),
-            new(new InstalledApplication { DisplayName = "Alpha" }),
-            new(new InstalledApplication { DisplayName = "Beta" })
-        };
+            var (vm, batch, _, discovery) = CreateHarness();
+            discovery.Apps.AddRange([App("Checked App"), App("Viewed App")]);
+            await vm.RefreshCommand.ExecuteAsync(null);
 
-        var sorted = list.OrderBy(a => a.DisplayName).ToList();
-        Assert.Equal("Alpha", sorted[0].DisplayName);
-        Assert.Equal("Beta", sorted[1].DisplayName);
-        Assert.Equal("Zebra", sorted[2].DisplayName);
+            var rows = vm.ApplicationsView.Cast<InstalledApplicationViewModel>().ToList();
+            rows.Single(r => r.DisplayName == "Checked App").IsSelected = true;
+            vm.SelectedApplication = rows.Single(r => r.DisplayName == "Viewed App");
+
+            await vm.UninstallThisCommand.ExecuteAsync(null);
+
+            Assert.Equal(["Viewed App"], batch.Requested);
+        });
     }
 
-    // ── Requirement 7 & 8: Test Selection & Details Panel ────────────────────
     [Fact]
-    public void Requirement7and8_SelectionAndDetails_WorkAsExpected()
+    public async Task D12_ProtectedPick_IsSkipped_AndTheRestStillRuns()
     {
-        var (vm, testApp, _) = CreateTestHarness();
-        var appVm = new InstalledApplicationViewModel(testApp);
+        await _wpf.RunAsync(async () =>
+        {
+            var (vm, batch, prompts, discovery) = CreateHarness();
+            discovery.Apps.AddRange([App("Normal App"), App("AxePower Desktop", isProtected: true)]);
+            await vm.RefreshCommand.ExecuteAsync(null);
 
-        Assert.False(appVm.IsSelected);
-        appVm.IsSelected = true;
-        Assert.True(appVm.IsSelected);
+            // The Protected chip lists protected apps even while they are hidden elsewhere
+            vm.SelectFilterCommand.Execute("Protected");
+            foreach (var row in vm.ApplicationsView.Cast<InstalledApplicationViewModel>()) row.IsSelected = true;
+            vm.SelectFilterCommand.Execute("All");
+            foreach (var row in vm.ApplicationsView.Cast<InstalledApplicationViewModel>()) row.IsSelected = true;
 
-        vm.SelectedApplication = appVm;
-        Assert.True(vm.IsDetailPanelVisible);
-        Assert.Equal("Test Notepad Plus", vm.SelectedApplication.DisplayName);
+            await vm.UninstallSelectedCommand.ExecuteAsync(null);
+
+            Assert.Equal(["Normal App"], batch.Requested);
+            Assert.Equal(1, prompts.ConfirmCalls);
+            Assert.Contains(prompts.LastSkipped, s => s.App.DisplayName == "AxePower Desktop");
+        });
     }
 
-    // ── Requirement 11: Verify Safe, Moderate and Advanced scan modes differ ──
     [Fact]
-    public async Task Requirement11_ScanModes_ProduceTieredResults()
+    public async Task NothingRuns_WhenTheConfirmationIsDeclined()
     {
-        var confidence = new LeftoverConfidenceService();
+        await _wpf.RunAsync(async () =>
+        {
+            var (vm, batch, prompts, discovery) = CreateHarness();
+            discovery.Apps.Add(App("Some App"));
+            await vm.RefreshCommand.ExecuteAsync(null);
+            vm.SelectedApplication = vm.ApplicationsView.Cast<InstalledApplicationViewModel>().Single();
+            prompts.Confirm = false;
+
+            await vm.UninstallThisCommand.ExecuteAsync(null);
+
+            Assert.Empty(batch.Requested);
+        });
+    }
+
+    [Fact]
+    public async Task D10_RefreshIsDisabled_WhileABatchRuns()
+    {
+        await _wpf.RunAsync(async () =>
+        {
+            var (vm, batch, _, discovery) = CreateHarness();
+            discovery.Apps.Add(App("Some App"));
+            await vm.RefreshCommand.ExecuteAsync(null);
+            vm.SelectedApplication = vm.ApplicationsView.Cast<InstalledApplicationViewModel>().Single();
+
+            batch.Gate = new TaskCompletionSource();
+            var running = vm.UninstallThisCommand.ExecuteAsync(null);
+
+            Assert.True(vm.IsBusy);
+            Assert.False(vm.RefreshCommand.CanExecute(null));
+            Assert.False(vm.UninstallSelectedCommand.CanExecute(null));
+            Assert.True(vm.CancelCommand.CanExecute(null));
+
+            batch.Gate.SetResult();
+            await running;
+
+            Assert.False(vm.IsBusy);
+            Assert.True(vm.RefreshCommand.CanExecute(null));
+        });
+    }
+
+    [Fact]
+    public void ProtectedApps_CannotBeUninstalled()
+    {
         var protection = new ProtectionService();
-        var scanner = new LeftoverScannerService(confidence, protection);
-        var settings = new UninstallerSettings();
-
-        var app = new InstalledApplication
-        {
-            Id = "notepad-plus",
-            DisplayName = "Notepad++",
-            Publisher = "Don HO",
-            InstallLocation = @"C:\Program Files\Notepad++"
-        };
-
-        var safeResults = await scanner.ScanAsync(app, ScanMode.Safe, settings);
-        var modResults = await scanner.ScanAsync(app, ScanMode.Moderate, settings);
-        var advResults = await scanner.ScanAsync(app, ScanMode.Advanced, settings);
-
-        // Safe is a subset or equal to Moderate/Advanced
-        Assert.True(safeResults.Count <= modResults.Count);
-        Assert.True(modResults.Count <= advResults.Count);
-    }
-
-    // ── Requirement 12: Protected apps cannot be selected/uninstalled ─────────
-    [Fact]
-    public void Requirement12_ProtectedApps_CannotBeUninstalled()
-    {
-        var protection = new ProtectionService();
-        var axePower = new InstalledApplication
-        {
-            DisplayName = "AxePower Desktop",
-            Publisher = "Abhimanyu Vishwakarma"
-        };
+        var axePower = new InstalledApplication { DisplayName = "AxePower Desktop", Publisher = "Abhimanyu Vishwakarma" };
 
         Assert.True(protection.IsApplicationProtected(axePower));
         Assert.NotNull(protection.GetProtectionReason(axePower));
     }
 
-    // ── Requirement 13: Low confidence leftovers unchecked by default ─────────
     [Fact]
-    public void Requirement13_LowConfidenceItems_AreUncheckedByDefault()
+    public void LeftoverRows_AreOnlyTickedWhenTheScannerPreselectedThem()
     {
-        var highConfidenceItem = new LeftoverItem
-        {
-            Path = @"C:\Program Files\TestApp",
-            ConfidenceScore = 90
-        };
+        var preselected = new LeftoverItemViewModel(new LeftoverItem { Path = @"C:\App", ConfidenceScore = 90, IsSelected = true });
+        var highButNameOnly = new LeftoverItemViewModel(new LeftoverItem { Path = @"C:\Other", ConfidenceScore = 90, IsSelected = false });
 
-        var lowConfidenceItem = new LeftoverItem
-        {
-            Path = @"C:\Users\User\Documents\TestApp.log",
-            ConfidenceScore = 30
-        };
-
-        var highVm = new LeftoverItemViewModel(highConfidenceItem);
-        var lowVm = new LeftoverItemViewModel(lowConfidenceItem);
-
-        Assert.True(highVm.IsSelected, "High confidence (>=80) must be checked by default");
-        Assert.False(lowVm.IsSelected, "Low confidence (<80) must be unchecked by default");
+        Assert.True(preselected.IsSelected);
+        Assert.False(highButNameOnly.IsSelected);
     }
 
-    // ── Requirement 14 & 15: Default Safety Settings ─────────────────────────
     [Fact]
-    public void Requirement14and15_SafetyDefaults_AreEnabled()
+    public void BlockedAndAdminOnlyRows_CannotBeTicked()
+    {
+        var blocked = new LeftoverItemViewModel(new LeftoverItem { Path = @"C:\X", IsSelected = true, BlockedReason = "test" });
+        var admin = new LeftoverItemViewModel(new LeftoverItem { Path = @"HKLM\SOFTWARE\X", IsSelected = true, RequiresElevation = true }, isElevated: false);
+        var adminElevated = new LeftoverItemViewModel(new LeftoverItem { Path = @"HKLM\SOFTWARE\X", IsSelected = true, RequiresElevation = true }, isElevated: true);
+
+        Assert.False(blocked.CanSelect);
+        Assert.False(blocked.IsSelected);
+        Assert.False(admin.CanSelect);
+        Assert.True(adminElevated.CanSelect);
+    }
+
+    [Fact]
+    public void SafetyDefaults_AreEnabled()
     {
         var settings = new UninstallerSettings();
 
-        Assert.True(settings.CreateSystemRestorePoint, "System Restore must be enabled by default");
-        Assert.True(settings.BackupRegistryChanges, "Registry backup must be enabled by default");
-        Assert.True(settings.MoveToRecycleBin, "Recycle Bin must be enabled by default");
+        Assert.True(settings.CreateSystemRestorePoint);
+        Assert.True(settings.BackupRegistryChanges);
+        Assert.True(settings.MoveToRecycleBin);
+        Assert.False(settings.PreferQuietUninstall);
+        Assert.False(settings.ShowSystemComponents);
         Assert.Equal(ScanMode.Moderate, settings.DefaultScanMode);
     }
 
-    // ── Requirement 16: Dry Run performs no destructive operation ────────────
     [Fact]
-    public async Task Requirement16_DryRun_PerformsNoDestructiveOperation()
+    public async Task DryRun_PerformsNoDestructiveOperation()
     {
-        var (vm, testApp, _) = CreateTestHarness();
-        var settings = new UninstallerSettings { DryRunMode = true };
+        var exe = @"C:\Program Files\Notepad++\uninstall.exe";
+        var executor = new Win32UninstallExecutor(new FakeFileSystemProbe(exe), new ProcessTreeWatcher());
+        var app = new InstalledApplication
+        {
+            DisplayName = "Test Notepad Plus",
+            UninstallerKind = UninstallerKind.Nsis,
+            UninstallerPath = exe,
+            UninstallString = $"\"{exe}\"",
+        };
 
-        var executor = new Win32UninstallExecutor();
-        var result = await executor.ExecuteAsync(testApp, settings);
+        var result = await executor.ExecuteAsync(app, new UninstallerSettings { DryRunMode = true }, new UninstallRunContext());
 
-        Assert.True(result.Success);
-        Assert.True(result.WasDryRun);
+        Assert.Equal(ExecutionVerdict.DryRun, result.Verdict);
         Assert.Contains("[DRY RUN]", result.CommandExecuted);
+    }
+
+    [Fact]
+    public async Task ScanModes_ProduceTieredResults()
+    {
+        var scanner = new LeftoverScannerService(new ProtectionService());
+        var app = new InstalledApplication
+        {
+            Id = "notepad-plus",
+            DisplayName = "Notepad++",
+            Publisher = "Don HO",
+            InstallLocation = @"C:\Program Files\Notepad++",
+        };
+
+        var safe = await scanner.ScanAsync(app, ScanMode.Safe, new UninstallerSettings());
+        var moderate = await scanner.ScanAsync(app, ScanMode.Moderate, new UninstallerSettings());
+
+        Assert.True(safe.Count <= moderate.Count);
+        Assert.All(safe, i => Assert.True(i.HasEvidence("ExplicitConnection") || i.HasEvidence("IsUninstallerRegistryKey")));
     }
 }

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 using AxePower.Core.Models.Uninstaller;
 
 namespace AxePower.Core.Services.Uninstaller;
@@ -10,103 +9,61 @@ namespace AxePower.Core.Services.Uninstaller;
 /// </summary>
 public sealed class AppxUninstallExecutor : IUninstallExecutor
 {
-    public ApplicationType SupportedType => ApplicationType.AppX;
+    private static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
 
-    public async Task<UninstallResult> ExecuteAsync(
+    public IReadOnlyCollection<UninstallerKind> SupportedKinds { get; } = [UninstallerKind.StoreApp];
+
+    public async Task<UninstallExecution> ExecuteAsync(
         InstalledApplication application,
         UninstallerSettings settings,
+        UninstallRunContext context,
         CancellationToken cancellationToken = default)
     {
+        const string method = "AppX";
         var sw = Stopwatch.StartNew();
 
         if (!application.CanUninstall)
-            return Fail(application, "This package is marked NonRemovable by Windows.", sw);
+            return Fail("This package is marked NonRemovable by Windows.");
 
-        if (string.IsNullOrWhiteSpace(application.PackageFullName))
-            return Fail(application, "No PackageFullName available for this AppX package.", sw);
+        // Validated so the name can sit inside a single-quoted PowerShell string
+        var plan = UninstallCommandBuilder.Build(application, preferQuiet: true, new FileSystemProbe());
+        if (!plan.CanRun) return UninstallerLauncher.PlanError(plan, method);
+        if (settings.DryRunMode) return UninstallerLauncher.DryRun(plan, method);
 
-        // Security: validate PackageFullName contains no dangerous characters
-        if (!IsValidPackageName(application.PackageFullName))
-            return Fail(application, $"Invalid PackageFullName: '{application.PackageFullName}'", sw);
+        context.OnLaunched?.Invoke(plan);
+        var result = await PowerShellRunner.RunAsync(plan.Arguments, Timeout, cancellationToken).ConfigureAwait(false);
 
-        if (settings.DryRunMode)
+        return new UninstallExecution
         {
-            return new UninstallResult
-            {
-                ApplicationId = application.Id,
-                ApplicationName = application.DisplayName,
-                Success = true,
-                WasDryRun = true,
-                CommandExecuted = $"[DRY RUN] Would execute: Remove-AppxPackage -Package '{application.PackageFullName}'",
-                UninstallMethod = "AppX",
-                Duration = sw.Elapsed,
-            };
-        }
-
-        try
-        {
-            // Use -Package parameter with ArgumentList for safety
-            var psi = new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8,
-            };
-            // Compose safe PowerShell command using the package name as a literal value
-            // Sanitized above — no injection possible
-            psi.ArgumentList.Add("-NonInteractive");
-            psi.ArgumentList.Add("-NoProfile");
-            psi.ArgumentList.Add("-Command");
-            psi.ArgumentList.Add($"Remove-AppxPackage -Package '{application.PackageFullName}'");
-
-            using var process = Process.Start(psi);
-            if (process is null)
-                return Fail(application, "Failed to start PowerShell.", sw);
-
-            var stdout = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-            var stderr = await process.StandardError.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
-
-            var exitCode = process.ExitCode;
-            var success = exitCode == 0;
-
-            return new UninstallResult
-            {
-                ApplicationId = application.Id,
-                ApplicationName = application.DisplayName,
-                Success = success,
-                ExitCode = exitCode,
-                ErrorMessage = !success ? stderr.Trim() : string.Empty,
-                CommandExecuted = $"Remove-AppxPackage -Package '{application.PackageFullName}'",
-                UninstallMethod = "AppX",
-                Duration = sw.Elapsed,
-            };
-        }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex)
-        {
-            return Fail(application, ex.Message, sw);
-        }
-    }
-
-    private static bool IsValidPackageName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name)) return false;
-        // PackageFullName contains only alphanumeric, dots, underscores, hyphens, tildes
-        return System.Text.RegularExpressions.Regex.IsMatch(name, @"^[\w\.\-~]+$");
-    }
-
-    private static UninstallResult Fail(InstalledApplication app, string msg, Stopwatch sw) =>
-        new()
-        {
-            ApplicationId = app.Id,
-            ApplicationName = app.DisplayName,
-            Success = false,
-            ErrorMessage = msg,
-            UninstallMethod = "AppX",
+            Verdict = result.TimedOut ? ExecutionVerdict.WaitAbandoned
+                    : result.ExitCode == 0 ? ExecutionVerdict.Finished
+                    : ExecutionVerdict.UnknownError,
+            ExitCode = result.TimedOut ? null : result.ExitCode,
+            Message = result.TimedOut ? "Remove-AppxPackage did not finish in time."
+                    : result.ExitCode == 0 ? string.Empty
+                    : FirstLine(result.StandardError),
+            CommandExecuted = plan.Arguments,
+            Method = method,
+            WasQuiet = true,
             Duration = sw.Elapsed,
         };
+
+        UninstallExecution Fail(string message) => new()
+        {
+            Verdict = ExecutionVerdict.Failed,
+            Message = message,
+            Method = method,
+            Duration = sw.Elapsed,
+        };
+    }
+
+    public static bool IsValidPackageName(string name) =>
+        UninstallCommandBuilder.IsValidPackageFullName(name);
+
+    private static string FirstLine(string text)
+    {
+        var line = text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault();
+        return string.IsNullOrEmpty(line) ? "Remove-AppxPackage reported an error." : line;
+    }
 }

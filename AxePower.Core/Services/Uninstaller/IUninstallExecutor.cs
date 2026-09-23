@@ -3,19 +3,22 @@ using AxePower.Core.Models.Uninstaller;
 namespace AxePower.Core.Services.Uninstaller;
 
 /// <summary>
-/// Executes the uninstall of a single application using the appropriate native method.
+/// Runs the uninstall of a single application for the uninstaller kinds it supports and reports
+/// what it observed. It never decides success: the batch verifies.
 /// </summary>
 public interface IUninstallExecutor
 {
-    /// <summary>The application type this executor handles.</summary>
-    ApplicationType SupportedType { get; }
+    /// <summary>The uninstaller kinds this executor runs.</summary>
+    IReadOnlyCollection<UninstallerKind> SupportedKinds { get; }
 
     /// <summary>
     /// Executes the uninstall for the given application.
-    /// Implementations must respect DryRunMode in settings.
+    /// Implementations must respect DryRunMode in settings. Cancelling
+    /// <paramref name="cancellationToken"/> stops waiting; it never kills the uninstaller.
     /// </summary>
-    Task<UninstallResult> ExecuteAsync(
+    Task<UninstallExecution> ExecuteAsync(
         InstalledApplication application,
         UninstallerSettings settings,
+        UninstallRunContext context,
         CancellationToken cancellationToken = default);
 }

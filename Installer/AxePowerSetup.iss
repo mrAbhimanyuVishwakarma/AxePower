@@ -1,9 +1,9 @@
 [Setup]
 AppName=AxePower
-AppVersion=1.8.0
+AppVersion=1.9.0
 DefaultDirName={autopf}\AxePower
 DefaultGroupName=AxePower
-OutputBaseFilename=AxePower-v1.8.0-Setup
+OutputBaseFilename=AxePower-v1.9.0-Setup
 Compression=lzma
 SolidCompression=yes
 ArchitecturesAllowed=x64
@@ -13,8 +13,9 @@ ArchitecturesInstallIn64BitMode=x64
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\AxePower.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\AxePower.App\bin\Release\net8.0-windows\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\AxePower.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 ; Exclude PDB files if any
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

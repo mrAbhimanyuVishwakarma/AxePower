@@ -36,6 +36,66 @@ public class BatteryService : IDisposable
     [DllImport("kernel32.dll")]
     private static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS sps);
 
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern IntPtr CreateFile(
+        string lpFileName,
+        uint dwDesiredAccess,
+        uint dwShareMode,
+        IntPtr lpSecurityAttributes,
+        uint dwCreationDisposition,
+        uint dwFlagsAndAttributes,
+        IntPtr hTemplateFile);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool DeviceIoControl(
+        IntPtr hDevice,
+        uint dwIoControlCode,
+        byte[]? lpInBuffer,
+        uint nInBufferSize,
+        byte[]? lpOutBuffer,
+        uint nOutBufferSize,
+        out uint lpBytesReturned,
+        IntPtr lpOverlapped);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr hObject);
+
+    private const uint GENERIC_READ = 0x80000000;
+    private const uint GENERIC_WRITE = 0x40000000;
+    private const uint FILE_SHARE_READ = 1;
+    private const uint FILE_SHARE_WRITE = 2;
+    private const uint OPEN_EXISTING = 3;
+    private const uint IOCTL_ENERGY_BATTERY_CHARGE_MODE = 0x831020F8;
+    private const uint IOCTL_ENERGY_BATTERY_NIGHT_CHARGE = 0x83102150;
+
+    private static bool TrySendEnergyDrvIoctl(uint ioctl, byte[] data)
+    {
+        try
+        {
+            var handle = CreateFile(@"\\.\EnergyDrv",
+                GENERIC_READ | GENERIC_WRITE,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                IntPtr.Zero,
+                OPEN_EXISTING,
+                0,
+                IntPtr.Zero);
+
+            if (handle != IntPtr.Zero && handle != new IntPtr(-1))
+            {
+                try
+                {
+                    return DeviceIoControl(handle, ioctl, data, (uint)data.Length, null, 0, out _, IntPtr.Zero);
+                }
+                finally
+                {
+                    CloseHandle(handle);
+                }
+            }
+        }
+        catch { }
+        return false;
+    }
+
     public BatteryService(LogService logService)
     {
         _logService = logService;
@@ -552,6 +612,25 @@ public class BatteryService : IDisposable
     {
         try
         {
+            // 1. Direct hardware driver control (Lenovo EnergyDrv IOCTL)
+            TrySendEnergyDrvIoctl(IOCTL_ENERGY_BATTERY_CHARGE_MODE, enabled ? new byte[] { 0x3 } : new byte[] { 0x8 });
+
+            // 2. ASUS Battery Health Charging via WMI (if present)
+            try
+            {
+                using var searcher = new ManagementObjectSearcher(@"root\wmi", "SELECT * FROM AsusAtkWmi_WMNB");
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    var inParams = obj.GetMethodParameters("DEVS");
+                    inParams["Device_Arg"] = 0x00120057;
+                    inParams["Control_Status"] = enabled ? 80 : 100;
+                    obj.InvokeMethod("DEVS", inParams, null);
+                    break;
+                }
+            }
+            catch { }
+
+            // 3. Lenovo Vantage & Power Management Registry hives
             const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
             using (var key = Registry.CurrentUser.CreateSubKey(hive))
             {
@@ -576,7 +655,7 @@ public class BatteryService : IDisposable
         }
         catch (Exception ex)
         {
-            _logService.LogError("Failed to update Conservation Mode in registry.", ex);
+            _logService.LogError("Failed to update Conservation Mode in hardware/registry.", ex);
         }
     }
 
@@ -584,6 +663,10 @@ public class BatteryService : IDisposable
     {
         try
         {
+            // 1. Direct hardware driver control (Lenovo EnergyDrv IOCTL)
+            TrySendEnergyDrvIoctl(IOCTL_ENERGY_BATTERY_CHARGE_MODE, enabled ? new byte[] { 0x7 } : new byte[] { 0x8 });
+
+            // 2. Lenovo Vantage & Power Management Registry hives
             const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
             using (var key = Registry.CurrentUser.CreateSubKey(hive))
             {
@@ -608,7 +691,7 @@ public class BatteryService : IDisposable
         }
         catch (Exception ex)
         {
-            _logService.LogError("Failed to update Rapid Charge in registry.", ex);
+            _logService.LogError("Failed to update Rapid Charge in hardware/registry.", ex);
         }
     }
 
@@ -616,6 +699,10 @@ public class BatteryService : IDisposable
     {
         try
         {
+            // 1. Direct hardware driver control (Lenovo EnergyDrv IOCTL)
+            TrySendEnergyDrvIoctl(IOCTL_ENERGY_BATTERY_NIGHT_CHARGE, enabled ? new byte[] { 0x1 } : new byte[] { 0x0 });
+
+            // 2. Lenovo Vantage Registry hive
             const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
             using (var key = Registry.CurrentUser.CreateSubKey(hive))
             {
@@ -626,7 +713,7 @@ public class BatteryService : IDisposable
         }
         catch (Exception ex)
         {
-            _logService.LogError("Failed to update Overnight Battery Charging in registry.", ex);
+            _logService.LogError("Failed to update Overnight Battery Charging in hardware/registry.", ex);
         }
     }
 

@@ -66,9 +66,9 @@ public class ApplicationDiscoveryTests
     [Fact]
     public void DiscoverySource_Flags_CombineCorrectly()
     {
-        var combined = DiscoverySource.RegistryHKLM | DiscoverySource.WinGet;
+        var combined = DiscoverySource.RegistryHKLM | DiscoverySource.RegistryHKCU;
         Assert.True(combined.HasFlag(DiscoverySource.RegistryHKLM));
-        Assert.True(combined.HasFlag(DiscoverySource.WinGet));
+        Assert.True(combined.HasFlag(DiscoverySource.RegistryHKCU));
         Assert.False(combined.HasFlag(DiscoverySource.AppX));
     }
 
@@ -94,10 +94,13 @@ public class ApplicationDiscoveryTests
         Assert.NotNull(apps);
         // On any Windows development machine, at least a few apps will be discovered
         Assert.NotEmpty(apps);
+        // Every registry entry carries its key in the 64-bit view
+        Assert.All(apps.Where(a => a.UninstallerKind != UninstallerKind.StoreApp),
+            a => Assert.Matches(@"^HK(LM|CU)\\", a.RegistryKeyPath));
     }
 
     [Fact]
-    public async Task MsiUninstallExecutor_DryRun_ReturnsSuccessWithoutExecuting()
+    public async Task MsiUninstallExecutor_DryRun_PrintsTheCommandWithoutExecuting()
     {
         var executor = new AxePower.Core.Services.Uninstaller.MsiUninstallExecutor();
         var app = new InstalledApplication
@@ -105,35 +108,15 @@ public class ApplicationDiscoveryTests
             Id = "test-msi",
             DisplayName = "Test App",
             ProductCode = "{11111111-2222-3333-4444-555555555555}",
+            UninstallerKind = UninstallerKind.Msi,
             ApplicationType = ApplicationType.MSI
         };
         var settings = new UninstallerSettings { DryRunMode = true };
 
-        var result = await executor.ExecuteAsync(app, settings);
+        var result = await executor.ExecuteAsync(app, settings, new AxePower.Core.Services.Uninstaller.UninstallRunContext());
 
-        Assert.True(result.Success);
-        Assert.True(result.WasDryRun);
+        Assert.Equal(AxePower.Core.Services.Uninstaller.ExecutionVerdict.DryRun, result.Verdict);
         Assert.Contains("[DRY RUN]", result.CommandExecuted);
-    }
-
-    [Fact]
-    public async Task WingetUninstallExecutor_DryRun_ReturnsSuccessWithoutExecuting()
-    {
-        var executor = new AxePower.Core.Services.Uninstaller.WingetUninstallExecutor();
-        var app = new InstalledApplication
-        {
-            Id = "test-winget",
-            DisplayName = "Test Winget App",
-            WingetId = "TestPublisher.TestApp",
-            ApplicationType = ApplicationType.WinGet
-        };
-        var settings = new UninstallerSettings { DryRunMode = true };
-
-        var result = await executor.ExecuteAsync(app, settings);
-
-        Assert.True(result.Success);
-        Assert.True(result.WasDryRun);
-        Assert.Contains("[DRY RUN]", result.CommandExecuted);
+        Assert.Contains("/x {11111111-2222-3333-4444-555555555555}", result.CommandExecuted);
     }
 }
-

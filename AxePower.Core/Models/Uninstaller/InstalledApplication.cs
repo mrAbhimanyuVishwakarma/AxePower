@@ -22,11 +22,32 @@ public sealed class InstalledApplication
     /// <summary>Install date in yyyyMMdd format (from registry) or null.</summary>
     public string? InstallDate { get; set; }
 
-    /// <summary>Root installation directory.</summary>
+    /// <summary>Root installation directory (registry value, or derived — see <see cref="IsInstallLocationDerived"/>).</summary>
     public string InstallLocation { get; set; } = string.Empty;
+
+    /// <summary>True when <see cref="InstallLocation"/> was worked out from the uninstaller or icon path.</summary>
+    public bool IsInstallLocationDerived { get; set; }
 
     /// <summary>Estimated install size in kilobytes (from registry EstimatedSize).</summary>
     public long EstimatedSizeKb { get; set; }
+
+    // ── Registry entry ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Uninstall key in the 64-bit view, WOW6432Node spelled out,
+    /// e.g. HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{GUID}.
+    /// Empty for Store apps.
+    /// </summary>
+    public string RegistryKeyPath { get; set; } = string.Empty;
+
+    /// <summary>Other uninstall keys merged into this entry (double registrations of one product).</summary>
+    public List<string> RelatedKeyPaths { get; set; } = new();
+
+    /// <summary>The uninstall key name (a GUID for MSI products, "…_is1" for Inno Setup).</summary>
+    public string RegistryKeyName { get; set; } = string.Empty;
+
+    /// <summary>ParentKeyName: set when this entry is an update or component of another product.</summary>
+    public string ParentKeyName { get; set; } = string.Empty;
 
     // ── Uninstall metadata ────────────────────────────────────────────────────
 
@@ -39,10 +60,22 @@ public sealed class InstalledApplication
     /// <summary>Modify/repair command.</summary>
     public string ModifyPath { get; set; } = string.Empty;
 
+    /// <summary>What the uninstaller really is (drives the executor and the command).</summary>
+    public UninstallerKind UninstallerKind { get; set; } = UninstallerKind.Unknown;
+
+    /// <summary>Resolved full path of the uninstaller executable (empty when not resolvable).</summary>
+    public string UninstallerPath { get; set; } = string.Empty;
+
+    /// <summary>Arguments that follow <see cref="UninstallerPath"/> in the registry command.</summary>
+    public string UninstallerArguments { get; set; } = string.Empty;
+
     // ── MSI-specific ──────────────────────────────────────────────────────────
 
-    /// <summary>MSI ProductCode GUID, e.g. {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}.</summary>
+    /// <summary>MSI ProductCode GUID, e.g. {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}. Only set for <see cref="UninstallerKind.Msi"/>.</summary>
     public string ProductCode { get; set; } = string.Empty;
+
+    /// <summary>Raw MsiQueryProductState result; <see cref="int.MinValue"/> = not checked.</summary>
+    public int MsiProductState { get; set; } = int.MinValue;
 
     // ── AppX/MSIX-specific ────────────────────────────────────────────────────
 
@@ -73,7 +106,10 @@ public sealed class InstalledApplication
 
     // ── Classification ────────────────────────────────────────────────────────
 
-    /// <summary>Primary application type.</summary>
+    /// <summary>
+    /// UI filter category, derived from <see cref="UninstallerKind"/>
+    /// (Msi → MSI, StoreApp → AppX, BrokenEntry → Orphaned, anything else → Win32).
+    /// </summary>
     public ApplicationType ApplicationType { get; set; } = ApplicationType.Win32;
 
     /// <summary>All discovery sources that found this application (may be multiple after deduplication).</summary>
@@ -81,8 +117,11 @@ public sealed class InstalledApplication
 
     // ── Flags ─────────────────────────────────────────────────────────────────
 
-    /// <summary>SystemComponent=1 in registry (hidden by default in Programs & Features).</summary>
+    /// <summary>SystemComponent=1 in registry (hidden by default in Programs &amp; Features).</summary>
     public bool IsSystemComponent { get; set; }
+
+    /// <summary>An update, hotfix or child component of another product (ParentKeyName or ReleaseType).</summary>
+    public bool IsUpdate { get; set; }
 
     /// <summary>Protected by AxePower's protection layer — cannot be removed via Uninstaller Pro.</summary>
     public bool IsProtected { get; set; }
@@ -93,7 +132,7 @@ public sealed class InstalledApplication
     /// <summary>A process from this application's InstallLocation is currently running.</summary>
     public bool IsRunning { get; set; }
 
-    /// <summary>Whether a valid uninstall path exists.</summary>
+    /// <summary>Whether the entry allows removal (false for NoRemove=1 and non-removable packages).</summary>
     public bool CanUninstall { get; set; } = true;
 
     /// <summary>Whether the uninstall operation typically requires administrator rights.</summary>
@@ -106,6 +145,12 @@ public sealed class InstalledApplication
     public int UninstallerConfidence { get; set; } = 100;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /// <summary><see cref="RegistryKeyPath"/> followed by <see cref="RelatedKeyPaths"/>.</summary>
+    public IEnumerable<string> AllRegistryKeyPaths =>
+        new[] { RegistryKeyPath }.Concat(RelatedKeyPaths).Where(p => !string.IsNullOrEmpty(p));
+
+    public bool IsBrokenEntry => UninstallerKind == UninstallerKind.BrokenEntry;
 
     /// <summary>Human-readable size string (e.g. "1.27 GB", "450 MB").</summary>
     public string DisplaySize
@@ -137,5 +182,14 @@ public sealed class InstalledApplication
         }
     }
 
-    public override string ToString() => $"{DisplayName} ({Version}) [{ApplicationType}]";
+    /// <summary>The filter category for an uninstaller kind.</summary>
+    public static ApplicationType ApplicationTypeFor(UninstallerKind kind) => kind switch
+    {
+        UninstallerKind.Msi => ApplicationType.MSI,
+        UninstallerKind.StoreApp => ApplicationType.AppX,
+        UninstallerKind.BrokenEntry => ApplicationType.Orphaned,
+        _ => ApplicationType.Win32,
+    };
+
+    public override string ToString() => $"{DisplayName} ({Version}) [{UninstallerKind}]";
 }

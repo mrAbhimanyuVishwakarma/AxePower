@@ -88,7 +88,13 @@ public sealed class FileCleanupService : IFileCleanupService
     private const ushort FOF_NOCONFIRMATION = 0x0010;
     private const ushort FOF_SILENT      = 0x0004;
     private const ushort FOF_NOERRORUI   = 0x0400;
+    private const ushort FOF_WANTNUKEWARNING = 0x4000;
 
+    /// <summary>
+    /// Recycles the item. If the shell fails, nothing is deleted: the Recycle Bin is the backup,
+    /// so there is no silent fall-back to a permanent delete. Items too large for the Recycle Bin
+    /// make the shell ask before deleting them for good.
+    /// </summary>
     private static bool SendToRecycleBin(string path)
     {
         try
@@ -100,21 +106,14 @@ public sealed class FileCleanupService : IFileCleanupService
                 wFunc = FO_DELETE,
                 pFrom = path + '\0' + '\0',
                 pTo = null!,
-                fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI,
+                fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_WANTNUKEWARNING,
             };
             int result = SHFileOperation(ref op);
-            return result == 0;
+            return result == 0 && !op.fAnyOperationsAborted;
         }
         catch
         {
-            // Fall back to permanent deletion if Shell operation fails
-            try
-            {
-                if (File.Exists(path)) File.Delete(path);
-                else if (Directory.Exists(path)) Directory.Delete(path, true);
-                return true;
-            }
-            catch { return false; }
+            return false;
         }
     }
 }

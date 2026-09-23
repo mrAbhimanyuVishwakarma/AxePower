@@ -1,12 +1,11 @@
-using System.Diagnostics;
 using AxePower.Core.Models.Uninstaller;
 
 namespace AxePower.Core.Services.Uninstaller;
 
 /// <summary>
-/// Selects the appropriate IUninstallExecutor for an application type.
-/// For Orphaned applications, returns null — the batch service handles those
-/// by going directly to the leftover scanner (Forced Uninstall flow).
+/// Picks the executor for an application's <see cref="UninstallerKind"/>: MSI products go to
+/// msiexec, Store apps to Remove-AppxPackage, broken entries to "remove the listing", and every
+/// exe uninstaller to the Win32 executor.
 /// </summary>
 public sealed class UninstallExecutorFactory
 {
@@ -15,26 +14,18 @@ public sealed class UninstallExecutorFactory
     public UninstallExecutorFactory(
         Win32UninstallExecutor win32,
         MsiUninstallExecutor msi,
-        WingetUninstallExecutor winget,
-        AppxUninstallExecutor appx)
+        AppxUninstallExecutor appx,
+        BrokenEntryExecutor brokenEntry)
+        : this([win32, msi, appx, brokenEntry])
     {
-        _executors = [win32, msi, winget, appx];
     }
 
-    /// <summary>Returns the executor for the given application type, or null for Orphaned.</summary>
-    public IUninstallExecutor? GetExecutor(InstalledApplication application)
+    public UninstallExecutorFactory(IReadOnlyList<IUninstallExecutor> executors)
     {
-        var type = application.ApplicationType;
-
-        // Orphaned apps — skip native uninstaller, go directly to leftover scanner
-        if (type == ApplicationType.Orphaned) return null;
-
-        // MSI detected even if marked Win32 (ProductCode present)
-        if (type == ApplicationType.Win32 &&
-            MsiUninstallExecutor.IsValidProductCode(application.ProductCode))
-            type = ApplicationType.MSI;
-
-        return _executors.FirstOrDefault(e => e.SupportedType == type)
-               ?? _executors.First(e => e.SupportedType == ApplicationType.Win32);
+        _executors = executors;
     }
+
+    public IUninstallExecutor GetExecutor(InstalledApplication application) =>
+        _executors.FirstOrDefault(e => e.SupportedKinds.Contains(application.UninstallerKind))
+        ?? throw new InvalidOperationException($"No executor handles {application.UninstallerKind}.");
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using AxePower.Core.Models.Uninstaller;
 using Microsoft.Win32;
@@ -5,58 +6,95 @@ using Microsoft.Win32;
 namespace AxePower.Core.Services.Uninstaller;
 
 /// <summary>
-/// Backs up registry keys/values before leftover cleanup and provides session restore.
-/// Backups are stored as JSON in %AppData%\AxePower\UninstallerHistory\{sessionId}\.
+/// Real registry backups: whole keys go through <c>reg export … /reg:64</c> to .reg files (the
+/// same format Windows' own tools restore), single values are kept as typed JSON so their kind
+/// and data survive exactly. <c>reg.exe</c> always comes from System32 and gets its arguments
+/// through ArgumentList.
 /// </summary>
 public sealed class RegistryBackupService : IRegistryBackupService
 {
-    private static readonly string BackupRoot = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "AxePower", "UninstallerHistory");
+    private static readonly TimeSpan RegTimeout = TimeSpan.FromSeconds(60);
+    private readonly BackupManifestStore _manifests;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public RegistryBackupService() : this(new BackupManifestStore()) { }
+
+    public RegistryBackupService(BackupManifestStore manifests)
     {
-        WriteIndented = true,
-    };
+        _manifests = manifests;
+    }
 
-    public async Task<RegistryBackupItem?> BackupAsync(
-        string sessionId,
-        string applicationId,
-        string applicationName,
-        string hive,
-        string keyPath,
-        string? valueName = null)
+    public static string RegExePath => Path.Combine(Environment.SystemDirectory, "reg.exe");
+
+    public async Task<bool> ExportKeyAsync(string fullKeyPath, string targetFile, CancellationToken cancellationToken = default)
+    {
+        if (!RegistryPath.TryParse(fullKeyPath, out var hive, out var sub) || sub.Length == 0) return false;
+        Directory.CreateDirectory(Path.GetDirectoryName(targetFile)!);
+
+        var exitCode = await RunRegAsync(cancellationToken, "export", $"{RegistryPath.HiveName(hive)}\\{sub}",
+            targetFile, "/y", "/reg:64").ConfigureAwait(false);
+
+        try
+        {
+            return exitCode == 0 && File.Exists(targetFile) && new FileInfo(targetFile).Length > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> ImportAsync(string regFile, CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(regFile)) return false;
+        var exitCode = await RunRegAsync(cancellationToken, "import", regFile, "/reg:64").ConfigureAwait(false);
+        return exitCode == 0;
+    }
+
+    public RegistryBackupItem? BackupValue(string fullKeyPath, string valueName)
     {
         try
         {
-            var item = new RegistryBackupItem
-            {
-                SessionId = sessionId,
-                ApplicationId = applicationId,
-                ApplicationName = applicationName,
-                Hive = hive,
-                KeyPath = keyPath,
-                ValueName = valueName,
-            };
+            if (!RegistryPath.TryParse(fullKeyPath, out var hive, out var sub)) return null;
+            using var key = RegistryPath.OpenKey(fullKeyPath);
+            if (key is null || !key.GetValueNames().Contains(valueName, StringComparer.OrdinalIgnoreCase))
+                return null;
 
-            if (valueName is not null)
+            var kind = key.GetValueKind(valueName);
+            var raw = key.GetValue(valueName, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+
+            string json;
+            switch (kind)
             {
-                var (registryHive, subPath) = SplitHivePath($"{hive}\\{keyPath}");
-                using var baseKey = OpenBaseKey(registryHive);
-                if (baseKey is not null)
-                {
-                    using var key = baseKey.OpenSubKey(subPath, false);
-                    if (key is not null)
-                    {
-                        var value = key.GetValue(valueName);
-                        var kind  = key.GetValueKind(valueName);
-                        item.ValueData = JsonSerializer.Serialize(value);
-                        item.ValueKind = kind.ToString();
-                    }
-                }
+                case RegistryValueKind.String:
+                case RegistryValueKind.ExpandString:
+                    json = JsonSerializer.Serialize(raw as string ?? string.Empty);
+                    break;
+                case RegistryValueKind.DWord:
+                    json = JsonSerializer.Serialize(Convert.ToInt32(raw));
+                    break;
+                case RegistryValueKind.QWord:
+                    json = JsonSerializer.Serialize(Convert.ToInt64(raw));
+                    break;
+                case RegistryValueKind.MultiString:
+                    json = JsonSerializer.Serialize(raw as string[] ?? []);
+                    break;
+                case RegistryValueKind.Binary:
+                case RegistryValueKind.None:
+                    json = JsonSerializer.Serialize(raw as byte[] ?? []);
+                    break;
+                default:
+                    // A kind SetValue can't write back: refuse, so the value isn't deleted
+                    return null;
             }
 
-            return await Task.FromResult(item);
+            return new RegistryBackupItem
+            {
+                Hive = RegistryPath.HiveName(hive),
+                KeyPath = sub,
+                ValueName = valueName,
+                ValueKind = kind.ToString(),
+                ValueData = json,
+            };
         }
         catch
         {
@@ -64,89 +102,119 @@ public sealed class RegistryBackupService : IRegistryBackupService
         }
     }
 
-    public async Task SaveSessionBackupsAsync(string sessionId, IReadOnlyList<RegistryBackupItem> items)
+    public bool RestoreValue(RegistryBackupItem item)
     {
         try
         {
-            var dir = GetSessionDir(sessionId);
-            Directory.CreateDirectory(dir);
-            var path = Path.Combine(dir, "registry-backup.json");
-            var json = JsonSerializer.Serialize(items, JsonOptions);
-            await File.WriteAllTextAsync(path, json);
-        }
-        catch { }
-    }
+            if (item.ValueName is null || item.ValueData is null) return false;
+            if (!Enum.TryParse<RegistryValueKind>(item.ValueKind, out var kind)) return false;
+            if (!RegistryPath.TryParse(item.FullKeyPath, out var hive, out var sub) || sub.Length == 0) return false;
 
-    public async Task<IReadOnlyList<RegistryBackupItem>> LoadSessionBackupsAsync(string sessionId)
-    {
-        try
-        {
-            var path = Path.Combine(GetSessionDir(sessionId), "registry-backup.json");
-            if (!File.Exists(path)) return [];
-            var json = await File.ReadAllTextAsync(path);
-            return JsonSerializer.Deserialize<List<RegistryBackupItem>>(json) ?? [];
+            object value = kind switch
+            {
+                RegistryValueKind.String or RegistryValueKind.ExpandString =>
+                    JsonSerializer.Deserialize<string>(item.ValueData) ?? string.Empty,
+                RegistryValueKind.DWord => JsonSerializer.Deserialize<int>(item.ValueData),
+                RegistryValueKind.QWord => JsonSerializer.Deserialize<long>(item.ValueData),
+                RegistryValueKind.MultiString => JsonSerializer.Deserialize<string[]>(item.ValueData) ?? [],
+                RegistryValueKind.Binary or RegistryValueKind.None =>
+                    JsonSerializer.Deserialize<byte[]>(item.ValueData) ?? [],
+                _ => throw new NotSupportedException(),
+            };
+
+            using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
+            using var key = baseKey.CreateSubKey(sub, writable: true);
+            if (key is null) return false;
+            key.SetValue(item.ValueName, value, kind);
+            return true;
         }
         catch
         {
-            return [];
+            return false;
         }
     }
 
-    public async Task<int> RestoreSessionAsync(string sessionId)
+    public async Task<RestoreReport> RestoreSessionAsync(string sessionId, CancellationToken cancellationToken = default)
     {
-        var items = await LoadSessionBackupsAsync(sessionId);
-        int restored = 0;
+        var report = new RestoreReport();
+        var manifest = _manifests.Load(sessionId);
+        var folder = _manifests.GetSessionFolder(sessionId);
 
-        foreach (var item in items)
+        var pending = manifest.Entries
+            .Where(e => e.Status is CleanupItemStatus.Deleted && e.RestoredAt is null)
+            .OrderByDescending(e => e.Sequence)
+            .ToList();
+
+        // .reg files first (newest first), then values, then tasks
+        var ordered = pending.Where(e => e.BackupKind == BackupKind.RegistryKey)
+            .Concat(pending.Where(e => e.BackupKind == BackupKind.RegistryValue))
+            .Concat(pending.Where(e => e.BackupKind == BackupKind.ScheduledTask))
+            .ToList();
+
+        foreach (var entry in ordered)
         {
-            try
+            cancellationToken.ThrowIfCancellationRequested();
+            bool ok = entry.BackupKind switch
             {
-                var fullPath = $"{item.Hive}\\{item.KeyPath}";
-                var (registryHive, subPath) = SplitHivePath(fullPath);
-                using var baseKey = OpenBaseKey(registryHive);
-                if (baseKey is null) continue;
+                BackupKind.RegistryKey => await ImportAsync(Path.Combine(folder, entry.BackupFile), cancellationToken).ConfigureAwait(false),
+                BackupKind.RegistryValue => entry.Value is not null && RestoreValue(entry.Value),
+                BackupKind.ScheduledTask => ScheduledTaskService.TryRegisterFromXmlFile(entry.Path, Path.Combine(folder, entry.BackupFile)),
+                _ => false,
+            };
 
-                using var key = baseKey.CreateSubKey(subPath, writable: true);
-                if (key is null) continue;
-
-                if (item.ValueName is not null && item.ValueData is not null)
-                {
-                    if (Enum.TryParse<RegistryValueKind>(item.ValueKind, out var kind))
-                    {
-                        var value = JsonSerializer.Deserialize<object>(item.ValueData);
-                        key.SetValue(item.ValueName, value ?? string.Empty, kind);
-                        restored++;
-                    }
-                }
-                else
-                {
-                    // Key was deleted — restoring the key itself is sufficient
-                    restored++;
-                }
+            if (ok)
+            {
+                entry.RestoredAt = DateTime.Now;
+                report.Restored++;
             }
-            catch { }
+            else
+            {
+                report.Failed++;
+                report.Messages.Add($"Could not restore {entry.Path}{(entry.ValueName is null ? string.Empty : $" → {entry.ValueName}")}" +
+                                    (entry.Path.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) ? " (needs administrator rights)" : string.Empty));
+            }
         }
 
-        return restored;
+        report.NotRestorable = pending.Count(e => e.BackupKind == BackupKind.RecycleBin);
+        if (report.NotRestorable > 0)
+            report.Messages.Add($"{report.NotRestorable} file(s) and folder(s) are in the Recycle Bin; restore them from there.");
+
+        _manifests.Save(manifest);
+        return report;
     }
 
-    private static string GetSessionDir(string sessionId) =>
-        Path.Combine(BackupRoot, sessionId);
-
-    private static (RegistryHive hive, string subPath) SplitHivePath(string fullPath)
+    private static async Task<int> RunRegAsync(CancellationToken cancellationToken, params string[] arguments)
     {
-        if (fullPath.StartsWith("HKCU\\", StringComparison.OrdinalIgnoreCase))
-            return (RegistryHive.CurrentUser, fullPath[5..]);
-        if (fullPath.StartsWith("HKLM\\", StringComparison.OrdinalIgnoreCase))
-            return (RegistryHive.LocalMachine, fullPath[5..]);
-        return (RegistryHive.LocalMachine, fullPath);
-    }
-
-    private static RegistryKey? OpenBaseKey(RegistryHive hive) =>
-        hive switch
+        var psi = new ProcessStartInfo
         {
-            RegistryHive.CurrentUser  => Registry.CurrentUser,
-            RegistryHive.LocalMachine => Registry.LocalMachine,
-            _ => null,
+            FileName = RegExePath,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
         };
+        foreach (var argument in arguments) psi.ArgumentList.Add(argument);
+
+        try
+        {
+            using var process = Process.Start(psi);
+            if (process is null) return -1;
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(RegTimeout);
+            var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
+            var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
+            await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+            await Task.WhenAll(stdout, stderr).ConfigureAwait(false);
+            return process.ExitCode;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return -1;
+        }
+    }
 }

@@ -14,15 +14,13 @@ public class ControllerNavigationTests
     private readonly NotificationService _notificationService;
     private readonly SettingsService _settingsService;
     private readonly AppKillerService _appKillerService;
-    private readonly DisplayService _displayService;
 
     public ControllerNavigationTests()
     {
         _logService = new LogService();
         _controllerService = new ControllerNavigationService(_logService);
         _settingsService = new SettingsService(_logService);
-        _displayService = new DisplayService(_logService);
-        _powerPlanService = new PowerPlanService(_logService, _displayService, _settingsService);
+        _powerPlanService = TestPowerPlan.Create(_logService, _settingsService);
         _batteryService = new BatteryService(_logService);
         _notificationService = new NotificationService();
         _appKillerService = new AppKillerService();

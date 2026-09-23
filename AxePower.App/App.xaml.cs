@@ -9,8 +9,12 @@ using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
+using AxePower.Core.Services.Music;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
+using AxePower.App.ViewModels.Music;
+using AxePower.App.ViewModels.ShareScreen;
+using AxePower.Core.Services.ShareScreen;
 using AxePower.App.Helpers;
 
 namespace AxePower.App;
@@ -161,6 +165,10 @@ public partial class App : Application
 
             // Start listening for other instances
             Task.Run(ListenForOtherInstances);
+
+            // AxePower Music: media controls need the window handle; restoring the last session
+            // (reading tags) runs in the background and never blocks the UI
+            _ = InitializeMusicAsync(new WindowInteropHelper(mainWindow).EnsureHandle());
         }
         catch (Exception ex)
         {
@@ -201,7 +209,7 @@ public partial class App : Application
         return true;
     }
 
-    private static IServiceProvider ConfigureServices()
+    internal static IServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
 
@@ -244,22 +252,59 @@ public partial class App : Application
         services.AddSingleton<TerminalService>();
         services.AddSingleton<RestorePointService>();
 
+        // Share Screen: capture, encode and route one display to remote viewers
+        services.AddSingleton<IShareToolProvider, ShareToolProvider>();
+        services.AddSingleton<IShareDeviceProvider, ShareDeviceProvider>();
+        services.AddSingleton<IShareEncoderProbe, ShareEncoderProbe>();
+        services.AddSingleton<MediaMtxServer>();
+        services.AddSingleton<ShareEncodePipeline>();
+        services.AddSingleton<ShareAudioPump>();
+        services.AddSingleton<RemoteInputService>();
+        services.AddSingleton<ShareViewerHost>();
+        services.AddSingleton<IShareScreenService, ShareScreenService>();
+
         // Uninstaller Pro — Core Services
+        services.AddSingleton<IFileSystemProbe, FileSystemProbe>();
+        services.AddSingleton<IMsiProductStateReader, MsiProductStateReader>();
+        services.AddSingleton<IProcessTreeWatcher, ProcessTreeWatcher>();
+        services.AddSingleton<IInstallStateVerifier, InstallStateVerifier>();
+        services.AddSingleton<IProcessDetectionService, ProcessDetectionService>();
+        services.AddSingleton<BackupManifestStore>();
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
         services.AddSingleton<Win32UninstallExecutor>();
         services.AddSingleton<MsiUninstallExecutor>();
-        services.AddSingleton<WingetUninstallExecutor>();
         services.AddSingleton<AppxUninstallExecutor>();
+        services.AddSingleton<BrokenEntryExecutor>();
         services.AddSingleton<UninstallExecutorFactory>();
         services.AddSingleton<IBatchUninstallService, BatchUninstallService>();
         services.AddSingleton<ILeftoverScannerService, LeftoverScannerService>();
-        services.AddSingleton<ILeftoverConfidenceService, LeftoverConfidenceService>();
+        services.AddSingleton<ILeftoverCleanupService, LeftoverCleanupService>();
         services.AddSingleton<IRegistryBackupService, RegistryBackupService>();
         services.AddSingleton<IFileCleanupService, FileCleanupService>();
         services.AddSingleton<IProtectionService, ProtectionService>();
         services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
         services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
-        services.AddSingleton<ProcessDetectionService>();
+        services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
+
+        // AxePower Music — Core (each phase registers the services it implements)
+        services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton(new MusicStoragePaths());
+        services.AddSingleton<ITagReader, TagLibTagReader>();
+        services.AddSingleton<LooseTrackReader>();
+        services.AddSingleton<ICoverArtService, CoverArtService>();
+        services.AddSingleton<IAudioEngine, NAudioEngine>();
+        services.AddSingleton<PlaybackStateStore>();
+        services.AddSingleton<IMusicPlayerService, MusicPlayerService>();
+        services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
+        services.AddSingleton<PlayerIntegrationHost>();
+
+        // AxePower Music — App
+        services.AddSingleton<MusicDispatcher>();
+        services.AddSingleton<FileDropHelper>();
+        services.AddSingleton<IPlayerIntegration, TaskbarMediaIntegration>();
+        services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
+        services.AddTransient<MusicViewModel>();
+        services.AddTransient<MusicSettingsViewModel>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -277,6 +322,8 @@ public partial class App : Application
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
         services.AddTransient<TerminalViewModel>();
+        services.AddSingleton<ShareScreenSettingsViewModel>();   // shared by the stage and the Settings page
+        services.AddSingleton<ShareScreenViewModel>();   // singleton: a live stream must survive page switches
 
         // Views
         services.AddSingleton<MainWindow>();
@@ -296,6 +343,23 @@ public partial class App : Application
         var discovery = sp.GetRequiredService<IApplicationDiscoveryService>();
         var apps = Task.Run(async () => await discovery.DiscoverApplicationsAsync()).GetAwaiter().GetResult();
         Console.WriteLine($"Uninstaller Pro Initialized: Discovered {apps.Count} applications.");
+
+        var clock = sp.GetRequiredService<IClock>();
+        var music = sp.GetRequiredService<SettingsService>().GetSettings().Music;
+        Console.WriteLine($"AxePower Music Initialized: clock {clock.UtcNow:O}, {music.LibraryFolders.Count} library folder(s).");
+        var musicPlayer = sp.GetRequiredService<IMusicPlayerService>();
+        Console.WriteLine($"Music player resolved: {musicPlayer.GetType().Name}, queue {musicPlayer.State.Queue.Count} item(s).");
+        var nowPlaying = sp.GetRequiredService<NowPlayingViewModel>();
+        Console.WriteLine($"NowPlayingViewModel resolved: '{nowPlaying.Title}'.");
+
+        var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
+        var shareTools = sp.GetRequiredService<IShareToolProvider>();
+        var ffmpeg = shareTools.FindFfmpeg();
+        Console.WriteLine(
+            $"Share Screen Initialized: {shareDevices.GetDisplays().Count} display(s), " +
+            $"{shareDevices.GetRenderDevices().Count} output(s), {shareDevices.GetCaptureDevices().Count} mic(s); " +
+            $"FFmpeg {(ffmpeg.IsAvailable ? ffmpeg.Version : "not found")}, " +
+            $"media server {(shareTools.FindMediaMtx().IsAvailable ? "ready" : "not downloaded")}.");
 
         try
         {
@@ -374,10 +438,36 @@ public partial class App : Application
         }
     }
 
+    private async Task InitializeMusicAsync(IntPtr hwnd)
+    {
+        try
+        {
+            // On the UI thread: Windows media controls attach to the window here
+            await Services.GetRequiredService<PlayerIntegrationHost>().InitializeAsync(hwnd, CancellationToken.None);
+
+            var player = Services.GetRequiredService<IMusicPlayerService>();
+            await Task.Run(() => player.InitializeAsync(CancellationToken.None));
+        }
+        catch (Exception ex)
+        {
+            Services.GetService<LogService>()?.LogError("[Music] Startup failed.", ex);
+        }
+    }
+
     private void Application_Exit(object sender, ExitEventArgs e)
     {
         if (Services != null)
         {
+            try
+            {
+                // Saves the queue and position, then releases the audio device. Run off the UI
+                // thread so its awaits cannot wait on this (blocked) dispatcher.
+                var player = Services.GetService<IMusicPlayerService>();
+                if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
+                Services.GetService<PlayerIntegrationHost>()?.Dispose();
+            }
+            catch { }
+
             var autoSwitchService = Services.GetService<AutoSwitchService>();
             autoSwitchService?.Stop();
 

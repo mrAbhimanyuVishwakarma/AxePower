@@ -12,6 +12,9 @@ public sealed class UninstallProgress
     public bool IsCancelled { get; set; }
     public bool IsPaused { get; set; }
 
+    /// <summary>The current app's uninstaller runs without its own UI (so "Stop uninstaller" may be offered).</summary>
+    public bool IsQuiet { get; set; }
+
     public double ProgressPercent =>
         TotalCount > 0 ? (CompletedCount / (double)TotalCount) * 100.0 : 0;
 }
@@ -24,6 +27,7 @@ public enum UninstallPhase
     CreatingRestorePoint,
     Uninstalling,
     WaitingForUninstaller,
+    Verifying,
     ScanningLeftovers,
     Complete,
     Failed,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -445,6 +445,18 @@ public class WinGetHubService : IWinGetHubService
             LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "SteelSeries", "GG", "SteelSeriesGG.exe"),
             WebUrl = "https://steelseries.com/gg/sonar"
         });
+
+        _packages.Add(new SoftwarePackageItem
+        {
+            Id = "camstudio",
+            WinGetId = "CamStudio.CamStudio",
+            Name = "CamStudio",
+            Description = "Open-source screen & gameplay video recorder with AVI/MP4 encoding and microphone capture.",
+            Category = PackageCategory.Utilities,
+            Glyph = "\uE714",
+            LaunchProtocolOrExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio", "Recorder.exe"),
+            WebUrl = "https://camstudio.org/"
+        });
     }
 
     public IReadOnlyList<SoftwarePackageItem> GetAvailablePackages() => _packages.AsReadOnly();
@@ -536,6 +548,23 @@ public class WinGetHubService : IWinGetHubService
                     using (var k = Registry.CurrentUser.OpenSubKey(@"Software\MSI\Afterburner"))
                         if (k != null) return true;
                     break;
+                case "camstudio":
+                    string[] camCandidatePaths = new[]
+                    {
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio", "Recorder.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio", "CamStudio.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "CamStudio", "Recorder.exe"),
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "CamStudio", "Recorder.exe")
+                    };
+                    // The official installer uses a versioned folder (e.g. "CamStudio 2.7"), so
+                    // fall back to the uninstall entries and any "CamStudio*" Program Files folder
+                    string? camFound = camCandidatePaths.FirstOrDefault(File.Exists) ?? FindCamStudioRecorder();
+                    if (camFound != null)
+                    {
+                        pkg.LaunchProtocolOrExe = camFound;
+                        return true;
+                    }
+                    break;
                 case "dlss5swapper":
                     string dlssExe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "DLSS5-Swapper", "DLSS5-Swapper-portable.exe");
                     if (File.Exists(dlssExe))
@@ -549,6 +578,61 @@ public class WinGetHubService : IWinGetHubService
         catch { }
 
         return false;
+    }
+
+    /// <summary>Finds CamStudio's Recorder.exe from its uninstall entry or a "CamStudio*" folder under Program Files.</summary>
+    private static string? FindCamStudioRecorder()
+    {
+        var uninstallRoots = new (RegistryKey Hive, string Path)[]
+        {
+            (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall")
+        };
+
+        foreach (var (hive, path) in uninstallRoots)
+        {
+            try
+            {
+                using var root = hive.OpenSubKey(path);
+                if (root == null) continue;
+                foreach (var name in root.GetSubKeyNames())
+                {
+                    using var entry = root.OpenSubKey(name);
+                    if (entry?.GetValue("DisplayName") is not string displayName ||
+                        !displayName.Contains("CamStudio", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    if (entry.GetValue("InstallLocation") is string location && !string.IsNullOrWhiteSpace(location))
+                    {
+                        string exe = Path.Combine(location.Trim('"'), "Recorder.exe");
+                        if (File.Exists(exe)) return exe;
+                    }
+                    if (entry.GetValue("DisplayIcon") is string icon)
+                    {
+                        string exe = icon.Split(',')[0].Trim('"');
+                        if (exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && File.Exists(exe)) return exe;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        foreach (var programFiles in new[] { Environment.SpecialFolder.ProgramFilesX86, Environment.SpecialFolder.ProgramFiles })
+        {
+            try
+            {
+                string dir = Environment.GetFolderPath(programFiles);
+                if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) continue;
+                foreach (var camDir in Directory.EnumerateDirectories(dir, "CamStudio*"))
+                {
+                    string exe = Path.Combine(camDir, "Recorder.exe");
+                    if (File.Exists(exe)) return exe;
+                }
+            }
+            catch { }
+        }
+
+        return null;
     }
 
     // Microsoft Store product IDs (e.g. 9N0866FS04B8) only exist in the msstore source
@@ -566,6 +650,23 @@ public class WinGetHubService : IWinGetHubService
         if (pkg != null && pkg.Id == "dlss5swapper")
         {
             return await DownloadAndRunDlss5SwapperAsync(pkg, outputProgress);
+        }
+
+        if (pkg != null && pkg.Id == "camstudio")
+        {
+            // Not published on WinGet, so a winget attempt can only fail. Send the user to the
+            // official download instead; the card flips to Open once the install is detected.
+            if (CheckIsInstalledFast(pkg))
+            {
+                pkg.IsInstalled = true;
+                outputProgress.Report($"\n[Install] {displayName} is already installed: {pkg.LaunchProtocolOrExe}");
+                return true;
+            }
+            outputProgress.Report($"\n[Install] {displayName} is not available on WinGet. Opening the official download page: {webUrl}");
+            outputProgress.Report("After installing it, use Refresh and AxePower will pick it up.");
+            try { Process.Start(new ProcessStartInfo { FileName = webUrl, UseShellExecute = true }); }
+            catch (Exception ex) { outputProgress.Report($"[Browser Error] {ex.Message}"); }
+            return false;
         }
 
         outputProgress.Report($"\n[Install] > {displayName} ({targetId})");
@@ -634,6 +735,22 @@ public class WinGetHubService : IWinGetHubService
     {
         var pkg = _packages.FirstOrDefault(p => p.WinGetId.Equals(wingetId, StringComparison.OrdinalIgnoreCase) || p.Id.Equals(wingetId, StringComparison.OrdinalIgnoreCase));
         string targetId = pkg?.WinGetId ?? wingetId;
+
+        if (pkg != null && pkg.Id == "camstudio")
+        {
+            string camToolsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Tools", "CamStudio");
+            if (Directory.Exists(camToolsDir))
+            {
+                try
+                {
+                    Directory.Delete(camToolsDir, true);
+                    pkg.IsInstalled = false;
+                    outputProgress.Report("\n[CamStudio] ✓ Removed local files.");
+                    return true;
+                }
+                catch { }
+            }
+        }
 
         if (pkg != null && pkg.Id == "dlss5swapper")
         {

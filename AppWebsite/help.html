@@ -847,7 +847,7 @@
             Uninstaller Pro
             <span class="guide-credit-badge">Built into AxePower</span>
           </h2>
-          <p class="guide-subtitle">Deep application removal, batch uninstallation, and leftover registry cleaner with safe rollback.</p>
+          <p class="guide-subtitle">Verified application removal, batch uninstallation, and an evidence-based leftover cleaner with registry backups.</p>
         </div>
       </div>
 
@@ -855,7 +855,7 @@
         <div class="guide-card">
           <h3 class="guide-card-title">🔍 Comprehensive App Discovery</h3>
           <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
-            Uninstaller Pro scans standard Win32 64-bit and 32-bit registry keys, Windows Store (UWP/AppX) packages, and Winget sources to uncover applications that Windows Control Panel often misses.
+            Uninstaller Pro reads the 64-bit, 32-bit and per-user uninstall registry keys and Windows Store (UWP/AppX) packages, and identifies each uninstaller (MSI, NSIS, Inno Setup, WiX bundle, Squirrel…) so the right one runs. Entries whose uninstaller is missing are listed under <strong>Broken</strong>.
           </p>
           <ul class="guide-steps-list">
             <li class="guide-step-item">
@@ -864,7 +864,7 @@
             </li>
             <li class="guide-step-item">
               <span class="step-num">✓</span>
-              <span>Filter by Win32 desktop apps or Windows Store packages.</span>
+              <span>Filter by Win32, MSI, Store, Broken or Protected apps.</span>
             </li>
             <li class="guide-step-item">
               <span class="step-num">✓</span>
@@ -878,15 +878,15 @@
           <ul class="guide-steps-list">
             <li class="guide-step-item">
               <span class="step-num">1</span>
-              <span>Select the app you wish to remove and click <strong>Uninstall</strong>.</span>
+              <span>Select the app you wish to remove, click <strong>Uninstall</strong>, and check the command that will run before confirming.</span>
             </li>
             <li class="guide-step-item">
               <span class="step-num">2</span>
-              <span>After standard uninstallation completes, AxePower performs a deep sweep for orphaned AppData folders, ProgramData remnants, and registry keys.</span>
+              <span>AxePower waits for the whole uninstaller (including helper copies it starts), then checks that the app is really gone. Only then does it look for leftovers, and only items it can tie to that app by evidence are pre-selected.</span>
             </li>
             <li class="guide-step-item">
               <span class="step-num">3</span>
-              <span>A restore snapshot is automatically created before any leftover registry items are deleted.</span>
+              <span>Registry keys are exported to .reg backups before they are deleted (if a backup fails, the item is kept) and files go to the Recycle Bin. Restore registry backups from <strong>History</strong>.</span>
             </li>
           </ul>
         </div>

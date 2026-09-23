@@ -3,109 +3,83 @@ using AxePower.Core.Models.Uninstaller;
 
 namespace AxePower.Core.Services.Uninstaller;
 
-/// <summary>Detects whether a process from the application's InstallLocation is currently running.</summary>
-public sealed class ProcessDetectionService
+/// <summary>Finds and closes the running processes of an installed application.</summary>
+public interface IProcessDetectionService
 {
+    /// <summary>Processes whose image lives under the app's install folder.</summary>
+    IReadOnlyList<RunningProcessInfo> GetRunningProcesses(InstalledApplication application);
+
+    bool IsApplicationRunning(InstalledApplication application);
+
     /// <summary>
-    /// Returns true if any process whose main module is under the application's InstallLocation is running.
-    /// Uses path-based matching, NOT display-name matching, to avoid false positives.
+    /// Asks the app's windows to close (or terminates it when <paramref name="forceKill"/>) and
+    /// waits up to <paramref name="timeout"/>. True when none of its processes are left.
     /// </summary>
-    public bool IsApplicationRunning(InstalledApplication application)
+    Task<bool> TryCloseApplicationAsync(InstalledApplication application, TimeSpan timeout, bool forceKill = false);
+}
+
+/// <summary>
+/// Detects running apps by image path, using Toolhelp snapshots and
+/// QueryFullProcessImageName so elevated and 32-bit processes are seen too
+/// (<c>Process.MainModule</c> throws for those).
+/// </summary>
+public sealed class ProcessDetectionService : IProcessDetectionService
+{
+    public IReadOnlyList<RunningProcessInfo> GetRunningProcesses(InstalledApplication application)
     {
-        if (string.IsNullOrWhiteSpace(application.InstallLocation))
-            return false;
+        var folder = ProtectedPaths.Normalize(application.InstallLocation);
+        // A missing or shared folder (C:\Program Files) would match unrelated programs
+        if (folder is null || ProtectedPaths.GetBlockReason(folder) is not null) return [];
 
-        var normalizedInstall = application.InstallLocation.TrimEnd('\\', '/')
-                                           .ToLowerInvariant();
-
+        var ownPid = Environment.ProcessId;
+        var results = new List<RunningProcessInfo>();
         try
         {
-            foreach (var process in Process.GetProcesses())
+            foreach (var entry in NativeProcesses.Snapshot())
             {
-                try
-                {
-                    var modulePath = process.MainModule?.FileName ?? string.Empty;
-                    if (string.IsNullOrEmpty(modulePath)) continue;
-
-                    if (modulePath.ToLowerInvariant().StartsWith(normalizedInstall))
-                        return true;
-                }
-                catch
-                {
-                    // Access denied on some system processes — skip
-                }
+                if (entry.Pid is 0 or 4 || entry.Pid == ownPid) continue;
+                var image = NativeProcesses.GetImagePath(entry.Pid);
+                if (image is not null && ProtectedPaths.IsSameOrUnder(image, folder))
+                    results.Add(new RunningProcessInfo(entry.Pid, entry.ExeName, image));
             }
         }
         catch
         {
-            // Process enumeration failed — assume not running
+            // Enumeration failed: report nothing rather than guess
         }
-
-        return false;
+        return results;
     }
 
-    /// <summary>
-    /// Attempts to gracefully close running processes from the InstallLocation.
-    /// Returns true if all known processes exited within the timeout.
-    /// </summary>
-    public async Task<bool> TryCloseApplicationAsync(
-        InstalledApplication application,
-        TimeSpan timeout,
-        bool forceKill = false)
+    public bool IsApplicationRunning(InstalledApplication application) =>
+        GetRunningProcesses(application).Count > 0;
+
+    public async Task<bool> TryCloseApplicationAsync(InstalledApplication application, TimeSpan timeout, bool forceKill = false)
     {
-        if (string.IsNullOrWhiteSpace(application.InstallLocation))
-            return true;
+        var running = GetRunningProcesses(application);
+        if (running.Count == 0) return true;
 
-        var normalizedInstall = application.InstallLocation.TrimEnd('\\', '/')
-                                           .ToLowerInvariant();
-
-        var toClose = new List<Process>();
-        try
-        {
-            foreach (var process in Process.GetProcesses())
-            {
-                try
-                {
-                    var modulePath = process.MainModule?.FileName ?? string.Empty;
-                    if (!string.IsNullOrEmpty(modulePath) &&
-                        modulePath.ToLowerInvariant().StartsWith(normalizedInstall))
-                        toClose.Add(process);
-                }
-                catch { }
-            }
-        }
-        catch { }
-
-        if (toClose.Count == 0) return true;
-
-        foreach (var proc in toClose)
+        foreach (var info in running)
         {
             try
             {
+                using var process = Process.GetProcessById(info.Pid);
                 if (forceKill)
-                    proc.Kill(entireProcessTree: true);
+                    process.Kill(entireProcessTree: true);
                 else
-                    proc.CloseMainWindow();
+                    process.CloseMainWindow();
             }
-            catch { }
+            catch
+            {
+                // Gone already, or it runs elevated and we can't signal it
+            }
         }
 
         var deadline = DateTime.UtcNow + timeout;
         while (DateTime.UtcNow < deadline)
         {
-            await Task.Delay(500);
-            if (toClose.All(p =>
-            {
-                try { return p.HasExited; }
-                catch { return true; }
-            }))
-                return true;
+            await Task.Delay(500).ConfigureAwait(false);
+            if (GetRunningProcesses(application).Count == 0) return true;
         }
-
-        return toClose.All(p =>
-        {
-            try { return p.HasExited; }
-            catch { return true; }
-        });
+        return GetRunningProcesses(application).Count == 0;
     }
 }

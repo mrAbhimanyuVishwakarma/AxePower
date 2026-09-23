@@ -63,4 +63,30 @@
 
     <BitmapImage x:Key="AppIconImage" UriSource="/Resources/AxePower_white.ico" />
 
+    <!-- AxePower Music -->
+    <SolidColorBrush x:Key="MusicAccentBrush" Color="#38BDF8" />
+    <SolidColorBrush x:Key="MusicGlassSurfaceBrush" Color="#59162032" />
+    <SolidColorBrush x:Key="MusicTrackBrush" Color="#40FFFFFF" />
+    <SolidColorBrush x:Key="MusicPlayGlyphBrush" Color="#0B1220" />
+    <LinearGradientBrush x:Key="MusicPlaceholderArtBrush" StartPoint="1,0" EndPoint="0,1">
+        <GradientStop Color="#38BDF8" Offset="0" />
+        <GradientStop Color="#7C5CE6" Offset="0.55" />
+        <GradientStop Color="#EC4899" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Share Screen stage. A video surface stays dark in every theme: letterbox bars around a
+         16:9 stream should recede, not glow, and the controls sit on top of moving picture. -->
+    <SolidColorBrush x:Key="ShareStageBackgroundBrush" Color="#0A0B0D" />
+    <SolidColorBrush x:Key="ShareTileBackgroundBrush" Color="#16181C" />
+    <SolidColorBrush x:Key="ShareTileBorderBrush" Color="#2A2E37" />
+    <SolidColorBrush x:Key="ShareControlBarBrush" Color="#F21E2129" />
+    <SolidColorBrush x:Key="ShareControlButtonBrush" Color="#2EFFFFFF" />
+    <SolidColorBrush x:Key="ShareControlButtonHoverBrush" Color="#52FFFFFF" />
+    <SolidColorBrush x:Key="ShareControlForegroundBrush" Color="#F2F3F5" />
+    <SolidColorBrush x:Key="ShareControlMutedBrush" Color="#9BA3AF" />
+    <SolidColorBrush x:Key="ShareNamePillBrush" Color="#B3000000" />
+    <SolidColorBrush x:Key="ShareDangerBrush" Color="#DA373C" />
+    <SolidColorBrush x:Key="ShareDangerHoverBrush" Color="#B02B2F" />
+    <SolidColorBrush x:Key="ShareLiveBrush" Color="#23A55A" />
+
 </ResourceDictionary>

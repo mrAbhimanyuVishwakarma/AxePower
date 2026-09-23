@@ -4,7 +4,7 @@
 **Downloads & Releases Repository:** [AxePower_Download](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download)  
 **Website:** [AxePower.com](https://axepower.com) (`AppWebsite/`)  
 **Primary Architect & Developer:** [Abhimanyu Vishwakarma](https://github.com/mrAbhimanyuVishwakarma)  
-**Last Updated:** August 24, 2026
+**Last Updated:** September 23, 2026
 
 ---
 
@@ -255,6 +255,30 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
    - **`README.md` & `RELEASE_README.md`**: Fully aligned with v1.6.0 features and tools.
 9. **Installer Created**:
    - `d:\Projects\AxePower\Installer\Output\AxePower-v1.6.0-Setup.exe` built with Inno Setup 6.7.3.
+
+---
+
+## 🚀 Version 1.9.0 Release Summary
+
+1. **Integrated Music Player & Media Hub**:
+   - Full-featured audio playback engine with local music library scanner, playback queue, and background audio streaming.
+   - **YouTube & Spotify Integration**: Seamless YouTube audio query/streaming and Spotify playback controller.
+   - **Header Player**: Minimalist mini-player integrated right into the top header matching dashboard aesthetics.
+   - **Dynamic Audio Output Switching**: Automatically detects and switches audio output device when the Windows default device changes without requiring an app restart.
+2. **Share Screen & GameStream**:
+   - Low-latency browser-based desktop and gameplay sharing over local network.
+   - Viewers connect seamlessly via any standard browser without installing external software.
+   - Display reset fixes for CamStudio and spacedesk virtual displays.
+3. **Next-Gen Uninstaller Pro Overhaul**:
+   - Deep leftover scanner equipped with heuristic confidence scoring, safety registry backup manifests, and file system probes.
+   - **Broken Entry Executor** for safely cleaning broken or orphaned Windows uninstaller registry records.
+   - Support for Win32, MSI, Squirrel, and modern AppX packages.
+4. **Battery Diagnostics & UI Polish**:
+   - Streamlined battery history card layout with responsive sparklines and cleaner metrics presentation.
+   - Sidebar group expansion states remembered across application restarts.
+   - Fixed binding errors and settings churn during dashboard load for faster initial rendering.
+5. **Installer & Packaging**:
+   - Compiled `AxePower-v1.9.0-Setup.exe` with Inno Setup 6 LZMA solid compression.
 
 ---
 

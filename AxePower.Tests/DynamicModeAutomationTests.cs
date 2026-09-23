@@ -72,8 +72,7 @@ public class DynamicModeAutomationTests
         var gameScanner = new GameScannerService(_logService);
         var appKiller = new AppKillerService();
         var systemServiceOptimizer = new SystemServiceOptimizer();
-        var displayService = new DisplayService(_logService);
-        var powerPlanService = new PowerPlanService(_logService, displayService, _settingsService);
+        var powerPlanService = TestPowerPlan.Create(_logService, _settingsService);
 
         var vm = new GameModeViewModel(
             _settingsService,
@@ -114,8 +113,7 @@ public class DynamicModeAutomationTests
         var gameScanner = new GameScannerService(_logService);
         var appKiller = new AppKillerService();
         var systemServiceOptimizer = new SystemServiceOptimizer();
-        var displayService = new DisplayService(_logService);
-        var powerPlanService = new PowerPlanService(_logService, displayService, _settingsService);
+        var powerPlanService = TestPowerPlan.Create(_logService, _settingsService);
 
         var vm = new GameModeViewModel(
             _settingsService,
@@ -144,8 +142,7 @@ public class DynamicModeAutomationTests
         var gameScanner = new GameScannerService(_logService);
         var appKiller = new AppKillerService();
         var systemServiceOptimizer = new SystemServiceOptimizer();
-        var displayService = new DisplayService(_logService);
-        var powerPlanService = new PowerPlanService(_logService, displayService, _settingsService);
+        var powerPlanService = TestPowerPlan.Create(_logService, _settingsService);
 
         var vm = new GameModeViewModel(
             _settingsService,
