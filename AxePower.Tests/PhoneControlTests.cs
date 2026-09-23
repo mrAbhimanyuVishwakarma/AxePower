@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AxePower.App.ViewModels;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Music;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace AxePower.Tests;
@@ -101,6 +102,26 @@ public class PhoneControlTests
         {
             lan.StopServer();
         }
+    }
+
+    [Fact]
+    public void RealContainer_GivesTheLanPortalItsTokenAndTheMusicRemote()
+    {
+        // LanDropService takes both as optional constructor parameters. If the container failed
+        // to supply the token, the portal would refuse to start and LAN Drop would stop working
+        // altogether, with nothing but a log line to say why.
+        var provider = AxePower.App.App.ConfigureServices();
+        var lan = provider.GetRequiredService<LanDropService>();
+
+        var tokenField = typeof(LanDropService).GetField("_token",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var musicField = typeof(LanDropService).GetField("_music",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+        Assert.NotNull(tokenField);
+        Assert.NotNull(musicField);
+        Assert.NotNull(tokenField!.GetValue(lan));
+        Assert.NotNull(musicField!.GetValue(lan));
     }
 
     /// <summary>Credentials in memory, so no test writes the real DPAPI secret file.</summary>
