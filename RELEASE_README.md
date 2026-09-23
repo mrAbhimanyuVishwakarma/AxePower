@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.9.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.0-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -35,6 +35,27 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🌡️ **True CPU & GPU Temperatures:** Reads your machine's real sensors — and keeps working on Windows 11 PCs with Memory Integrity turned on, where most monitoring tools show nothing.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v2.0.0
+
+- 🖥️ **Share Screen — the real thing**:
+  - Share any display to a friend's **browser**. They click a link; there is nothing to install on their side.
+  - **Hardware encoding** on NVIDIA (NVENC), AMD (AMF) and Intel (QSV), picked automatically, with a software path only as a last resort.
+  - **60 FPS is held by dropping resolution, not frames** — 1080p60 steps down to 900p60 and 720p60 when the link tightens, because motion matters more than pixels when a game is moving.
+  - **System audio or microphone** rides along with the picture, following your default output device.
+  - **In-app preview** shows the real stream through the real pipeline, so what you see is the delay your viewer sees.
+  - **Remote control**, off by default: granted per session, and the code is never part of the watch link, so passing someone the link does not pass them your keyboard.
+- 🎵 **Music — sources, discovery and a real library**:
+  - **Provider-based sources** for YouTube and Spotify, with better track matching and a way to pick a different take when the match is wrong.
+  - **Discovery** keeps the queue going when you reach the end, adding only to the end and never touching what you queued.
+  - **Media shortcuts** that work from any application — play, skip, seek and volume — every key rebindable, with conflicts reported rather than silently failing.
+  - **Library index and instant search** over your local music, by title, artist or album, however large the folder.
+- 🔐 **Secured phone portal**:
+  - The LAN portal now requires an access token carried by its QR link, and controls music live from your phone. **Older bookmarked links stop working** — rescan the QR code.
+- 📦 **Packaging**:
+  - Ships as **`AxePower-v2.0.0-Setup.exe`**, bootstrapping the .NET 8 Desktop Runtime and cleanly upgrading existing installations.
 
 ---
 

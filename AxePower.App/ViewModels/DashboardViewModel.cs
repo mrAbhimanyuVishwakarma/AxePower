@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -599,6 +599,33 @@ public partial class DashboardViewModel : ObservableObject
     public static IReadOnlyList<AppFeatureItem> BuildNewFeatures()
     {
         var features = new List<AppFeatureItem>();
+        features.Add(new AppFeatureItem
+        {
+            Title = "Share Screen",
+            Badge = "NEW IN 2.0",
+            BadgeColorHex = "#8B5CF6",
+            Glyph = "",
+            Description = "Share a display to anyone on your network, in their browser, with no install. Hardware encoding on NVIDIA, AMD and Intel, and 60 FPS held by dropping resolution instead of frames.",
+            TargetNavigation = "ShareScreen"
+        });
+        features.Add(new AppFeatureItem
+        {
+            Title = "Remote Control",
+            Badge = "CODE-GATED",
+            BadgeColorHex = "#F59E0B",
+            Glyph = "",
+            Description = "Hand someone the mouse and keyboard while they watch. Off by default, granted per session, and the code is never part of the watch link.",
+            TargetNavigation = "ShareScreen"
+        });
+        features.Add(new AppFeatureItem
+        {
+            Title = "Music Library",
+            Badge = "INSTANT SEARCH",
+            BadgeColorHex = "#14B8A6",
+            Glyph = "",
+            Description = "Your local music is indexed once and searched instantly by title, artist or album, however large the folder.",
+            TargetNavigation = "Music"
+        });
         features.Add(new AppFeatureItem
         {
             Title = "Music Sources",

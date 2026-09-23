@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using AxePower.App.ViewModels;
@@ -65,12 +65,22 @@ public class DashboardFeaturesTests
     }
 
     [Fact]
+    public void TheShareScreenWorkIsListed()
+    {
+        var titles = Features().Select(f => f.Title).ToList();
+
+        Assert.Contains("Share Screen", titles);
+        Assert.Contains("Remote Control", titles);
+    }
+
+    [Fact]
     public void TheNewestEntriesComeFirst()
     {
         // The Dashboard selects the first entry on load, so ordering decides what is shown.
         var titles = Features().Select(f => f.Title).ToList();
 
-        Assert.Equal("Music Sources", titles[0]);
+        Assert.Equal("Share Screen", titles[0]);
+        Assert.True(titles.IndexOf("Share Screen") < titles.IndexOf("Music Sources"));
         Assert.True(titles.IndexOf("Secured Phone Portal") < titles.IndexOf("DLSS 5 Swapper"));
     }
 

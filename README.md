@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.9.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -170,7 +170,7 @@ sequenceDiagram
     AboutView->>Vm: CheckForUpdatesCommand
     Vm->>Svc: CheckForUpdatesAsync()
     Svc->>GH: GET /repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest
-    GH-->>Svc: Latest Release JSON (v1.9.0, Assets: Setup.exe)
+    GH-->>Svc: Latest Release JSON (v2.0.0, Assets: Setup.exe)
     Svc-->>Vm: UpdateCheckResult (HasUpdate = true)
     Vm->>AboutView: Display "Update Available" Modal Dialog
     
@@ -222,7 +222,7 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
 2. Publish first (the script packages `AxePower.App/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish/`).
 3. Open `Installer/AxePower.iss` — the full script, which also bootstraps the .NET 8 Desktop Runtime and removes older installs.
-4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v1.9.0-Setup.exe`.
+4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v2.0.0-Setup.exe`.
 
 ---
 
