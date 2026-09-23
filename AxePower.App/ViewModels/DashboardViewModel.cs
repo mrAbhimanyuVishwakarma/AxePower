@@ -587,7 +587,55 @@ public partial class DashboardViewModel : ObservableObject
     private void InitializeNewFeatures()
     {
         NewFeatures.Clear();
-        NewFeatures.Add(new AppFeatureItem
+        foreach (var feature in BuildNewFeatures()) NewFeatures.Add(feature);
+
+        SelectedFeature = NewFeatures.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// The "What's New" entries, newest first — the Dashboard shows the first one on load.
+    /// Static and public so the list can be checked without building a whole view model.
+    /// </summary>
+    public static IReadOnlyList<AppFeatureItem> BuildNewFeatures()
+    {
+        var features = new List<AppFeatureItem>();
+        features.Add(new AppFeatureItem
+        {
+            Title = "Music Sources",
+            Badge = "YOUTUBE & SPOTIFY",
+            BadgeColorHex = "#A855F7",
+            Glyph = "\uE8D6",
+            Description = "Search and stream YouTube in-app, or browse Spotify's catalogue and import your playlists. Pick a different take when the match is wrong.",
+            TargetNavigation = "Music"
+        });
+        features.Add(new AppFeatureItem
+        {
+            Title = "Discovery",
+            Badge = "AUTO QUEUE",
+            BadgeColorHex = "#22D3EE",
+            Glyph = "\uEC4F",
+            Description = "Reach the end of the queue and AxePower keeps it going with more music like it. Adds only to the end, never touches what you queued.",
+            TargetNavigation = "Music"
+        });
+        features.Add(new AppFeatureItem
+        {
+            Title = "Media Shortcuts",
+            Badge = "WORKS ANYWHERE",
+            BadgeColorHex = "#94A3B8",
+            Glyph = "\uE765",
+            Description = "Play, skip, seek and change volume from any application. Rebind every key, with conflicts reported instead of failing silently.",
+            TargetNavigation = "Music"
+        });
+        features.Add(new AppFeatureItem
+        {
+            Title = "Secured Phone Portal",
+            Badge = "SECURITY FIX",
+            BadgeColorHex = "#EF4444",
+            Glyph = "\uE72E",
+            Description = "The LAN portal now needs an access token carried by its QR link, and controls music live from your phone. Older bookmarked links no longer work.",
+            TargetNavigation = "PhoneHub"
+        });
+        features.Add(new AppFeatureItem
         {
             Title = "DLSS 5 Swapper",
             Badge = "NEW GAMING TOOL",
@@ -596,7 +644,7 @@ public partial class DashboardViewModel : ObservableObject
             Description = "1-Click portable downloader & runner. Swap DLSS, Streamline DLLs, RenoDX, and ReShade silently in games.",
             TargetNavigation = "UpdatePc:Apps:Gaming"
         });
-        NewFeatures.Add(new AppFeatureItem
+        features.Add(new AppFeatureItem
         {
             Title = "NVIDIA Driver Selector",
             Badge = "ROLLBACK & STABLE",
@@ -605,7 +653,7 @@ public partial class DashboardViewModel : ObservableObject
             Description = "Choose proven stable Game Ready releases or rollback if new updates introduce stuttering or bugs.",
             TargetNavigation = "UpdatePc:Updaters"
         });
-        NewFeatures.Add(new AppFeatureItem
+        features.Add(new AppFeatureItem
         {
             Title = "In-App WinGet Updates",
             Badge = "PACKAGE MANAGER",
@@ -614,7 +662,7 @@ public partial class DashboardViewModel : ObservableObject
             Description = "Batch upgrade installed applications with live progress logs and install gaming runtimes.",
             TargetNavigation = "UpdatePc:Apps:All"
         });
-        NewFeatures.Add(new AppFeatureItem
+        features.Add(new AppFeatureItem
         {
             Title = "BIOS & UEFI Center",
             Badge = "FIRMWARE SCAN",
@@ -623,7 +671,7 @@ public partial class DashboardViewModel : ObservableObject
             Description = "Inspect motherboard BIOS, check UEFI Secure Boot status, and scan for Windows firmware capsules.",
             TargetNavigation = "UpdatePc:Updaters"
         });
-        NewFeatures.Add(new AppFeatureItem
+        features.Add(new AppFeatureItem
         {
             Title = "Phone Control & LanDrop",
             Badge = "CROSS-DEVICE",
@@ -632,7 +680,7 @@ public partial class DashboardViewModel : ObservableObject
             Description = "Instant Wi-Fi file transfers between PC and smartphone without cables, plus remote quick actions.",
             TargetNavigation = "PhoneHub"
         });
-        NewFeatures.Add(new AppFeatureItem
+        features.Add(new AppFeatureItem
         {
             Title = "System Doctor",
             Badge = "HEALTH REPAIR",
@@ -641,7 +689,7 @@ public partial class DashboardViewModel : ObservableObject
             Description = "One-click Windows repair (SFC / DISM), DirectX/Vulkan shader cache cleaner, and DNS benchmark.",
             TargetNavigation = "Doctor"
         });
-        NewFeatures.Add(new AppFeatureItem
+        features.Add(new AppFeatureItem
         {
             Title = "System Optimizer",
             Badge = "GAMING LATENCY",
@@ -651,7 +699,7 @@ public partial class DashboardViewModel : ObservableObject
             TargetNavigation = "Optimizer"
         });
 
-        SelectedFeature = NewFeatures.FirstOrDefault();
+        return features;
     }
 }
 
