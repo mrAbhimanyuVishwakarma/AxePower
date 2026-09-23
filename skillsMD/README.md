@@ -15,6 +15,8 @@ Written from the code on branch `v1.8` (working tree, 2026-09-22). Paths are rel
 | CONTROL | Controller Navigation (gamepad → mouse) | [controller-navigation.md](controller-navigation.md) |
 | CONTROL | Battery (status, 24h history, Lenovo charge modes) | [battery.md](battery.md) |
 | CONTROL | Music (player, title-bar player, media keys) | [music-player.md](music-player.md) |
+| CONTROL | Music — build spec, phase by phase | [MUSIC_PLAYER_PLAN.md](MUSIC_PLAYER_PLAN.md) |
+| CONTROL | Music — open issues and what is still unproven | [MUSIC_FIX_PLAN.md](MUSIC_FIX_PLAN.md) |
 | CONNECTION | Phone Control (scrcpy, SpaceDesk, LAN Drop, Phone Link) | [phone-control.md](phone-control.md) |
 | MAINTENANCE | System Optimizer (registry tweaks) | [system-optimizer.md](system-optimizer.md) |
 | MAINTENANCE | System Doctor (SFC/DISM, cache cleaner, DNS) | [system-doctor.md](system-doctor.md) |
