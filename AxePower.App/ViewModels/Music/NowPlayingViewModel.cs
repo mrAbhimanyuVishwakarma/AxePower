@@ -59,6 +59,64 @@ public partial class NowPlayingViewModel : ObservableObject
         Apply(_player.State);
     }
 
+    private readonly SpotifyController _spotifyController = new();
+    private System.Windows.Threading.DispatcherTimer? _spotifyTimer;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PlayerSourceBadge))]
+    private bool _isSpotifyMode;
+
+    public string PlayerSourceBadge => IsSpotifyMode ? "Spotify (Minimized)" : "Local Player";
+
+    [RelayCommand]
+    public async Task EnableSpotifyModeAsync()
+    {
+        if (IsPlaying)
+            await _player.PauseAsync();
+
+        IsSpotifyMode = true;
+        await _spotifyController.LaunchAndMinimizeSpotifyAsync();
+        await SyncSpotifyStateAsync();
+
+        if (_spotifyTimer == null)
+        {
+            _spotifyTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1.5)
+            };
+            _spotifyTimer.Tick += async (_, _) =>
+            {
+                if (IsSpotifyMode)
+                    await SyncSpotifyStateAsync();
+            };
+        }
+        _spotifyTimer.Start();
+    }
+
+    [RelayCommand]
+    public void DisableSpotifyMode()
+    {
+        IsSpotifyMode = false;
+        _spotifyTimer?.Stop();
+        Apply(_player.State);
+    }
+
+    public async Task SyncSpotifyStateAsync()
+    {
+        if (!IsSpotifyMode) return;
+        var info = await _spotifyController.GetSpotifyTrackInfoAsync();
+        if (info.HasValue)
+        {
+            Title = info.Value.title;
+            Artist = info.Value.artist;
+            Album = "Spotify (Minimized)";
+            IsPlaying = info.Value.isPlaying;
+            HasCurrent = true;
+            CanNext = true;
+            CanPrevious = true;
+        }
+    }
+
     /// <summary>Set by the shell so "Open Music" works from any surface.</summary>
     public Action? NavigateToMusic { get; set; }
 
@@ -243,13 +301,42 @@ public partial class NowPlayingViewModel : ObservableObject
     // ── Commands ────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    private Task PlayPause() => _player.TogglePlayPauseAsync();
+    private async Task PlayPause()
+    {
+        if (IsSpotifyMode)
+        {
+            await _spotifyController.TogglePlayPauseAsync();
+            IsPlaying = !IsPlaying;
+            return;
+        }
+        await _player.TogglePlayPauseAsync();
+    }
 
     [RelayCommand]
-    private Task Next() => _player.NextAsync();
+    private async Task Next()
+    {
+        if (IsSpotifyMode)
+        {
+            await _spotifyController.NextTrackAsync();
+            await Task.Delay(350);
+            await SyncSpotifyStateAsync();
+            return;
+        }
+        await _player.NextAsync();
+    }
 
     [RelayCommand]
-    private Task Previous() => _player.PreviousAsync();
+    private async Task Previous()
+    {
+        if (IsSpotifyMode)
+        {
+            await _spotifyController.PreviousTrackAsync();
+            await Task.Delay(350);
+            await SyncSpotifyStateAsync();
+            return;
+        }
+        await _player.PreviousAsync();
+    }
 
     [RelayCommand]
     private void ToggleShuffle() => _player.SetShuffle(!_state.Shuffle);
@@ -339,7 +426,11 @@ public partial class NowPlayingViewModel : ObservableObject
 
     public void MoveEntry(int from, int to) => _player.Move(from, to);
 
-    public Task OpenPathsAsync(IEnumerable<string> paths) => _player.OpenPathsAsync(paths);
+    public Task OpenPathsAsync(IEnumerable<string> paths)
+    {
+        if (IsSpotifyMode) DisableSpotifyMode();
+        return _player.OpenPathsAsync(paths);
+    }
 
     public Task AddPathsAsync(IEnumerable<string> paths) => _player.AddPathsAsync(paths);
 
@@ -360,6 +451,7 @@ public partial class NowPlayingViewModel : ObservableObject
 
     private void ApplyCore(PlayerState state)
     {
+        if (IsSpotifyMode) return;
         _state = state;
         var current = state.Current;
 

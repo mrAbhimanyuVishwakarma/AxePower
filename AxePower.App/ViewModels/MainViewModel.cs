@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
 using AxePower.App.ViewModels.Music;
+using AxePower.App.ViewModels.ShareScreen;
 
 namespace AxePower.App.ViewModels;
 
@@ -55,6 +56,7 @@ public partial class MainViewModel : ObservableObject
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
     public MusicViewModel? MusicVm { get; }
+    public ShareScreenViewModel? ShareScreenVm { get; }
 
     /// <summary>Shared Now Playing state for the title-bar player (null only in minimal test setups).</summary>
     public NowPlayingViewModel? NowPlaying { get; }
@@ -65,6 +67,12 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public bool ShowHeaderPlayer =>
         NowPlaying?.IsHeaderPlayerOpen == true && !DashboardVm.IsShrunk && (MusicVm == null || CurrentView != MusicVm);
+
+    /// <summary>
+    /// The "Music ▾" toggle button in the titlebar is hidden when viewing the full Music page.
+    /// </summary>
+    public bool ShowMusicHeaderToggle =>
+        NowPlaying != null && (MusicVm == null || CurrentView != MusicVm);
 
     [ObservableProperty]
     private bool _isMaintenanceExpanded;
@@ -91,6 +99,7 @@ public partial class MainViewModel : ObservableObject
     public Style? PhoneHubActiveStyle => (_currentNavSection is "PhoneHub" or "PhoneControl") && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
     public Style? SecondMonitorActiveStyle => _currentNavSection == "SecondMonitor" && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
     public Style? LanDropActiveStyle => GetStyleForView(PhoneHubVm);
+    public Style? ShareScreenActiveStyle => ShareScreenVm != null ? GetStyleForView(ShareScreenVm) : GetStyleForView(new object());
 
     public string MaintenanceChevronGlyph => IsMaintenanceExpanded ? "\uE70D" : "\uE76C";
     public string UtilitiesChevronGlyph => IsUtilitiesExpanded ? "\uE70D" : "\uE76C";
@@ -118,9 +127,12 @@ public partial class MainViewModel : ObservableObject
         TerminalService terminalService,
         AutoSwitchViewModel? autoSwitchVm = null,
         MusicViewModel? musicVm = null,
-        NowPlayingViewModel? nowPlaying = null)
+        NowPlayingViewModel? nowPlaying = null,
+        ShareScreenViewModel? shareScreenVm = null)
     {
         MusicVm = musicVm;
+        ShareScreenVm = shareScreenVm;
+        if (ShareScreenVm != null) ShareScreenVm.NavigateTo = target => Navigate(target);
         NowPlaying = nowPlaying;
         if (NowPlaying != null)
         {
@@ -296,6 +308,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(MusicActiveStyle));
         NowPlaying?.SetHeaderPlayerPage(isDashboard: value == DashboardVm);
         OnPropertyChanged(nameof(ShowHeaderPlayer));
+        OnPropertyChanged(nameof(ShowMusicHeaderToggle));
         OnPropertyChanged(nameof(LogsActiveStyle));
         OnPropertyChanged(nameof(SettingsActiveStyle));
         OnPropertyChanged(nameof(AboutActiveStyle));
@@ -307,6 +320,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(UpdatePcActiveStyle));
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
         OnPropertyChanged(nameof(LanDropActiveStyle));
+        OnPropertyChanged(nameof(ShareScreenActiveStyle));
         OnPropertyChanged(nameof(ShowBatteryPill));
     }
 
@@ -348,7 +362,7 @@ public partial class MainViewModel : ObservableObject
             "GameMode"    => GameModeVm,
             "Battery"     => BatteryVm,
             "Music"       => (object?)MusicVm ?? DashboardVm,
-            "Settings"    => SettingsVm,
+            "Settings"    => ShowSettingsSection(arg1),
             "Logs"        => LogsVm,
             "About"       => AboutVm,
             "Uninstaller" => UninstallerVm,
@@ -359,6 +373,7 @@ public partial class MainViewModel : ObservableObject
             "Terminal"    => TerminalVm,
             "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
             "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
+            "ShareScreen" => (object?)ShareScreenVm ?? DashboardVm,
             "PhoneControl"=> SwitchPhoneHubTab("ScreenMirror"),
             "PhoneHub"    => SwitchPhoneHubTab("ScreenMirror"),
             "SecondMonitor"=> SwitchPhoneHubTab("SecondMonitor"),
@@ -370,6 +385,16 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
         OnPropertyChanged(nameof(SecondMonitorActiveStyle));
+    }
+
+    /// <summary>
+    /// Opens Settings, optionally asking the page to bring one card into view. Used by the Share
+    /// Screen stage, whose gear sends the user here rather than duplicating the pickers.
+    /// </summary>
+    private object ShowSettingsSection(string? section)
+    {
+        SettingsVm.RequestedSection = section;
+        return SettingsVm;
     }
 
     /// <summary>Relaunch AxePower elevated (one UAC prompt), then close this instance.</summary>
@@ -652,19 +677,19 @@ public partial class MainViewModel : ObservableObject
             Subtitle = "Deep Application Removal & Verified Leftover Cleaner",
             Credit = "Built into AxePower Pro",
             CreditUrl = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download#readme",
-            Overview = "A powerful, unified uninstaller that searches and completely removes Win32 desktop software, MSI packages, Windows Store (UWP/AppX) apps, and Winget packages while cleaning orphaned registry entries and leftover file junk.",
+            Overview = "Removes desktop programs, MSI packages and Store apps with their own uninstallers, checks that each one is really gone, and then offers only the leftovers it can tie to that app.",
             Steps = new System.Collections.Generic.List<string>
             {
                 "Click 'Uninstaller Pro' from the left sidebar.",
-                "Browse or search through all detected software across Win32, Windows Store, and Winget formats.",
-                "Select one or more applications you wish to remove.",
-                "Click 'Uninstall Selected' to run the uninstaller and perform deep leftover analysis.",
-                "Review discovered leftover registry keys and files, then confirm cleanup with automatic registry backup safety."
+                "Browse or search the installed apps; the Broken filter lists entries whose uninstaller is missing.",
+                "Select one or more apps, or open one in the details panel.",
+                "Click 'Uninstall', check the list of commands that will run, and confirm. Each app is verified afterwards.",
+                "Review the leftovers found for removed apps; hover an item to see the evidence, then clean the ones you want."
             },
             Tips = new System.Collections.Generic.List<string>
             {
-                "System-critical components are automatically protected and highlighted to prevent accidental system breakage.",
-                "Automatic registry snapshots are preserved in case you ever want to restore uninstalled configurations."
+                "System components, AxePower itself and folders other apps still use are protected and can't be selected.",
+                "Registry keys are exported to .reg backups before deletion and files go to the Recycle Bin; restore registry backups from History."
             },
             LaunchButtonText = "Open Uninstaller Pro"
         });

@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.8.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.9.0-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -27,12 +27,38 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - ⚖️ **Smart Mode:** The perfect middle ground for everyday tasks like browsing and watching videos.
 - 🚀 **Beast Mode:** Gives you maximum power and sustained clocks for gaming or heavy tasks when plugged in.
 - 🎮 **Game Mode:** Automatically detects running games across any drive, suspends background bloat, locks maximum display refresh rate, and offers Controller Navigation (Gopher360).
+- 🎵 **Music Player:** In-app audio player supporting local audio libraries, YouTube streaming, Spotify controller, and a dashboard-integrated Header Player.
+- 🖥️ **Share Screen:** Browser-based low-latency desktop and gameplay streaming with zero setup for viewers.
 - 📱 **Phone Control:** All-in-one mobile suite with offline **LAN Drop** Wi-Fi file sharing and **scrcpy** Android screen mirroring.
 - 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
 - 🖥️ **Built-In Terminal:** A real CMD / PowerShell window inside AxePower, where every command the app runs shows its live output.
 - 🌡️ **True CPU & GPU Temperatures:** Reads your machine's real sensors — and keeps working on Windows 11 PCs with Memory Integrity turned on, where most monitoring tools show nothing.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v1.9.0
+
+- 🎵 **Integrated Music Player & Media Hub**:
+  - Full in-app audio playback engine with queue management, track progress, volume control, and background playback.
+  - **YouTube & Spotify Integration**: Stream audio directly from YouTube and manage Spotify playback right from AxePower.
+  - **Dashboard Header Player**: Sleek mini-player embedded seamlessly in the top header matching the dashboard aesthetic.
+  - **Dynamic Audio Device Following**: Automatically follows default Windows output audio device transitions without requiring an app restart.
+- 🖥️ **Share Screen & GameStream**:
+  - Stream your active desktop or gaming session directly to friends via a local web link.
+  - Viewers connect straight from any modern browser with low latency and synchronized audio — no external client downloads required.
+  - Stability fixes for CamStudio and spacedesk virtual display resets.
+- 🗑️ **Next-Gen Uninstaller Pro Engine**:
+  - Overhauled leftover scanner featuring confidence scoring, deep registry/filesystem probes, and pre-clean safety backup manifests.
+  - Dedicated **Broken Entry Executor** to purge corrupted and orphaned Windows registry uninstallation remnants.
+  - Expanded heuristics covering Win32 setups, MSI installers, Squirrel frameworks, and modern Windows AppX/MSIX packages.
+- 🔋 **Battery View Diagnostics Optimization**:
+  - Streamlined battery history card layout with responsive sparklines and cleaner metrics presentation.
+  - Fixed binding errors and settings churn during dashboard load for faster initial rendering.
+- 🧭 **UX & Navigation Enhancements**:
+  - Sidebar group expansion states are now remembered across sessions.
+  - Installer refreshed as **`AxePower-v1.9.0-Setup.exe`**, bootstrapping the .NET 8 Desktop Runtime and cleanly updating existing installations.
 
 ---
 

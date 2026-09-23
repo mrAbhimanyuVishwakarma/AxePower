@@ -110,6 +110,12 @@ public partial class MusicView : UserControl
             ViewModel?.NowPlaying.JumpCommand.Execute(entry);
     }
 
+    private void SongsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (SongItemAt(e.OriginalSource as DependencyObject) is { } song)
+            ViewModel?.PlaySongCommand.Execute(song);
+    }
+
     private void QueueList_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         var np = ViewModel?.NowPlaying;
@@ -195,5 +201,13 @@ public partial class MusicView : UserControl
             element = element is Visual ? VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element);
 
         return (element as ListBoxItem)?.DataContext as QueueEntryViewModel;
+    }
+
+    private static SongItemViewModel? SongItemAt(DependencyObject? element)
+    {
+        while (element != null && element is not ListBoxItem)
+            element = element is Visual ? VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element);
+
+        return (element as ListBoxItem)?.DataContext as SongItemViewModel;
     }
 }

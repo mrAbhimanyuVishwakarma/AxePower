@@ -310,7 +310,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly BatteryService? _batteryService;
     private readonly ElevationService? _elevationService;
 
-    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.8.0";
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.9.0";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]
@@ -349,6 +349,21 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>The Music settings group (null in minimal test setups, which hides it).</summary>
     public AxePower.App.ViewModels.Music.MusicSettingsViewModel? Music { get; }
 
+    /// <summary>The Share Screen settings group (null in minimal test setups, which hides it).</summary>
+    public AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? ShareScreen { get; }
+
+    private string? _requestedSection;
+
+    /// <summary>
+    /// A card the page should scroll to on arrival, e.g. "ShareScreen" when the user clicked the
+    /// gear on the sharing stage. The view clears it once it has obliged.
+    /// </summary>
+    public string? RequestedSection
+    {
+        get => _requestedSection;
+        set { _requestedSection = value; OnPropertyChanged(nameof(RequestedSection)); }
+    }
+
     private void SaveCurrentSettings()
     {
         var latest = _settingsService.GetSettings();
@@ -356,6 +371,8 @@ public partial class SettingsViewModel : ObservableObject
         CurrentSettings.SidebarUtilitiesExpanded = latest.SidebarUtilitiesExpanded;
         // The music section is edited elsewhere (Music group, header player); never save a stale copy of it
         CurrentSettings.Music = latest.Music;
+        // Same for Share Screen: its pickers write straight through, so a snapshot here is stale
+        CurrentSettings.ShareScreen = latest.ShareScreen;
         _settingsService.SaveSettings(CurrentSettings);
     }
 
@@ -369,9 +386,11 @@ public partial class SettingsViewModel : ObservableObject
         UpdateService updateService,
         BatteryService? batteryService = null,
         ElevationService? elevationService = null,
-        AxePower.App.ViewModels.Music.MusicSettingsViewModel? music = null)
+        AxePower.App.ViewModels.Music.MusicSettingsViewModel? music = null,
+        AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? shareScreen = null)
     {
         Music = music;
+        ShareScreen = shareScreen;
         _settingsService = settingsService;
         _notificationService = notificationService;
         _timeoutService = timeoutService;

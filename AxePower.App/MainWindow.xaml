@@ -10,6 +10,8 @@
         xmlns:converters="clr-namespace:AxePower.App.Converters"
         xmlns:musicvm="clr-namespace:AxePower.App.ViewModels.Music"
         xmlns:musicviews="clr-namespace:AxePower.App.Views.Music"
+        xmlns:sharevm="clr-namespace:AxePower.App.ViewModels.ShareScreen"
+        xmlns:shareviews="clr-namespace:AxePower.App.Views.ShareScreen"
         mc:Ignorable="d"
         Title="AxePower" Height="840" Width="1280" MinWidth="1024" MinHeight="760"
         WindowStyle="SingleBorderWindow" AllowsTransparency="False" ResizeMode="CanResize"
@@ -65,6 +67,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type musicvm:MusicViewModel}">
             <musicviews:MusicView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type sharevm:ShareScreenViewModel}">
+            <shareviews:ShareScreenView />
         </DataTemplate>
         
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -166,6 +171,14 @@
 
                             <!-- 2. CONNECTION GROUP -->
                             <TextBlock Text="CONNECTION" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="20,10,20,3"/>
+
+                            <!-- Share Screen -->
+                            <Button Style="{Binding ShareScreenActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="ShareScreen" ToolTip="Share Screen: stream a display to friends in their browser, like Discord" AutomationProperties.Name="Share Screen">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Share Screen" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
 
                             <!-- Phone Control -->
                             <Button Style="{Binding PhoneHubActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="PhoneHub" ToolTip="Phone Control: Screen mirroring, Wi-Fi LAN drop &amp; remote tools">

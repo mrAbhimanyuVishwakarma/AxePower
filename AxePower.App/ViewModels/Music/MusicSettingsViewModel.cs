@@ -23,9 +23,32 @@ public partial class MusicSettingsViewModel : ObservableObject
 
     [ObservableProperty] private bool _allowVolumeBoost;
     [ObservableProperty] private bool _resumePlaybackOnStartup;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayPlaylistFolder))]
+    private string? _playlistFolder;
+
+    public string DisplayPlaylistFolder =>
+        string.IsNullOrWhiteSpace(PlaylistFolder)
+            ? Environment.GetFolderPath(Environment.SpecialFolder.MyMusic)
+            : PlaylistFolder;
 
     partial void OnAllowVolumeBoostChanged(bool value) => Save(m => m.AllowVolumeBoost = value);
     partial void OnResumePlaybackOnStartupChanged(bool value) => Save(m => m.ResumePlaybackOnStartup = value);
+    partial void OnPlaylistFolderChanged(string? value) => Save(m => m.PlaylistFolder = value);
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void BrowsePlaylistFolder()
+    {
+        var dlg = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Select Music & Playlist Folder",
+            InitialDirectory = DisplayPlaylistFolder
+        };
+        if (dlg.ShowDialog() == true)
+        {
+            PlaylistFolder = dlg.FolderName;
+        }
+    }
 
     private void Load(MusicSettings music)
     {
@@ -34,6 +57,7 @@ public partial class MusicSettingsViewModel : ObservableObject
         {
             AllowVolumeBoost = music.AllowVolumeBoost;
             ResumePlaybackOnStartup = music.ResumePlaybackOnStartup;
+            PlaylistFolder = music.PlaylistFolder;
         }
         finally
         {

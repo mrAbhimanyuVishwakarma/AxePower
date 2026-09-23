@@ -1,6 +1,6 @@
 # Uninstaller Pro: Fix & Completion Plan 🧹
 
-> **Status:** Plan, not started · **Written:** 2026-09-22 · **Branch at time of audit:** `v1.8`
+> **Status:** Phases 0–4 implemented on `v1.9` (2026-09-22); Phase 5 (optional) not started; manual matrix still to run — see [Implementation notes](#implementation-notes) · **Written:** 2026-09-22 · **Branch at time of audit:** `v1.8`
 > **Current behaviour (as built):** [skillsMD/uninstaller.md](skillsMD/uninstaller.md)
 > **Main reference:** [Bulk Crap Uninstaller (BCU)](https://github.com/BCUninstaller/Bulk-Crap-Uninstaller), Apache-2.0
 > **Repo rules this plan follows:** [system-safety.md](.agents/plugins/axepower-wpf/rules/system-safety.md), [testing-and-quality.md](.agents/plugins/axepower-wpf/rules/testing-and-quality.md)
@@ -32,6 +32,7 @@ This is the working plan for fixing and finishing Uninstaller Pro. It covers:
 - [Appendix B: BCU source map](#appendix-b-bcu-source-map)
 - [Appendix C: Scripts to reproduce and capture fixtures](#appendix-c-scripts)
 - [Appendix D: Glossary](#appendix-d-glossary)
+- [Implementation notes](#implementation-notes)
 
 ---
 
@@ -738,13 +739,13 @@ Size: **S** ≈ under half a day · **M** ≈ one to two days · **L** ≈ three
 
 ### Phase 0: Prep
 
-- [ ] **P0.1 Quarantine the live test** (S) · closes D17
+- [x] **P0.1 Quarantine the live test** (S) · closes D17
   - [LiveEchoMusicUninstallTest.cs](AxePower.Tests/Uninstaller/LiveEchoMusicUninstallTest.cs): `[Fact(Skip = "Live test: uninstalls a real app. Run manually only.")]` and `[Trait("Category", "Live")]`.
   - **Done when:** `dotnet test` runs no uninstaller.
-- [ ] **P0.2 Attribution scaffolding** (S)
+- [x] **P0.2 Attribution scaffolding** (S)
   - Add `THIRD_PARTY_NOTICES.md` at the repo root with BCU's Apache-2.0 notice (copy BCU's `NOTICE` and link the license). Put the header from [§5](#5-what-we-take-from-bcu) on every ported file.
   - **Done when:** the notice file exists and is linked from README.
-- [ ] **P0.3 Capture fixtures** (S)
+- [x] **P0.3 Capture fixtures** (S)
   - Run the fixture script ([Appendix C](#appendix-c-scripts)) to write `AxePower.Tests/Uninstaller/Fixtures/arp-entries.json` from the audit PC, with the user name redacted.
   - **Done when:** the fixture includes the RustDesk, ONLYOFFICE, Google Drive, Samsung USB Driver and Package Cache entries.
 
@@ -752,14 +753,14 @@ Size: **S** ≈ under half a day · **M** ≈ one to two days · **L** ≈ three
 
 *Goal: every uninstall runs the right uninstaller, waits for it, verifies, and reports the truth. Nothing unsafe is offered.*
 
-- [ ] **P1.1 `UninstallCommandParser` + `IFileSystemProbe`** (M) · D1
+- [x] **P1.1 `UninstallCommandParser` + `IFileSystemProbe`** (M) · D1
   - New `AxePower.Core/Services/Uninstaller/UninstallCommandParser.cs`, as in [§6.3](#63-command-parsing).
   - Replace `ExtractExecutablePath` ([L545-569](AxePower.Core/Services/Uninstaller/ApplicationDiscoveryService.cs#L545-L569)) and `Win32UninstallExecutor.ParseCommand` ([L94-126](AxePower.Core/Services/Uninstaller/Win32UninstallExecutor.cs#L94-L126)).
   - **Done when:** the parser tests in [§8](#8-automated-tests) pass, including bare `MsiExec.exe`, unquoted paths with spaces, `%ProgramFiles%` and `rundll32`.
-- [ ] **P1.2 `UninstallerKindDetector` + `IMsiProductStateReader`** (M) · D1, D2
+- [x] **P1.2 `UninstallerKindDetector` + `IMsiProductStateReader`** (M) · D1, D2
   - Rules from [§6.4](#64-uninstaller-kind-detection); ProductCode extraction; `MsiQueryProductState` P/Invoke.
   - **Done when:** on the fixtures, RustDesk and ONLYOFFICE → `Msi`; Google Drive and Samsung USB Driver → `Unknown` (exe); VC++ and .NET Package Cache entries → `BurnBundle`; missing exe → `BrokenEntry`.
-- [ ] **P1.3 Discovery refactor** (M) · D1, D14
+- [x] **P1.3 Discovery refactor** (M) · D1, D14
   - Pure `UninstallEntryClassifier` ([§6.5](#65-discovery-rules)).
   - New model fields ([§6.2](#62-model-changes)) with `RegistryKeyPath` in the 64-bit view.
   - SystemComponent, update and NoRemove rules.
@@ -768,16 +769,16 @@ Size: **S** ≈ under half a day · **M** ≈ one to two days · **L** ≈ three
   - Remove WinGet discovery, the executor registration and the chip ([decision 1](#10-open-decisions)).
   - Fix the AppX `\r` bug now (`line.TrimEnd('\r')`); the JSON rewrite comes in P2.5.
   - **Done when:** the [Appendix C](#appendix-c-scripts) comparison on the audit PC shows **Broken** holding only entries whose uninstaller really is missing, and the **MSI** chip listing the MSI apps.
-- [ ] **P1.4 `UninstallOutcome` + `IInstallStateVerifier`** (M) · D4
+- [x] **P1.4 `UninstallOutcome` + `IInstallStateVerifier`** (M) · D4
   - Enum and result changes ([§6.2](#62-model-changes)); verifier ([§6.7](#67-verification--outcomes)).
   - Update `UninstallSession` counts and the history serialization (keep old JSON loading: a missing `Outcome` maps from the old `Success`).
   - **Done when:** the batch tests with a fake verifier produce `StillInstalled` when the key remains after exit code 0.
-- [ ] **P1.5 `ProcessTreeWatcher` + process detection fix** (M) · D3, D15
+- [x] **P1.5 `ProcessTreeWatcher` + process detection fix** (M) · D3, D15
   - Watcher as in [§6.6](#66-running-an-uninstaller).
   - Switch `ProcessDetectionService` from `MainModule` to Toolhelp + `QueryFullProcessImageName`.
   - Use the watcher in `Win32UninstallExecutor` and `MsiUninstallExecutor` (with `IncludeMsiexecChildren`).
   - **Done when:** the watcher test (a `cmd.exe` that starts a detached `ping` grandchild) waits for the grandchild; a manual NSIS uninstall (Notepad++) waits until the wizard closes.
-- [ ] **P1.6 Executors by kind + `UninstallCommandBuilder` + exit codes** (M) · D2
+- [x] **P1.6 Executors by kind + `UninstallCommandBuilder` + exit codes** (M) · D2
   - Factory keyed on `UninstallerKind` ([UninstallExecutorFactory.cs](AxePower.Core/Services/Uninstaller/UninstallExecutorFactory.cs)):
     - `Msi` → MSI executor;
     - `StoreApp` → AppX executor;
@@ -786,25 +787,25 @@ Size: **S** ≈ under half a day · **M** ≈ one to two days · **L** ≈ three
   - `ExitCodeInterpreter` from [§6.6](#66-running-an-uninstaller); UAC-refused (1223) → `Cancelled`; MSI 1618 retry.
   - Interactive commands only in this phase (quiet mode is P2.1).
   - **Done when:** dry run prints the exact planned command for each kind, and the exit-code tests pass.
-- [ ] **P1.7 Batch flow rewrite** (M) · D1, D4
+- [x] **P1.7 Batch flow rewrite** (M) · D1, D4
   - [BatchUninstallService.cs](AxePower.Core/Services/Uninstaller/BatchUninstallService.cs): pre-check → execute → wait → interpret → verify → leftover scan only for `Removed` / `AlreadyRemoved` / `BrokenEntryRemoved`, using a fresh snapshot of the other apps.
   - Add an `IUninstallInteraction` parameter.
   - Add the `Verifying` phase to `UninstallPhase`.
   - Remove the ForcedOrphan success path.
   - **Done when:** the batch tests in [§8](#8-automated-tests) pass and no path records success without verification.
-- [ ] **P1.8 Protection rails + scanner hot-fixes** (M) · D7, D8
+- [x] **P1.8 Protection rails + scanner hot-fixes** (M) · D7, D8
   - `GetBlockReason` with the full rule set from [§6.10](#610-protection-rules), including the other-apps check.
   - Remove the `Installer\UserData` scan and the `LocalLow\{Publisher}` add.
   - Open HKLM with an explicit 64-bit view in the scanner.
   - Blocked items are hidden from the review, or shown disabled with the reason when "Show blocked items" is on.
   - **Done when:** the protection tests pass and a fake app with `InstallLocation = C:\Program Files` produces no selectable folder.
-- [ ] **P1.9 Backup + honest cleanup** (M) · D5, D6
+- [x] **P1.9 Backup + honest cleanup** (M) · D5, D6
   - `LeftoverCleanupService` with `reg export` / typed-value backups, fail-closed behaviour, and per-item `CleanupItemResult` ([§6.9](#69-leftover-scanner), [§6.11](#611-backup--restore)).
   - Fix the value serialization in `RegistryBackupService`.
   - Write `manifest.json`; add `CleanupResult` and `CleanedItems` to the session and re-save it.
   - The VM calls the service instead of its own switch and `DeleteRegistryKey`.
   - **Done when:** the backup round-trip test on `HKCU\Software\AxePower.Tests\{guid}` passes; a failed backup leaves the key in place; the summary counts match the per-item results.
-- [ ] **P1.10 View-model & UI fixes** (M) · D10, D11, D12, D15, D16
+- [x] **P1.10 View-model & UI fixes** (M) · D10, D11, D12, D15, D16
   - Separate CTSs; `IsBusy`; `CancelCommand`; `UninstallThisCommand`.
   - `IUninstallerPrompts` confirmation and running-app prompt; per-app skipping of protected apps; results summary.
   - Rename the chip to **Broken**; **Remove broken entry** button.
@@ -813,51 +814,51 @@ Size: **S** ≈ under half a day · **M** ≈ one to two days · **L** ≈ three
 
 ### Phase 2: Quiet mode, elevation, settings
 
-- [ ] **P2.1 Quiet commands** (S)
+- [x] **P2.1 Quiet commands** (S)
   - The quiet column of the [§6.6](#66-running-an-uninstaller) table, behind `PreferQuietUninstall`.
   - The confirmation dialog says "silent" for each app.
   - **Done when:** the builder tests cover every kind in both modes.
-- [ ] **P2.2 Quiet-mode stall handling** (S)
+- [x] **P2.2 Quiet-mode stall handling** (S)
   - If a quiet uninstall's tree is still alive after `QuietStallMinutes`, ask **Keep waiting** or **Stop uninstaller** (kills the watched tree), then verify.
   - **Done when:** it's tested with a fake watcher that never ends.
-- [ ] **P2.3 Needs-admin handling** (M)
+- [x] **P2.3 Needs-admin handling** (M)
   - Compute `RequiresElevation` per item and per broken entry; lock badges; the relaunch banner (`ElevationService.TryRelaunchElevated`); save the pending review before relaunching.
   - **Done when:** unelevated, HKLM items can't be ticked and the banner relaunches elevated; elevated, they can.
-- [ ] **P2.4 Settings panel + persistence** (M) · D13
+- [x] **P2.4 Settings panel + persistence** (M) · D13
   - `AppSettings.Uninstaller`; a Settings panel in [UninstallerView.xaml](AxePower.App/Views/UninstallerView.xaml) bound to `ShowSettingsPanel`, with every setting from [§6.14](#614-settings) and the exclusion lists.
   - **Done when:** settings survive a restart and a corrupt settings file falls back to defaults (existing SettingsService behaviour).
-- [ ] **P2.5 AppX discovery rewrite** (S) · D14
+- [x] **P2.5 AppX discovery rewrite** (S) · D14
   - JSON output, `-PackageTypeFilter Main`, 30 s timeout, manifest display names, `StoreApp` verification.
   - **Done when:** Store apps show real names and removal is verified.
 
 ### Phase 3: Leftover scanner rebuild
 
-- [ ] **P3.1 `AppNameNormalizer` + `Sift4` port** (S) · D9
+- [x] **P3.1 `AppNameNormalizer` + `Sift4` port** (S) · D9
   - [§6.9](#69-leftover-scanner) name rules; `MatchStringToProductName`; `TestForSimilarNames`.
   - **Done when:** "Mozilla Firefox (x64 en-US)" trims to "Mozilla Firefox"; "Google LLC" → "Google"; "AppX Extended" doesn't claim "AppX" folders.
-- [ ] **P3.2 Evidence model + scoring** (S) · D9
+- [x] **P3.2 Evidence model + scoring** (S) · D9
   - `ConfidenceRecord`, the records table, the score mapping and the pre-tick rule. `LeftoverConfidenceService` becomes a thin adapter or is removed.
   - **Done when:** the scoring tests pass and nothing name-only is pre-ticked.
-- [ ] **P3.3a Core finders** (L) · D9
+- [x] **P3.3a Core finders** (L) · D9
   - InstallLocation, CommonFolder, SoftwareKey, UninstallKey, Startup (registry and folders), Shortcut.
   - **Done when:** the M9/M10 manual rows find real leftovers (AppData folders, Start Menu shortcuts, HKCU software keys) with evidence.
-- [ ] **P3.3b Advanced finders** (L) · D9
+- [x] **P3.3b Advanced finders** (L) · D9
   - App Paths, AppCompat, MuiCache, COM (with the Classes rule change from [§6.10](#610-protection-rules)), scheduled tasks, service info, firewall info.
   - **Done when:** each finder has fixture-based tests and they appear only in Advanced mode.
-- [ ] **P3.4 Deleters for the new types** (M)
+- [x] **P3.4 Deleters for the new types** (M)
   - Shortcut, scheduled task (with XML backup), registry value (typed backup).
   - **Done when:** round-trip tests pass for the task and value backups.
-- [ ] **P3.5 Leftover review UI** (M)
+- [x] **P3.5 Leftover review UI** (M)
   - Grouping, evidence display, badges, per-item results, backup-folder link.
   - **Done when:** it's usable by keyboard and at 150% scaling (repo testing rule).
 
 ### Phase 4: History & restore
 
-- [ ] **P4.1 History panel** (M)
+- [x] **P4.1 History panel** (M)
   - Sessions list (date, apps, outcomes), per-app details, **Open log**, **Open backups folder**, **Restore registry backup** (runs `reg import` in reverse, then values and tasks; needs admin for HKLM), and **Resume leftover review**.
-- [ ] **P4.2 Move history to LocalAppData** (S)
+- [x] **P4.2 Move history to LocalAppData** (S)
   - One-time migration of `%APPDATA%\AxePower\UninstallerHistory` → `%LOCALAPPDATA%\AxePower\UninstallerHistory`.
-- [ ] **P4.3 Docs** (S)
+- [x] **P4.3 Docs** (S)
   - Rewrite [skillsMD/uninstaller.md](skillsMD/uninstaller.md) to describe the new behaviour.
   - Update README, [AppWebsite/help.html](AppWebsite/help.html) and [features.html](AppWebsite/features.html) claims.
   - Remove the "Known gaps" that no longer apply.
@@ -1046,3 +1047,28 @@ Don't put "AxePower" in the fake entry's name: the name rule protects it.
 - **Broken entry** (was "Orphaned"): an ARP entry whose uninstaller is missing, or whose MSI product isn't registered.
 - **Toolhelp snapshot**: the `CreateToolhelp32Snapshot` Win32 API, which lists all processes with their parent PIDs, including elevated ones.
 - **Evidence / confidence record**: a signed score component explaining why a leftover belongs to the removed app (BCU's model).
+
+---
+
+## Implementation notes
+
+Phases 0–4 are implemented. What is built is described in [skillsMD/uninstaller.md](skillsMD/uninstaller.md). Automated coverage is in `AxePower.Tests/Uninstaller/` (306 tests; the live test is skipped). On the audit PC, discovery now reports 72 MSI entries and 15 broken entries, all of them hidden NVIDIA sub-components with no uninstall command. M7 (remove a broken entry, back it up, restore it) was run end to end against an HKCU test entry.
+
+**Still manual:** rows M1–M6 and M8–M13 of the [manual test matrix](#9-manual-test-matrix) uninstall real software and need a VM or a restore point. The P1.10 and P3.5 "done when" checks that depend on them (keyboard use, 150% scaling) are not yet verified by hand.
+
+**Where the implementation differs from the plan, and why:**
+
+1. **Registry rules under `…\Microsoft` are an allow-list** (§6.10). Blocking only the root and its direct children would still allow keys such as `…\Microsoft\Windows\CurrentVersion`. Only single uninstall entries, single App Paths entries, and Run / RunOnce / AppCompat / MUI-cache *values* are deletable there.
+2. **Start Menu shortcuts are allowed** inside the protected `Microsoft` folder trees. The Start Menu lives under `%APPDATA%\Microsoft` and `%ProgramData%\Microsoft`, so the tree rule blocked every shortcut the shortcut finder is meant to offer. Windows' own Start Menu groups stay protected.
+3. **New evidence record `TargetStillExists` (−4)**: a shortcut, Run value, task or App Paths entry whose program is still on disk isn't pre-ticked. Without it, shortcuts to games left in a shared folder such as `C:\Program Files\Epic Games` were pre-ticked after removing the launcher.
+4. **Sift4 uses offset 2.** With the canonical algorithm an offset of 1 gives no look-ahead at all.
+5. **MSI quiet mode keeps the generated command** (with `/norestart` and the verbose log) instead of the vendor `QuietUninstallString`. Other kinds prefer the vendor command. NSIS quiet mode keeps the registry arguments (`/allusers`) and appends `/S`.
+6. **3010 / 1641 mean "restart required" for every kind**, not only MSI and Burn.
+7. **Running apps are checked per app when their turn comes**, not once before the batch, so an app started mid-batch is also caught.
+8. **Merging:** an `InstallLocation` match also needs the same publisher; a visible entry beats a hidden one and a Burn bundle beats the MSIs it chains when choosing which uninstaller runs; a leftover second registration only counts as "still installed" while it has a working uninstaller (otherwise it is offered as a leftover, as rule 11 intends).
+9. **Derived install locations** are dropped when another entry has the same folder or uninstaller (Steam games all "uninstall" through `steam.exe`), and an `InstallLocation` that names an exe (Google Drive) is reduced to its folder.
+10. **`WindowsInstaller=1` with an unregistered product but a working exe** falls back to the exe instead of becoming a broken entry.
+11. **Candidate names** strip `_is1` from Inno key names instead of skipping them.
+12. The existing `Service` leftover type is used for the informational service item; no separate `ServiceInfo` value was added. `AllSubdirsMatched` and `CompanyNameDidNotMatch` are defined but not yet produced by any finder.
+13. `SettingsService` gained a constructor that takes a folder, so view-model tests never write the real `settings.json`.
+14. Two fixes outside the uninstaller, both needed to get a reliable `dotnet test`: `LogsViewModel` no longer calls `Dispatcher.Invoke` on a dispatcher that has shut down (a background service logging while the app closes crashed the process from a timer thread), and `DependencyInjectionTests` disposes the `SystemTelemetryService` it creates so its one-second timer stops with the test.

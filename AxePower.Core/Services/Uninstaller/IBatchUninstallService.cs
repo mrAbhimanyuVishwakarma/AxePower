@@ -6,13 +6,15 @@ namespace AxePower.Core.Services.Uninstaller;
 public interface IBatchUninstallService
 {
     /// <summary>
-    /// Executes uninstall for all applications in sequence.
-    /// Progress is reported via the <paramref name="progress"/> callback.
-    /// Failures are recorded but do not abort the remaining queue.
+    /// Uninstalls the applications one at a time. Each result is verified; failures are recorded
+    /// and don't stop the queue. Stopping (through <paramref name="control"/> or the token)
+    /// ends the queue after the current app; the session is saved and returned either way.
     /// </summary>
     Task<UninstallSession> ExecuteBatchAsync(
         IReadOnlyList<InstalledApplication> applications,
         UninstallerSettings settings,
         IProgress<UninstallProgress>? progress = null,
+        IUninstallInteraction? interaction = null,
+        UninstallBatchControl? control = null,
         CancellationToken cancellationToken = default);
 }

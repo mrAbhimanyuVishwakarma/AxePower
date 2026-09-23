@@ -12,13 +12,13 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <!-- Row style for orphaned / protected apps -->
+        <!-- Row style for broken / protected apps -->
         <Style x:Key="AppRowStyle" TargetType="DataGridRow">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsOrphaned}" Value="True">
+                <DataTrigger Binding="{Binding IsBroken}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsProtected}" Value="True">
@@ -91,6 +91,9 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
                             </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -101,6 +104,54 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Small pill used for badges -->
+        <Style x:Key="BadgeBorderStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,1"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="SettingLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="SettingHintStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -108,16 +159,16 @@
             <RowDefinition Height="Auto"/>  <!-- Header -->
             <RowDefinition Height="Auto"/>  <!-- Toolbar -->
             <RowDefinition Height="Auto"/>  <!-- Search + Filters -->
-            <RowDefinition Height="Auto"/>  <!-- Status bar -->
+            <RowDefinition Height="Auto"/>  <!-- Status / progress -->
             <RowDefinition Height="*"/>     <!-- Main content -->
-            <RowDefinition Height="Auto"/>  <!-- Leftover review panel -->
+            <RowDefinition Height="Auto"/>  <!-- Results + leftover review -->
             <RowDefinition Height="69"/>    <!-- Bottom status bar -->
         </Grid.RowDefinitions>
 
         <!-- ─── Header ─────────────────────────────────────────────────────── -->
         <StackPanel Grid.Row="0" Margin="40,24,40,16">
             <TextBlock Text="🗑️ Uninstaller Pro" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-            <TextBlock Text="Remove applications and clean their verified leftovers safely." FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0"/>
+            <TextBlock Text="Remove applications, verify they are gone, and clean their leftovers safely." FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0"/>
         </StackPanel>
 
         <!-- ─── Toolbar ────────────────────────────────────────────────────── -->
@@ -127,21 +178,18 @@
                         Command="{Binding RefreshCommand}"
                         ToolTip="Rediscover all installed applications"
                         AutomationProperties.Name="Refresh application list"
-                        Padding="16,8" FontSize="13" MinWidth="90"
-                        Margin="0,0,8,0">
+                        Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                   Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Refresh" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <Button Style="{DynamicResource SecondaryButtonStyle}"
                         Command="{Binding SelectAllCommand}"
-                        ToolTip="Select all removable applications"
+                        ToolTip="Select every removable application shown"
                         AutomationProperties.Name="Select all applications"
-                        Padding="16,8" FontSize="13" MinWidth="90"
-                        Margin="0,0,8,0">
+                        Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
                     <TextBlock Text="Select All"/>
                 </Button>
 
@@ -149,35 +197,40 @@
                         Command="{Binding SelectNoneCommand}"
                         ToolTip="Clear all selections"
                         AutomationProperties.Name="Select no applications"
-                        Padding="16,8" FontSize="13" MinWidth="90"
-                        Margin="0,0,8,0">
+                        Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
                     <TextBlock Text="Select None"/>
                 </Button>
 
                 <Button Style="{DynamicResource PrimaryButtonStyle}"
                         Command="{Binding UninstallSelectedCommand}"
-                        ToolTip="Uninstall selected applications"
+                        ToolTip="Uninstall the checked applications, one after another"
                         AutomationProperties.Name="Uninstall selected applications"
-                        Padding="20,8"
-                        FontSize="13"
-                        Margin="0,0,8,0">
+                        Padding="20,8" FontSize="13" Margin="0,0,8,8">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                   Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Uninstall Selected" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <Button Style="{DynamicResource SecondaryButtonStyle}"
                         Command="{Binding ScanLeftoversForSelectedCommand}"
-                        ToolTip="Scan for leftovers of the selected application"
+                        ToolTip="Scan for leftovers of the application shown in the details panel"
                         AutomationProperties.Name="Scan for leftovers"
-                        Padding="16,8" FontSize="13" MinWidth="90"
-                        Margin="0,0,8,0">
+                        Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE7C3;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                   Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE7C3;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Scan Leftovers" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Style="{DynamicResource SecondaryButtonStyle}"
+                        Command="{Binding ToggleHistoryCommand}"
+                        ToolTip="Past sessions, logs, backups and restore"
+                        AutomationProperties.Name="Open uninstall history"
+                        Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="History" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
@@ -185,19 +238,29 @@
                         Command="{Binding ToggleSettingsCommand}"
                         ToolTip="Uninstaller Pro settings"
                         AutomationProperties.Name="Open Uninstaller Pro settings"
-                        Padding="16,8" FontSize="13" MinWidth="90"
-                        Margin="0,0,0,0">
+                        Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                   Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Style="{DynamicResource SecondaryButtonStyle}"
+                        Command="{Binding CancelCommand}"
+                        Visibility="{Binding IsCancellable, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Stop after the current app"
+                        AutomationProperties.Name="Cancel the running operation"
+                        Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Cancel" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </WrapPanel>
         </Border>
 
         <!-- ─── Search + Filters ──────────────────────────────────────────── -->
-        <Border Grid.Row="2" Padding="40,16,40,0">
+        <Border Grid.Row="2" Padding="40,8,40,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="300"/>
@@ -256,7 +319,7 @@
                 </Border>
 
                 <!-- Filter chips -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <RadioButton Style="{StaticResource FilterChipStyle}" Content="All" IsChecked="True"
                                  GroupName="AppFilter" Margin="0,0,6,0"
                                  Command="{Binding DataContext.SelectFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -273,44 +336,71 @@
                                  GroupName="AppFilter" Margin="0,0,6,0"
                                  Command="{Binding DataContext.SelectFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                  CommandParameter="Store Apps"/>
-                    <RadioButton Style="{StaticResource FilterChipStyle}" Content="WinGet"
+                    <RadioButton Style="{StaticResource FilterChipStyle}" Content="Broken"
+                                 GroupName="AppFilter" Margin="0,0,6,0"
+                                 ToolTip="Entries whose uninstaller is missing"
+                                 Command="{Binding DataContext.SelectFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                 CommandParameter="Broken"/>
+                    <RadioButton Style="{StaticResource FilterChipStyle}" Content="Protected"
                                  GroupName="AppFilter" Margin="0,0,6,0"
                                  Command="{Binding DataContext.SelectFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                 CommandParameter="WinGet"/>
-                    <RadioButton Style="{StaticResource FilterChipStyle}" Content="Orphaned"
-                                 GroupName="AppFilter" Margin="0,0,6,0"
-                                 Command="{Binding DataContext.SelectFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                 CommandParameter="Orphaned"/>
-                </StackPanel>
+                                 CommandParameter="Protected"/>
+                </WrapPanel>
             </Grid>
         </Border>
 
-        <!-- ─── Status Bar ────────────────────────────────────────────────── -->
+        <!-- ─── Status + progress ─────────────────────────────────────────── -->
         <Border Grid.Row="3" Padding="40,10,40,0">
-            <Grid>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{Binding StatusMessage}"
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               FontSize="13"/>
-                    <TextBlock Margin="16,0,0,0"
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               FontSize="13"
-                               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
-                        <Run Text="&#xE895;" FontFamily="Segoe MDL2 Assets"/>
-                        <Run Text=" Scanning..."/>
+            <StackPanel>
+                <Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="13" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Margin="16,0,0,0"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="13"
+                                   Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                            <Run Text="&#xE895;" FontFamily="Segoe MDL2 Assets"/>
+                            <Run Text=" Scanning..."/>
+                        </TextBlock>
+                        <Border Style="{StaticResource BadgeBorderStyle}" Margin="16,0,0,0" Background="#1AF59E0B"
+                                Visibility="{Binding DryRunMode, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Dry run: nothing is changed" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock HorizontalAlignment="Right"
+                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"
+                               Visibility="{Binding IsSelectedCountVisible, Converter={StaticResource BoolToVis}}">
+                        <Run Text="{Binding SelectedCount, Mode=OneWay}"/>
+                        <Run Text="selected of"/>
+                        <Run Text="{Binding AppCount, Mode=OneWay}"/>
                     </TextBlock>
-                </StackPanel>
-                <TextBlock HorizontalAlignment="Right"
-                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"
-                           Visibility="{Binding IsSelectedCountVisible, Converter={StaticResource BoolToVis}}">
-                    <Run Text="{Binding SelectedCount, Mode=OneWay}"/>
-                    <Run Text="selected"/>
-                </TextBlock>
-            </Grid>
+                </Grid>
+                <Grid Margin="0,8,0,0" Visibility="{Binding IsProgressVisible, Converter={StaticResource BoolToVis}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ProgressBar Height="6" Minimum="0" Maximum="100"
+                                 Value="{Binding CurrentProgress.ProgressPercent, Mode=OneWay}"
+                                 Foreground="{DynamicResource AccentBrush}"
+                                 Background="{DynamicResource CardBorderBrush}" BorderThickness="0"
+                                 AutomationProperties.Name="Uninstall progress"/>
+                    <TextBlock Grid.Column="1" Margin="12,0,0,0" FontSize="12"
+                               Foreground="{DynamicResource MutedTextBrush}">
+                        <Run Text="{Binding CurrentProgress.CompletedCount, Mode=OneWay}"/>
+                        <Run Text="/"/>
+                        <Run Text="{Binding CurrentProgress.TotalCount, Mode=OneWay}"/>
+                        <Run Text="·"/>
+                        <Run Text="{Binding CurrentProgress.Phase, Mode=OneWay}"/>
+                    </TextBlock>
+                </Grid>
+            </StackPanel>
         </Border>
 
         <!-- ─── Main Content Area ─────────────────────────────────────────── -->
-        <Grid Grid.Row="4" Margin="40,12,40,24">
+        <Grid Grid.Row="4" Margin="40,12,40,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -354,6 +444,7 @@
                                 <DataTemplate>
                                     <CheckBox IsChecked="{Binding DataContext.IsAllSelected,
                                                 RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                              AutomationProperties.Name="Select all shown applications"
                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.HeaderTemplate>
@@ -361,6 +452,7 @@
                                 <DataTemplate>
                                     <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                               IsEnabled="{Binding CanUninstall}"
+                                              AutomationProperties.Name="{Binding DisplayName}"
                                               VerticalAlignment="Center" HorizontalAlignment="Center"
                                               Margin="8,0"/>
                                 </DataTemplate>
@@ -400,6 +492,7 @@
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
                                     <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                                     <Setter Property="Padding" Value="8,6"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
@@ -418,10 +511,11 @@
                         </DataGridTextColumn>
 
                         <!-- Type -->
-                        <DataGridTemplateColumn Header="Type" Width="85">
+                        <DataGridTemplateColumn Header="Type" Width="85" SortMemberPath="ApplicationTypeLabel">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Margin="6,4">
+                                    <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Margin="6,4"
+                                            ToolTip="{Binding KindLabel}">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
@@ -432,10 +526,7 @@
                                                     <DataTrigger Binding="{Binding ApplicationTypeLabel}" Value="AppX">
                                                         <Setter Property="Background" Value="#1A10B981"/>
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding ApplicationTypeLabel}" Value="WinGet">
-                                                        <Setter Property="Background" Value="#1AF59E0B"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding ApplicationTypeLabel}" Value="Orphaned">
+                                                    <DataTrigger Binding="{Binding ApplicationTypeLabel}" Value="Broken">
                                                         <Setter Property="Background" Value="#1AEF4444"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -446,7 +537,7 @@
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding ApplicationTypeLabel}" Value="Orphaned">
+                                                        <DataTrigger Binding="{Binding ApplicationTypeLabel}" Value="Broken">
                                                             <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -459,7 +550,7 @@
                         </DataGridTemplateColumn>
 
                         <!-- Status badge -->
-                        <DataGridTemplateColumn Header="Status" Width="95">
+                        <DataGridTemplateColumn Header="Status" Width="95" SortMemberPath="StatusLabel">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding StatusLabel}" FontSize="12" Padding="8,6">
@@ -470,7 +561,7 @@
                                                     <DataTrigger Binding="{Binding StatusLabel}" Value="Running">
                                                         <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding StatusLabel}" Value="Orphaned">
+                                                    <DataTrigger Binding="{Binding StatusLabel}" Value="Broken">
                                                         <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding StatusLabel}" Value="Protected">
@@ -487,115 +578,8 @@
                 </DataGrid>
             </Border>
 
-            <!-- Detail Panel -->
-            <Border Grid.Column="1"
-                    Width="340"
-                    Margin="16,0,0,0"
-                    Background="{DynamicResource CardBackgroundBrush}"
-                    BorderBrush="{DynamicResource CardBorderBrush}"
-                    BorderThickness="1" CornerRadius="16" Padding="20"
-                    Visibility="{Binding IsDetailPanelVisible, Converter={StaticResource BoolToVis}}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <!-- App Name -->
-                        <TextBlock Text="{Binding SelectedApplication.DisplayName}"
-                                   FontSize="16" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                   Margin="0,0,0,4"
-                                   TextWrapping="Wrap"/>
-
-                        <!-- Publisher -->
-                        <TextBlock Text="{Binding SelectedApplication.Publisher}"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   FontSize="13"
-                                   Margin="0,0,0,16" TextWrapping="Wrap"/>
-
-                        <!-- Detail rows -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Labels -->
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Version"   Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Size"      Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Installed" Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Type"      Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Source"    Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Arch"      Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Scope"     Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-                            <TextBlock Grid.Row="7" Grid.Column="0" Text="Method"    Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
-
-                            <!-- Values -->
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedApplication.Version}"             Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3" TextWrapping="Wrap"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedApplication.DisplaySize}"         Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedApplication.DisplayInstallDate}"  Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedApplication.ApplicationTypeLabel}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
-                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedApplication.SourceLabel}"         Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
-                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedApplication.Application.Architecture}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
-                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SelectedApplication.Application.Scope}"    Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
-                            <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedApplication.ApplicationTypeLabel}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
-                        </Grid>
-
-                        <!-- Install location -->
-                        <TextBlock Text="Install Location" Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,8,0,2"/>
-                        <TextBlock Text="{Binding SelectedApplication.Application.InstallLocation}"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   FontSize="11" TextWrapping="Wrap" Margin="0,0,0,16"/>
-
-                        <!-- Protection warning -->
-                        <Border Background="#1AEF4444"
-                                BorderBrush="{DynamicResource ErrorBrush}"
-                                BorderThickness="1" CornerRadius="8" Padding="12,8"
-                                Margin="0,0,0,12"
-                                Visibility="{Binding IsSelectedProtected, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="&#xE72E; This application is protected."
-                                       FontFamily="Segoe MDL2 Assets, Segoe UI Variable"
-                                       Foreground="{DynamicResource ErrorBrush}"
-                                       FontSize="12" TextWrapping="Wrap"/>
-                        </Border>
-
-                        <!-- Action buttons -->
-                        <Button Style="{DynamicResource PrimaryButtonStyle}"
-                                Command="{Binding UninstallSelectedCommand}"
-                                Content="Uninstall"
-                                IsEnabled="{Binding SelectedApplication.CanUninstall}"
-                                HorizontalAlignment="Stretch"
-                                Padding="0,10" FontSize="13"
-                                Margin="0,0,0,8"
-                                AutomationProperties.Name="Uninstall selected application"/>
-
-                        <Button Style="{DynamicResource SecondaryButtonStyle}"
-                                Command="{Binding ScanLeftoversForSelectedCommand}"
-                                Content="Scan Leftovers"
-                                HorizontalAlignment="Stretch"
-                                Padding="0,8" FontSize="13"
-                                Margin="0,0,0,8"
-                                AutomationProperties.Name="Scan for leftovers"/>
-
-                        <Button Style="{DynamicResource SecondaryButtonStyle}"
-                                Command="{Binding OpenInstallLocationCommand}"
-                                Content="Open Install Folder"
-                                HorizontalAlignment="Stretch"
-                                Padding="0,8" FontSize="13"
-                                AutomationProperties.Name="Open install location in Explorer"/>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
-
             <!-- Loading overlay -->
-            <Border Grid.Column="0" Grid.ColumnSpan="3"
+            <Border Grid.Column="0"
                     Background="#AA090A0D"
                     CornerRadius="16"
                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
@@ -610,166 +594,629 @@
                                HorizontalAlignment="Center" Margin="0,12,0,0"/>
                 </StackPanel>
             </Border>
-        </Grid>
 
-        <!-- ─── Leftover Review Panel (slide-up) ─────────────────────────── -->
-        <Border Grid.Row="5"
-                Background="{DynamicResource ElevatedCardBackgroundBrush}"
-                BorderBrush="{DynamicResource CardBorderBrush}"
-                BorderThickness="0,1,0,0"
-                Padding="40,20"
-                MaxHeight="320"
-                Visibility="{Binding IsLeftoverReviewVisible, Converter={StaticResource BoolToVis}}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+            <!-- ── Right panel: details / settings / history ─────────────── -->
+            <Grid Grid.Column="1" Width="360" Margin="16,0,0,0">
 
-                <!-- Header -->
-                <Grid Grid.Row="0" Margin="0,0,0,12">
-                    <StackPanel>
-                        <TextBlock FontSize="16" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource PrimaryTextBrush}">
-                            <Run Text="🔍 Leftovers Found — "/>
-                            <Run Text="{Binding LeftoverApplicationName, Mode=OneWay}"/>
-                        </TextBlock>
-                        <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
-                                   Margin="0,2,0,0">
-                            <Run Text="{Binding LeftoverItems.Count, Mode=OneWay}"/>
-                            <Run Text="items found. Review and select items to clean."/>
-                        </TextBlock>
-                    </StackPanel>
-                    <Button HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Command="{Binding CloseLeftoverReviewCommand}"
-                            Background="Transparent" BorderThickness="0"
-                            Foreground="{DynamicResource SecondaryTextBrush}"
-                            Cursor="Hand" Padding="8"
-                            AutomationProperties.Name="Close leftover review">
-                        <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
-                    </Button>
-                </Grid>
+                <!-- Details -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="16" Padding="20"
+                        Visibility="{Binding IsDetailPanelVisible, Converter={StaticResource BoolToVis}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedApplication.DisplayName}"
+                                       FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       Margin="0,0,0,4" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedApplication.Publisher}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontSize="13" Margin="0,0,0,16" TextWrapping="Wrap"/>
 
-                <!-- Leftover list -->
-                <ListView Grid.Row="1"
-                          ItemsSource="{Binding LeftoverItems}"
-                          Background="Transparent"
-                          BorderThickness="0"
-                          VirtualizingPanel.IsVirtualizing="True"
-                          VirtualizingPanel.VirtualizationMode="Recycling"
-                          VirtualizingPanel.ScrollUnit="Pixel"
-                          ScrollViewer.CanContentScroll="True"
-                          ScrollViewer.PanningMode="Both"
-                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                          AutomationProperties.Name="Leftover items list">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,2">
+                            <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="100"/>
                                 </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                                <CheckBox Grid.Column="0"
-                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                          IsEnabled="{Binding IsNotProtected}"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,10,0"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Version"     Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Size"        Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Installed"   Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Type"        Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Uninstaller" Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Will run"    Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Source"      Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="7" Grid.Column="0" Text="Arch"        Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Scope"       Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,3,16,3"/>
 
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Path}"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               FontSize="12" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding Reason}"
-                                               Foreground="{DynamicResource MutedTextBrush}"
-                                               FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedApplication.Version}"              Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedApplication.DisplaySize}"          Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedApplication.DisplayInstallDate}"   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedApplication.ApplicationTypeLabel}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedApplication.KindLabel}"            Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedApplication.PlanDescription}"      Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SelectedApplication.SourceLabel}"          Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedApplication.Application.Architecture}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
+                                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SelectedApplication.Application.Scope}"    Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,3,0,3"/>
+                            </Grid>
+
+                            <TextBlock Text="Install Location" Foreground="{DynamicResource MutedTextBrush}" FontSize="13" Margin="0,8,0,2"/>
+                            <TextBlock Text="{Binding SelectedApplication.InstallLocationLabel}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontSize="11" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                            <!-- Protection warning -->
+                            <Border Background="#1AEF4444"
+                                    BorderBrush="{DynamicResource ErrorBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="12,8"
+                                    Margin="0,0,0,12"
+                                    Visibility="{Binding IsSelectedProtected, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding SelectedProtectionReason}"
+                                           Foreground="{DynamicResource ErrorBrush}"
+                                           FontSize="12" TextWrapping="Wrap"/>
+                            </Border>
+
+                            <!-- Broken entry note -->
+                            <Border Background="#1AF59E0B"
+                                    BorderBrush="{DynamicResource WarningBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="12,8"
+                                    Margin="0,0,0,12"
+                                    Visibility="{Binding SelectedApplication.IsBroken, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                                <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="12" TextWrapping="Wrap"
+                                           Text="The uninstaller for this entry is missing. Removing it deletes only the listing (after a .reg backup); files are not touched."/>
+                            </Border>
+
+                            <!-- Action buttons -->
+                            <Button Style="{DynamicResource PrimaryButtonStyle}"
+                                    Command="{Binding UninstallThisCommand}"
+                                    Content="{Binding SelectedApplication.ActionLabel}"
+                                    HorizontalAlignment="Stretch"
+                                    Padding="0,10" FontSize="13"
+                                    Margin="0,0,0,8"
+                                    AutomationProperties.Name="Uninstall this application"/>
+
+                            <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                    Command="{Binding ScanLeftoversForSelectedCommand}"
+                                    Content="Scan Leftovers"
+                                    HorizontalAlignment="Stretch"
+                                    Padding="0,8" FontSize="13"
+                                    Margin="0,0,0,8"
+                                    AutomationProperties.Name="Scan for leftovers of this application"/>
+
+                            <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                    Command="{Binding OpenInstallLocationCommand}"
+                                    Content="Open Install Folder"
+                                    HorizontalAlignment="Stretch"
+                                    Padding="0,8" FontSize="13"
+                                    AutomationProperties.Name="Open install location in Explorer"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Settings -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="16" Padding="20"
+                        Visibility="{Binding ShowSettingsPanel, Converter={StaticResource BoolToVis}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <TextBlock Text="Settings" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <Button HorizontalAlignment="Right" Style="{StaticResource LinkButtonStyle}"
+                                        Command="{Binding ToggleSettingsCommand}" AutomationProperties.Name="Close settings">
+                                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock Text="Leftover scan depth" Style="{StaticResource SettingLabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding ScanModes}" SelectedItem="{Binding DefaultScanMode}"
+                                      Margin="0,6,0,2" AutomationProperties.Name="Leftover scan depth"/>
+                            <TextBlock Style="{StaticResource SettingHintStyle}"
+                                       Text="Safe: only items that point into the app's folder. Moderate: also folders and keys named after it. Advanced: also App Paths, COM, tasks, services and firewall rules."/>
+
+                            <Grid Margin="0,14,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Prefer silent uninstall" Style="{StaticResource SettingLabelStyle}"/>
+                                    <TextBlock Text="Uses silent switches where the uninstaller supports them." Style="{StaticResource SettingHintStyle}"/>
                                 </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding PreferQuietUninstall}" AutomationProperties.Name="Prefer silent uninstall"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="Create a restore point first" Style="{StaticResource SettingLabelStyle}"/>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding CreateSystemRestorePoint}" AutomationProperties.Name="Create a restore point first"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Back up HKCU registry items" Style="{StaticResource SettingLabelStyle}"/>
+                                    <TextBlock Text="HKLM items are always backed up." Style="{StaticResource SettingHintStyle}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding BackupRegistryChanges}" AutomationProperties.Name="Back up HKCU registry items"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="Move files to the Recycle Bin" Style="{StaticResource SettingLabelStyle}"/>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding MoveToRecycleBin}" AutomationProperties.Name="Move files to the Recycle Bin"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Scan leftovers after uninstalling" Style="{StaticResource SettingLabelStyle}"/>
+                                    <TextBlock Text="Only once the app is verified gone." Style="{StaticResource SettingHintStyle}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoScanLeftovers}" AutomationProperties.Name="Scan leftovers after uninstalling"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="Show protected apps" Style="{StaticResource SettingLabelStyle}"/>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowProtectedApplications}" AutomationProperties.Name="Show protected apps"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="Show broken entries" Style="{StaticResource SettingLabelStyle}"/>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowBrokenEntries}" AutomationProperties.Name="Show broken entries"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Show system components" Style="{StaticResource SettingLabelStyle}"/>
+                                    <TextBlock Text="Entries Windows Settings hides." Style="{StaticResource SettingHintStyle}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowSystemComponents}" AutomationProperties.Name="Show system components"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="Show updates and hotfixes" Style="{StaticResource SettingLabelStyle}"/>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowUpdates}" AutomationProperties.Name="Show updates and hotfixes"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Show blocked leftovers" Style="{StaticResource SettingLabelStyle}"/>
+                                    <TextBlock Text="Items the protection rules refuse, shown disabled with the reason." Style="{StaticResource SettingHintStyle}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowBlockedLeftovers}" AutomationProperties.Name="Show blocked leftovers"/>
+                            </Grid>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Dry run" Style="{StaticResource SettingLabelStyle}"/>
+                                    <TextBlock Text="Show what would run and be deleted, without doing it." Style="{StaticResource SettingHintStyle}"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding DryRunMode}" AutomationProperties.Name="Dry run"/>
+                            </Grid>
 
-                                <!-- Confidence badge -->
-                                <Border Grid.Column="2" CornerRadius="4" Padding="6,2"
-                                        HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#1A9CA3AF"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ConfidenceLabel}" Value="Very High">
-                                                    <Setter Property="Background" Value="#1A10B981"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ConfidenceLabel}" Value="High">
-                                                    <Setter Property="Background" Value="#1A3B82F6"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ConfidenceLabel}" Value="Low">
-                                                    <Setter Property="Background" Value="#1AF59E0B"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ConfidenceLabel}" Value="Very Low">
-                                                    <Setter Property="Background" Value="#1AEF4444"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding ConfidenceLabel}" FontSize="11" FontWeight="SemiBold">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock Text="Ask about a silent uninstall after (minutes)" Style="{StaticResource SettingLabelStyle}" Margin="0,14,0,0"/>
+                            <TextBox Text="{Binding QuietStallMinutes, UpdateSourceTrigger=LostFocus}" Width="80" HorizontalAlignment="Left"
+                                     Margin="0,6,0,0" Padding="6,4"
+                                     Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderBrush="{DynamicResource CardBorderBrush}"
+                                     AutomationProperties.Name="Minutes before asking about a stalled silent uninstall"/>
+
+                            <TextBlock Text="Never offer these paths (one per line)" Style="{StaticResource SettingLabelStyle}" Margin="0,14,0,0"/>
+                            <TextBox Text="{Binding ExcludedPathsText, UpdateSourceTrigger=LostFocus}"
+                                     AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="70" MaxHeight="140"
+                                     VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                     Margin="0,6,0,0" Padding="6,4" FontSize="12"
+                                     Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderBrush="{DynamicResource CardBorderBrush}"
+                                     AutomationProperties.Name="Excluded paths"/>
+                            <TextBlock Style="{StaticResource SettingHintStyle}" Text="Folders (C:\…) or registry keys (HKCU\… / HKLM\…)."/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- History -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="16" Padding="20"
+                        Visibility="{Binding ShowHistoryPanel, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Margin="0,0,0,12">
+                            <TextBlock Text="History" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <Button HorizontalAlignment="Right" Style="{StaticResource LinkButtonStyle}"
+                                    Command="{Binding ToggleHistoryCommand}" AutomationProperties.Name="Close history">
+                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Button>
+                        </Grid>
+                        <TextBlock Grid.Row="1" Text="No sessions yet." Foreground="{DynamicResource MutedTextBrush}" FontSize="12">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Sessions.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Sessions}" AutomationProperties.Name="Uninstall sessions">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="0,8,0,10">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding When}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBlock Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                                <ItemsControl ItemsSource="{Binding Results}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal" Margin="0,1">
+                                                                <TextBlock FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                           ToolTip="{Binding ErrorMessage}">
+                                                                    <Run Text="{Binding ApplicationName, Mode=OneWay}"/>
+                                                                    <Run Text="—"/>
+                                                                    <Run Text="{Binding OutcomeLabel, Mode=OneWay}"/>
+                                                                </TextBlock>
+                                                                <Button Style="{StaticResource LinkButtonStyle}" Content="Open log" FontSize="11"
+                                                                        Visibility="{Binding LogPath, Converter={StaticResource NotNullToVis}}"
+                                                                        Command="{Binding DataContext.OpenLogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                        CommandParameter="{Binding}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <WrapPanel Margin="0,4,0,0">
+                                                    <Button Style="{StaticResource LinkButtonStyle}" Content="Resume leftover review"
+                                                            Visibility="{Binding CanResumeReview, Converter={StaticResource BoolToVis}}"
+                                                            Command="{Binding DataContext.ResumeReviewCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Style="{StaticResource LinkButtonStyle}" Content="Restore registry backup"
+                                                            Visibility="{Binding CanRestore, Converter={StaticResource BoolToVis}}"
+                                                            Command="{Binding DataContext.RestoreSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Style="{StaticResource LinkButtonStyle}" Content="Open backups"
+                                                            Visibility="{Binding HasBackupFolder, Converter={StaticResource BoolToVis}}"
+                                                            Command="{Binding DataContext.OpenSessionFolderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Style="{StaticResource LinkButtonStyle}" Content="Remove from history"
+                                                            Command="{Binding DataContext.DeleteSessionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ─── Results summary + leftover review ───────────────────────── -->
+        <StackPanel Grid.Row="5">
+            <!-- Results of the last batch -->
+            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="40,14"
+                    Visibility="{Binding IsResultsVisible, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}">
+                            <Run Text="Results — "/>
+                            <Run Text="{Binding LastSession.OutcomeSummary, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Button HorizontalAlignment="Right" Style="{StaticResource LinkButtonStyle}"
+                                Command="{Binding CloseResultsCommand}" AutomationProperties.Name="Close results">
+                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </Button>
+                    </Grid>
+                    <ScrollViewer Grid.Row="1" MaxHeight="120" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding BatchResults}" AutomationProperties.Name="Uninstall results">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="220"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding OutcomeLabel}" FontSize="12" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Success}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Outcome}" Value="Failed">
+                                                            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Text="{Binding ApplicationName}" FontSize="12"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding ErrorMessage}" FontSize="12"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding CommandExecuted}"/>
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                                            <Button Style="{StaticResource LinkButtonStyle}" Content="Open log"
+                                                    Visibility="{Binding LogPath, Converter={StaticResource NotNullToVis}}"
+                                                    Command="{Binding DataContext.OpenLogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                            <Button Style="{StaticResource LinkButtonStyle}" Content="Remove broken entry"
+                                                    Visibility="{Binding OfferRemoveBrokenEntry, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.RemoveBrokenEntryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Leftover review -->
+            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="40,16"
+                    MaxHeight="360"
+                    Visibility="{Binding IsLeftoverReviewVisible, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}">
+                                <Run Text="🔍 Leftovers — "/>
+                                <Run Text="{Binding LeftoverApplicationName, Mode=OneWay}"/>
+                            </TextBlock>
+                            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap">
+                                <Run Text="{Binding LeftoverItems.Count, Mode=OneWay}"/>
+                                <Run Text="items. Only items tied to the app by evidence are pre-selected; hover an item to see why it was found."/>
+                            </TextBlock>
+                            <TextBlock Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,2,0,0"
+                                       Visibility="{Binding CleanupSummary, Converter={StaticResource NotNullToVis}}">
+                                <Run Text="Last cleanup:"/>
+                                <Run Text="{Binding CleanupSummary, Mode=OneWay}"/>
+                            </TextBlock>
+                        </StackPanel>
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Style="{StaticResource LinkButtonStyle}"
+                                Command="{Binding CloseLeftoverReviewCommand}"
+                                AutomationProperties.Name="Close leftover review">
+                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Needs-admin banner -->
+                    <Border Grid.Row="1" Background="#1AF59E0B" BorderBrush="{DynamicResource WarningBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,6" Margin="0,0,0,8"
+                            Visibility="{Binding IsAdminBannerVisible, Converter={StaticResource BoolToVis}}">
+                        <Grid>
+                            <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource WarningBrush}">
+                                <Run Text="&#xE72E;" FontFamily="Segoe MDL2 Assets"/>
+                                <Run Text="{Binding LeftoverNeedsAdminCount, Mode=OneWay}"/>
+                                <Run Text="items need administrator rights."/>
+                            </TextBlock>
+                            <Button HorizontalAlignment="Right" Style="{StaticResource LinkButtonStyle}"
+                                    Content="Restart as administrator"
+                                    Command="{Binding RestartAsAdministratorCommand}"
+                                    AutomationProperties.Name="Restart AxePower as administrator"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Leftover list, grouped by app -->
+                    <ListView Grid.Row="2"
+                              ItemsSource="{Binding LeftoverView}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              MinHeight="80"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              VirtualizingPanel.ScrollUnit="Pixel"
+                              ScrollViewer.CanContentScroll="True"
+                              ScrollViewer.PanningMode="Both"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              KeyboardNavigation.TabNavigation="Continue"
+                              AutomationProperties.Name="Leftover items list">
+                        <ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}" Margin="0,6,0,2"/>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListView.GroupStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2" ToolTip="{Binding EvidenceText}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="70"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              IsEnabled="{Binding CanSelect}"
+                                              AutomationProperties.Name="{Binding Path}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0"/>
+
+                                    <TextBlock Grid.Column="1" Text="{Binding TypeGlyph}" FontFamily="Segoe MDL2 Assets"
+                                               FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="{Binding TypeLabel}"/>
+
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Path}"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding Reason}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding ResultLabel}" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource WarningBrush}" TextTrimming="CharacterEllipsis"
+                                                   Visibility="{Binding ResultLabel, Converter={StaticResource NotNullToVis}}"/>
+                                    </StackPanel>
+
+                                    <!-- Badges -->
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#1AF59E0B"
+                                                Visibility="{Binding NeedsAdmin, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Deleting this needs administrator rights">
+                                            <TextBlock FontSize="11" Foreground="{DynamicResource WarningBrush}">
+                                                <Run Text="&#xE72E;" FontFamily="Segoe MDL2 Assets"/>
+                                                <Run Text="Needs admin"/>
+                                            </TextBlock>
+                                        </Border>
+                                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#1AEF4444"
+                                                Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="{Binding BlockedReason}">
+                                            <TextBlock Text="Blocked" FontSize="11" Foreground="{DynamicResource ErrorBrush}"/>
+                                        </Border>
+                                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#1A9CA3AF"
+                                                Visibility="{Binding IsShared, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Other installed apps use this">
+                                            <TextBlock Text="Shared" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- Confidence badge -->
+                                    <Border Grid.Column="4" CornerRadius="4" Padding="6,2"
+                                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#1A9CA3AF"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding ConfidenceLabel}" Value="Very High">
-                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                        <Setter Property="Background" Value="#1A10B981"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ConfidenceLabel}" Value="High">
-                                                        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter Property="Background" Value="#1A3B82F6"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ConfidenceLabel}" Value="Low">
+                                                        <Setter Property="Background" Value="#1AF59E0B"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ConfidenceLabel}" Value="Very Low">
+                                                        <Setter Property="Background" Value="#1AEF4444"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Border>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding ConfidenceLabel}" FontSize="11" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ConfidenceLabel}" Value="Very High">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ConfidenceLabel}" Value="High">
+                                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
 
-                                <TextBlock Grid.Column="3" Text="{Binding DisplaySize}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           FontSize="11" VerticalAlignment="Center"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="Padding" Value="0,4"/>
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                </ListView>
+                                    <TextBlock Grid.Column="5" Text="{Binding DisplaySize}"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               FontSize="11" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0,4"/>
+                                <Setter Property="IsTabStop" Value="False"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
 
-                <!-- Actions -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
-                            Margin="0,12,0,0">
-                    <TextBlock Text="{Binding SelectedLeftoverCount}"
-                               Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
-                               VerticalAlignment="Center" Margin="0,0,16,0"/>
-
-                    <Button Style="{DynamicResource SecondaryButtonStyle}"
-                            Command="{Binding CloseLeftoverReviewCommand}"
-                            Content="Skip Cleanup"
-                            Padding="16,8" FontSize="13"
-                            Margin="0,0,8,0"
-                            AutomationProperties.Name="Skip leftover cleanup"/>
-
-                    <Button Style="{DynamicResource PrimaryButtonStyle}"
-                            Command="{Binding CleanSelectedLeftoversCommand}"
-                            Padding="20,8" FontSize="13"
-                            AutomationProperties.Name="Delete selected leftover items">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                       Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Clean Selected" VerticalAlignment="Center"/>
+                    <!-- Actions -->
+                    <Grid Grid.Row="3" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock FontSize="12" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center">
+                                <Run Text="Backups:"/>
+                            </TextBlock>
+                            <Button Style="{StaticResource LinkButtonStyle}" Content="open folder"
+                                    Command="{Binding OpenReviewBackupFolderCommand}"
+                                    AutomationProperties.Name="Open the backup folder for this review"/>
+                            <TextBlock FontSize="12" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="12,0,0,0"
+                                       Visibility="{Binding ShowBlockedLeftovers, Converter={StaticResource InverseBoolToVis}}">
+                                <Run Text="{Binding LeftoverBlockedCount, Mode=OneWay}"/>
+                                <Run Text="blocked items hidden"/>
+                            </TextBlock>
                         </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding SelectedLeftoverCount}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
+                                       VerticalAlignment="Center" Margin="0,0,16,0"/>
+
+                            <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                    Command="{Binding CloseLeftoverReviewCommand}"
+                                    Content="Skip Cleanup"
+                                    Padding="16,8" FontSize="13"
+                                    Margin="0,0,8,0"
+                                    AutomationProperties.Name="Skip leftover cleanup"/>
+
+                            <Button Style="{DynamicResource PrimaryButtonStyle}"
+                                    Command="{Binding CleanSelectedLeftoversCommand}"
+                                    Padding="20,8" FontSize="13"
+                                    AutomationProperties.Name="Delete selected leftover items">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                               Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Clean Selected" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </StackPanel>
 
         <!-- ─── Bottom Status Bar ───────────────────────────────────────────── -->
         <Border Grid.Row="6" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
@@ -787,7 +1234,7 @@
                     </Grid>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Uninstaller Pro" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
-                        <TextBlock Text="Clean uninstalls, leftover file scanning, and system restore integration." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                        <TextBlock Text="Verified uninstalls, evidence-based leftover cleaning, registry backups and restore." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>

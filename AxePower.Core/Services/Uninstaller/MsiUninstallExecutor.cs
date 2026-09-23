@@ -1,120 +1,80 @@
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 using AxePower.Core.Models.Uninstaller;
 
 namespace AxePower.Core.Services.Uninstaller;
 
 /// <summary>
-/// Uninstalls MSI applications using msiexec /x {ProductCode}.
-/// Validates the ProductCode format before execution.
+/// Uninstalls MSI products with <c>msiexec /x {ProductCode}</c> (basic UI, or silent when quiet
+/// mode is on), always with <c>/norestart</c> and a verbose log. Waits for msiexec and its custom
+/// actions, and retries twice when another installation is in progress (1618).
 /// </summary>
 public sealed class MsiUninstallExecutor : IUninstallExecutor
 {
-    public ApplicationType SupportedType => ApplicationType.MSI;
+    private static readonly TimeSpan BusyRetryDelay = TimeSpan.FromSeconds(30);
+    private const int MaxAttempts = 3;
 
-    // MSI exit code for "reboot required"
-    private const int ExitRebootRequired = 3010;
-    private const int ExitRebootInitiated = 1641;
+    private readonly IFileSystemProbe _fs;
+    private readonly IProcessTreeWatcher _watcher;
 
-    public async Task<UninstallResult> ExecuteAsync(
+    public MsiUninstallExecutor() : this(new FileSystemProbe(), new ProcessTreeWatcher()) { }
+
+    public MsiUninstallExecutor(IFileSystemProbe fs, IProcessTreeWatcher watcher)
+    {
+        _fs = fs;
+        _watcher = watcher;
+    }
+
+    public IReadOnlyCollection<UninstallerKind> SupportedKinds { get; } = [UninstallerKind.Msi];
+
+    public async Task<UninstallExecution> ExecuteAsync(
         InstalledApplication application,
         UninstallerSettings settings,
+        UninstallRunContext context,
         CancellationToken cancellationToken = default)
     {
-        var sw = Stopwatch.StartNew();
-
-        if (!IsValidProductCode(application.ProductCode))
-        {
-            return Fail(application,
-                $"Invalid or missing MSI ProductCode: '{application.ProductCode}'", sw);
-        }
-
-        // /qb = basic UI (shows progress), /norestart = defer reboot decision to the user
-        // We use /qb rather than /q (silent) to keep the user informed and to handle
-        // installers that require user decisions. This is the safest default.
-        var logPath = GetLogPath(application);
-        var arguments = $"/x {application.ProductCode} /qb /norestart /l*v \"{logPath}\"";
+        const string method = "MSI";
 
         if (settings.DryRunMode)
+            return UninstallerLauncher.DryRun(UninstallCommandBuilder.Build(application, settings.PreferQuietUninstall, _fs), method);
+
+        UninstallExecution execution = null!;
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            return new UninstallResult
-            {
-                ApplicationId = application.Id,
-                ApplicationName = application.DisplayName,
-                Success = true,
-                WasDryRun = true,
-                CommandExecuted = $"[DRY RUN] Would execute: msiexec {arguments}",
-                UninstallMethod = "MSI",
-                Duration = sw.Elapsed,
-            };
+            var plan = UninstallCommandBuilder.Build(application, settings.PreferQuietUninstall, _fs, CreateLogPath(application));
+            if (!plan.CanRun) return UninstallerLauncher.PlanError(plan, method);
+
+            execution = await UninstallerLauncher.RunAsync(plan, application, settings, _watcher, context, method, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (execution.Verdict != ExecutionVerdict.Busy) return execution;
+            if (attempt < MaxAttempts)
+                await Task.Delay(BusyRetryDelay, cancellationToken).ConfigureAwait(false);
         }
 
-        try
+        return new UninstallExecution
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "msiexec.exe",
-                Arguments = arguments,
-                UseShellExecute = true,  // msiexec will handle UAC elevation itself
-            };
-
-            using var process = Process.Start(psi);
-            if (process is null)
-                return Fail(application, "Failed to start msiexec.exe.", sw);
-
-            await process.WaitForExitAsync(cancellationToken);
-
-            var exitCode = process.ExitCode;
-            var requiresReboot = exitCode is ExitRebootRequired or ExitRebootInitiated;
-            var success = exitCode == 0 || requiresReboot;
-
-            return new UninstallResult
-            {
-                ApplicationId = application.Id,
-                ApplicationName = application.DisplayName,
-                Success = success,
-                ExitCode = exitCode,
-                RequiresReboot = requiresReboot,
-                CommandExecuted = $"msiexec {arguments}",
-                UninstallMethod = "MSI",
-                ErrorMessage = !success ? $"msiexec exited with code {exitCode}." : string.Empty,
-                Duration = sw.Elapsed,
-            };
-        }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex)
-        {
-            return Fail(application, ex.Message, sw);
-        }
+            Verdict = ExecutionVerdict.Failed,
+            ExitCode = execution.ExitCode,
+            Message = "Another installation kept Windows Installer busy (1618). Try again when it has finished.",
+            CommandExecuted = execution.CommandExecuted,
+            Method = method,
+            WasQuiet = execution.WasQuiet,
+            LogPath = execution.LogPath,
+            Duration = execution.Duration,
+        };
     }
 
     /// <summary>Validates MSI ProductCode format: {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}</summary>
-    public static bool IsValidProductCode(string productCode)
-    {
-        if (string.IsNullOrWhiteSpace(productCode)) return false;
-        return Regex.IsMatch(productCode, @"^\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}$");
-    }
+    public static bool IsValidProductCode(string productCode) =>
+        MsiProductStateReader.IsProductCode(productCode);
 
-    private static string GetLogPath(InstalledApplication app)
+    private static string CreateLogPath(InstalledApplication app)
     {
         var logDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "AxePower", "UninstallLogs");
         Directory.CreateDirectory(logDir);
-        var safeName = string.Concat(app.DisplayName
-            .Where(c => !Path.GetInvalidFileNameChars().Contains(c)))
-            .Replace(" ", "_");
+        var invalid = Path.GetInvalidFileNameChars();
+        var safeName = string.Concat(app.DisplayName.Where(c => !invalid.Contains(c))).Replace(' ', '_');
         return Path.Combine(logDir, $"{safeName}_{DateTime.Now:yyyyMMdd_HHmmss}.log");
     }
-
-    private static UninstallResult Fail(InstalledApplication app, string msg, Stopwatch sw) =>
-        new()
-        {
-            ApplicationId = app.Id,
-            ApplicationName = app.DisplayName,
-            Success = false,
-            ErrorMessage = msg,
-            UninstallMethod = "MSI",
-            Duration = sw.Elapsed,
-        };
 }

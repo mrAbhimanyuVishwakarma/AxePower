@@ -17,10 +17,15 @@ public class SettingsService
     public string SettingsDirectory { get; }
 
     public SettingsService(LogService logService)
+        : this(logService, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower"))
+    {
+    }
+
+    /// <summary>Keeps settings in <paramref name="settingsDirectory"/>; tests use a temp folder so they never touch the real file.</summary>
+    public SettingsService(LogService logService, string settingsDirectory)
     {
         _logService = logService;
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        SettingsDirectory = Path.Combine(localAppData, "AxePower");
+        SettingsDirectory = settingsDirectory;
         Directory.CreateDirectory(SettingsDirectory);
         
         _settingsFilePath = Path.Combine(SettingsDirectory, "settings.json");

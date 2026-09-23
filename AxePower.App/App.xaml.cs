@@ -13,6 +13,8 @@ using AxePower.Core.Services.Music;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
 using AxePower.App.ViewModels.Music;
+using AxePower.App.ViewModels.ShareScreen;
+using AxePower.Core.Services.ShareScreen;
 using AxePower.App.Helpers;
 
 namespace AxePower.App;
@@ -250,22 +252,39 @@ public partial class App : Application
         services.AddSingleton<TerminalService>();
         services.AddSingleton<RestorePointService>();
 
+        // Share Screen: capture, encode and route one display to remote viewers
+        services.AddSingleton<IShareToolProvider, ShareToolProvider>();
+        services.AddSingleton<IShareDeviceProvider, ShareDeviceProvider>();
+        services.AddSingleton<IShareEncoderProbe, ShareEncoderProbe>();
+        services.AddSingleton<MediaMtxServer>();
+        services.AddSingleton<ShareEncodePipeline>();
+        services.AddSingleton<ShareAudioPump>();
+        services.AddSingleton<RemoteInputService>();
+        services.AddSingleton<ShareViewerHost>();
+        services.AddSingleton<IShareScreenService, ShareScreenService>();
+
         // Uninstaller Pro — Core Services
+        services.AddSingleton<IFileSystemProbe, FileSystemProbe>();
+        services.AddSingleton<IMsiProductStateReader, MsiProductStateReader>();
+        services.AddSingleton<IProcessTreeWatcher, ProcessTreeWatcher>();
+        services.AddSingleton<IInstallStateVerifier, InstallStateVerifier>();
+        services.AddSingleton<IProcessDetectionService, ProcessDetectionService>();
+        services.AddSingleton<BackupManifestStore>();
         services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
         services.AddSingleton<Win32UninstallExecutor>();
         services.AddSingleton<MsiUninstallExecutor>();
-        services.AddSingleton<WingetUninstallExecutor>();
         services.AddSingleton<AppxUninstallExecutor>();
+        services.AddSingleton<BrokenEntryExecutor>();
         services.AddSingleton<UninstallExecutorFactory>();
         services.AddSingleton<IBatchUninstallService, BatchUninstallService>();
         services.AddSingleton<ILeftoverScannerService, LeftoverScannerService>();
-        services.AddSingleton<ILeftoverConfidenceService, LeftoverConfidenceService>();
+        services.AddSingleton<ILeftoverCleanupService, LeftoverCleanupService>();
         services.AddSingleton<IRegistryBackupService, RegistryBackupService>();
         services.AddSingleton<IFileCleanupService, FileCleanupService>();
         services.AddSingleton<IProtectionService, ProtectionService>();
         services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
         services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
-        services.AddSingleton<ProcessDetectionService>();
+        services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
 
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();
@@ -303,6 +322,8 @@ public partial class App : Application
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
         services.AddTransient<TerminalViewModel>();
+        services.AddSingleton<ShareScreenSettingsViewModel>();   // shared by the stage and the Settings page
+        services.AddSingleton<ShareScreenViewModel>();   // singleton: a live stream must survive page switches
 
         // Views
         services.AddSingleton<MainWindow>();
@@ -330,6 +351,15 @@ public partial class App : Application
         Console.WriteLine($"Music player resolved: {musicPlayer.GetType().Name}, queue {musicPlayer.State.Queue.Count} item(s).");
         var nowPlaying = sp.GetRequiredService<NowPlayingViewModel>();
         Console.WriteLine($"NowPlayingViewModel resolved: '{nowPlaying.Title}'.");
+
+        var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
+        var shareTools = sp.GetRequiredService<IShareToolProvider>();
+        var ffmpeg = shareTools.FindFfmpeg();
+        Console.WriteLine(
+            $"Share Screen Initialized: {shareDevices.GetDisplays().Count} display(s), " +
+            $"{shareDevices.GetRenderDevices().Count} output(s), {shareDevices.GetCaptureDevices().Count} mic(s); " +
+            $"FFmpeg {(ffmpeg.IsAvailable ? ffmpeg.Version : "not found")}, " +
+            $"media server {(shareTools.FindMediaMtx().IsAvailable ? "ready" : "not downloaded")}.");
 
         try
         {

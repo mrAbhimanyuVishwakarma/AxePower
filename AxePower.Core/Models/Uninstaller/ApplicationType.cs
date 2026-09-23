@@ -1,23 +1,27 @@
 namespace AxePower.Core.Models.Uninstaller;
 
-/// <summary>The packaging/deployment type of an installed application.</summary>
+/// <summary>
+/// The UI filter category of an installed application, derived from its
+/// <see cref="UninstallerKind"/>. Saved history stores these as numbers, so values are never
+/// removed or reordered.
+/// </summary>
 public enum ApplicationType
 {
-    /// <summary>Classic Win32 installer (NSIS, Inno Setup, InstallShield, etc.).</summary>
+    /// <summary>Classic Win32 installer (NSIS, Inno Setup, InstallShield, Burn, Squirrel…).</summary>
     Win32,
 
     /// <summary>Windows Installer (MSI) package with a ProductCode GUID.</summary>
     MSI,
 
-    /// <summary>AppX package (Windows 8/10 era Store package).</summary>
+    /// <summary>AppX / MSIX Store package.</summary>
     AppX,
 
-    /// <summary>MSIX package (Windows 10/11 Store package).</summary>
+    /// <summary>No longer produced: MSIX packages are reported as <see cref="AppX"/>. Kept for saved history.</summary>
     MSIX,
 
-    /// <summary>Package discovered via Windows Package Manager (winget).</summary>
+    /// <summary>No longer produced: WinGet discovery was removed. Kept for saved history.</summary>
     WinGet,
 
-    /// <summary>Registry entry exists but the uninstaller is missing or broken.</summary>
+    /// <summary>Broken entry: the uninstaller is missing or the MSI product isn't registered. Shown as "Broken".</summary>
     Orphaned,
 }

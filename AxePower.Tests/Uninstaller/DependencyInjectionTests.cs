@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.IO;
+using Microsoft.Extensions.DependencyInjection;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
 using AxePower.Core.Services;
@@ -26,7 +27,11 @@ public class DependencyInjectionTests
 
             // Core Services
             services.AddSingleton<LogService>();
-            services.AddSingleton<SettingsService>();
+            // SettingsViewModel saves as soon as its properties initialise, so the container
+            // gets a SettingsService pointing at a temp folder: a test must never rewrite the
+            // user's real settings.json.
+            var settingsDir = Path.Combine(Path.GetTempPath(), "AxePower.Tests", "di-" + Guid.NewGuid().ToString("N"));
+            services.AddSingleton(sp => new SettingsService(sp.GetRequiredService<LogService>(), settingsDir));
             services.AddSingleton<BatteryService>();
             services.AddSingleton<PowerPlanService>();
             services.AddSingleton<NotificationService>();
@@ -64,21 +69,27 @@ public class DependencyInjectionTests
             services.AddSingleton<HardwareMonitorService>();
 
             // Uninstaller Pro — Core Services
+            services.AddSingleton<IFileSystemProbe, FileSystemProbe>();
+            services.AddSingleton<IMsiProductStateReader, MsiProductStateReader>();
+            services.AddSingleton<IProcessTreeWatcher, ProcessTreeWatcher>();
+            services.AddSingleton<IInstallStateVerifier, InstallStateVerifier>();
+            services.AddSingleton<IProcessDetectionService, ProcessDetectionService>();
+            services.AddSingleton<BackupManifestStore>();
             services.AddSingleton<IApplicationDiscoveryService, ApplicationDiscoveryService>();
             services.AddSingleton<Win32UninstallExecutor>();
             services.AddSingleton<MsiUninstallExecutor>();
-            services.AddSingleton<WingetUninstallExecutor>();
             services.AddSingleton<AppxUninstallExecutor>();
+            services.AddSingleton<BrokenEntryExecutor>();
             services.AddSingleton<UninstallExecutorFactory>();
             services.AddSingleton<IBatchUninstallService, BatchUninstallService>();
             services.AddSingleton<ILeftoverScannerService, LeftoverScannerService>();
-            services.AddSingleton<ILeftoverConfidenceService, LeftoverConfidenceService>();
+            services.AddSingleton<ILeftoverCleanupService, LeftoverCleanupService>();
             services.AddSingleton<IRegistryBackupService, RegistryBackupService>();
             services.AddSingleton<IFileCleanupService, FileCleanupService>();
             services.AddSingleton<IProtectionService, ProtectionService>();
             services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
             services.AddSingleton<SystemRestoreService>();
-            services.AddSingleton<ProcessDetectionService>();
+            services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
 
             // ViewModels
             services.AddTransient<DashboardViewModel>();
@@ -98,6 +109,12 @@ public class DependencyInjectionTests
             services.AddTransient<MainViewModel>();
 
             var provider = services.BuildServiceProvider();
+
+            // Every uninstaller service resolves (multi-constructor types pick the injectable one)
+            Assert.NotNull(provider.GetRequiredService<IBatchUninstallService>());
+            Assert.NotNull(provider.GetRequiredService<ILeftoverScannerService>());
+            Assert.NotNull(provider.GetRequiredService<ILeftoverCleanupService>());
+            Assert.NotNull(provider.GetRequiredService<UninstallExecutorFactory>());
 
             var mainVm = provider.GetRequiredService<MainViewModel>();
             Assert.NotNull(mainVm);
@@ -133,6 +150,12 @@ public class DependencyInjectionTests
             mainVm.NavigateCommand.Execute("About");
             Assert.Equal(mainVm.AboutVm, mainVm.CurrentView);
 
+            // SystemTelemetryService logs from a one-second timer. Left running, it keeps logging
+            // after this collection's dispatcher is gone. Only it is disposed: disposing the whole
+            // container would also tear down services whose Dispose blocks (hardware monitor,
+            // LAN drop) and stall the shared STA thread.
+            provider.GetService<SystemTelemetryService>()?.Dispose();
+            try { Directory.Delete(settingsDir, recursive: true); } catch { }
         });
     }
 

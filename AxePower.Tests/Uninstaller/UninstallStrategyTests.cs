@@ -26,31 +26,4 @@ public class UninstallStrategyTests
         var result = MsiUninstallExecutor.IsValidProductCode(productCode ?? string.Empty);
         Assert.Equal(expected, result);
     }
-
-    // ── WingetUninstallExecutor ID validation ─────────────────────────────────
-    // Tested indirectly by ensuring the executor requires a valid WinGet ID
-    // (executor returns Fail if ID is invalid)
-
-    [Theory]
-    [InlineData("Google.Chrome")]
-    [InlineData("VideoLAN.VLC")]
-    [InlineData("7zip.7zip")]
-    [InlineData("Microsoft.VisualStudioCode")]
-    public void ValidWingetIds_PassSafeCharacterCheck(string id)
-    {
-        // Safe pattern: Publisher.App with alphanumeric, dots, hyphens, underscores
-        var regex = new System.Text.RegularExpressions.Regex(@"^[\w\.\-]+$");
-        Assert.Matches(regex, id);
-    }
-
-    [Theory]
-    [InlineData("Google Chrome; rm -rf /")]
-    [InlineData("../../etc/passwd")]
-    [InlineData("App`whoami`")]
-    [InlineData("App$(echo bad)")]
-    public void MaliciousWingetIds_FailSafeCharacterCheck(string id)
-    {
-        var regex = new System.Text.RegularExpressions.Regex(@"^[\w\.\-]+$");
-        Assert.DoesNotMatch(regex, id);
-    }
 }

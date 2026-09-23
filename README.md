@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.8.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-1.9.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -17,6 +17,9 @@
 
 ## 🚀 Key Features
 
+- 🎵 **Integrated Music Player & Media Hub**: Built-in high-fidelity audio engine supporting local libraries, YouTube streaming, and Spotify controller integration. Features an aesthetic Header Player matching the dashboard design and automatically follows default Windows audio output device switches.
+- 🖥️ **Share Screen & GameStream**: Low-latency desktop and game display sharing directly to friends in their web browser without requiring them to install third-party clients.
+- 🗑️ **Next-Gen Uninstaller Pro**: Deep leftover scanner with confidence scoring, registry backup manifests, broken uninstaller recovery, and PowerShell execution safety nets.
 - 🖥️ **Built-In Terminal (CMD & PowerShell)**: A persistent interactive shell inside the app, and the single place every command AxePower runs reports to — Software Hub installs and System Doctor diagnostics stream their live output here, with a **Stop** button that cancels the running task.
 - 🛡️ **Administrator Mode Without the UAC Nagging**: A **Run as administrator** setting (on by default) plus a title-bar **Relaunch with Admin** button. The app ships an `asInvoker` manifest and registers its logon task at `HighestAvailable`, so it starts elevated at boot with **no UAC prompt** — and the toggle can still be switched off.
 - 🌡️ **Real CPU & GPU Temperatures (Driver-Free)**: A three-tier sensor stack — Lenovo's ACPI-WMI firmware interface, MSI Afterburner's shared memory, then LibreHardwareMonitor — so readings keep working on machines with **Memory Integrity / the vulnerable-driver blocklist enabled**, where MSR-only tools silently return nothing.
@@ -42,7 +45,6 @@
   - 📱 **Android Screen Mirroring (scrcpy)**: Ultra-low latency device mirroring, stay-awake / screen-off power toggles, resolution & FPS presets, and 1-click APK sideloading *(Credit to Genymobile)*.
 - 📖 **Dedicated Help & Documentation Center**: Direct in-app `? Help` title bar button and "Learn More" links connecting to the official [AxePower Help Center](https://axepower.vercel.app/help.html).
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
-- 🗑️ **Uninstaller Pro**: Deep application discovery, batch uninstallation, and verified leftover registry/filesystem cleaner with safety backups.
 - 🔄 **Update PC Utility & BIOS Checks**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and BIOS/firmware version checks.
 - 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
 - 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
@@ -61,8 +63,10 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **Auto Switch** | 🔄 | Configure automated rules for AC (Plugged In) and DC (Battery) states and dynamic refresh rate switching. |
 | **Game Mode** | 🎮 | Multi-platform game library scanner, SteamGridDB vertical posters, GPU control companion, background app suspension, and Xbox / PS5 Controller Navigation. |
 | **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends with custom icon cards. |
+| **Music** | 🎵 | Integrated music playback, local library scanning, YouTube streaming, Spotify controller, and sleek header player. |
 | **CONNECTION** | | |
 | **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
+| **🖥️ Share Screen** | 🖥️ | Low-latency display and gameplay streaming to any browser with audio. |
 | **MAINTENANCE** | | |
 | **⚡ Optimizer** | ⚡ | Safe Windows debloat, telemetry removal, and system performance optimizations. |
 | **🩺 Doctor** | 🩺 | Windows system health repair (SFC/DISM), shader cache cleaner, and DNS benchmark. |
@@ -166,7 +170,7 @@ sequenceDiagram
     AboutView->>Vm: CheckForUpdatesCommand
     Vm->>Svc: CheckForUpdatesAsync()
     Svc->>GH: GET /repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest
-    GH-->>Svc: Latest Release JSON (v1.8.0, Assets: Setup.exe)
+    GH-->>Svc: Latest Release JSON (v1.9.0, Assets: Setup.exe)
     Svc-->>Vm: UpdateCheckResult (HasUpdate = true)
     Vm->>AboutView: Display "Update Available" Modal Dialog
     
@@ -218,7 +222,7 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
 2. Publish first (the script packages `AxePower.App/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish/`).
 3. Open `Installer/AxePower.iss` — the full script, which also bootstraps the .NET 8 Desktop Runtime and removes older installs.
-4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v1.8.0-Setup.exe`.
+4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v1.9.0-Setup.exe`.
 
 ---
 
@@ -235,6 +239,9 @@ AxePower proudly integrates with and acknowledges tools created by the open-sour
 - **[Hardcodet WPF TaskbarNotification](https://github.com/hardcodet/wpf-notifyicon)**: System tray icon integration for WPF by **Philipp Sumi**.
 - **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)**: Modern, high-performance MVVM library by the **.NET Foundation & Microsoft**.
 - **Windows Package Manager (`winget`) & USOClient**: Package and driver update orchestration by **Microsoft Corporation**.
+- **[Bulk Crap Uninstaller](https://github.com/BCUninstaller/Bulk-Crap-Uninstaller)**: Uninstaller Pro adapts parts of its uninstaller detection, process-tree waiting and leftover-evidence model, by **Marcin Szeniak** (Apache-2.0).
+
+Full license texts and notices for bundled and adapted components are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 > *Notice: All trademarks, product names, and brand logos belong to their respective owners. AxePower functions as an independent, open-source orchestration companion. If you are an author or copyright holder of any included component and have questions, concerns, or requests for modification/removal, please open an issue and we will gladly accommodate.*
 

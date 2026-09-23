@@ -18,13 +18,22 @@ public partial class LogsViewModel : ObservableObject
         _logService = logService;
         _dispatcher = Dispatcher.CurrentDispatcher;
         
-        // Subscribe to log events to safely marshal them to the UI thread
-        _logService.OnLogAdded += (s, e) => 
+        // Subscribe to log events to safely marshal them to the UI thread.
+        // Background services keep logging from their timers while the app is closing, and
+        // Invoke on a dispatcher that is shutting down throws on the timer's thread, where
+        // nothing can catch it. A log line is never worth taking the process down for.
+        _logService.OnLogAdded += (s, e) =>
         {
-            _dispatcher.Invoke(() => 
+            if (_dispatcher.HasShutdownStarted || _dispatcher.HasShutdownFinished) return;
+
+            try
             {
-                _logService.AddLogToCollection(e);
-            });
+                _dispatcher.Invoke(() => _logService.AddLogToCollection(e));
+            }
+            catch (TaskCanceledException)
+            {
+                // The dispatcher shut down between the check and the call
+            }
         };
     }
 }

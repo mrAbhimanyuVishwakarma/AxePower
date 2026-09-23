@@ -22,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Uninstaller\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AxePower.Core\AxePower.Core.csproj" />
     <ProjectReference Include="..\AxePower.App\AxePower.App.csproj" />
   </ItemGroup>

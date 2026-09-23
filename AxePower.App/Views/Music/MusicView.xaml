@@ -34,20 +34,30 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding NowPlaying.OpenFilesCommand}" Margin="0,0,8,0"
-                        AutomationProperties.Name="Open files">
+                <!-- Spotify Green Button: Open & minimize + control -->
+                <Button Style="{StaticResource SpotifyButtonStyle}" Command="{Binding LaunchAndMinimizeSpotifyCommand}" Margin="0,0,8,0"
+                        ToolTip="Launch Spotify minimized &amp; control playback" AutomationProperties.Name="Spotify">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Open files…" VerticalAlignment="Center" />
+                        <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Spotify" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding NowPlaying.OpenFolderCommand}" Margin="0,0,8,0"
-                        AutomationProperties.Name="Open folder">
+
+                <!-- YouTube Music Free In-App Streaming -->
+                <Button Style="{StaticResource YouTubeMusicButtonStyle}" Command="{Binding SearchYouTubeCommand}" Margin="0,0,8,0"
+                        ToolTip="Stream YouTube Music In-App (Free, No Browser)" AutomationProperties.Name="YouTube Music">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Open folder…" VerticalAlignment="Center" />
+                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#FF0000" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock Text="YT Music" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
+
+                <!-- Music Settings Button ("*" Gear Icon) -->
+                <Button Style="{StaticResource MusicIconButtonStyle}" Width="38" Height="38" Content="&#xE713;"
+                        Command="{Binding ToggleMusicSettingsCommand}" Margin="0,0,8,0"
+                        ToolTip="Music Settings (Configure Library &amp; Playlist storage path)" AutomationProperties.Name="Music Settings" />
+
+                <!-- Queue / Playlist Toggle Button ("=" Icon) -->
                 <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Width="38" Height="38" Content="&#xE8FD;"
                               IsChecked="{Binding IsQueueOpen, Mode=TwoWay}"
                               ToolTip="{Binding QueueToggleLabel}" AutomationProperties.Name="{Binding QueueToggleLabel}" />
@@ -61,9 +71,15 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Grid.Column="0" Margin="-10,-10,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="10,10,10,20">
-                    <!-- Now Playing: glass card after the horizontal player in the design reference -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- ─── Pinned Player & Search (Never scrolls out of view) ─── -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                    <!-- Now Playing: glass card controlling Local, YouTube Music & Spotify -->
                     <Border x:Name="NowPlayingCard" Style="{StaticResource MusicGlassCardStyle}" Padding="24"
                             DataContext="{Binding NowPlaying}" AutomationProperties.Name="Now playing">
                         <Grid>
@@ -97,6 +113,16 @@
                                 </Border>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <!-- Spotify Mode Badge in Main Player -->
+                                    <Border Background="#221DB954" BorderBrush="#551DB954" BorderThickness="1" CornerRadius="6"
+                                            Padding="8,3" HorizontalAlignment="Left" Margin="0,0,0,8"
+                                            Visibility="{Binding IsSpotifyMode, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="7" Height="7" Fill="#1DB954" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Spotify (Streaming Minimized)" FontSize="11.5" FontWeight="SemiBold" Foreground="#1DB954" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+
                                     <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"
                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" />
                                     <TextBlock Text="{Binding ArtistAndAlbum}" FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,18"
@@ -167,146 +193,538 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Empty state -->
-                    <Border Margin="0,16,0,0" Padding="28" CornerRadius="16" BorderThickness="1.5"
-                            BorderBrush="{DynamicResource CardBorderBrush}" Background="{DynamicResource CardBackgroundBrush}"
-                            Visibility="{Binding NowPlaying.HasQueue, Converter={StaticResource InverseBoolToVis}}">
-                        <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="30" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,10" />
-                            <TextBlock Text="Nothing queued — pick some music or drop files here." FontSize="15" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
-                            <TextBlock Text="MP3, AAC/M4A, ALAC, FLAC, WAV, AIFF, WMA, Ogg Vorbis and Opus are supported."
-                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" Margin="0,6,0,16"
-                                       TextWrapping="Wrap" TextAlignment="Center" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Button Style="{StaticResource PrimaryButtonStyle}" Padding="20,9" FontSize="13.5" Margin="0,0,8,0"
-                                        Command="{Binding NowPlaying.OpenFilesCommand}" Content="Open files…" />
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding NowPlaying.OpenFolderCommand}" Content="Open folder…" />
+                    <!-- ─── YouTube Music In-App Search Bar ─── -->
+                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                            BorderThickness="1" CornerRadius="12" Padding="14,8" Margin="0,24,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,14,0">
+                                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#EF4444" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="YouTube Music" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
-                        </StackPanel>
+
+                            <Grid Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBox Text="{Binding SearchYouTubeText, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="Transparent" BorderThickness="0" FontSize="13"
+                                         Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"
+                                         Padding="4,2"
+                                         ToolTip="Search songs, artists or playlists on YouTube Music (plays in-app without browser)">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding SearchYouTubeCommand}"/>
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <TextBlock Text="Search tracks, artists or albums on YouTube Music..." FontSize="12.5"
+                                           Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="4,0,0,0"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SearchYouTubeText}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SearchYouTubeText}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
+                            <Button Grid.Column="2" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding SearchYouTubeCommand}"
+                                    Padding="16,6" Height="32" ToolTip="Search and load results into Library and Queue">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Search YT Music" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                     </Border>
                 </StackPanel>
-            </ScrollViewer>
 
-            <!-- ─── Queue drawer ─── -->
+                <!-- ─── Dedicated Scrollable Playlist Section (Player stays fixed at top) ─── -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16">
+                    <StackPanel>
+                        <!-- Section Header & Toolbar (Buttons placed below title to prevent hiding title) -->
+                        <StackPanel Margin="4,0,4,12">
+                            <!-- Row 1: Section Title & Summary -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+                                <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock Text="Library &amp; Playlists" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" Margin="0,0,14,0" />
+                                <TextBlock Text="{Binding LibraryItemsSummary}" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <!-- Row 2: Action Buttons Bar (never overlaps or clips the title) -->
+                            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Create Playlist Button -->
+                                <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding OpenCreatePlaylistDialogCommand}" Margin="0,0,8,6" Padding="14,6" Height="32"
+                                        ToolTip="Create new playlist in configured music folder">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Create Playlist" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Open files... moved here -->
+                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding NowPlaying.OpenFilesCommand}" Margin="0,0,8,6" Padding="12,6" Height="32"
+                                        ToolTip="Open individual audio files" AutomationProperties.Name="Open files">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Open files…" FontSize="12" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Open folder... moved here -->
+                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding NowPlaying.OpenFolderCommand}" Margin="0,0,8,6" Padding="12,6" Height="32"
+                                        ToolTip="Open folder into queue" AutomationProperties.Name="Open folder">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Open folder…" FontSize="12" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Add Folder to Library -->
+                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddFolderToLibraryCommand}" Margin="0,0,8,6" Padding="12,6" Height="32"
+                                        ToolTip="Add external folder to Library">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Add Folder" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Rescan Library -->
+                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RefreshLibraryCommand}" Margin="0,0,8,6" Padding="10,6" Height="32" ToolTip="Rescan Local Music &amp; Playlists">
+                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center"/>
+                                </Button>
+                            </WrapPanel>
+                        </StackPanel>
+
+                        <!-- Responsive WrapPanel: Automatically fits more columns as screen expands, never stretches images -->
+                        <ItemsControl ItemsSource="{Binding LibraryItems}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="150" Margin="6" Background="{DynamicResource ElevatedCardBackgroundBrush}" 
+                                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                                            CornerRadius="12" Padding="10" Cursor="Hand">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter Property="BorderThickness" Value="1.5"/>
+                                                    </DataTrigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" 
+                                                          Command="{Binding DataContext.SelectLibraryItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                          CommandParameter="{Binding}"/>
+                                        </Border.InputBindings>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Cover Art / Stylized Tile: Fixed height 130 for perfect square proportion -->
+                                            <Grid Grid.Row="0" Height="130" Margin="0,0,0,8">
+                                                <Border CornerRadius="8" Background="{Binding GradientBrush}" ClipToBounds="True">
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" 
+                                                                   FontSize="36" Foreground="#66FFFFFF"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                   Visibility="{Binding HasCover, Converter={StaticResource InverseBoolToVis}}"/>
+                                                        <Image Source="{Binding CoverImage}" Stretch="UniformToFill" 
+                                                               RenderOptions.BitmapScalingMode="HighQuality"
+                                                               Visibility="{Binding HasCover, Converter={StaticResource BoolToVis}}"/>
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- Quick Play button -->
+                                                <Button Style="{StaticResource MusicPlayButtonStyle}" Width="36" Height="36" FontSize="13"
+                                                        HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,6"
+                                                        Command="{Binding DataContext.PlayLibraryItemDirectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Play now" AutomationProperties.Name="Play playlist">
+                                                    <Button.Effect>
+                                                        <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.45" Color="#000000"/>
+                                                    </Button.Effect>
+                                                </Button>
+                                            </Grid>
+
+                                            <!-- Title -->
+                                            <TextBlock Grid.Row="1" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis" Margin="2,0,2,2"/>
+
+                                            <!-- Subtitle / Track count -->
+                                            <TextBlock Grid.Row="2" Text="{Binding Subtitle}" FontSize="11" 
+                                                       Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" Margin="2,0,2,0"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- ─── Right Drawer: Dual Queued / Songs Panel ─── -->
             <Border x:Name="QueuePanel" Grid.Column="1" Width="340" Margin="20,0,0,0" Padding="0,16,0,8"
                     Style="{StaticResource MusicGlassCardStyle}"
                     Visibility="{Binding IsQueueOpen, Converter={StaticResource BoolToVis}}"
-                    AutomationProperties.Name="Queue">
-                <Grid DataContext="{Binding NowPlaying}">
+                    AutomationProperties.Name="Music panel">
+                <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Margin="18,0,12,10">
+                    <!-- Header with Segmented Tabs: [ Queued ] [ Songs ] -->
+                    <Grid Margin="16,0,12,12">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Text="Queue" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                            <TextBlock Text="{Binding QueueSummary}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE710;" Command="{Binding AddFilesCommand}"
+
+                        <!-- Segmented Switcher -->
+                        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="2">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource MusicTabRadioStyle}" Content="Queued"
+                                             IsChecked="{Binding IsQueueTabSelected, Mode=TwoWay}" />
+                                <RadioButton Style="{StaticResource MusicTabRadioStyle}" Content="Songs"
+                                             IsChecked="{Binding IsSongsTabSelected, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Track count / Subtitle -->
+                        <TextBlock Grid.Column="1" Text="{Binding RightPanelSubtitle}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" 
+                                   VerticalAlignment="Center" Margin="8,0,4,0" TextTrimming="CharacterEllipsis" />
+
+                        <!-- Actions for Queued Tab: Add files, Clear queue -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" 
+                                    Visibility="{Binding IsQueueTabSelected, Converter={StaticResource BoolToVis}}">
+                            <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE710;" Command="{Binding NowPlaying.AddFilesCommand}"
                                     ToolTip="Add files to the queue" AutomationProperties.Name="Add files to the queue" />
-                            <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE74D;" Command="{Binding ClearQueueCommand}"
-                                    IsEnabled="{Binding HasQueue}" ToolTip="Clear the queue" AutomationProperties.Name="Clear the queue" />
+                            <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE74D;" Command="{Binding NowPlaying.ClearQueueCommand}"
+                                    IsEnabled="{Binding NowPlaying.HasQueue}" ToolTip="Clear the queue" AutomationProperties.Name="Clear the queue" />
+                        </StackPanel>
+
+                        <!-- Actions for Songs Tab: Play All, Queue All -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                                    Visibility="{Binding IsSongsTabSelected, Converter={StaticResource BoolToVis}}">
+                            <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE768;" Command="{Binding PlaySelectedSongsCommand}"
+                                    ToolTip="Play All" AutomationProperties.Name="Play All" />
+                            <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE710;" Command="{Binding QueueSelectedSongsCommand}"
+                                    ToolTip="Add All to Queue" AutomationProperties.Name="Queue All" />
                         </StackPanel>
                     </Grid>
 
-                    <ListBox x:Name="QueueList" Grid.Row="1" ItemsSource="{Binding Queue}"
-                             Background="Transparent" BorderThickness="0" Padding="6,0"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
-                             VirtualizingPanel.ScrollUnit="Pixel"
-                             AutomationProperties.Name="Queue"
-                             MouseDoubleClick="QueueList_MouseDoubleClick"
-                             PreviewKeyDown="QueueList_PreviewKeyDown"
-                             PreviewMouseLeftButtonDown="QueueList_PreviewMouseLeftButtonDown"
-                             PreviewMouseMove="QueueList_PreviewMouseMove"
-                             PreviewMouseLeftButtonUp="QueueList_PreviewMouseLeftButtonUp">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}" />
-                                <Setter Property="ToolTip" Value="{Binding AccessibleName}" />
-                                <Setter Property="Padding" Value="0" />
-                                <Setter Property="Margin" Value="0,1" />
-                                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="row" CornerRadius="8" Padding="10,7" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
-                                                <ContentPresenter />
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
-                                                </Trigger>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
-                                                </Trigger>
-                                                <Trigger Property="IsKeyboardFocused" Value="True">
-                                                    <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter Property="ContextMenu">
-                                    <Setter.Value>
-                                        <ContextMenu>
-                                            <MenuItem Header="Play" Command="{Binding PlacementTarget.Tag.JumpCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
-                                            <MenuItem Header="Move up" InputGestureText="Alt+Up" Command="{Binding PlacementTarget.Tag.MoveUpCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
-                                            <MenuItem Header="Move down" InputGestureText="Alt+Down" Command="{Binding PlacementTarget.Tag.MoveDownCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
-                                            <Separator />
-                                            <MenuItem Header="Remove from queue" InputGestureText="Del" Command="{Binding PlacementTarget.Tag.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
-                                        </ContextMenu>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" />
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate DataType="{x:Type music:QueueEntryViewModel}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="30" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                    <!-- TAB 1: Queue List -->
+                    <Grid Grid.Row="1" Visibility="{Binding IsQueueTabSelected, Converter={StaticResource BoolToVis}}">
+                        <ListBox x:Name="QueueList" ItemsSource="{Binding NowPlaying.Queue}"
+                                 Background="Transparent" BorderThickness="0" Padding="6,0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                 VirtualizingPanel.ScrollUnit="Pixel"
+                                 AutomationProperties.Name="Queue"
+                                 MouseDoubleClick="QueueList_MouseDoubleClick"
+                                 PreviewKeyDown="QueueList_PreviewKeyDown"
+                                 PreviewMouseLeftButtonDown="QueueList_PreviewMouseLeftButtonDown"
+                                 PreviewMouseMove="QueueList_PreviewMouseMove"
+                                 PreviewMouseLeftButtonUp="QueueList_PreviewMouseLeftButtonUp">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}" />
+                                    <Setter Property="ToolTip" Value="{Binding AccessibleName}" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0,1" />
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="row" CornerRadius="8" Padding="10,7" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                                                    <ContentPresenter />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                                        <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu MinWidth="180">
+                                                <MenuItem Header="Play" Icon="&#xE768;" Command="{Binding PlacementTarget.Tag.JumpCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="Move up" Icon="&#xE74A;" InputGestureText="Alt+Up" Command="{Binding PlacementTarget.Tag.MoveUpCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="Move down" Icon="&#xE74B;" InputGestureText="Alt+Down" Command="{Binding PlacementTarget.Tag.MoveDownCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <Separator />
+                                                <MenuItem Header="Remove from queue" Icon="&#xE74D;" InputGestureText="Del" Command="{Binding PlacementTarget.Tag.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Tag" Value="{Binding NowPlaying, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type music:QueueEntryViewModel}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="30" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                                    <!-- Number, or a speaker glyph on the current track (shape, not just colour) -->
-                                    <Grid Grid.Column="0" VerticalAlignment="Center">
-                                        <TextBlock x:Name="number" Text="{Binding Number}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" />
-                                        <TextBlock x:Name="nowGlyph" Text="&#xE767;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                                                   Foreground="{DynamicResource MusicAccentBrush}" Visibility="Collapsed" />
+                                        <Grid Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="number" Text="{Binding Number}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" />
+                                            <TextBlock x:Name="nowGlyph" Text="&#xE767;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                       Foreground="{DynamicResource MusicAccentBrush}" Visibility="Collapsed" />
+                                        </Grid>
+
+                                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                            <TextBlock x:Name="title" Text="{Binding Title}" FontSize="13" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Artist}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
                                     </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                            <Setter TargetName="number" Property="Visibility" Value="Collapsed" />
+                                            <Setter TargetName="nowGlyph" Property="Visibility" Value="Visible" />
+                                            <Setter TargetName="title" Property="FontWeight" Value="SemiBold" />
+                                            <Setter TargetName="title" Property="Foreground" Value="{DynamicResource MusicAccentBrush}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
 
-                                    <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                                        <TextBlock x:Name="title" Text="{Binding Title}" FontSize="13" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding Artist}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
+                        <TextBlock Text="Nothing queued yet. Add files, or drop them here to add them to the end."
+                                   Margin="18,8" TextWrapping="Wrap" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}"
+                                   Visibility="{Binding NowPlaying.HasQueue, Converter={StaticResource InverseBoolToVis}}" />
+                    </Grid>
 
-                                    <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
-                                </Grid>
-                                <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
-                                        <Setter TargetName="number" Property="Visibility" Value="Collapsed" />
-                                        <Setter TargetName="nowGlyph" Property="Visibility" Value="Visible" />
-                                        <Setter TargetName="title" Property="FontWeight" Value="SemiBold" />
-                                        <Setter TargetName="title" Property="Foreground" Value="{DynamicResource MusicAccentBrush}" />
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <!-- TAB 2: Songs List of Selected Playlist/Folder -->
+                    <Grid Grid.Row="1" Visibility="{Binding IsSongsTabSelected, Converter={StaticResource BoolToVis}}">
+                        <ListBox x:Name="SongsList" ItemsSource="{Binding SelectedSongs}"
+                                 Background="Transparent" BorderThickness="0" Padding="6,0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                 VirtualizingPanel.ScrollUnit="Pixel"
+                                 MouseDoubleClick="SongsList_MouseDoubleClick">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0,1" />
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="row" CornerRadius="8" Padding="10,7" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                                                    <ContentPresenter />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu MinWidth="180">
+                                                <MenuItem Header="Play" Icon="&#xE768;" Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="Add to queue" Icon="&#xE710;" Command="{Binding DataContext.QueueSongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type music:SongItemViewModel}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="28" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="1" Text="Nothing queued yet. Add files, or drop them here to add them to the end."
-                               Margin="18,8" TextWrapping="Wrap" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}"
-                               Visibility="{Binding HasQueue, Converter={StaticResource InverseBoolToVis}}" />
+                                        <TextBlock Grid.Column="0" Text="{Binding Number}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+
+                                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                            <TextBlock Text="{Binding Title}" FontSize="13" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis" FontWeight="Medium" />
+                                            <TextBlock Text="{Binding Artist}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <TextBlock Text="No songs found in this playlist or folder."
+                                   Margin="18,8" TextWrapping="Wrap" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSongs.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
                 </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ─── Modal 1: Create Playlist Dialog ─── -->
+        <Grid Grid.Row="0" Grid.RowSpan="2" Background="#B2000000"
+              Visibility="{Binding IsCreatePlaylistOpen, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="100">
+            <Border Width="420" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5"
+                    CornerRadius="16" Padding="28">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="8" Direction="270" Opacity="0.5" Color="#000000" />
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Create Playlist" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Enter a name for your new playlist. It will be saved into your designated playlist folder as an .m3u playlist."
+                               FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Playlist Name" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10,6" Margin="0,0,0,14">
+                        <TextBox Text="{Binding NewPlaylistName, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="12,8" Margin="0,0,0,20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Grid.Column="1" Text="{Binding SelectedPlaylistPath}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding CancelCreatePlaylistCommand}" Content="Cancel" Margin="0,0,10,0" Padding="16,8"/>
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding ConfirmCreatePlaylistCommand}" Content="Create" Padding="20,8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ─── Modal 2: Music Settings Dialog ─── -->
+        <Grid Grid.Row="0" Grid.RowSpan="2" Background="#B2000000"
+              Visibility="{Binding IsMusicSettingsOpen, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="100">
+            <Border Width="480" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5"
+                    CornerRadius="16" Padding="28">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="8" Direction="270" Opacity="0.5" Color="#000000" />
+                </Border.Effect>
+                <StackPanel>
+                    <Grid Margin="0,0,0,18">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Music Settings" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource MusicIconButtonStyle}" HorizontalAlignment="Right" Content="&#xE711;"
+                                Command="{Binding CloseMusicSettingsCommand}" ToolTip="Close" />
+                    </Grid>
+
+                    <!-- Library & Playlist Storage Path -->
+                    <TextBlock Text="Music &amp; Playlist Folder" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Created playlists and local music collections are saved and read from this folder."
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,18">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding SelectedPlaylistPath}" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ChangePlaylistPathCommand}" Padding="12,6" Content="Change Path…"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Integrations Section -->
+                    <TextBlock Text="Streaming Integrations" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4"/>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,20">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                    <TextBlock Text="Spotify Background Control" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Launches Spotify minimized and controls playback via Windows media sessions" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Style="{StaticResource SpotifyButtonStyle}" Command="{Binding LaunchAndMinimizeSpotifyCommand}" Padding="10,5" Content="Open Minimized" VerticalAlignment="Center"/>
+                            </Grid>
+                            <Separator Background="{DynamicResource CardBorderBrush}" Margin="0,6"/>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                    <TextBlock Text="YouTube Music (Free)" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Opens YouTube Music in background with universal media controls" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Style="{StaticResource YouTubeMusicButtonStyle}" Command="{Binding LaunchYouTubeMusicCommand}" Padding="10,5" Content="Open YT Music" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Right" Command="{Binding CloseMusicSettingsCommand}" Content="Done" Padding="24,8"/>
+                </StackPanel>
             </Border>
         </Grid>
     </Grid>

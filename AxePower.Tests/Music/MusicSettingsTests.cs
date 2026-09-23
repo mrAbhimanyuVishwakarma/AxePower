@@ -18,6 +18,7 @@ public class MusicSettingsTests
         var s = new MusicSettings();
 
         Assert.Empty(s.LibraryFolders);
+        Assert.Null(s.PlaylistFolder);
         Assert.True(s.ScanOnStartup);
         Assert.True(s.WatchFolders);
         Assert.Equal(100, s.MinimumFileSizeKb);
@@ -181,6 +182,7 @@ public class MusicSettingsTests
     private static MusicSettings CreateNonDefault() => new()
     {
         LibraryFolders = new List<string> { @"D:\Music" },
+        PlaylistFolder = @"D:\Playlists",
         ScanOnStartup = false,
         WatchFolders = false,
         MinimumFileSizeKb = 250,

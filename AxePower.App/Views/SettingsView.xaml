@@ -5,337 +5,699 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:AxePower.App.Converters"
              mc:Ignorable="d"
-             d:DesignHeight="728" d:DesignWidth="1040">
+             d:DesignHeight="840" d:DesignWidth="1100">
 
     <UserControl.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBool" />
-        <!-- Declared locally as well as in App.xaml so the view can be constructed standalone -->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converters:NullToVisibilityConverter x:Key="NotNullToVis" Invert="True" />
+        <converters:EnumToBooleanConverter x:Key="EnumToBool" />
     </UserControl.Resources>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="69"/>
-        </Grid.RowDefinitions>
-        
-        <ScrollViewer Grid.Row="0" Margin="40,32,40,24" VerticalScrollBarVisibility="Auto">
-            <StackPanel HorizontalAlignment="Stretch" Margin="0,0,40,0" MaxWidth="920">
-                <!-- Header -->
-                <StackPanel Margin="0,0,0,32">
-                    <TextBlock Text="Settings" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                    <TextBlock Text="Customize AxePower to fit your needs." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15"/>
+    <!-- Main Content Area: Single Full-Height ScrollViewer (No redundant empty bottom bar) -->
+    <ScrollViewer Margin="36,24,36,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel HorizontalAlignment="Stretch" MaxWidth="1140">
+            <!-- Header -->
+            <StackPanel Margin="4,0,0,24">
+                <TextBlock Text="Settings" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="26" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                <TextBlock Text="Customize performance defaults, appearance, startup options, notifications and music preferences."
+                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13.5"/>
+            </StackPanel>
+
+            <!-- 2-Column Responsive Card Grid -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="340"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*" MinWidth="340"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ══════════════ LEFT COLUMN ══════════════ -->
+                <StackPanel Grid.Column="0">
+
+                    <!-- CARD 1: Appearance & Display -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A3B82F6" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE790;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource PrimaryBlueBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Appearance &amp; Display" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Theme, display refresh rate, and telemetry units." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Theme -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Theme" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Choose Dark, Light, or System appearance." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
+                                          ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Display Refresh Rate -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Display refresh rate" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Dynamic smart switching or fixed panel rate." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
+                                          ItemsSource="{Binding AvailableRefreshRates}" SelectedItem="{Binding SelectedRefreshRate}"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Temperature Unit -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Temperature unit" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Used for CPU and GPU telemetry monitoring." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
+                                          ItemsSource="{Binding AvailableTemperatureUnits}" SelectedItem="{Binding SelectedTemperatureUnit}"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Touchpad -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Touchpad" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Enable or disable internal laptop touchpad." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenTouchpadSettingsCommand}"
+                                            ToolTip="Open Windows Touchpad Settings" Margin="0,0,10,0" Padding="8,4" Height="28">
+                                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </Button>
+                                    <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsTouchpadEnabled, Mode=TwoWay}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Touchpad"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 2: Performance Defaults -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1AF97316" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#F97316"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Performance Defaults" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Default power plans and automatic fan profile switching." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Default Mode on Battery -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Default mode on battery" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Power mode applied when unplugged." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
+                                          ItemsSource="{Binding AvailablePowerModeItems}"
+                                          SelectedValuePath="Mode"
+                                          SelectedValue="{Binding SelectedUnpluggedMode}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" Foreground="{Binding ColorHex}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Default Mode when Plugged In -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Default mode when plugged in" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Power mode applied when connected to charger." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
+                                          ItemsSource="{Binding AvailablePowerModeItems}"
+                                          SelectedValuePath="Mode"
+                                          SelectedValue="{Binding SelectedPluggedInMode}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" Foreground="{Binding ColorHex}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Fan Mode on Battery -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Fan profile on battery" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Thermal cooling profile when running on battery." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
+                                          ItemsSource="{Binding AvailableFanModes}"
+                                          SelectedItem="{Binding SelectedFanModeOnBattery}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource SmartBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 3: Notifications & Alerts -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A10B981" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#10B981"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Notifications &amp; Alerts" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Desktop banners and audible battery warnings." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Show Notifications -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Show notifications" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Display desktop notifications for system events." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Notify on Mode Switch -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Notify on mode switch" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Toast alert when power plan switches automatically." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding NotifyOnModeSwitch}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Low Battery Alert Sound -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Low battery alert chime" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Audible sound when battery reaches low threshold." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding LowBatteryAlertSound}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="24"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <!-- ══════════════ RIGHT COLUMN ══════════════ -->
+                <StackPanel Grid.Column="2">
 
-                    <!-- Left Column -->
-                    <StackPanel Grid.Column="0">
-                        <!-- General -->
-                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="General" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                        <TextBlock Text="Basic app preferences." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                    </StackPanel>
+                    <!-- CARD 1: Startup & System -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A8B5CF6" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#8B5CF6"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Startup &amp; Elevation" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Control how AxePower launches and runs." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                 </StackPanel>
-                                
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Temperature unit" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableTemperatureUnits}" SelectedItem="{Binding SelectedTemperatureUnit}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Display refresh rate" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableRefreshRates}" SelectedItem="{Binding SelectedRefreshRate}"/>
-                                </Grid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Touchpad" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsTouchpadEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                </Grid>
                             </StackPanel>
-                        </Border>
 
-                        <!-- Notifications -->
-                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <TextBlock Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Notifications" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                        <TextBlock Text="Manage alerts and notifications." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                    </StackPanel>
+                            <!-- Start with Windows -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Launch on Windows startup" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Starts automatically upon user logon." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Show notifications" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowNotifications}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Notify on mode switch" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding NotifyOnModeSwitch}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Notify when battery below" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}">
-                                        <ComboBoxItem Content="30%" IsSelected="True"/>
-                                    </ComboBox>
-                                </Grid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Low battery alert sound" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding LowBatteryAlertSound}"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center"/>
+                            </Grid>
 
-                        <!-- Performance Defaults -->
-                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Performance Defaults" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                        <TextBlock Text="Set default preferences for power modes." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                    </StackPanel>
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Start Minimized -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Start minimized" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Silently starts in the system tray without opening window." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Default mode on battery" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}"
-                                              ItemsSource="{Binding AvailablePowerModeItems}"
-                                              SelectedValuePath="Mode"
-                                              SelectedValue="{Binding SelectedUnpluggedMode}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" Foreground="{Binding ColorHex}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </Grid>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Default mode when plugged in" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}"
-                                              ItemsSource="{Binding AvailablePowerModeItems}"
-                                              SelectedValuePath="Mode"
-                                              SelectedValue="{Binding SelectedPluggedInMode}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" Foreground="{Binding ColorHex}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </Grid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Fan mode on battery" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}"
-                                              ItemsSource="{Binding AvailableFanModes}"
-                                              SelectedItem="{Binding SelectedFanModeOnBattery}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource SmartBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartMinimised}" VerticalAlignment="Center"/>
+                            </Grid>
 
-                    </StackPanel>
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
 
-                    <!-- Right Column -->
-                    <StackPanel Grid.Column="2">
-                        <!-- Startup -->
-                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Startup" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                        <TextBlock Text="Control how AxePower launches." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                    </StackPanel>
+                            <!-- Run as Administrator -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Run as administrator" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Enables deep power management and hardware monitoring." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Launch AxePower on Windows startup" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Start minimized" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartMinimised}"/>
-                                </Grid>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding RunAsAdministrator, Mode=TwoWay}" VerticalAlignment="Center"/>
+                            </Grid>
 
-                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,4,0,12"/>
+                            <!-- Restart elevated button (only if not elevated) -->
+                            <Button Content="Restart as administrator now" Command="{Binding RestartElevatedCommand}"
+                                    Visibility="{Binding CanRestartElevated, Converter={StaticResource BoolToVis}}"
+                                    HorizontalAlignment="Left" Cursor="Hand" Margin="0,6,0,2">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="elevBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14,7">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="&#xE7EF;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource PrimaryBlueBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{TemplateBinding Content}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="elevBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                                <Setter TargetName="elevBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Border>
 
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Run as administrator" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding RunAsAdministrator, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                </Grid>
-
-                                <Button Content="Restart as administrator now" Command="{Binding RestartElevatedCommand}"
-                                        Visibility="{Binding CanRestartElevated, Converter={StaticResource BoolToVis}}"
-                                        HorizontalAlignment="Left" Cursor="Hand" Margin="0,0,0,4">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="elevBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="14" Padding="14,6">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="&#xE7EF;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource PrimaryBlueBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{TemplateBinding Content}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="elevBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                                                    <Setter TargetName="elevBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Theme -->
-                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <TextBlock Text="&#xE790;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Theme" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                        <TextBlock Text="Choose your preferred appearance." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                    </StackPanel>
+                    <!-- CARD: Share Screen -->
+                    <Border x:Name="ShareScreenCard" Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22"
+                            DataContext="{Binding ShareScreen}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A7C5CE6" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#7C5CE6"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Share Screen" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="What gets streamed to your friends, and how." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                 </StackPanel>
-                                
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Theme" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"/>
-                                </Grid>
                             </StackPanel>
-                        </Border>
 
-                        <!-- Updates -->
-                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Updates" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                        <TextBlock Text="Keep AxePower up to date." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                    </StackPanel>
+                            <!-- Display -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Display" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Which monitor your friends see." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Check for updates automatically" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoCheckUpdates}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Download updates in the background" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoDownloadUpdates}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Current version" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding CurrentVersion}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                </Grid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Last checked" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding LastCheckedDisplay}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                          ItemsSource="{Binding Displays}" SelectedItem="{Binding SelectedDisplay}"
+                                          DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Display"/>
+                            </Grid>
 
-                        <!-- Music (playback group; more groups arrive with later music features) -->
-                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,16" Padding="20"
-                                DataContext="{Binding Music}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource PrimaryBlueBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Music" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                        <TextBlock Text="Playback preferences for AxePower Music." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                    </StackPanel>
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Quality -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Quality" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Every rung targets 60 FPS; a struggling link costs resolution, not smoothness." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                          ItemsSource="{Binding QualityPresets}" SelectedItem="{Binding SelectedQuality}"
+                                          DisplayMemberPath="DisplayName" AutomationProperties.Name="Quality"/>
+                            </Grid>
 
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                        <TextBlock Text="Allow volume boost up to 200%" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock Text="A limiter keeps boosted audio from clipping. Windows' own volume is never changed." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowVolumeBoost}" VerticalAlignment="Center"
-                                              AutomationProperties.Name="Allow volume boost up to 200%"/>
-                                </Grid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                        <TextBlock Text="Resume playback on startup" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock Text="When off, your last queue and position come back paused." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ResumePlaybackOnStartup}" VerticalAlignment="Center"
-                                              AutomationProperties.Name="Resume playback on startup"/>
-                                </Grid>
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Audio source -->
+                            <StackPanel Margin="0,0,0,14">
+                                <TextBlock Text="Audio" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                <TextBlock Text="System audio sends whatever the chosen output is playing — your game, your music, a call." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,10"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Content="System audio" GroupName="ShareAudioModeSettings" Margin="0,0,18,0" FontSize="12.5"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"
+                                                 IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=SystemAudio, Mode=TwoWay}"/>
+                                    <RadioButton Content="Microphone" GroupName="ShareAudioModeSettings" Margin="0,0,18,0" FontSize="12.5"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"
+                                                 IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=Microphone, Mode=TwoWay}"/>
+                                    <RadioButton Content="None" GroupName="ShareAudioModeSettings" FontSize="12.5"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"
+                                                 IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=None, Mode=TwoWay}"/>
+                                </StackPanel>
                             </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
-        </ScrollViewer>
-        
-        <!-- Bottom Status Region -->
-        <Border Grid.Row="1" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
-            <Grid Margin="32,0" VerticalAlignment="Center">
-                <!-- Left: Check for Updates Button -->
-                <Button HorizontalAlignment="Left" VerticalAlignment="Center" Command="{Binding CheckForUpdatesCommand}" Cursor="Hand" IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="chkBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="18" Padding="20,8">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding CheckButtonText}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+
+                            <!-- Output device -->
+                            <Grid Margin="0,0,0,14" Visibility="{Binding ShowSystemAudioPicker, Converter={StaticResource BoolToVis}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Output device" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="The speakers or headphones whose sound gets shared." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                          ItemsSource="{Binding SystemAudioDevices}" SelectedItem="{Binding SelectedSystemAudioDevice}"
+                                          DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Output device"/>
+                            </Grid>
+
+                            <!-- Microphone -->
+                            <Grid Margin="0,0,0,14" Visibility="{Binding ShowMicrophonePicker, Converter={StaticResource BoolToVis}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Microphone" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Your friends hear you, but not the game." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                          ItemsSource="{Binding Microphones}" SelectedItem="{Binding SelectedMicrophone}"
+                                          DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Microphone"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Hide cursor -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Hide the mouse pointer" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Leave this off for games so your friends can follow what you are doing." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding HideCursor}" VerticalAlignment="Center"
+                                          AutomationProperties.Name="Hide the mouse pointer"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Adaptive quality -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Adapt automatically" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Drop a rung when the encoder cannot keep up, instead of letting the picture stutter." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AdaptiveQuality}" VerticalAlignment="Center"
+                                          AutomationProperties.Name="Adapt automatically"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Remote control -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Allow remote control" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Adds a control button to the Share Screen page. Nothing is granted by this switch on its own." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowRemoteControl}" VerticalAlignment="Center"
+                                          AutomationProperties.Name="Allow remote control"/>
+                            </Grid>
+
+                            <Border Background="#22DA373C" BorderBrush="#66DA373C" BorderThickness="1" CornerRadius="8"
+                                    Padding="12,10" Margin="0,0,0,14"
+                                    Visibility="{Binding AllowRemoteControl, Converter={StaticResource BoolToVis}}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#E8646A" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="What remote control gives away" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" LineHeight="17">
+                                        <Run Text="A viewer with control has your mouse and keyboard. They can open your files, read your email, install software, and act as you on anything you are signed in to. You will see it happen, but you are not asked to approve each action."/>
+                                        <LineBreak/>
+                                        <Run Text="Control is off every time a session starts, has to be switched on by hand, and needs a code that the viewing link does not contain. Stopping the share, or closing AxePower, cuts it off."/>
+                                        <LineBreak/>
+                                        <Run Text="Only ever turn it on for someone you would hand your unlocked laptop to."/>
+                                    </TextBlock>
                                 </StackPanel>
                             </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="chkBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                                    <Setter TargetName="chkBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
+
+                            <!-- Viewer address -->
+                            <StackPanel Margin="0,0,0,14">
+                                <TextBlock Text="Viewer address" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                <TextBlock Text="Leave this empty to use this PC's network address. Set it to a Tailscale or public address when your friends are not on your network." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,8"/>
+                                <TextBox Text="{Binding ViewerHostOverride, UpdateSourceTrigger=LostFocus}" Height="30" Padding="9,0" VerticalContentAlignment="Center"
+                                         Background="{DynamicResource CardBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}"
+                                         BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" FontSize="12.5"
+                                         AutomationProperties.Name="Viewer address"/>
+                            </StackPanel>
+
+                            <!-- Tools -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding ToolStatus}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5"
+                                           TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RefreshDevicesCommand}"
+                                        Padding="12,5" Height="28" ToolTip="Re-read the displays and audio devices on this PC">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Refresh" FontSize="11.5" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 2: Music & Playlists -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22"
+                            DataContext="{Binding Music}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A10B981" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#10B981"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Music &amp; Playlists" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Folder storage and native playback preferences." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Playlist & Music Storage Folder -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Music &amp; playlist storage path" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="{Binding DisplayPlaylistFolder}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"
+                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayPlaylistFolder}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding BrowsePlaylistFolderCommand}"
+                                        Padding="12,5" Height="28" ToolTip="Choose folder for music and created playlists">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Browse…" FontSize="11.5" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Allow Volume Boost -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Allow volume boost up to 200%" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Hardware limiter prevents distortion; Windows volume is unchanged." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowVolumeBoost}" VerticalAlignment="Center"
+                                          AutomationProperties.Name="Allow volume boost up to 200%"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Resume Playback on Startup -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Resume playback on startup" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="When off, your last queue and position restore in a paused state." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ResumePlaybackOnStartup}" VerticalAlignment="Center"
+                                          AutomationProperties.Name="Resume playback on startup"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 3: Updates & Version (Integrated Check Button) -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A3B82F6" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource PrimaryBlueBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Updates &amp; Maintenance" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Software version and release management." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Version Banner & Check Button -->
+                            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                            <TextBlock Text="AxePower v" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding CurrentVersion}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding LastCheckedDisplay, StringFormat='Last checked: {0}'}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Integrated Check for Updates Button -->
+                                    <Button Grid.Column="1" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CheckForUpdatesCommand}"
+                                            IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}"
+                                            Padding="14,6" Height="32" Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding CheckButtonText}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <!-- Check for Updates Automatically -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Check for updates automatically" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Checks for new stable builds in the background." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoCheckUpdates}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Download Updates in Background -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Download updates automatically" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Pre-fetches releases so updates apply smoothly." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutoDownloadUpdates}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
             </Grid>
-        </Border>
-    </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

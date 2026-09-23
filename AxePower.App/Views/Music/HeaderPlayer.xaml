@@ -173,11 +173,12 @@
                         <Button x:Name="MoreButton" Style="{StaticResource MusicIconButtonStyle}" Width="24" Height="22" FontSize="12"
                                 Content="&#xE712;" ToolTip="More" AutomationProperties.Name="More options" Click="MoreButton_Click">
                             <Button.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Open Music" Command="{Binding OpenMusicPageCommand}" />
-                                    <MenuItem Header="Open files…" Command="{Binding OpenFilesCommand}" />
-                                    <MenuItem Header="Open folder…" Command="{Binding OpenFolderCommand}" />
-                                    <MenuItem Header="Add files to queue…" Command="{Binding AddFilesCommand}" />
+                                <ContextMenu MinWidth="180">
+                                    <MenuItem Header="Open Music" Icon="&#xE8D6;" Command="{Binding OpenMusicPageCommand}" />
+                                    <MenuItem Header="Open files…" Icon="&#xE8E5;" Command="{Binding OpenFilesCommand}" />
+                                    <MenuItem Header="Open folder…" Icon="&#xE8B7;" Command="{Binding OpenFolderCommand}" />
+                                    <Separator/>
+                                    <MenuItem Header="Add files to queue…" Icon="&#xE710;" Command="{Binding AddFilesCommand}" />
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>

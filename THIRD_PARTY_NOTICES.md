@@ -35,6 +35,12 @@ LGPL components (TagLib#) are shipped as separate, unmodified DLLs (`TagLibSharp
 
 The source code of the MPL-2.0 components is available at the source links above. AxePower does not modify them.
 
+### Adapted source code (Uninstaller Pro)
+
+| Component | License | Source | How it is used |
+|---|---|---|---|
+| Bulk Crap Uninstaller (BCU) | Apache-2.0 | https://github.com/BCUninstaller/Bulk-Crap-Uninstaller | Parts of its uninstaller-type detection, process-tree waiting, name trimming, Sift4 matching, confidence records and junk finders were adapted and modified in AxePower's own source. No BCU binary is shipped. |
+
 ## License texts
 
 ### MIT License
@@ -515,6 +521,51 @@ Full text of the Apache License, Version 2.0:
    limitations under the License.
 
 ```
+
+### Bulk Crap Uninstaller (Apache-2.0)
+
+Portions of Uninstaller Pro are adapted from Bulk Crap Uninstaller and modified for AxePower.
+Each such file carries this header:
+
+```text
+// Portions adapted from Bulk Crap Uninstaller (https://github.com/BCUninstaller/Bulk-Crap-Uninstaller)
+// Copyright (c) 2017 Marcin Szeniak. Licensed under the Apache License, Version 2.0. Modified for AxePower.
+```
+
+Modified files: `AxePower.Core/Services/Uninstaller/UninstallerKindDetector.cs`,
+`ProcessTreeWatcher.cs`, and in `AxePower.Core/Services/Uninstaller/Leftovers/`: `Sift4.cs`,
+`AppNameNormalizer.cs`, `ConfidenceRecords.cs`, `CoreFinders.cs`, `AdvancedFinders.cs`.
+
+```text
+Copyright 2017 Marcin Szeniak
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+BCU's NOTICE file:
+
+```text
+Bulk Crap Uninstaller is a free open-source project hosted on GitHub. Marcin Szeniak is the project manager and lead developer.
+The official project is hosted at https://github.com/Klocman/Bulk-Crap-Uninstaller
+
+In case of issues, please update to the latest official release. Non-official releases are not supported.
+If the issue presists, please post a bug report to https://github.com/Klocman/Bulk-Crap-Uninstaller/issues
+
+If you wish to contribute, donate or otherwise help the project, please read the CONTRIBUTING file.
+https://github.com/Klocman/Bulk-Crap-Uninstaller/blob/master/CONTRIBUTING.md
+```
+
+The full text of the Apache License, Version 2.0 is included in the HidSharp section above.
 
 ### Mozilla Public License 2.0 (LibreHardwareMonitorLib, BlackSharp.Core, DiskInfoToolkit, RAMSPDToolkit-NDD)
 

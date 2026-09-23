@@ -20,6 +20,9 @@ public class MusicSettings
     [JsonPropertyName("libraryFolders")]
     public List<string> LibraryFolders { get; set; } = new();
 
+    [JsonPropertyName("playlistFolder")]
+    public string? PlaylistFolder { get; set; }
+
     [JsonPropertyName("scanOnStartup")]
     public bool ScanOnStartup { get; set; } = true;
 
@@ -126,6 +129,7 @@ public class MusicSettings
         return new MusicSettings
         {
             LibraryFolders = new List<string>(LibraryFolders ?? new List<string>()),
+            PlaylistFolder = PlaylistFolder,
             ScanOnStartup = ScanOnStartup,
             WatchFolders = WatchFolders,
             MinimumFileSizeKb = MinimumFileSizeKb,

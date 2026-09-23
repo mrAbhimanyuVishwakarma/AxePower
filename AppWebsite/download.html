@@ -72,6 +72,9 @@
       height: 4px;
       background: linear-gradient(90deg, #00d4ff, #0066ff);
     }
+    .dl-card-mobile::before {
+      background: linear-gradient(90deg, #10b981, #00d4ff) !important;
+    }
     .dl-options-card {
       background: var(--bg-card);
       border: 1px solid var(--border-card);
@@ -190,12 +193,12 @@
         <div>
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
             <span style="font-size: 13px; font-weight: 700; color: var(--mode-eco); background: rgba(16,185,129,0.12); padding: 4px 12px; border-radius: var(--radius-pill);">Latest Stable Release</span>
-            <span style="font-size: 13px; color: var(--text-muted);">Version 1.8.0</span>
+            <span style="font-size: 13px; color: var(--text-muted);">Version 1.9.0</span>
           </div>
 
           <h2 style="font-size: 26px; font-weight: 800; margin-bottom: 8px;">AxePower for Windows</h2>
           <p style="font-size: 14.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px;">
-            Includes the built-in CMD/PowerShell terminal, driver-free CPU &amp; GPU temperature monitoring, one-click System Restore points, automatic background updater, tray controls, Game Booster, Ninite Multi-Installer, Controller Navigation, and Phone Companion server.
+            Includes the built-in Music Player &amp; Header Mini-Player, ShareScreen browser streaming, Uninstaller Pro leftover cleaner, persistent CMD/PowerShell terminal, driver-free CPU &amp; GPU temperatures, 24h battery history, tray controls, Game Booster, Ninite multi-installer, and Phone Companion server.
           </p>
         </div>
 
@@ -248,13 +251,78 @@
 
     </div>
 
-    <!-- What's New in v1.8.0 Changelog Section -->
+    <!-- AxePower Mobile Companion Card (Beta - In Progress) -->
+    <div style="margin-top: 30px;" class="download-grid-main">
+      <div class="dl-card-featured dl-card-mobile">
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; font-weight: 700; color: #f59e0b; background: rgba(245, 158, 11, 0.15); padding: 4px 12px; border-radius: var(--radius-pill); border: 1px solid rgba(245, 158, 11, 0.35);">Beta &bull; In Progress</span>
+              <span style="font-size: 13px; font-weight: 700; color: var(--mode-eco); background: rgba(16, 185, 129, 0.12); padding: 4px 12px; border-radius: var(--radius-pill);">Android Companion</span>
+            </div>
+            <span style="font-size: 13px; color: var(--text-muted);">Version 1.0.0 (Beta)</span>
+          </div>
+
+          <h2 style="font-size: 26px; font-weight: 800; margin-bottom: 8px;">AxePower Mobile for Android</h2>
+          <p style="font-size: 14.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px;">
+            Turn your smartphone into a dedicated second-screen hardware monitor and remote control deck for your PC. Features real-time CPU/GPU load &amp; temp telemetry, live RAM and battery monitoring, and 1-tap remote power mode switching over your local Wi-Fi with 100% privacy and zero cloud tracking.
+          </p>
+        </div>
+
+        <div>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px;">
+            <a href="https://github.com/mrAbhimanyuVishwakarma/Axepower-Mobile-Download/releases" target="_blank" rel="noopener noreferrer" class="btn btn-lg btn-primary" style="flex: 1; min-width: 220px; background: #10b981; border-color: #10b981;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4483.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.996-3.4572c.1556-.2692.0633-.6135-.2059-.7691-.2692-.1555-.6135-.0633-.7691.2059l-2.0231 3.5042c-1.4287-.652-3.0371-1.0163-4.7594-1.0163s-3.3307.3643-4.7594 1.0163l-2.0231-3.5042c-.1556-.2692-.4999-.3614-.7691-.2059-.2692.1556-.3615.4999-.2059.7691l1.996 3.4572c-3.1554 1.7214-5.321 4.9084-5.5902 8.706h22.451c-.2692-3.7976-2.4348-6.9846-5.5902-8.706"/></svg>
+              <span>Download Latest APK (Releases) ↗</span>
+            </a>
+            <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower/tree/main/AxePower%20Mobile" target="_blank" rel="noopener noreferrer" class="btn btn-lg btn-secondary">
+              <span>View Mobile Source ↗</span>
+            </a>
+          </div>
+          <p style="font-size: 12.5px; color: var(--text-muted); text-align: center;">
+            Supports Android 8.0+ (Oreo to Android 15) &bull; ARM64 &amp; x86_64 &bull; 100% Free &amp; Open Source
+          </p>
+        </div>
+      </div>
+
+      <div class="dl-options-card">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Mobile Specifications</h3>
+        <ul class="sys-req-list">
+          <li class="sys-req-item">
+            <span>Platform</span>
+            <span>Android (iOS in development)</span>
+          </li>
+          <li class="sys-req-item">
+            <span>Minimum OS</span>
+            <span>Android 8.0 (API 26+)</span>
+          </li>
+          <li class="sys-req-item">
+            <span>Connection</span>
+            <span>Local Wi-Fi (LAN) / USB</span>
+          </li>
+          <li class="sys-req-item">
+            <span>Framework</span>
+            <span>Flutter 3 &bull; Dart 3</span>
+          </li>
+          <li class="sys-req-item">
+            <span>Cloud &amp; Telemetry</span>
+            <span>Zero (100% Offline / Local)</span>
+          </li>
+        </ul>
+
+        <div style="margin-top: 24px; padding: 14px; background: var(--bg-elevated); border-radius: var(--radius-md); font-size: 13px; color: var(--text-secondary);">
+          ⚡ <strong>Beta Status:</strong> AxePower Mobile is actively in progress. Download the latest release APK anytime from GitHub Releases.
+        </div>
+      </div>
+    </div>
+
+    <!-- What's New in v1.9.0 Changelog Section -->
     <div style="margin-top: 40px; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 32px 28px;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 12px;">
           <span style="font-size: 24px;">🚀</span>
           <div>
-            <h3 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0;">What's New in Version 1.8.0</h3>
+            <h3 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 0;">What's New in Version 1.9.0</h3>
             <p style="font-size: 13px; color: var(--text-secondary); margin: 2px 0 0;">Latest update released September 2026</p>
           </div>
         </div>
@@ -265,33 +333,33 @@
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
         <div style="padding: 16px; background: var(--bg-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-card);">
-          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">🖥️ Built-In Terminal (CMD &amp; PowerShell)</div>
-          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">A real interactive shell inside AxePower, and the one place every command the app runs reports to — Software Hub installs and System Doctor diagnostics stream their live output here, with a Stop button that cancels the running task.</p>
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">🎵 Integrated Music Player &amp; Media Hub</div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">In-app audio playback engine with local library support, YouTube audio streaming, Spotify controller, and a sleek Header Player matching the dashboard design that automatically follows Windows audio device switching.</p>
         </div>
 
         <div style="padding: 16px; background: var(--bg-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-card);">
-          <div style="font-size: 14px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;">🛡️ Run as Administrator — No UAC Prompt</div>
-          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">New Run as administrator setting plus a Relaunch with Admin button. The logon task registers at HighestAvailable, so AxePower starts elevated at boot with no UAC prompt — and unlike most tools, the toggle can still be switched off.</p>
+          <div style="font-size: 14px; font-weight: 700; color: #8b5cf6; margin-bottom: 6px;">🖥️ ShareScreen &amp; GameStream</div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">Stream your PC screen or gaming session directly to friends via a local web link. Viewers connect in any browser with low latency and audio with zero software installation needed on their end.</p>
         </div>
 
         <div style="padding: 16px; background: var(--bg-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-card);">
-          <div style="font-size: 14px; font-weight: 700; color: #ef4444; margin-bottom: 6px;">🌡️ Real CPU &amp; GPU Temperatures</div>
-          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">A three-tier sensor stack — Lenovo ACPI-WMI firmware, MSI Afterburner shared memory, then LibreHardwareMonitor — so readings keep working on Windows 11 PCs with Memory Integrity enabled, where MSR-only tools silently show nothing.</p>
+          <div style="font-size: 14px; font-weight: 700; color: #ef4444; margin-bottom: 6px;">🗑️ Next-Gen Uninstaller Pro</div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">Overhauled leftover scanner featuring confidence scoring, deep registry/filesystem probes, safety backups, and a dedicated Broken Entry Executor to clean corrupted Windows uninstall records.</p>
         </div>
 
         <div style="padding: 16px; background: var(--bg-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-card);">
-          <div style="font-size: 14px; font-weight: 700; color: var(--mode-eco); margin-bottom: 6px;">💾 One-Click System Restore Point</div>
-          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">Create a Windows restore point from the Software Hub before you change anything. AxePower enables System Restore and lifts the once-per-24-hours throttle first, so the checkpoint is actually written.</p>
+          <div style="font-size: 14px; font-weight: 700; color: var(--mode-eco); margin-bottom: 6px;">🔋 Battery Diagnostics &amp; UI Polish</div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">Streamlined battery history card layout with responsive sparklines and cleaner metrics, persistent sidebar group states, and elimination of binding errors during dashboard startup.</p>
         </div>
 
         <div style="padding: 16px; background: var(--bg-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-card);">
-          <div style="font-size: 14px; font-weight: 700; color: #8b5cf6; margin-bottom: 6px;">🪟 New Glass Theme (Mica &amp; Acrylic)</div>
-          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">The old Transparent theme is replaced by Glass, built on the real Windows 11 DWM backdrops with an Acrylic blur-behind fallback for Windows 10. Existing settings migrate automatically.</p>
+          <div style="font-size: 14px; font-weight: 700; color: #f59e0b; margin-bottom: 6px;">🖥️ Built-In Terminal (CMD &amp; PowerShell)</div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">A real interactive shell inside AxePower where Software Hub installs and System Doctor diagnostics stream their live progress, featuring an instant Stop button to cancel tasks.</p>
         </div>
 
         <div style="padding: 16px; background: var(--bg-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-card);">
-          <div style="font-size: 14px; font-weight: 700; color: #ec4899; margin-bottom: 6px;">🧭 Dashboard Quick Actions That Deep-Link</div>
-          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">Dashboard tiles now jump straight to the exact destination — a Gaming Runtimes tile opens the Software Hub already on the right tab with the right category selected — and Software Hub category chips filter correctly.</p>
+          <div style="font-size: 14px; font-weight: 700; color: #ec4899; margin-bottom: 6px;">🌡️ Driver-Free Temperatures &amp; Admin Mode</div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">Hardware temperature monitoring that works even with Windows 11 Memory Integrity turned on, alongside Run as administrator setting with clean boot elevation and no UAC prompts.</p>
         </div>
       </div>
     </div>

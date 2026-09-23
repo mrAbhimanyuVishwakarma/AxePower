@@ -1,25 +1,115 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using AxePower.Core.Models.Uninstaller;
 
 namespace AxePower.Core.Services.Uninstaller;
 
-/// <summary>Persists and retrieves uninstall session history as JSON.</summary>
+/// <summary>
+/// Persists uninstall sessions to %LOCALAPPDATA%\AxePower\UninstallerHistory\sessions.json
+/// (moved once from %APPDATA%). Writes are atomic, a session is saved again under the same ID
+/// when its cleanup finishes, and history written before outcomes existed still loads.
+/// </summary>
 public sealed class UninstallHistoryService : IUninstallHistoryService
 {
-    private static readonly string HistoryFile = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "AxePower", "UninstallerHistory", "sessions.json");
+    private const int MaxSessions = 50;
 
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    public static string DefaultRoot { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "UninstallerHistory");
+
+    private static readonly string LegacyRoot = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AxePower", "UninstallerHistory");
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    private readonly string _root;
+    private readonly SemaphoreSlim _gate = new(1, 1);
+    private bool _migrated;
+
+    public UninstallHistoryService() : this(DefaultRoot) { }
+
+    public UninstallHistoryService(string root)
+    {
+        _root = root;
+    }
+
+    private string HistoryFile => Path.Combine(_root, "sessions.json");
 
     public async Task<IReadOnlyList<UninstallSession>> GetSessionsAsync()
     {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            return await LoadAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task SaveSessionAsync(UninstallSession session)
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            var sessions = await LoadAsync().ConfigureAwait(false);
+            sessions.RemoveAll(s => s.SessionId == session.SessionId);
+            sessions.Add(session);
+            await WriteAsync(sessions).ConfigureAwait(false);
+        }
+        catch
+        {
+            // History is best effort; the uninstall itself already happened
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task DeleteSessionAsync(string sessionId)
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            var sessions = await LoadAsync().ConfigureAwait(false);
+            sessions.RemoveAll(s => s.SessionId == sessionId);
+            await WriteAsync(sessions).ConfigureAwait(false);
+        }
+        catch { }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task ClearAllSessionsAsync()
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await WriteAsync([]).ConfigureAwait(false);
+        }
+        catch { }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task<List<UninstallSession>> LoadAsync()
+    {
+        MigrateOnce();
         try
         {
             if (!File.Exists(HistoryFile)) return [];
-            var json = await File.ReadAllTextAsync(HistoryFile);
-            return JsonSerializer.Deserialize<List<UninstallSession>>(json, JsonOptions)
-                   ?? [];
+            var json = await File.ReadAllTextAsync(HistoryFile).ConfigureAwait(false);
+            return Parse(json);
         }
         catch
         {
@@ -27,41 +117,74 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
         }
     }
 
-    public async Task SaveSessionAsync(UninstallSession session)
+    private async Task WriteAsync(List<UninstallSession> sessions)
     {
-        try
-        {
-            var sessions = new List<UninstallSession>(await GetSessionsAsync()) { session };
-            // Keep last 50 sessions
-            if (sessions.Count > 50)
-                sessions = sessions.OrderByDescending(s => s.StartTime).Take(50).ToList();
-
-            Directory.CreateDirectory(Path.GetDirectoryName(HistoryFile)!);
-            var json = JsonSerializer.Serialize(sessions, JsonOptions);
-            await File.WriteAllTextAsync(HistoryFile, json);
-        }
-        catch { }
+        var kept = sessions.OrderByDescending(s => s.StartTime).Take(MaxSessions).OrderBy(s => s.StartTime).ToList();
+        Directory.CreateDirectory(_root);
+        var temp = HistoryFile + ".tmp";
+        await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(kept, JsonOptions)).ConfigureAwait(false);
+        File.Move(temp, HistoryFile, overwrite: true);
     }
 
-    public async Task DeleteSessionAsync(string sessionId)
+    /// <summary>
+    /// Reads sessions, giving results saved before <see cref="UninstallResult.Outcome"/> existed an
+    /// outcome from their old Success / WasSkipped / WasDryRun flags.
+    /// </summary>
+    internal static List<UninstallSession> Parse(string json)
     {
-        try
+        var root = JsonNode.Parse(json) as JsonArray;
+        if (root is null) return [];
+
+        foreach (var session in root.OfType<JsonObject>())
         {
-            var sessions = new List<UninstallSession>(await GetSessionsAsync());
-            sessions.RemoveAll(s => s.SessionId == sessionId);
-            var json = JsonSerializer.Serialize(sessions, JsonOptions);
-            await File.WriteAllTextAsync(HistoryFile, json);
+            if (session["Results"] is not JsonArray results) continue;
+            foreach (var result in results.OfType<JsonObject>())
+            {
+                if (result.ContainsKey("Outcome")) continue;
+                var outcome =
+                    Flag(result, "WasDryRun") ? UninstallOutcome.DryRun :
+                    Flag(result, "WasSkipped") ? UninstallOutcome.Skipped :
+                    Flag(result, "Success") ? UninstallOutcome.Removed :
+                    UninstallOutcome.Failed;
+                result["Outcome"] = outcome.ToString();
+            }
         }
-        catch { }
+
+        return root.Deserialize<List<UninstallSession>>(JsonOptions) ?? [];
+
+        static bool Flag(JsonObject o, string name) =>
+            o.TryGetPropertyValue(name, out var v) && v is JsonValue value && value.TryGetValue<bool>(out var b) && b;
     }
 
-    public async Task ClearAllSessionsAsync()
+    /// <summary>Moves history (sessions and backup folders) from %APPDATA% the first time it's needed.</summary>
+    private void MigrateOnce()
     {
+        if (_migrated) return;
+        _migrated = true;
+        if (!_root.Equals(DefaultRoot, StringComparison.OrdinalIgnoreCase)) return;
+
         try
         {
-            if (File.Exists(HistoryFile))
-                await File.WriteAllTextAsync(HistoryFile, "[]");
+            if (!Directory.Exists(LegacyRoot)) return;
+            Directory.CreateDirectory(_root);
+
+            foreach (var file in Directory.EnumerateFiles(LegacyRoot))
+            {
+                var target = Path.Combine(_root, Path.GetFileName(file));
+                if (!File.Exists(target)) File.Move(file, target);
+            }
+            foreach (var dir in Directory.EnumerateDirectories(LegacyRoot))
+            {
+                var target = Path.Combine(_root, Path.GetFileName(dir));
+                if (!Directory.Exists(target)) Directory.Move(dir, target);
+            }
+
+            if (!Directory.EnumerateFileSystemEntries(LegacyRoot).Any())
+                Directory.Delete(LegacyRoot);
         }
-        catch { }
+        catch
+        {
+            // Old history stays where it was; nothing is lost
+        }
     }
 }

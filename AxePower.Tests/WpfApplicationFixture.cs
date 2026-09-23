@@ -135,6 +135,16 @@ public sealed class WpfApplicationFixture : IDisposable
         }
     }
 
+    /// <summary>
+    /// Runs an async test body on the Application's STA thread. Its awaits resume on that
+    /// dispatcher, as they do in the app, so view models can update their collection views.
+    /// </summary>
+    public Task RunAsync(Func<Task> action)
+    {
+        Assert.True(_startupFailure is null, $"WPF application fixture failed to start: {_startupFailure}");
+        return Dispatcher.InvokeAsync(action).Task.Unwrap();
+    }
+
     public void Dispose()
     {
         try
