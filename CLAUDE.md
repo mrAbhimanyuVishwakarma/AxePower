@@ -36,6 +36,6 @@ something as working because its tests are green.
 
 ## Conventions
 
-- Branch `v1.9`. Do not push; commit locally unless told otherwise.
+- Branch `v2.0` (one branch per release line). Do not push; commit locally unless told otherwise.
 - Leave the untracked reference clones (`LenovoLegionToolkit/`, `lenovo_vantage/`) out of commits.
 - UI must match the images in `ui reference/` closely.
