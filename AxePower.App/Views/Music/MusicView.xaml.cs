@@ -70,6 +70,16 @@ public partial class MusicView : UserControl
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        // While a shortcut is being recorded every key belongs to it, including the ones this
+        // page uses for playback, or a shortcut could never be bound to them.
+        if (ViewModel?.Shortcuts is { Recording: not null } shortcuts)
+        {
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+            shortcuts.RecordKey(key, Keyboard.Modifiers);
+            e.Handled = true;
+            return;
+        }
+
         var np = ViewModel?.NowPlaying;
         if (np == null || Keyboard.FocusedElement is TextBoxBase) return;
 

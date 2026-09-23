@@ -157,6 +157,10 @@
                                         <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="{Binding RepeatGlyph}"
                                                       IsChecked="{Binding IsRepeatOn, Mode=TwoWay}"
                                                       ToolTip="{Binding RepeatLabel}" AutomationProperties.Name="{Binding RepeatLabel}" />
+                                        <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="&#xEC4F;" Margin="10,0,0,0"
+                                                      IsChecked="{Binding IsDiscoveryOn, Mode=TwoWay}"
+                                                      Visibility="{Binding IsDiscoveryAvailable, Converter={StaticResource BoolToVis}}"
+                                                      ToolTip="{Binding DiscoveryLabel}" AutomationProperties.Name="{Binding DiscoveryLabel}" />
                                     </StackPanel>
 
                                     <!-- Volume -->
@@ -859,6 +863,142 @@
                                     </StackPanel>
                                     <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Padding="12,5" Content="Clear"
                                             VerticalAlignment="Center" Command="{Binding Sources.ClearCacheCommand}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Discovery: keep the queue going when it runs out -->
+                        <TextBlock Text="Discovery" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4"/>
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,20">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Keep the queue going" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="When you reach the last track, AxePower asks the active source for more music like it and adds it to the end. It never changes what you queued yourself."
+                                                   FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                              IsChecked="{Binding NowPlaying.IsDiscoveryOn, Mode=TwoWay}"/>
+                                </Grid>
+                                <Separator Background="{DynamicResource CardBorderBrush}" Margin="0,10"/>
+                                <TextBlock Text="Variety" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="How far recommendations stray from what is playing."
+                                           FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,4"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Similar" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <Slider Grid.Column="1" Style="{StaticResource MusicThinSliderStyle}" Margin="8,0" VerticalAlignment="Center"
+                                            Minimum="0" Maximum="100" SmallChange="5" LargeChange="10"
+                                            Value="{Binding Sources.DiscoveryVariety, Mode=TwoWay}"
+                                            AutomationProperties.Name="Discovery variety"/>
+                                    <TextBlock Grid.Column="2" Text="Adventurous" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Shortcuts -->
+                        <Grid Margin="0,0,0,4">
+                            <TextBlock Text="Keyboard shortcuts" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <Button Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" Padding="10,3"
+                                    Content="Reset all" Command="{Binding Shortcuts.ResetAllCommand}"/>
+                        </Grid>
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,20">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Work outside AxePower" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="{Binding Shortcuts.GlobalHotkeysNote}" FontSize="11.5" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Shortcuts.GlobalHotkeysEnabled, Mode=TwoWay}"/>
+                                </Grid>
+
+                                <Separator Background="{DynamicResource CardBorderBrush}" Margin="0,10"/>
+
+                                <ItemsControl ItemsSource="{Binding Shortcuts.Shortcuts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12.5" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                                    <Button Grid.Column="1" MinWidth="150" Padding="10,5" Margin="0,0,6,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Content="{Binding DisplayBinding}"
+                                                            Command="{Binding RecordCommand}"
+                                                            ToolTip="Click, then press the keys you want. Esc cancels, Backspace clears."/>
+
+                                                    <Button Grid.Column="2" Style="{StaticResource MusicIconButtonStyle}" Content="&#xE777;"
+                                                            ToolTip="Back to the default"
+                                                            Command="{Binding DataContext.Shortcuts.ResetOneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </Grid>
+
+                                                <TextBlock Text="{Binding Error}" FontSize="11" Margin="0,2,0,0" Foreground="#F59E0B" TextWrapping="Wrap"
+                                                           Visibility="{Binding Error, Converter={StaticResource NotNullToVis}}"/>
+                                                <TextBlock Text="{Binding SystemConflict}" FontSize="11" Margin="0,2,0,0" Foreground="#EF4444" TextWrapping="Wrap"
+                                                           Visibility="{Binding SystemConflict, Converter={StaticResource NotNullToVis}}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Separator Background="{DynamicResource CardBorderBrush}" Margin="0,10"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Seek step" FontSize="12.5" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Slider Style="{StaticResource MusicThinSliderStyle}" Width="150" VerticalAlignment="Center"
+                                                Minimum="1" Maximum="60" SmallChange="1" LargeChange="5"
+                                                Value="{Binding Shortcuts.SeekSeconds, Mode=TwoWay}"
+                                                AutomationProperties.Name="Seek step in seconds"/>
+                                        <TextBlock Text="{Binding Shortcuts.SeekSeconds, StringFormat={}{0} s}" MinWidth="40" Margin="8,0,0,0"
+                                                   FontSize="11.5" TextAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Volume step" FontSize="12.5" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Slider Style="{StaticResource MusicThinSliderStyle}" Width="150" VerticalAlignment="Center"
+                                                Minimum="1" Maximum="25" SmallChange="1" LargeChange="5"
+                                                Value="{Binding Shortcuts.VolumeStepPercent, Mode=TwoWay}"
+                                                AutomationProperties.Name="Volume step in percent"/>
+                                        <TextBlock Text="{Binding Shortcuts.VolumeStepPercent, StringFormat={}{0}%}" MinWidth="40" Margin="8,0,0,0"
+                                                   FontSize="11.5" TextAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
                                 </Grid>
                             </StackPanel>
                         </Border>

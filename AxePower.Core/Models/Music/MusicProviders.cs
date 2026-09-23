@@ -13,7 +13,19 @@ public enum ProviderKind
     Metadata,
 
     /// <summary>Supplies lyrics.</summary>
-    Lyrics
+    Lyrics,
+
+    /// <summary>Suggests what to play next, to keep a queue going on its own.</summary>
+    Discovery
+}
+
+/// <summary>
+/// How adventurous a set of recommendations should be. <see cref="Variety"/> runs 0–1: at the
+/// bottom it stays with the artists already playing, at the top it looks for music around them.
+/// </summary>
+public sealed record DiscoveryOptions(double Variety, int Limit)
+{
+    public static DiscoveryOptions Default { get; } = new(0.5, 10);
 }
 
 /// <summary>Where an item came from. <see cref="Provider"/> is a provider id such as "youtube".</summary>

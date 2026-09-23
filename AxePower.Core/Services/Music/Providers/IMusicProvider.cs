@@ -56,6 +56,20 @@ public interface IMetadataProvider : IMusicProvider
     Task<IReadOnlyList<Track>> GetPlaylistTracksAsync(string playlistId, int limit, CancellationToken ct);
 }
 
+/// <summary>
+/// Suggests tracks to carry on with, given what has been playing. Used to extend the queue
+/// when it runs out, so a session does not simply stop.
+/// </summary>
+public interface IDiscoveryProvider : IMusicProvider
+{
+    /// <summary>
+    /// Tracks to play next. <paramref name="context"/> is the recent listening, most recent
+    /// last. Returning fewer than asked for is fine; returning nothing means "no ideas".
+    /// </summary>
+    Task<IReadOnlyList<Track>> GetRecommendationsAsync(
+        IReadOnlyList<Track> context, DiscoveryOptions options, CancellationToken ct);
+}
+
 /// <summary>A provider the user signs into.</summary>
 public interface IAuthenticatedProvider
 {

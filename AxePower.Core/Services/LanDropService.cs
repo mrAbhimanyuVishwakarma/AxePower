@@ -14,11 +14,23 @@ using System.Threading.Tasks;
 using AxePower.Core.Helpers;
 using AxePower.Core.Models;
 
+using AxePower.Core.Services.Music;
+
 namespace AxePower.Core.Services;
 
 public class LanDropService : IDisposable
 {
     private readonly LogService _logService;
+
+    /// <summary>
+    /// Null only where the portal is constructed without security wired up (older tests). The
+    /// server then refuses to start rather than listening unprotected.
+    /// </summary>
+    private readonly PortalAccessToken? _token;
+
+    /// <summary>Null when the music player is not available; its routes then return 404.</summary>
+    private readonly MusicRemote? _music;
+
     private TcpListener? _tcpListener;
     private CancellationTokenSource? _cts;
     private Task? _listenTask;
@@ -39,6 +51,18 @@ public class LanDropService : IDisposable
         : string.Empty;
 
     public string DownloadDirectory { get; set; }
+
+    /// <summary>HTTP line endings, spelled out so they survive any source-file rewriting.</summary>
+    private const string Crlf = "\r\n";
+    private const string Lf = "\n";
+
+    /// <summary>
+    /// The address to open on a phone, including the access token. This is what the QR code
+    /// encodes: the link is the credential, so it must not be shared any further than intended.
+    /// </summary>
+    public string PortalUrl => IsRunning && _token is not null && !string.IsNullOrEmpty(CurrentIpAddress)
+        ? $"http://{CurrentIpAddress}:{CurrentPort}/?{PortalAccessToken.QueryName}={_token.Value}"
+        : string.Empty;
 
     // Win32 Media, Lock, and Power simulation
     [DllImport("user32.dll")]
@@ -69,9 +93,11 @@ public class LanDropService : IDisposable
     private const byte VK_MEDIA_PLAY_PAUSE = 0xB3;
     private const uint KEYEVENTF_KEYUP = 0x0002;
 
-    public LanDropService(LogService logService)
+    public LanDropService(LogService logService, PortalAccessToken? token = null, MusicRemote? music = null)
     {
         _logService = logService;
+        _token = token;
+        _music = music;
         var downloads = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "Downloads", "AxePower_LanDrop");
@@ -133,6 +159,14 @@ public class LanDropService : IDisposable
             {
                 CurrentIpAddress = ipAddress;
             }
+            if (_token is null)
+            {
+                // Listening on every interface with no way to tell an intended request from
+                // any other is not something to do quietly, so it is refused outright.
+                _logService.LogError("[LanDrop] Refusing to start: the portal has no access token configured.");
+                return Task.FromResult(false);
+            }
+
             CurrentPort = port;
 
             _cts = new CancellationTokenSource();
@@ -353,6 +387,15 @@ public class LanDropService : IDisposable
                     return;
                 }
 
+                var query = ParseQueryString(queryString);
+                if (!IsAuthorised(headers, query))
+                {
+                    // The same answer for a missing token and a wrong one, with nothing about
+                    // what this service is, so scanning the network learns nothing from it.
+                    await SendResponseAsync(networkStream, 401, "Unauthorized", "text/plain", "Unauthorized"u8.ToArray());
+                    return;
+                }
+
                 if (method == "GET")
                 {
                     if (path == "/" || path == "/index.html")
@@ -371,9 +414,25 @@ public class LanDropService : IDisposable
                         string? fileId = queryDict.TryGetValue("id", out var fid) ? fid : null;
                         await HandleDownloadRequestAsync(networkStream, fileId, ct);
                     }
+                    else if (path == "/api/music/state")
+                    {
+                        if (_music is null)
+                        {
+                            await SendResponseAsync(networkStream, 404, "Not Found", "text/plain", "No player"u8.ToArray());
+                        }
+                        else
+                        {
+                            await SendResponseAsync(networkStream, 200, "OK", "application/json",
+                                Encoding.UTF8.GetBytes(_music.StateJson()));
+                        }
+                    }
+                    else if (path == "/api/music/events")
+                    {
+                        await StreamMusicEventsAsync(networkStream, ct);
+                    }
                     else if (path == "/qr")
                     {
-                        string svg = QrCodeGenerator.GenerateSvg(ServerUrl, 6, 2, "#00F0FF", "#0F172A");
+                        string svg = QrCodeGenerator.GenerateSvg(PortalUrl, 6, 2, "#00F0FF", "#0F172A");
                         byte[] body = Encoding.UTF8.GetBytes(svg);
                         await SendResponseAsync(networkStream, 200, "OK", "image/svg+xml", body);
                     }
@@ -396,6 +455,10 @@ public class LanDropService : IDisposable
                     {
                         await HandleRemoteActionAsync(networkStream, headers, initialBodyBytes, ct);
                     }
+                    else if (path == "/api/music/command")
+                    {
+                        await HandleMusicCommandAsync(networkStream, query, ct);
+                    }
                     else
                     {
                         await SendResponseAsync(networkStream, 404, "Not Found", "text/plain", "Not Found"u8.ToArray());
@@ -406,6 +469,108 @@ public class LanDropService : IDisposable
             {
                 _logService.LogWarning($"[LanDrop] Client handler exception: {ex.Message}");
             }
+        }
+    }
+
+    /// <summary>
+    /// Whether a request carries the portal's access token, in the header its own scripts send
+    /// or in the query string the QR link uses.
+    /// </summary>
+    private bool IsAuthorised(Dictionary<string, string> headers, Dictionary<string, string> query)
+    {
+        if (_token is null) return false;
+
+        if (headers.TryGetValue(PortalAccessToken.HeaderName, out var fromHeader) && _token.IsValid(fromHeader))
+            return true;
+
+        return query.TryGetValue(PortalAccessToken.QueryName, out var fromQuery) && _token.IsValid(fromQuery);
+    }
+
+    private async Task HandleMusicCommandAsync(NetworkStream stream, Dictionary<string, string> query, CancellationToken ct)
+    {
+        if (_music is null)
+        {
+            await SendResponseAsync(stream, 404, "Not Found", "text/plain", "No player"u8.ToArray());
+            return;
+        }
+
+        query.TryGetValue("action", out var action);
+        query.TryGetValue("value", out var value);
+
+        bool ok = await _music.CommandAsync(action ?? string.Empty, value, ct);
+        if (!ok)
+        {
+            // An unknown action or an out-of-range value is the caller's mistake, and saying so
+            // is more useful than a success the player quietly ignored.
+            await SendResponseAsync(stream, 400, "Bad Request", "application/json",
+                Encoding.UTF8.GetBytes("{\"success\":false}"));
+            return;
+        }
+
+        await SendResponseAsync(stream, 200, "OK", "application/json", Encoding.UTF8.GetBytes(_music.StateJson()));
+    }
+
+    /// <summary>
+    /// Pushes the player's state to the phone as Server-Sent Events, so several devices stay
+    /// in step with the desktop and with each other without any of them polling.
+    /// </summary>
+    private async Task StreamMusicEventsAsync(NetworkStream stream, CancellationToken ct)
+    {
+        if (_music is null)
+        {
+            await SendResponseAsync(stream, 404, "Not Found", "text/plain", "No player"u8.ToArray());
+            return;
+        }
+
+        var header = new StringBuilder();
+        header.Append("HTTP/1.1 200 OK" + Crlf);
+        header.Append("Content-Type: text/event-stream; charset=utf-8" + Crlf);
+        header.Append("Cache-Control: no-cache, no-store" + Crlf);
+        header.Append("X-Content-Type-Options: nosniff" + Crlf);
+        header.Append("Connection: keep-alive" + Crlf + Crlf);
+
+        byte[] headerBytes = Encoding.ASCII.GetBytes(header.ToString());
+        await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
+        await stream.FlushAsync(ct);
+
+        // A signal rather than a queue of states: the phone only ever wants the latest one, so
+        // a burst of changes collapses into a single send. It starts released on purpose, so a
+        // client that has just connected is sent the current state instead of waiting for a
+        // change that may be minutes away.
+        using var pending = new SemaphoreSlim(1, 1);
+        void OnChanged(object? sender, EventArgs e)
+        {
+            try { if (pending.CurrentCount == 0) pending.Release(); } catch (SemaphoreFullException) { }
+        }
+
+        _music.Changed += OnChanged;
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                // The wait doubles as a heartbeat: with nothing happening, a comment line every
+                // 20 seconds keeps the connection open through anything that drops idle ones.
+                bool changed = await pending.WaitAsync(TimeSpan.FromSeconds(20), ct);
+
+                string payload = changed
+                    ? "event: state" + Lf + "data: " + _music.StateJson() + Lf + Lf
+                    : ": ping" + Lf + Lf;
+
+                byte[] bytes = Encoding.UTF8.GetBytes(payload);
+                await stream.WriteAsync(bytes, 0, bytes.Length, ct);
+                await stream.FlushAsync(ct);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception)
+        {
+            // The phone closed the tab or left the network; nothing to report.
+        }
+        finally
+        {
+            _music.Changed -= OnChanged;
         }
     }
 
@@ -535,7 +700,9 @@ public class LanDropService : IDisposable
 
         var headerSb = new StringBuilder();
         headerSb.Append("HTTP/1.1 200 OK\r\n");
-        headerSb.Append("Access-Control-Allow-Origin: *\r\n");
+        // No Access-Control-Allow-Origin: the portal page is served from this same origin,
+        // so it needs no grant, and granting one let any site the user visits reach in.
+        headerSb.Append("X-Content-Type-Options: nosniff\r\n");
         headerSb.Append("Content-Type: application/octet-stream\r\n");
         headerSb.Append($"Content-Length: {length}\r\n");
         headerSb.Append($"Content-Disposition: attachment; filename=\"{safeFileName}\"\r\n");
@@ -714,9 +881,10 @@ public class LanDropService : IDisposable
     {
         var sb = new StringBuilder();
         sb.Append($"HTTP/1.1 {statusCode} {statusDescription}\r\n");
-        sb.Append("Access-Control-Allow-Origin: *\r\n");
-        sb.Append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
-        sb.Append("Access-Control-Allow-Headers: Content-Type, X-File-Name\r\n");
+        // No Access-Control-Allow-Origin: the portal page is served from this same origin,
+        // so it needs no grant, and granting one let any site the user visits reach in.
+        sb.Append("X-Content-Type-Options: nosniff\r\n");
+        sb.Append("Referrer-Policy: no-referrer\r\n");
         sb.Append($"Content-Type: {contentType}\r\n");
         sb.Append($"Content-Length: {body.Length}\r\n");
         sb.Append("Connection: close\r\n\r\n");
@@ -812,7 +980,8 @@ public class LanDropService : IDisposable
         {
             IsRunning = IsRunning,
             SelectedIp = CurrentIpAddress,
-            Port = CurrentPort
+            Port = CurrentPort,
+            PortalUrl = PortalUrl
         });
     }
 
@@ -976,6 +1145,12 @@ public class LanDropService : IDisposable
     <div class=""toast"" id=""toast""></div>
 
     <script>
+        // The link AxePower handed out carries the access token. It is kept in memory and
+        // attached to every request; it is never stored, so closing the tab ends the session.
+        const AXE_TOKEN = new URLSearchParams(location.search).get('t') || '';
+        const axeUrl = (path) => path + (path.includes('?') ? '&' : '?') + 't=' + encodeURIComponent(AXE_TOKEN);
+        const axeFetch = (path, init) => fetch(axeUrl(path), init);
+
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.textContent = msg;
@@ -1027,7 +1202,7 @@ public class LanDropService : IDisposable
                 try {
                     progressFill.style.width = '20%';
                     const xhr = new XMLHttpRequest();
-                    xhr.open('POST', '/api/upload', true);
+                    xhr.open('POST', axeUrl('/api/upload'), true);
                     xhr.upload.onprogress = (e) => {
                         if (e.lengthComputable) {
                             progressFill.style.width = Math.round((e.loaded / e.total) * 100) + '%';
@@ -1055,7 +1230,7 @@ public class LanDropService : IDisposable
             if (!val) return;
 
             try {
-                const res = await fetch('/api/text', { method: 'POST', body: val });
+                const res = await axeFetch('/api/text', { method: 'POST', body: val });
                 if (res.ok) {
                     showToast('🚀 Text sent to PC!');
                     input.value = '';
@@ -1067,7 +1242,7 @@ public class LanDropService : IDisposable
 
         async function sendAction(act) {
             try {
-                const res = await fetch('/api/remote', { method: 'POST', body: act });
+                const res = await axeFetch('/api/remote', { method: 'POST', body: act });
                 if (res.ok) showToast('⚡ Action sent: ' + act);
             } catch (e) {
                 showToast('❌ Action error');
@@ -1083,7 +1258,7 @@ public class LanDropService : IDisposable
 
         async function refreshStatus() {
             try {
-                const res = await fetch('/api/status');
+                const res = await axeFetch('/api/status');
                 if (!res.ok) return;
                 const data = await res.json();
 
@@ -1106,7 +1281,7 @@ public class LanDropService : IDisposable
                                 <div class=""file-name"" title=""${f.name}"">${f.name}</div>
                                 <div class=""file-meta"">${f.formattedSize} • ${f.time}</div>
                             </div>
-                            <a href=""/api/download?id=${f.id}"" class=""btn-download"">⬇ Download</a>
+                            <a href=""${axeUrl(`/api/download?id=${f.id}`)}"" class=""btn-download"">⬇ Download</a>
                         `;
                         listContainer.appendChild(item);
                     });

@@ -16,7 +16,7 @@ namespace AxePower.Core.Services.Music;
 /// metadata source (what is there) and the streaming source (where the sound comes from), so
 /// it also serves as the audio half for catalogues that cannot supply audio themselves.
 /// </summary>
-public sealed class YouTubeProvider : IStreamingProvider, IMetadataProvider
+public sealed class YouTubeProvider : IStreamingProvider, IMetadataProvider, IDiscoveryProvider
 {
     /// <summary>Only so many search hits are worth keeping as fallbacks for one track.</summary>
     private const int MaxCandidates = 5;
@@ -41,8 +41,8 @@ public sealed class YouTubeProvider : IStreamingProvider, IMetadataProvider
         Name: "YouTube",
         Description: "Search and stream from YouTube. No account and no browser window.",
         Author: "AxePower",
-        Kinds: new[] { ProviderKind.Streaming, ProviderKind.Metadata },
-        Capabilities: new[] { "Search", "Streaming", "Artwork" },
+        Kinds: new[] { ProviderKind.Streaming, ProviderKind.Metadata, ProviderKind.Discovery },
+        Capabilities: new[] { "Search", "Streaming", "Artwork", "Recommendations" },
         RequiresSetup: false);
 
     public bool SupportsLocalFiles => false;
@@ -96,6 +96,78 @@ public sealed class YouTubeProvider : IStreamingProvider, IMetadataProvider
         return tracks;
     }
 
+    // ── Discovery ────────────────────────────────────────────────────
+
+    public async Task<IReadOnlyList<Track>> GetRecommendationsAsync(
+        IReadOnlyList<Track> context, DiscoveryOptions options, CancellationToken ct)
+    {
+        if (context.Count == 0) return Array.Empty<Track>();
+
+        // The artists that have actually been playing, most recent first, so a session that has
+        // drifted is followed rather than anchored to whatever started it.
+        var artists = context
+            .Reverse()
+            .SelectMany(t => t.Artists)
+            .Where(a => !string.IsNullOrWhiteSpace(a) && !a.Equals("Unknown artist", StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(3)
+            .ToList();
+
+        if (artists.Count == 0) return Array.Empty<Track>();
+
+        // Anything already in the context is not a recommendation, and a search for one artist
+        // returns their own catalogue over and over, so both are filtered out as results arrive.
+        var seen = context
+            .Select(t => Key(t.Title, t.Artists.FirstOrDefault()))
+            .ToHashSet(StringComparer.Ordinal);
+        var seenIds = context
+            .Where(t => t.Source?.Provider == Info.Id)
+            .Select(t => t.Source!.Id)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var results = new List<Track>();
+        foreach (string query in Queries(artists, options.Variety))
+        {
+            if (results.Count >= options.Limit) break;
+            ct.ThrowIfCancellationRequested();
+
+            foreach (var found in await SearchTracksAsync(query, options.Limit, ct))
+            {
+                if (results.Count >= options.Limit) break;
+                if (found.Duration > TimeSpan.FromMinutes(12) || found.Duration < TimeSpan.FromSeconds(45)) continue;
+                if (found.Source is null || !seenIds.Add(found.Source.Id)) continue;
+                if (!seen.Add(Key(found.Title, found.Artists.FirstOrDefault()))) continue;
+
+                results.Add(found);
+            }
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Searches to try, in order. Low variety asks for more of the same artists; high variety
+    /// asks for the music around them, which is what the slider is for.
+    /// </summary>
+    private static IEnumerable<string> Queries(IReadOnlyList<string> artists, double variety)
+    {
+        double clamped = Math.Clamp(variety, 0, 1);
+
+        if (clamped < 0.66)
+        {
+            foreach (string artist in artists) yield return artist + " songs";
+        }
+
+        if (clamped >= 0.33)
+        {
+            foreach (string artist in artists) yield return "artists similar to " + artist;
+            foreach (string artist in artists) yield return artist + " radio mix";
+        }
+    }
+
+    private static string Key(string title, string? artist) =>
+        CandidateRanker.Normalize(title) + "|" + CandidateRanker.Normalize(artist);
+
     // ── Streaming ───────────────────────────────────────────────────────────
 
     public async Task<IReadOnlyList<StreamCandidate>> FindCandidatesAsync(Track track, CancellationToken ct)
@@ -133,18 +205,7 @@ public sealed class YouTubeProvider : IStreamingProvider, IMetadataProvider
                 ThumbnailUrl: BestThumbnail(video.Thumbnails)));
         }
 
-        // A hit whose length is close to the known duration is almost always the right take,
-        // so it goes first. With no known duration the search order stands.
-        if (track.Duration > TimeSpan.Zero)
-        {
-            candidates = candidates
-                .OrderBy(c => c.Duration is null
-                    ? TimeSpan.MaxValue
-                    : (c.Duration.Value - track.Duration).Duration())
-                .ToList();
-        }
-
-        return candidates;
+        return CandidateRanker.Rank(track, candidates);
     }
 
     public async Task<AudioStream?> ResolveAsync(StreamCandidate candidate, bool preferLocalCopy, CancellationToken ct)

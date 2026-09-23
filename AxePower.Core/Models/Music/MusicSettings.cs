@@ -130,6 +130,12 @@ public class MusicSettings
     [JsonPropertyName("providers")]
     public ProviderSettings Providers { get; set; } = new();
 
+    // ── Shortcuts ───────────────────────────────────────────────────
+
+    /// <summary>Keyboard shortcuts for playback, and whether they work outside AxePower.</summary>
+    [JsonPropertyName("shortcuts")]
+    public ShortcutSettings Shortcuts { get; set; } = new();
+
     public MusicSettings Clone()
     {
         return new MusicSettings
@@ -163,7 +169,8 @@ public class MusicSettings
             LyricsOnline = LyricsOnline,
             ShowTrackChangeNotification = ShowTrackChangeNotification,
             Integrations = (Integrations ?? new IntegrationSettings()).Clone(),
-            Providers = (Providers ?? new ProviderSettings()).Clone()
+            Providers = (Providers ?? new ProviderSettings()).Clone(),
+            Shortcuts = (Shortcuts ?? new ShortcutSettings()).Clone()
         };
     }
 }
@@ -205,6 +212,18 @@ public class ProviderSettings
     [JsonPropertyName("streamCacheMaxMb")]
     public int StreamCacheMaxMb { get; set; } = 1024;
 
+    /// <summary>Keep the queue going by appending recommendations when it runs out.</summary>
+    [JsonPropertyName("discoveryEnabled")]
+    public bool DiscoveryEnabled { get; set; } = false;
+
+    /// <summary>0 = stay with the artists playing, 100 = look furthest afield.</summary>
+    [JsonPropertyName("discoveryVariety")]
+    public int DiscoveryVariety { get; set; } = 50;
+
+    /// <summary>How many tracks to append each time the queue runs out.</summary>
+    [JsonPropertyName("discoveryBatchSize")]
+    public int DiscoveryBatchSize { get; set; } = 10;
+
     public ProviderSettings Clone() => new()
     {
         Enabled = new List<string>(Enabled ?? new List<string>()),
@@ -213,7 +232,10 @@ public class ProviderSettings
         StreamExpiryMinutes = StreamExpiryMinutes,
         StreamResolutionRetries = StreamResolutionRetries,
         CacheStreamsToDisk = CacheStreamsToDisk,
-        StreamCacheMaxMb = StreamCacheMaxMb
+        StreamCacheMaxMb = StreamCacheMaxMb,
+        DiscoveryEnabled = DiscoveryEnabled,
+        DiscoveryVariety = DiscoveryVariety,
+        DiscoveryBatchSize = DiscoveryBatchSize
     };
 }
 

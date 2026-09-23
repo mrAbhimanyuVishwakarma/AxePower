@@ -53,6 +53,7 @@ public partial class MusicViewModel : ObservableObject
         _providers = providers ?? services?.GetService<ProviderRegistry>();
         _resolver = resolver ?? services?.GetService<IStreamResolver>();
         Sources = services?.GetService<SourcesViewModel>();
+        Shortcuts = services?.GetService<ShortcutsViewModel>();
 
         NowPlaying.PropertyChanged += (_, e) =>
         {
@@ -72,6 +73,9 @@ public partial class MusicViewModel : ObservableObject
 
     /// <summary>The Sources list shown in Music Settings. Null only in a design-time view.</summary>
     public SourcesViewModel? Sources { get; }
+
+    /// <summary>The Shortcuts list shown in Music Settings. Null only in a design-time view.</summary>
+    public ShortcutsViewModel? Shortcuts { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(QueueToggleLabel), nameof(LibraryColumns))]

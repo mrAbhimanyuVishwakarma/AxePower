@@ -37,5 +37,15 @@ public class LanDropServerState
     public string SelectedIp { get; set; } = string.Empty;
     public int Port { get; set; } = 5050;
     public string ServerUrl => !string.IsNullOrEmpty(SelectedIp) ? $"http://{SelectedIp}:{Port}/" : string.Empty;
+
+    /// <summary>
+    /// The link to open on a phone. It carries the portal's access token, so it is what the QR
+    /// code and the copy button must use — the plain <see cref="ServerUrl"/> is refused.
+    /// </summary>
+    public string PortalUrl { get; set; } = string.Empty;
+
+    /// <summary>The address without the token, for showing on screen.</summary>
+    public string DisplayUrl => ServerUrl;
+
     public int ActiveTransfers { get; set; }
 }

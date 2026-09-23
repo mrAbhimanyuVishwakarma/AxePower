@@ -309,6 +309,9 @@ public partial class App : Application
         services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<LocalFileProvider>());
         services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<YouTubeProvider>());
         services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<SpotifyProvider>());
+        services.AddSingleton<DiscoveryService>();
+        services.AddSingleton<MusicRemote>();
+        services.AddSingleton<PortalAccessToken>();
         services.AddSingleton<IMusicPlayerService, MusicPlayerService>();
         services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
         services.AddSingleton<PlayerIntegrationHost>();
@@ -317,10 +320,13 @@ public partial class App : Application
         services.AddSingleton<MusicDispatcher>();
         services.AddSingleton<FileDropHelper>();
         services.AddSingleton<IPlayerIntegration, TaskbarMediaIntegration>();
+        services.AddSingleton<HotkeyService>();
+        services.AddSingleton<MusicShortcutHandler>();
         services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
         services.AddTransient<MusicViewModel>();
         services.AddTransient<MusicSettingsViewModel>();
         services.AddSingleton<SourcesViewModel>();
+        services.AddSingleton<ShortcutsViewModel>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -377,6 +383,19 @@ public partial class App : Application
         Console.WriteLine(
             $"Stream resolver resolved: {sp.GetRequiredService<IStreamResolver>().GetType().Name}, " +
             $"cache {sp.GetRequiredService<StreamCache>().SizeBytes() / 1024} KB.");
+
+        var musicDiscovery = sp.GetRequiredService<AxePower.Core.Services.Music.DiscoveryService>();
+        var shortcutSettings = sp.GetRequiredService<SettingsService>().GetSettings().Music.Shortcuts;
+        Console.WriteLine(
+            $"Discovery: {(musicDiscovery.IsAvailable ? "available" : "no source")}, " +
+            $"{(musicDiscovery.IsEnabled ? "on" : "off")}; variety {sources.Current.DiscoveryVariety}%.");
+        Console.WriteLine(
+            $"Shortcuts: global {(shortcutSettings.GlobalHotkeysEnabled ? "on" : "off")}, " +
+            $"play/pause {shortcutSettings.Resolve(ShortcutAction.PlayPause)}, " +
+            $"mini player {shortcutSettings.Resolve(ShortcutAction.ToggleMiniPlayer)}.");
+        Console.WriteLine(
+            $"Phone portal: token {(sp.GetRequiredService<PortalAccessToken>().Value.Length)} chars, " +
+            $"music remote {sp.GetRequiredService<MusicRemote>().GetType().Name} ready.");
 
         var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
         var shareTools = sp.GetRequiredService<IShareToolProvider>();
@@ -473,6 +492,13 @@ public partial class App : Application
 
             var player = Services.GetRequiredService<IMusicPlayerService>();
             await Task.Run(() => player.InitializeAsync(CancellationToken.None));
+
+            // Shortcuts and discovery both watch the player, so they start once it has its
+            // restored queue — otherwise discovery would fire on the empty startup state.
+            Services.GetRequiredService<HotkeyService>().Attach(hwnd);
+            Services.GetRequiredService<MusicShortcutHandler>().Start();
+            Services.GetRequiredService<DiscoveryService>().Start();
+            Services.GetRequiredService<MusicRemote>().Start();
         }
         catch (Exception ex)
         {

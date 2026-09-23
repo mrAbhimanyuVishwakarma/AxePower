@@ -42,21 +42,55 @@ public partial class NowPlayingViewModel : ObservableObject
     private double _dragSeekSeconds;
     private bool _applying;
 
-    public NowPlayingViewModel(IMusicPlayerService player, ICoverArtService covers, SettingsService settings, MusicDispatcher dispatcher)
+    /// <summary>
+    /// <paramref name="discovery"/> is optional so the view model can be built in tests and at
+    /// design time without the service that watches the player.
+    /// </summary>
+    public NowPlayingViewModel(
+        IMusicPlayerService player,
+        ICoverArtService covers,
+        SettingsService settings,
+        MusicDispatcher dispatcher,
+        DiscoveryService? discovery = null)
     {
         _player = player;
         _covers = covers;
         _settings = settings;
         _dispatcher = dispatcher;
+        _discovery = discovery;
 
         _isHeaderPlayerOpen = settings.GetSettings().Music.DashboardPlayerExpanded;
         _allowBoost = settings.GetSettings().Music.AllowVolumeBoost;
 
         _player.StateChanged += (_, state) => _dispatcher.Post(() => Apply(state));
         _player.PositionChanged += (_, position) => _dispatcher.PostPosition(position, ApplyPosition);
-        _settings.OnSettingsChanged += (_, s) => _dispatcher.Post(() => AllowBoost = s.Music.AllowVolumeBoost);
+        _settings.OnSettingsChanged += (_, s) => _dispatcher.Post(() =>
+        {
+            AllowBoost = s.Music.AllowVolumeBoost;
+            SyncDiscovery();
+        });
 
+        if (_discovery is not null)
+            _discovery.BusyChanged += (_, busy) => _dispatcher.Post(() => IsDiscoveryBusy = busy);
+
+        SyncDiscovery();
         Apply(_player.State);
+    }
+
+    private readonly DiscoveryService? _discovery;
+
+    /// <summary>Reads the toggle back from settings without treating it as a user change.</summary>
+    private void SyncDiscovery()
+    {
+        if (_discovery is null) return;
+
+        bool on = _discovery.IsEnabled;
+        if (IsDiscoveryOn == on) return;
+
+        bool wasApplying = _applying;
+        _applying = true;
+        try { IsDiscoveryOn = on; }
+        finally { _applying = wasApplying; }
     }
 
     private readonly SpotifyController _spotifyController = new();
@@ -423,6 +457,32 @@ public partial class NowPlayingViewModel : ObservableObject
 
     [RelayCommand]
     private void ClearQueue() => _player.ClearQueue();
+
+    // ── Discovery ────────────────────────────────────────────────
+
+    /// <summary>
+    /// Keeps the queue going by appending recommendations when it runs out. Hidden entirely
+    /// when no source can make them, rather than shown as a button that does nothing.
+    /// </summary>
+    public bool IsDiscoveryAvailable => _discovery?.IsAvailable ?? false;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DiscoveryLabel))]
+    private bool _isDiscoveryOn;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DiscoveryLabel))]
+    private bool _isDiscoveryBusy;
+
+    public string DiscoveryLabel => IsDiscoveryBusy
+        ? "Discovery: finding more music…"
+        : IsDiscoveryOn ? "Discovery: on" : "Discovery: off";
+
+    partial void OnIsDiscoveryOnChanged(bool value)
+    {
+        if (_applying) return;
+        _discovery?.SetEnabled(value);
+    }
 
     /// <summary>Plays a queued track from a different source than the one matched for it.</summary>
     [RelayCommand]

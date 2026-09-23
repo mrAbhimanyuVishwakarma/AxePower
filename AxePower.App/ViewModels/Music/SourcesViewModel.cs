@@ -54,12 +54,15 @@ public partial class SourcesViewModel : ObservableObject
     [ObservableProperty] private bool _cacheStreamsToDisk;
     [ObservableProperty] private int _streamCacheMaxMb;
     [ObservableProperty] private string _cacheSizeText = "Empty";
+    [ObservableProperty] private int _discoveryVariety = 50;
 
     private bool _loading;
 
     partial void OnCacheStreamsToDiskChanged(bool value) => SaveOptions(o => o.CacheStreamsToDisk = value);
 
     partial void OnStreamCacheMaxMbChanged(int value) => SaveOptions(o => o.StreamCacheMaxMb = Math.Clamp(value, 128, 20480));
+
+    partial void OnDiscoveryVarietyChanged(int value) => SaveOptions(o => o.DiscoveryVariety = Math.Clamp(value, 0, 100));
 
     [RelayCommand]
     private void ClearCache()
@@ -98,6 +101,7 @@ public partial class SourcesViewModel : ObservableObject
             var options = _registry.Current;
             CacheStreamsToDisk = options.CacheStreamsToDisk;
             StreamCacheMaxMb = options.StreamCacheMaxMb;
+            DiscoveryVariety = options.DiscoveryVariety;
         }
         finally { _loading = false; }
     }
