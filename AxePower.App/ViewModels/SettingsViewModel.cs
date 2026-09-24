@@ -185,11 +185,8 @@ public partial class SettingsViewModel : ObservableObject
             CurrentSettings.DisplayRefreshRate = 0;
             SaveCurrentSettings();
 
-            Task.Run(async () =>
-            {
-                var mode = await _powerPlanService.GetActivePowerModeAsync();
-                _displayService.SetSmartRefreshRate(mode == PowerMode.Eco);
-            });
+            // Same rule as a mode change: 60 Hz only for Eco on battery
+            Task.Run(_powerPlanService.SyncRefreshRateAsync);
             _notificationService.Show("Display refresh rate set to Auto (Smart).");
         }
         else
@@ -314,6 +311,9 @@ public partial class SettingsViewModel : ObservableObject
         CurrentSettings.Music = latest.Music;
         // Same for Share Screen: its pickers write straight through, so a snapshot here is stale
         CurrentSettings.ShareScreen = latest.ShareScreen;
+        // Written in the background by the power-plan and Game Mode GPU services
+        CurrentSettings.PowerPlansInitialized = latest.PowerPlansInitialized;
+        CurrentSettings.GpuPreferenceBackups = latest.GpuPreferenceBackups;
         _settingsService.SaveSettings(CurrentSettings);
     }
 
@@ -328,7 +328,10 @@ public partial class SettingsViewModel : ObservableObject
         BatteryService? batteryService = null,
         ElevationService? elevationService = null,
         AxePower.App.ViewModels.Music.MusicSettingsViewModel? music = null,
-        AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? shareScreen = null)
+        AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? shareScreen = null,
+        GameModeGpuService? gameModeGpu = null,
+        IGpuDisplayModeController? displayModeController = null,
+        AxePower.App.Services.IGameModePrompts? gameModePrompts = null)
     {
         Music = music;
         ShareScreen = shareScreen;
@@ -342,6 +345,7 @@ public partial class SettingsViewModel : ObservableObject
         _batteryService = batteryService;
         _elevationService = elevationService;
         _currentSettings = _settingsService.GetSettings();
+        InitializeGameMode(gameModeGpu, displayModeController, gameModePrompts, gameModeGpu != null ? new GpuControlAppService() : null);
         _selectedTheme = _currentSettings.Theme;
         _startWithLastSelectedMode = _currentSettings.StartWithLastSelectedMode;
         _startWithWindows = _currentSettings.StartWithWindows;

@@ -32,6 +32,17 @@ public class AppSettings
     [JsonPropertyName("powerPlansInitialized")]
     public bool PowerPlansInitialized { get; set; } = false;
 
+    /// <summary>While Game Mode is on, give every known game Windows' "High performance" GPU.</summary>
+    [JsonPropertyName("gameModeUseDedicatedGpu")]
+    public bool GameModeUseDedicatedGpu { get; set; } = false;
+
+    /// <summary>
+    /// exe path → the UserGpuPreferences value it had before Game Mode changed it (null: none).
+    /// Only entries AxePower changed are listed, and they are put back when Game Mode ends.
+    /// </summary>
+    [JsonPropertyName("gpuPreferenceBackups")]
+    public Dictionary<string, string?> GpuPreferenceBackups { get; set; } = new();
+
     [JsonPropertyName("lastSelectedPowerMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PowerMode LastSelectedPowerMode { get; set; } = PowerMode.Beast;
@@ -162,6 +173,8 @@ public class AppSettings
             StartWithLastSelectedMode = this.StartWithLastSelectedMode,
             LastSelectedPowerMode = this.LastSelectedPowerMode,
             PowerPlansInitialized = this.PowerPlansInitialized,
+            GameModeUseDedicatedGpu = this.GameModeUseDedicatedGpu,
+            GpuPreferenceBackups = new Dictionary<string, string?>(this.GpuPreferenceBackups ?? new(), StringComparer.OrdinalIgnoreCase),
             LowBatteryRuleEnabled = this.LowBatteryRuleEnabled,
             LowBatteryThresholdPercent = this.LowBatteryThresholdPercent,
             LowBatteryMode = this.LowBatteryMode,

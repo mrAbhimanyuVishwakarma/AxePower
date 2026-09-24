@@ -933,17 +933,17 @@ public partial class GameModeViewModel : ObservableObject
     {
         if (isActive)
         {
-            await _powerPlanService.ApplyModeAsync(PowerMode.Beast);
+            await _powerPlanService.ApplyModeAsync(PowerMode.GameMode);
             KillSelectedNow();
             OptimizeSelectedServices();
             RefreshActiveGameDetection();
-            _notificationService.Show("⚡ Game Mode activated! Beast power mode engaged.");
+            _notificationService.Show("⚡ Game Mode activated! GameMode power plan engaged.");
         }
         else
         {
             await _powerPlanService.ApplyModeAsync(PowerMode.Smart);
             RefreshActiveGameDetection();
-            _notificationService.Show("Game Mode deactivated. Reverted to Balanced mode.");
+            _notificationService.Show("Game Mode deactivated. Back to Smart mode.");
         }
     }
 

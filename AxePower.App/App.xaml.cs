@@ -137,6 +137,10 @@ public partial class App : Application
             var batteryService = Services.GetRequiredService<BatteryService>();
             batteryService.StartHistoryCollection();
 
+            // Before the startup switch to Smart, so GPU preferences left by an interrupted
+            // Game Mode are put back by that first mode change
+            Services.GetRequiredService<GameModeGpuService>().Attach(Services.GetRequiredService<PowerPlanService>());
+
             var autoSwitchService = Services.GetRequiredService<AutoSwitchService>();
             autoSwitchService.Start();
 
@@ -228,6 +232,9 @@ public partial class App : Application
         services.AddSingleton<TimeoutService>();
         services.AddSingleton<AppMonitorService>();
         services.AddSingleton<GameScannerService>();
+        services.AddSingleton<GameModeGpuService>();
+        services.AddSingleton<IGpuDisplayModeController, LenovoGpuDisplayModeService>();
+        services.AddSingleton<IGameModePrompts, WindowGameModePrompts>();
         services.AddSingleton<ThemeService>();
         services.AddSingleton<SystemServiceOptimizer>();
         services.AddSingleton<DisplayService>();
@@ -370,6 +377,16 @@ public partial class App : Application
         Console.WriteLine(
             $"Power plans: {string.Join(", ", powerPlans.GetPlanPresence().Select(p => $"{p.Plan.Name} {(p.Present ? "present" : "not created yet")}"))}; " +
             $"active mode {activeMode}.");
+
+        // Read-only: asks the firmware whether a MUX exists, changes nothing
+        var gameModeSettings = sp.GetRequiredService<SettingsService>().GetSettings();
+        sp.GetRequiredService<GameModeGpuService>();
+        var displayMode = sp.GetRequiredService<IGpuDisplayModeController>();
+        bool muxSupported = Task.Run(displayMode.IsSupportedAsync).GetAwaiter().GetResult();
+        Console.WriteLine(
+            $"Game Mode GPU: dedicated GPU {(gameModeSettings.GameModeUseDedicatedGpu ? "on" : "off")}, " +
+            $"{gameModeSettings.GpuPreferenceBackups.Count} preference(s) to restore; " +
+            $"display mode switch {(muxSupported ? "supported" : "not available (non-Lenovo, no MUX, or not elevated)")}.");
         
         var discovery = sp.GetRequiredService<IApplicationDiscoveryService>();
         var apps = Task.Run(async () => await discovery.DiscoverApplicationsAsync()).GetAwaiter().GetResult();

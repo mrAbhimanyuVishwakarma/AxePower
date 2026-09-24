@@ -120,6 +120,66 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- CARD 2: Game Mode (dedicated GPU and display mode) -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A8B5CF6" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#8B5CF6"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Which graphics card your games and screen use." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Dedicated GPU in Game Mode -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Use dedicated GPU in Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="While Game Mode is on, games run on the high-performance GPU. Restored when it ends." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding GameModeUseDedicatedGpu}" VerticalAlignment="Center"
+                                          AutomationProperties.Name="Use dedicated GPU in Game Mode"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Display mode (MUX) -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Display mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Optimus lets Windows pick a GPU per app; Dedicated GPU only drives the screen from the graphics card. Needs a restart." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Restart pending — the new mode applies after a restart." Foreground="#F59E0B" FontSize="11.5" TextWrapping="Wrap" Margin="0,6,0,0"
+                                               Visibility="{Binding DisplayModeRestartRequired, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <ComboBox Style="{DynamicResource AppComboBoxStyle}" Width="180"
+                                              ItemsSource="{Binding DisplayModeOptions}" SelectedItem="{Binding SelectedDisplayMode}"
+                                              DisplayMemberPath="DisplayName" AutomationProperties.Name="Display mode"
+                                              Visibility="{Binding IsDisplayModeSupported, Converter={StaticResource BoolToVis}}"/>
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RestartForDisplayModeCommand}"
+                                            Content="Restart now" Margin="0,8,0,0" Padding="14,6" HorizontalAlignment="Right"
+                                            Visibility="{Binding DisplayModeRestartRequired, Converter={StaticResource BoolToVis}}"/>
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenGpuControlPanelCommand}"
+                                            Content="Open GPU control panel" Padding="14,6"
+                                            ToolTip="This laptop does not let apps switch the display mode; change it in NVIDIA Control Panel or the NVIDIA App."
+                                            Visibility="{Binding IsDisplayModeUnsupported, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
                     <!-- CARD 3: Notifications & Alerts -->
                     <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
                         <StackPanel>
