@@ -12,10 +12,10 @@
     <RootNamespace>AxePower.App</RootNamespace>
     <ApplicationIcon>Resources\AxePower_white.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.0.0</Version>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
-    <InformationalVersion>2.0.0</InformationalVersion>
+    <Version>2.0.2</Version>
+    <AssemblyVersion>2.0.2.0</AssemblyVersion>
+    <FileVersion>2.0.2.0</FileVersion>
+    <InformationalVersion>2.0.2</InformationalVersion>
     <Authors>Abhimanyu Vishwakarma</Authors>
     <Company>AxePower</Company>
     <Product>AxePower</Product>
@@ -31,9 +31,17 @@
     <InternalsVisibleTo Include="AxePower.Tests" />
   </ItemGroup>
 
-  <!-- Skins ship next to AxePower.exe (skins\<id>\skin.json); a new folder there appears in Settings → Theme -->
+  <!-- Skins that ship next to AxePower.exe (skins\<id>\skin.json). Only the ones listed here are
+       packaged; other folders in the repo's skins\ stay out of the installer. A folder someone adds
+       to the installed skins\ appears in Settings → Theme. -->
   <ItemGroup>
-    <None Include="..\skins\**\*" LinkBase="skins" CopyToOutputDirectory="PreserveNewest" />
+    <!-- One item per folder: LinkBase keeps only the part under "**", so each needs its own base -->
+    <None Include="..\skins\README.md" LinkBase="skins" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\_template\**\*" LinkBase="skins\_template" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\dark\**\*" LinkBase="skins\dark" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\light\**\*" LinkBase="skins\light" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\glass\**\*" LinkBase="skins\glass" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\deep-obsidian-glass\**\*" LinkBase="skins\deep-obsidian-glass" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

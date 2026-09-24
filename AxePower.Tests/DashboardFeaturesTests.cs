@@ -54,34 +54,13 @@ public class DashboardFeaturesTests
     }
 
     [Fact]
-    public void TheMusicWorkIsListed()
-    {
-        var titles = Features().Select(f => f.Title).ToList();
-
-        Assert.Contains("Music Sources", titles);
-        Assert.Contains("Discovery", titles);
-        Assert.Contains("Media Shortcuts", titles);
-        Assert.Contains("Secured Phone Portal", titles);
-    }
-
-    [Fact]
-    public void TheShareScreenWorkIsListed()
-    {
-        var titles = Features().Select(f => f.Title).ToList();
-
-        Assert.Contains("Share Screen", titles);
-        Assert.Contains("Remote Control", titles);
-    }
-
-    [Fact]
-    public void TheNewestEntriesComeFirst()
+    public void TheListIsTheSevenThe_OwnerChose_InTheirOrder()
     {
         // The Dashboard selects the first entry on load, so ordering decides what is shown.
-        var titles = Features().Select(f => f.Title).ToList();
-
-        Assert.Equal("Share Screen", titles[0]);
-        Assert.True(titles.IndexOf("Share Screen") < titles.IndexOf("Music Sources"));
-        Assert.True(titles.IndexOf("Secured Phone Portal") < titles.IndexOf("DLSS 5 Swapper"));
+        // The owner picks this list each release; change it only when they do.
+        Assert.Equal(
+            new[] { "DLSS 5 Swapper", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller Pro", "Terminal" },
+            Features().Select(f => f.Title));
     }
 
     [Fact]

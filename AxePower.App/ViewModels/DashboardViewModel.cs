@@ -612,73 +612,10 @@ public partial class DashboardViewModel : ObservableObject
     /// The "What's New" entries, newest first — the Dashboard shows the first one on load.
     /// Static and public so the list can be checked without building a whole view model.
     /// </summary>
-    public static IReadOnlyList<AppFeatureItem> BuildNewFeatures()
+    public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
     {
-        var features = new List<AppFeatureItem>();
-        features.Add(new AppFeatureItem
-        {
-            Title = "Share Screen",
-            Badge = "NEW IN 2.0",
-            BadgeColorHex = "#8B5CF6",
-            Glyph = "",
-            Description = "Share a display to anyone on your network, in their browser, with no install. Hardware encoding on NVIDIA, AMD and Intel, and 60 FPS held by dropping resolution instead of frames.",
-            TargetNavigation = "ShareScreen"
-        });
-        features.Add(new AppFeatureItem
-        {
-            Title = "Remote Control",
-            Badge = "CODE-GATED",
-            BadgeColorHex = "#F59E0B",
-            Glyph = "",
-            Description = "Hand someone the mouse and keyboard while they watch. Off by default, granted per session, and the code is never part of the watch link.",
-            TargetNavigation = "ShareScreen"
-        });
-        features.Add(new AppFeatureItem
-        {
-            Title = "Music Library",
-            Badge = "INSTANT SEARCH",
-            BadgeColorHex = "#14B8A6",
-            Glyph = "",
-            Description = "Your local music is indexed once and searched instantly by title, artist or album, however large the folder.",
-            TargetNavigation = "Music"
-        });
-        features.Add(new AppFeatureItem
-        {
-            Title = "Music Sources",
-            Badge = "YOUTUBE & SPOTIFY",
-            BadgeColorHex = "#A855F7",
-            Glyph = "\uE8D6",
-            Description = "Search and stream YouTube in-app, or browse Spotify's catalogue and import your playlists. Pick a different take when the match is wrong.",
-            TargetNavigation = "Music"
-        });
-        features.Add(new AppFeatureItem
-        {
-            Title = "Discovery",
-            Badge = "AUTO QUEUE",
-            BadgeColorHex = "#22D3EE",
-            Glyph = "\uEC4F",
-            Description = "Reach the end of the queue and AxePower keeps it going with more music like it. Adds only to the end, never touches what you queued.",
-            TargetNavigation = "Music"
-        });
-        features.Add(new AppFeatureItem
-        {
-            Title = "Media Shortcuts",
-            Badge = "WORKS ANYWHERE",
-            BadgeColorHex = "#94A3B8",
-            Glyph = "\uE765",
-            Description = "Play, skip, seek and change volume from any application. Rebind every key, with conflicts reported instead of failing silently.",
-            TargetNavigation = "Music"
-        });
-        features.Add(new AppFeatureItem
-        {
-            Title = "Secured Phone Portal",
-            Badge = "SECURITY FIX",
-            BadgeColorHex = "#EF4444",
-            Glyph = "\uE72E",
-            Description = "The LAN portal now needs an access token carried by its QR link, and controls music live from your phone. Older bookmarked links no longer work.",
-            TargetNavigation = "PhoneHub"
-        });
-        features.Add(new AppFeatureItem
+        // Chosen by the owner for 2.0.2, in this order. Ask which to keep before the next release.
+        new()
         {
             Title = "DLSS 5 Swapper",
             Badge = "NEW GAMING TOOL",
@@ -686,35 +623,35 @@ public partial class DashboardViewModel : ObservableObject
             Glyph = "\uE7FC",
             Description = "1-Click portable downloader & runner. Swap DLSS, Streamline DLLs, RenoDX, and ReShade silently in games.",
             TargetNavigation = "UpdatePc:Apps:Gaming"
-        });
-        features.Add(new AppFeatureItem
+        },
+        new()
         {
-            Title = "NVIDIA Driver Selector",
-            Badge = "ROLLBACK & STABLE",
-            BadgeColorHex = "#76B900",
-            Glyph = "\uE81C",
-            Description = "Choose proven stable Game Ready releases or rollback if new updates introduce stuttering or bugs.",
-            TargetNavigation = "UpdatePc:Updaters"
-        });
-        features.Add(new AppFeatureItem
+            Title = "Share Screen",
+            Badge = "NEW IN 2.0",
+            BadgeColorHex = "#8B5CF6",
+            Glyph = "\uE72D",
+            Description = "Share a display to anyone on your network, in their browser, with no install. Hardware encoding on NVIDIA, AMD and Intel, and 60 FPS held by dropping resolution instead of frames.",
+            TargetNavigation = "ShareScreen"
+        },
+        new()
         {
-            Title = "In-App WinGet Updates",
-            Badge = "PACKAGE MANAGER",
-            BadgeColorHex = "#60A5FA",
-            Glyph = "\uE777",
-            Description = "Batch upgrade installed applications with live progress logs and install gaming runtimes.",
-            TargetNavigation = "UpdatePc:Apps:All"
-        });
-        features.Add(new AppFeatureItem
+            Title = "Skins",
+            Badge = "NEW IN 2.0.2",
+            BadgeColorHex = "#A855F7",
+            Glyph = "\uE790",
+            Description = "Every theme is now a skin you can pick in Settings \u2192 Theme: Dark, Light, black Glass and Deep Obsidian (Glass). Drop a new skin folder in and it appears, no restart.",
+            TargetNavigation = "Settings"
+        },
+        new()
         {
-            Title = "BIOS & UEFI Center",
-            Badge = "FIRMWARE SCAN",
-            BadgeColorHex = "#818CF8",
-            Glyph = "\uE950",
-            Description = "Inspect motherboard BIOS, check UEFI Secure Boot status, and scan for Windows firmware capsules.",
-            TargetNavigation = "UpdatePc:Updaters"
-        });
-        features.Add(new AppFeatureItem
+            Title = "Game Mode",
+            Badge = "NEW IN 2.0.2",
+            BadgeColorHex = "#8B5CF6",
+            Glyph = "\uE7FC",
+            Description = "Its own GameMode power plan, the dedicated GPU for your games while it is on, and a toggle right on the Dashboard. Picking another mode ends it, but never while a game is still running.",
+            TargetNavigation = "GameMode"
+        },
+        new()
         {
             Title = "Phone Control & LanDrop",
             Badge = "CROSS-DEVICE",
@@ -722,28 +659,26 @@ public partial class DashboardViewModel : ObservableObject
             Glyph = "\uE8EA",
             Description = "Instant Wi-Fi file transfers between PC and smartphone without cables, plus remote quick actions.",
             TargetNavigation = "PhoneHub"
-        });
-        features.Add(new AppFeatureItem
+        },
+        new()
         {
-            Title = "System Doctor",
-            Badge = "HEALTH REPAIR",
-            BadgeColorHex = "#EC4899",
-            Glyph = "\uE958",
-            Description = "One-click Windows repair (SFC / DISM), DirectX/Vulkan shader cache cleaner, and DNS benchmark.",
-            TargetNavigation = "Doctor"
-        });
-        features.Add(new AppFeatureItem
+            Title = "Uninstaller Pro",
+            Badge = "DEEP CLEAN",
+            BadgeColorHex = "#EF4444",
+            Glyph = "\uE74D",
+            Description = "Remove applications and clean only verified leftovers, with confidence scoring, a safety backup before cleaning, and a fixer for broken uninstall entries.",
+            TargetNavigation = "Uninstaller"
+        },
+        new()
         {
-            Title = "System Optimizer",
-            Badge = "GAMING LATENCY",
-            BadgeColorHex = "#06B6D4",
-            Glyph = "\uE90F",
-            Description = "Safe Windows debloating, background telemetry elimination, and low-latency gaming tweaks.",
-            TargetNavigation = "Optimizer"
-        });
-
-        return features;
-    }
+            Title = "Terminal",
+            Badge = "BUILT-IN",
+            BadgeColorHex = "#F59E0B",
+            Glyph = "\uE756",
+            Description = "A real CMD and PowerShell inside AxePower, where Software Hub installs and System Doctor repairs stream their output, with a Stop button.",
+            TargetNavigation = "Terminal"
+        },
+    };
 }
 
 public class AppFeatureItem

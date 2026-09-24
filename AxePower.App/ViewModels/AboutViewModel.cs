@@ -63,7 +63,7 @@ public partial class AboutViewModel : ObservableObject
     private bool _isUpdateAvailable;
 
     [ObservableProperty]
-    private string _latestVersionTag = "2.0.0";
+    private string _latestVersionTag = "2.0.2";
 
     [ObservableProperty]
     private string _releaseTitle = "";
