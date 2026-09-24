@@ -394,6 +394,8 @@ public partial class MainViewModel : ObservableObject
     private object ShowSettingsSection(string? section)
     {
         SettingsVm.RequestedSection = section;
+        // The page lives for the whole session, so pick up skins added since it was built
+        SettingsVm.RefreshThemeChoices();
         return SettingsVm;
     }
 

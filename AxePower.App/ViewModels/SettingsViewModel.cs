@@ -150,8 +150,9 @@ public partial class SettingsViewModel : ObservableObject
 
     private bool _isLoadingThemeChoices;
 
-    /// <summary>Re-reads the skin folders, so a skin added while AxePower runs can be picked.</summary>
-    private void LoadThemeChoices()
+    /// <summary>Re-reads the skin folders, so a skin added while AxePower runs can be picked.
+    /// Called when the Settings page is opened.</summary>
+    public void RefreshThemeChoices()
     {
         _isLoadingThemeChoices = true;
         try
@@ -163,8 +164,8 @@ public partial class SettingsViewModel : ObservableObject
                 ThemeChoices.Add(new ThemeChoice(skin.Id, ThemeService.ToAppTheme(skin), skin.Name));
 
             // Older settings have no skin id: Dark/Light/Glass map to those skins
-            string? id = _currentSettings.SkinId
-                ?? (_currentSettings.Theme == AppTheme.System ? null : _currentSettings.Theme.ToString().ToLowerInvariant());
+            string? id = CurrentSettings.SkinId
+                ?? (CurrentSettings.Theme == AppTheme.System ? null : CurrentSettings.Theme.ToString().ToLowerInvariant());
             SelectedThemeChoice = ThemeChoices.FirstOrDefault(c => string.Equals(c.SkinId, id, StringComparison.OrdinalIgnoreCase))
                 ?? ThemeChoices[0];
         }
@@ -390,7 +391,7 @@ public partial class SettingsViewModel : ObservableObject
         _elevationService = elevationService;
         _currentSettings = _settingsService.GetSettings();
         InitializeGameMode(gameModeGpu, displayModeController, gameModePrompts, gameModeGpu != null ? new GpuControlAppService() : null);
-        LoadThemeChoices();
+        RefreshThemeChoices();
         _startWithLastSelectedMode = _currentSettings.StartWithLastSelectedMode;
         _startWithWindows = _currentSettings.StartWithWindows;
         _startMinimised = _currentSettings.StartMinimised;
