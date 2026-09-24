@@ -387,7 +387,8 @@
                                     <TextBlock Text="Display" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="Which monitor your friends see." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding Displays}" SelectedItem="{Binding SelectedDisplay}"
                                           DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Display"/>
                             </Grid>
@@ -404,7 +405,8 @@
                                     <TextBlock Text="Quality" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="Every rung targets 60 FPS; a struggling link costs resolution, not smoothness." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding QualityPresets}" SelectedItem="{Binding SelectedQuality}"
                                           DisplayMemberPath="DisplayName" AutomationProperties.Name="Quality"/>
                             </Grid>
@@ -438,7 +440,8 @@
                                     <TextBlock Text="Output device" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="The speakers or headphones whose sound gets shared." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding SystemAudioDevices}" SelectedItem="{Binding SelectedSystemAudioDevice}"
                                           DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Output device"/>
                             </Grid>
@@ -453,7 +456,8 @@
                                     <TextBlock Text="Microphone" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="Your friends hear you, but not the game." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding Microphones}" SelectedItem="{Binding SelectedMicrophone}"
                                           DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Microphone"/>
                             </Grid>
@@ -489,8 +493,6 @@
                                 <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AdaptiveQuality}" VerticalAlignment="Center"
                                           AutomationProperties.Name="Adapt automatically"/>
                             </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
 
                             <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
 
