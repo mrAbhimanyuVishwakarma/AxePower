@@ -162,6 +162,16 @@
         </Setter>
     </Style>
 
+    <!-- Sidebar item label: hidden when the sidebar is collapsed to its icon rail -->
+    <Style TargetType="TextBlock" x:Key="SidebarLabelStyle" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Sidebar Group Header Text -->
     <Style TargetType="TextBlock" x:Key="SidebarGroupHeaderTextStyle">
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
@@ -169,6 +179,24 @@
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="20,10,20,3" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Stands in for a group title in the collapsed icon rail -->
+    <Style TargetType="Border" x:Key="SidebarRailDividerStyle">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="22,12,22,6" />
+        <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Sidebar Expander Header Button (UTILITIES / SYSTEM) -->
@@ -205,6 +233,12 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <!-- The collapsed rail shows every group's tools, so the open/close header goes -->
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Sidebar Button -->
@@ -223,9 +257,13 @@
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
                         <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Margin="10,2" />
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="27,0,0,0" />
+                        </DataTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -254,9 +292,13 @@
                         <Border x:Name="border" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Margin="10,2">
                             <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,7" />
                         </Border>
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="27,0,0,0" />
+                        </DataTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
                         </Trigger>
@@ -276,9 +318,14 @@
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
                         <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Margin="16,2,10,2" />
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="28,0,0,0" />
+                            <Setter TargetName="border" Property="Margin" Value="10,2" />
+                        </DataTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -307,9 +354,14 @@
                         <Border x:Name="border" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Margin="16,2,10,2">
                             <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,6" />
                         </Border>
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="28,0,0,0" />
+                            <Setter TargetName="border" Property="Margin" Value="10,2" />
+                        </DataTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
                         </Trigger>

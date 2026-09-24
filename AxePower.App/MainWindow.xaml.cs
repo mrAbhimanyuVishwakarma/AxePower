@@ -56,6 +56,8 @@ public partial class MainWindow : Window
 
         // The title-bar music player follows the window controls and the available width
         WindowControls.SizeChanged += (s, e) => PositionHeaderPlayer();
+        // A narrow window folds the sidebar to its icon rail (MainViewModel.OnWindowWidthChanged)
+        SizeChanged += (s, e) => (DataContext as MainViewModel)?.OnWindowWidthChanged(ActualWidth);
         TitleBar.SizeChanged += (s, e) => PositionHeaderPlayer();
         BatteryPill.SizeChanged += (s, e) => PositionHeaderPlayer();
         HeaderPlayerHost.SizeChanged += (s, e) => PositionHeaderPlayer();

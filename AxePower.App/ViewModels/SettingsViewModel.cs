@@ -352,6 +352,7 @@ public partial class SettingsViewModel : ObservableObject
         var latest = _settingsService.GetSettings();
         CurrentSettings.SidebarMaintenanceExpanded = latest.SidebarMaintenanceExpanded;
         CurrentSettings.SidebarUtilitiesExpanded = latest.SidebarUtilitiesExpanded;
+        CurrentSettings.SidebarCollapsed = latest.SidebarCollapsed;
         // The music section is edited elsewhere (Music group, header player); never save a stale copy of it
         CurrentSettings.Music = latest.Music;
         // Same for Share Screen: its pickers write straight through, so a snapshot here is stale

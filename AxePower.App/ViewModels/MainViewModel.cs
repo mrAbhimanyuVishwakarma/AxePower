@@ -104,6 +104,42 @@ public partial class MainViewModel : ObservableObject
     public string MaintenanceChevronGlyph => IsMaintenanceExpanded ? "\uE70D" : "\uE76C";
     public string UtilitiesChevronGlyph => IsUtilitiesExpanded ? "\uE70D" : "\uE76C";
 
+    /// <summary>Below this window width the sidebar collapses to its icon rail by itself.</summary>
+    public const double SidebarAutoCollapseWidth = 1200;
+
+    /// <summary>The sidebar is a 72 px icon rail instead of the full 240 px list.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowMaintenanceItems), nameof(ShowUtilitiesItems))]
+    private bool _isSidebarCollapsed;
+
+    // The rail has no group headers to open, so it always shows every tool
+    public bool ShowMaintenanceItems => IsMaintenanceExpanded || IsSidebarCollapsed;
+    public bool ShowUtilitiesItems => IsUtilitiesExpanded || IsSidebarCollapsed;
+
+    private bool? _windowWasNarrow;
+
+    /// <summary>
+    /// Auto-collapse acts only when the window crosses the width line, so a click always wins
+    /// until the next crossing. Going wide restores the last manual choice.
+    /// </summary>
+    public void OnWindowWidthChanged(double width)
+    {
+        bool narrow = width < SidebarAutoCollapseWidth;
+        if (_windowWasNarrow == narrow) return;
+        _windowWasNarrow = narrow;
+        IsSidebarCollapsed = narrow || _settingsService.GetSettings().SidebarCollapsed;
+    }
+
+    [RelayCommand]
+    private void ToggleSidebar()
+    {
+        IsSidebarCollapsed = !IsSidebarCollapsed;
+
+        var settings = _settingsService.GetSettings();
+        settings.SidebarCollapsed = IsSidebarCollapsed;
+        _settingsService.SaveSettings(settings, notifyListeners: false);
+    }
+
     public MainViewModel(
         DashboardViewModel dashboardVm, 
         GameModeViewModel gameModeVm,
@@ -178,6 +214,7 @@ public partial class MainViewModel : ObservableObject
         var startupSettings = _settingsService.GetSettings();
         IsMaintenanceExpanded = startupSettings.SidebarMaintenanceExpanded;
         IsUtilitiesExpanded = startupSettings.SidebarUtilitiesExpanded;
+        IsSidebarCollapsed = startupSettings.SidebarCollapsed;
 
         _currentView = DashboardVm;
         NowPlaying?.SetHeaderPlayerPage(isDashboard: true);
@@ -272,11 +309,13 @@ public partial class MainViewModel : ObservableObject
     partial void OnIsMaintenanceExpandedChanged(bool value)
     {
         OnPropertyChanged(nameof(MaintenanceChevronGlyph));
+        OnPropertyChanged(nameof(ShowMaintenanceItems));
     }
 
     partial void OnIsUtilitiesExpandedChanged(bool value)
     {
         OnPropertyChanged(nameof(UtilitiesChevronGlyph));
+        OnPropertyChanged(nameof(ShowUtilitiesItems));
     }
 
     [RelayCommand]

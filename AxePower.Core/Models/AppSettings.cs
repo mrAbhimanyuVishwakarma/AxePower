@@ -156,6 +156,11 @@ public class AppSettings
     [JsonPropertyName("sidebarUtilitiesExpanded")]
     public bool SidebarUtilitiesExpanded { get; set; } = true;
 
+    /// <summary>The user's last collapse/expand click. A narrow window collapses the sidebar on its
+    /// own; this is what it returns to when the window is wide again.</summary>
+    [JsonPropertyName("sidebarCollapsed")]
+    public bool SidebarCollapsed { get; set; } = false;
+
     /// <summary>AxePower Music preferences. A settings file without this key loads the defaults.</summary>
     [JsonPropertyName("music")]
     public MusicSettings Music { get; set; } = new();
@@ -213,6 +218,7 @@ public class AppSettings
             NotifyOnNewRelease = this.NotifyOnNewRelease,
             SidebarMaintenanceExpanded = this.SidebarMaintenanceExpanded,
             SidebarUtilitiesExpanded = this.SidebarUtilitiesExpanded,
+            SidebarCollapsed = this.SidebarCollapsed,
             // An explicit "music": null in the file must not leave callers with a null section
             Music = (this.Music ?? new MusicSettings()).Clone(),
             Uninstaller = (this.Uninstaller ?? new UninstallerSettings()).Clone(),
