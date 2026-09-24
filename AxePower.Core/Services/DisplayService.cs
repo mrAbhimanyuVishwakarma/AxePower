@@ -433,18 +433,17 @@ public class DisplayService : IRefreshRateController
 
     /// <summary>
     /// Attempts to set the primary display's refresh rate.
-    /// Uses 60Hz if useLowest is true, otherwise uses the highest available refresh rate.
+    /// Uses 60Hz if useLowest is true (the lowest rate when the panel has no 60Hz), otherwise the
+    /// highest available refresh rate. Does nothing when the display is already there, because
+    /// every change blanks the screen for a moment and this runs on each power-status event.
     /// </summary>
     public void SetSmartRefreshRate(bool useLowest)
     {
         var rates = GetSupportedRefreshRates();
         if (!rates.Any()) return;
 
-        int targetHz = useLowest ? rates.Min() : rates.Max();
-        if (useLowest && targetHz < 60 && rates.Contains(60))
-        {
-            targetHz = 60;
-        }
+        int targetHz = useLowest ? (rates.Contains(60) ? 60 : rates.Min()) : rates.Max();
+        if (GetCurrentRefreshRate() == targetHz) return;
 
         SetRefreshRate(targetHz);
     }

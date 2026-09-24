@@ -48,20 +48,14 @@ public class AutoSwitchService : IDisposable
         
         _logService.LogInfo("AutoSwitchService started.");
         
-        // Trigger initial evaluation or apply remembered last manual mode if configured
+        // AxePower always starts in Smart. Recording the current power state first keeps the
+        // first evaluation from immediately replacing it with a plugged-in/battery rule.
         var settings = _settingsService.GetSettings();
-        if (settings.StartWithLastSelectedMode)
-        {
-            _logService.LogInfo($"StartWithLastSelectedMode is enabled. Applying remembered mode: {settings.LastSelectedPowerMode}");
-            var status = _batteryService.GetCurrentStatus();
-            _lastPluggedInState = status.IsPluggedIn;
-            _inLowBatteryState = settings.LowBatteryRuleEnabled && status.BatteryPercentage <= settings.LowBatteryThresholdPercent;
-            _ = _powerPlanService.ApplyModeAsync(settings.LastSelectedPowerMode);
-        }
-        else
-        {
-            EvaluatePowerStateAsync().ConfigureAwait(false);
-        }
+        var status = _batteryService.GetCurrentStatus();
+        _lastPluggedInState = status.IsPluggedIn;
+        _inLowBatteryState = settings.LowBatteryRuleEnabled && status.BatteryPercentage <= settings.LowBatteryThresholdPercent;
+        _logService.LogInfo("Startup: applying Smart mode.");
+        _ = _powerPlanService.ApplyModeAsync(PowerMode.Smart);
     }
 
     public void Stop()
@@ -78,6 +72,11 @@ public class AutoSwitchService : IDisposable
     private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
     {
         _logService.LogInfo($"System power mode changed: {e.Mode}");
+        if (e.Mode == PowerModes.StatusChange)
+        {
+            // Eco's refresh rate depends on AC vs battery, even when the mode itself stays
+            _ = _powerPlanService.SyncRefreshRateAsync();
+        }
         EvaluatePowerStateAsync().ConfigureAwait(false);
     }
 

@@ -363,6 +363,13 @@ public partial class App : Application
         var current = ds.GetCurrentRefreshRate();
         var rates = ds.GetSupportedRefreshRates();
         Console.WriteLine($"DisplayService Initialized: Current {current} Hz, Supported [{string.Join(", ", rates)} Hz]");
+
+        // Reports the plans without creating them; they are created on the first mode apply
+        var powerPlans = sp.GetRequiredService<PowerPlanService>();
+        var activeMode = Task.Run(powerPlans.GetActivePowerModeAsync).GetAwaiter().GetResult();
+        Console.WriteLine(
+            $"Power plans: {string.Join(", ", powerPlans.GetPlanPresence().Select(p => $"{p.Plan.Name} {(p.Present ? "present" : "not created yet")}"))}; " +
+            $"active mode {activeMode}.");
         
         var discovery = sp.GetRequiredService<IApplicationDiscoveryService>();
         var apps = Task.Run(async () => await discovery.DiscoverApplicationsAsync()).GetAwaiter().GetResult();

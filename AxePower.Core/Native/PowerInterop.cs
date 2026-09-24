@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace AxePower.Core.Native;
 
@@ -34,6 +35,33 @@ internal static class PowerInterop
         IntPtr PowerSettingGuid,
         IntPtr Buffer,
         ref uint BufferSize);
+
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerDuplicateScheme(IntPtr RootPowerKey, ref Guid SourceSchemeGuid, ref IntPtr DestinationSchemeGuid);
+
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerWriteFriendlyName(
+        IntPtr RootPowerKey,
+        ref Guid SchemeGuid,
+        IntPtr SubGroupOfPowerSettingsGuid,
+        IntPtr PowerSettingGuid,
+        byte[] Buffer,
+        uint BufferSize);
+
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerWriteDescription(
+        IntPtr RootPowerKey,
+        ref Guid SchemeGuid,
+        IntPtr SubGroupOfPowerSettingsGuid,
+        IntPtr PowerSettingGuid,
+        byte[] Buffer,
+        uint BufferSize);
+
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerWriteACValueIndex(IntPtr RootPowerKey, ref Guid SchemeGuid, ref Guid SubGroupOfPowerSettingsGuid, ref Guid PowerSettingGuid, uint AcValueIndex);
+
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerWriteDCValueIndex(IntPtr RootPowerKey, ref Guid SchemeGuid, ref Guid SubGroupOfPowerSettingsGuid, ref Guid PowerSettingGuid, uint DcValueIndex);
 
     public const int ACCESS_SCHEME = 16;
 
@@ -115,6 +143,44 @@ internal static class PowerInterop
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// Copies <paramref name="source"/> into a new scheme with the caller's own GUID. Passing a
+    /// non-null destination pointer makes powrprof use that GUID instead of generating one.
+    /// </summary>
+    public static bool DuplicateScheme(Guid source, Guid destination)
+    {
+        IntPtr pDestination = Marshal.AllocHGlobal(Marshal.SizeOf<Guid>());
+        try
+        {
+            Marshal.StructureToPtr(destination, pDestination, false);
+            IntPtr passed = pDestination;
+            return PowerDuplicateScheme(IntPtr.Zero, ref source, ref passed) == ERROR_SUCCESS;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(pDestination);
+        }
+    }
+
+    public static bool WriteFriendlyName(Guid scheme, string name)
+    {
+        byte[] buffer = Encoding.Unicode.GetBytes(name + "\0");
+        return PowerWriteFriendlyName(IntPtr.Zero, ref scheme, IntPtr.Zero, IntPtr.Zero, buffer, (uint)buffer.Length) == ERROR_SUCCESS;
+    }
+
+    public static bool WriteDescription(Guid scheme, string description)
+    {
+        byte[] buffer = Encoding.Unicode.GetBytes(description + "\0");
+        return PowerWriteDescription(IntPtr.Zero, ref scheme, IntPtr.Zero, IntPtr.Zero, buffer, (uint)buffer.Length) == ERROR_SUCCESS;
+    }
+
+    public static bool WriteValueIndex(Guid scheme, Guid subgroup, Guid setting, uint acValue, uint dcValue)
+    {
+        bool ac = PowerWriteACValueIndex(IntPtr.Zero, ref scheme, ref subgroup, ref setting, acValue) == ERROR_SUCCESS;
+        bool dc = PowerWriteDCValueIndex(IntPtr.Zero, ref scheme, ref subgroup, ref setting, dcValue) == ERROR_SUCCESS;
+        return ac && dc;
     }
 
     [DllImport("kernel32.dll")]

@@ -1,6 +1,6 @@
 ---
 name: power-modes
-description: Eco / Smart / Beast / Game power modes — how each maps to a Windows power plan GUID, the native-then-powercfg apply path, refresh-rate syncing, and where modes can be switched (dashboard, tray, title bar).
+description: Eco / Smart / Beast / GameMode power modes — the four named Windows plans AxePower creates and tunes, the native-then-powercfg apply path, refresh-rate syncing, and where modes can be switched (dashboard, tray, title bar).
 ---
 
 # Power Modes (Eco · Smart · Beast · Game)
@@ -20,25 +20,48 @@ Power modes are AxePower's core feature. Each mode maps to a Windows power plan 
 
 ## Mode → power plan
 
-| Mode | Plan | GUID |
-|---|---|---|
-| Eco | Power saver | `a1841308-3541-4fab-bc81-f71556f20b4a` (or any plan named "Power saver") |
-| Smart | Balanced | `381b4222-f694-41f0-9685-ff5bb260df2e` (or any plan named "Balanced") |
-| Beast | Ultimate Performance | Found by name. If missing, duplicated from template `e9a42b02-d5df-448d-aa00-03f14749eb61` with `powercfg -duplicatescheme`. Falls back to High Performance `8c5e7fda-…`. |
-| GameMode | Same plan as Beast | as above |
+Each mode has **its own Windows power plan**, named exactly after the mode and visible in
+Control Panel → Power Options. They are defined in
+[PowerPlanCatalog.cs](../AxePower.Core/Services/PowerPlanCatalog.cs) with fixed GUIDs, so the
+active plan maps back to exactly one mode and a user plan with the same name is never taken over.
 
-If no plan resolves, the service falls back to Balanced.
+| Mode | Plan name | GUID | Copied from (first that works) | Settings AxePower writes (AC and battery) |
+|---|---|---|---|---|
+| Eco | `Eco` | `c6e48611-…ef93` | Power saver, Balanced | CPU 5–70 %, turbo off, EPP 80, PCIe ASPM max savings, Energy Saver always on while on battery |
+| Smart | `Smart` | `e52a4182-…0e14` | Balanced | none (Balanced defaults) |
+| Beast | `Beast` | `0510a366-…7cca` | Ultimate template `e9a42b02-…`, High performance, Balanced | CPU 100–100 %, aggressive turbo, EPP 0, ASPM off, Energy Saver never |
+| GameMode | `GameMode` | `073f1c31-…cccf` | as Beast | as Beast |
 
-`GetActivePowerModeAsync` maps back from the plan: Power saver → Eco, High/Ultimate → Beast, anything else → Smart. **GameMode cannot be told apart from Beast** when reading the active plan.
+`EnsurePlan` creates a missing plan with `PowerDuplicateScheme` (passing AxePower's GUID as the
+destination), then writes the name, description and settings **on every apply**, so a plan edited
+in Control Panel or renamed is brought back in line. A setting a CPU does not support is logged
+and skipped. If a plan cannot be created at all, the stock plan is used instead (Power saver for
+Eco, High performance for Beast/GameMode, otherwise Balanced).
+
+`GetActivePowerModeAsync` maps AxePower's GUIDs to their modes. For any other plan it falls back
+to the old guesses: Power saver → Eco, High/Ultimate → Beast, anything else → Smart.
+
+Plans are never deleted, including on uninstall.
 
 ## Apply path (`PowerPlanService.ApplyModeAsync`)
-1. Resolve the target GUID as in the table.
+1. `EnsurePlan` for the mode, as above.
 2. Call `PowerInterop.SetActiveScheme`, then **verify** by reading the active scheme back.
 3. If that fails, run `powercfg /setactive <guid>` and verify again.
-4. On success, raise `ModeApplied` (the event AxePower Music listens to) and set the display refresh rate. **Known gap:** when step 2 succeeds, the method returns before reaching the refresh-rate code, so the refresh rate only syncs when the `powercfg` fallback was needed. The intended behaviour is:
-   - `AppSettings.DisplayRefreshRate > 0`: that fixed rate.
-   - `0` (Auto): `SetSmartRefreshRate(useLowest: mode == Eco)`. Eco picks the lowest supported rate but never below 60 Hz when 60 is available; every other mode picks the highest rate.
-   - `DisplayService.SetRefreshRate` calls both CCD (`SetDisplayConfig`) and GDI (`ChangeDisplaySettingsEx`), and reports success if either works.
+4. On success, set the refresh rate, then raise `ModeApplied` once (the event AxePower Music listens to).
+
+## Refresh rate
+- `AppSettings.DisplayRefreshRate > 0` (a fixed rate picked in Settings) overrides everything.
+- Otherwise: **Eco on battery → 60 Hz** (the panel's lowest if it has no 60 Hz). Every other
+  case, including every mode on AC and any desktop, gets the panel's highest rate.
+- `AutoSwitchService` calls `SyncRefreshRateAsync` on every power-status event, so plugging in or
+  unplugging while in Eco changes the rate without a mode change.
+- `SetSmartRefreshRate` does nothing when the display is already at the target, since each change
+  blanks the screen briefly.
+- `DisplayService.SetRefreshRate` calls both CCD (`SetDisplayConfig`) and GDI (`ChangeDisplaySettingsEx`), and reports success if either works.
+
+## Startup
+AxePower always applies **Smart** at startup (`AutoSwitchService.Start`). The old
+`startWithLastSelectedMode` setting is no longer read.
 
 The Dashboard's `ApplyModeAsync` also saves `LastSelectedPowerMode` and shows a toast.
 
@@ -60,4 +83,4 @@ The Dashboard's `ApplyModeAsync` also saves `LastSelectedPowerMode` and shows a 
 Nothing calls `OnModeChangedAsync` at present. The throttle and RAM actions are reachable only as manual buttons on the Game Mode page.
 
 ## Tests
-[DynamicModeAutomationTests.cs](../AxePower.Tests/DynamicModeAutomationTests.cs), [AppSettingsTests.cs](../AxePower.Tests/AppSettingsTests.cs)
+[PowerPlanCatalogTests.cs](../AxePower.Tests/PowerPlanCatalogTests.cs), [PowerPlanModeAppliedTests.cs](../AxePower.Tests/Music/PowerPlanModeAppliedTests.cs), [DynamicModeAutomationTests.cs](../AxePower.Tests/DynamicModeAutomationTests.cs), [AppSettingsTests.cs](../AxePower.Tests/AppSettingsTests.cs)

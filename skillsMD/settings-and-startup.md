@@ -74,7 +74,7 @@ Turning off `StartWithWindows` deletes the task. The task is re-registered on ev
 
 ## Other Settings page items
 - Default AC and battery modes, and fan mode on battery.
-- "Start with last selected mode".
+- ("Start with last selected mode" is gone: AxePower always starts in Smart.)
 - Notification toggles.
 - Display refresh rate: "Auto (Smart)" or a fixed Hz value (see [power-modes.md](power-modes.md)).
 - Temperature unit (°C / °F).
