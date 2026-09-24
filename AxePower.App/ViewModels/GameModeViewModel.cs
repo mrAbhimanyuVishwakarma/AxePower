@@ -49,12 +49,36 @@ public partial class GameModeViewModel : ObservableObject
     [ObservableProperty]
     private string _ramFreedText = "0 MB";
 
+    /// <summary>Set while the toggle follows a mode picked elsewhere, so it does not apply one itself.</summary>
+    private bool _followingAppliedMode;
+
     partial void OnIsManualGameModeActiveChanged(bool value)
     {
         GameModeStatusHeader = value ? "GAMEMODE IS ACTIVE" : "TURN ON GAMEMODE";
         ServicesPausedCountText = value ? "14" : "0";
         RamFreedText = value ? "2.3 GB" : "0 MB";
-        _ = ApplyGameModeStateAsync(value);
+        if (!_followingAppliedMode) _ = ApplyGameModeStateAsync(value);
+    }
+
+    /// <summary>
+    /// Picking another mode anywhere (Dashboard, tray, Auto Switch, an app rule) ends Game Mode,
+    /// so the toggle turns itself off. The mode just picked stays; Smart is not applied over it.
+    /// </summary>
+    private void OnPowerModeApplied(object? sender, PowerMode mode)
+    {
+        if (mode == PowerMode.GameMode) return;
+
+        if (!IsManualGameModeActive) return;
+
+        // A scalar property is safe to set from the thread that applied the mode
+        _followingAppliedMode = true;
+        try { IsManualGameModeActive = false; }
+        finally { _followingAppliedMode = false; }
+
+        // Detection reads the game card collection, which belongs to the UI thread
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.CheckAccess()) RefreshActiveGameDetection();
+        else dispatcher.BeginInvoke(RefreshActiveGameDetection);
     }
 
     [ObservableProperty]
@@ -196,6 +220,7 @@ public partial class GameModeViewModel : ObservableObject
         _appKillerService = appKillerService;
         _systemServiceOptimizer = systemServiceOptimizer;
         _powerPlanService = powerPlanService;
+        _powerPlanService.ModeApplied += OnPowerModeApplied;
         _controllerService = controllerService;
         _automationService = automationService;
         _throttlerService = throttlerService;

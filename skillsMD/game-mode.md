@@ -56,6 +56,12 @@ The HTTP timeout is 5 s. Downloaded images are cached.
 
 **Turning it off:** applies `Smart`.
 
+**Leaving Game Mode by picking another mode** ([GameModeGuard.cs](../AxePower.Core/Services/GameModeGuard.cs)):
+- Any other mode applied anywhere turns the toggle off. The picked mode stays; Smart is not applied over it.
+- **While a known game is running**, which means a library exe or an app rule:
+  - A Dashboard or tray pick first asks "A game is running. Leave Game Mode anyway?". After 10 s it chooses **Stay in Game Mode** by itself.
+  - Auto Switch does not switch at all; it logs "Keeping Game Mode".
+
 > **Not reverted:** services changed in step 3 stay on manual start after Game Mode is turned off. Killed apps are not restarted either (only the rule-driven Game Booster in `AppMonitorService` restarts apps).
 
 `SystemServiceOptimizer.OptimizableServices` includes Print Spooler, SysMain, Windows Search, Edge Update, WaaSMedicSvc, the Xbox Live services, VMware services and MongoDB. Only services that are present are listed.

@@ -92,6 +92,32 @@ public class DynamicModeAutomationTests
         Assert.False(string.IsNullOrWhiteSpace(vm.MemorySummary));
     }
 
+    [Fact]
+    public async Task PickingAnotherMode_TurnsTheGameModeToggleOff_AndKeepsThatMode()
+    {
+        var powerPlanService = TestPowerPlan.Create(_logService, _settingsService);
+        var vm = new GameModeViewModel(
+            _settingsService,
+            _notificationService,
+            new GameScannerService(_logService),
+            new AppKillerService(),
+            new SystemServiceOptimizer(),
+            powerPlanService,
+            controllerService: null,
+            automationService: _automationService,
+            throttlerService: _throttlerService,
+            memoryOptimizer: _memoryOptimizer);
+
+        // Mark Game Mode as on without running its side effects (they kill apps and stop services)
+        typeof(GameModeViewModel).GetField("_isManualGameModeActive", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(vm, true);
+
+        await powerPlanService.ApplyModeAsync(PowerMode.Eco);
+
+        Assert.False(vm.IsManualGameModeActive);
+        Assert.Equal(PowerMode.Eco, await powerPlanService.GetActivePowerModeAsync());
+    }
+
     [Theory]
     [InlineData("Lossless Scaling", true)]
     [InlineData("Wallpaper Engine", true)]

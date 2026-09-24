@@ -133,8 +133,12 @@ public partial class DashboardViewModel : ObservableObject
         UpdateService? updateService = null,
         SystemTelemetryService? telemetryService = null,
         DisplayService? displayService = null,
-        GraphicsDriverService? graphicsDriverService = null)
+        GraphicsDriverService? graphicsDriverService = null,
+        GameModeGuard? gameModeGuard = null,
+        AxePower.App.Services.IGameModePrompts? gameModePrompts = null)
     {
+        _gameModeGuard = gameModeGuard;
+        _gameModePrompts = gameModePrompts;
         _powerPlanService = powerPlanService;
         _batteryService = batteryService;
         _notificationService = notificationService;
@@ -445,9 +449,21 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
+    private readonly GameModeGuard? _gameModeGuard;
+    private readonly AxePower.App.Services.IGameModePrompts? _gameModePrompts;
+
     [RelayCommand]
     private async Task ApplyModeAsync()
     {
+        // Picking another mode ends Game Mode, but not behind a running game's back
+        if (_gameModeGuard != null && await _gameModeGuard.GetBlockingGameAsync(SelectedMode) is string game &&
+            _gameModePrompts?.ConfirmLeaveGameMode(game) != true)
+        {
+            await RefreshStatusAsync(syncSelectedMode: true);
+            _notificationService.Show($"Game Mode stays on while {game} is running.");
+            return;
+        }
+
         IsLoading = true;
         ApplyStatusText = "Applying...";
         try

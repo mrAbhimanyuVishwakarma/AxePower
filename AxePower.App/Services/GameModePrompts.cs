@@ -17,6 +17,9 @@ public interface IGameModePrompts
     /// <summary>10-second caution before the display mode is changed in firmware.</summary>
     bool ConfirmDisplayMode(GpuDisplayMode mode);
 
+    /// <summary>A game is running in Game Mode; true to leave Game Mode anyway. Stays by default.</summary>
+    bool ConfirmLeaveGameMode(string game);
+
     /// <summary>True for "Restart now".</summary>
     bool AskRestartNow(GpuDisplayMode mode);
 
@@ -41,6 +44,11 @@ public sealed class WindowGameModePrompts : IGameModePrompts
             : "The integrated GPU drives the screen again and Windows picks a GPU per app. Better battery life. " +
               "Takes effect after a restart.",
         "Switch", "Cancel", CautionSeconds);
+
+    public bool ConfirmLeaveGameMode(string game) => Show(
+        "A game is running",
+        $"{game} is open, so Game Mode is holding maximum performance for it. Leave Game Mode anyway?",
+        "Switch anyway", "Stay in Game Mode", CautionSeconds);
 
     public bool AskRestartNow(GpuDisplayMode mode) => Show(
         "Restart to apply",

@@ -233,6 +233,7 @@ public partial class App : Application
         services.AddSingleton<AppMonitorService>();
         services.AddSingleton<GameScannerService>();
         services.AddSingleton<GameModeGpuService>();
+        services.AddSingleton<GameModeGuard>();
         services.AddSingleton<IGpuDisplayModeController, LenovoGpuDisplayModeService>();
         services.AddSingleton<IGameModePrompts, WindowGameModePrompts>();
         services.AddSingleton<ThemeService>();

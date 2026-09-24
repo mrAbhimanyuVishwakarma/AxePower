@@ -13,6 +13,7 @@ public class AutoSwitchService : IDisposable
     private readonly SettingsService _settingsService;
     private readonly LogService _logService;
     private readonly NotificationService _notificationService;
+    private readonly GameModeGuard? _gameModeGuard;
 
     private CancellationTokenSource? _serviceCts;
     private CancellationTokenSource? _transitionCts;
@@ -27,8 +28,10 @@ public class AutoSwitchService : IDisposable
         PowerPlanService powerPlanService,
         SettingsService settingsService,
         LogService logService,
-        NotificationService notificationService)
+        NotificationService notificationService,
+        GameModeGuard? gameModeGuard = null)
     {
+        _gameModeGuard = gameModeGuard;
         _batteryService = batteryService;
         _powerPlanService = powerPlanService;
         _settingsService = settingsService;
@@ -185,6 +188,13 @@ public class AutoSwitchService : IDisposable
                 else
                 {
                     targetMode = isLowBattery ? settings.LowBatteryMode : settings.UnpluggedMode;
+                }
+
+                // Never pull Game Mode out from under a running game; a manual pick asks instead
+                if (_gameModeGuard != null && await _gameModeGuard.GetBlockingGameAsync(targetMode) is string game)
+                {
+                    _logService.LogInfo($"Keeping Game Mode: {game} is running (would have switched to {targetMode}).");
+                    return;
                 }
 
                 var currentMode = await _powerPlanService.GetActivePowerModeAsync();

@@ -41,7 +41,7 @@ public partial class CountdownConfirmWindow : Window
         Closed += (_, _) => _timer.Stop();
     }
 
-    private void UpdateCountdown() => CountdownText.Text = $"Cancels automatically in {_secondsLeft} s if you do nothing.";
+    private void UpdateCountdown() => CountdownText.Text = $"“{CancelButton.Content}” is chosen automatically in {_secondsLeft} s.";
 
     private void OnConfirm(object sender, RoutedEventArgs e) => Finish(true);
 
