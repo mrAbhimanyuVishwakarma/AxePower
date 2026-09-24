@@ -28,6 +28,10 @@ public class AppSettings
     [JsonPropertyName("startWithLastSelectedMode")]
     public bool StartWithLastSelectedMode { get; set; } = false;
 
+    /// <summary>Set once AxePower has created its four plans and removed every other non-stock plan on this PC.</summary>
+    [JsonPropertyName("powerPlansInitialized")]
+    public bool PowerPlansInitialized { get; set; } = false;
+
     [JsonPropertyName("lastSelectedPowerMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PowerMode LastSelectedPowerMode { get; set; } = PowerMode.Beast;
@@ -160,6 +164,7 @@ public class AppSettings
             UnpluggedMode = this.UnpluggedMode,
             StartWithLastSelectedMode = this.StartWithLastSelectedMode,
             LastSelectedPowerMode = this.LastSelectedPowerMode,
+            PowerPlansInitialized = this.PowerPlansInitialized,
             FanModeOnBattery = this.FanModeOnBattery,
             LowBatteryRuleEnabled = this.LowBatteryRuleEnabled,
             LowBatteryThresholdPercent = this.LowBatteryThresholdPercent,

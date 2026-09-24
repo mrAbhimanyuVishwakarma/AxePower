@@ -22,7 +22,7 @@ public sealed class MusicPlayerServiceTests : IDisposable
     public MusicPlayerServiceTests()
     {
         var log = new LogService();
-        var settings = new SettingsService(log);
+        var settings = new SettingsService(log, System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"axepower_tests_{System.Guid.NewGuid():N}"));
         var notifications = new NotificationService();
         notifications.OnShowNotification += (_, message) => _notices.Add(message);
 

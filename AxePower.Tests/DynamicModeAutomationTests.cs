@@ -27,7 +27,7 @@ public class DynamicModeAutomationTests
             _memoryOptimizer,
             _notificationService,
             _logService);
-        _settingsService = new SettingsService(_logService);
+        _settingsService = new SettingsService(_logService, System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"axepower_tests_{System.Guid.NewGuid():N}"));
     }
 
     [Fact]

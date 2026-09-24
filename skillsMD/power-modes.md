@@ -32,16 +32,26 @@ active plan maps back to exactly one mode and a user plan with the same name is 
 | Beast | `Beast` | `0510a366-…7cca` | Ultimate template `e9a42b02-…`, High performance, Balanced | CPU 100–100 %, aggressive turbo, EPP 0, ASPM off, Energy Saver never |
 | GameMode | `GameMode` | `073f1c31-…cccf` | as Beast | as Beast |
 
-`EnsurePlan` creates a missing plan with `PowerDuplicateScheme` (passing AxePower's GUID as the
-destination), then writes the name, description and settings **on every apply**, so a plan edited
-in Control Panel or renamed is brought back in line. A setting a CPU does not support is logged
-and skipped. If a plan cannot be created at all, the stock plan is used instead (Power saver for
-Eco, High performance for Beast/GameMode, otherwise Balanced).
+`EnsurePlan` creates a plan **only when it is missing**, with `PowerDuplicateScheme` (passing
+AxePower's GUID as the destination), and writes its name, description and settings at that moment
+only. An existing plan is switched to as it is, so edits made in Control Panel stay. A setting a CPU
+does not support is logged and skipped. If a plan cannot be created at all, the stock plan is used
+instead (Power saver for Eco, High performance for Beast/GameMode, otherwise Balanced).
 
 `GetActivePowerModeAsync` maps AxePower's GUIDs to their modes. For any other plan it falls back
 to the old guesses: Power saver → Eco, High/Ultimate → Beast, anything else → Smart.
 
-Plans are never deleted, including on uninstall.
+### One-time cleanup (`InitializePlansOnce`)
+After the first successful apply on a PC (normally the startup switch to Smart):
+1. All four plans are created.
+2. **Every other plan is deleted** except Windows' stock ones: Balanced, Power saver, High
+   performance and the Ultimate Performance template GUID. Copies of Ultimate Performance, OEM
+   plans (for example Lenovo's) and user plans all go. The active plan is skipped because Windows
+   will not delete it.
+3. `powerPlansInitialized` is set in settings.json, so this never runs again on that PC.
+
+If any of the four plans cannot be created, nothing is deleted and the flag stays off, so it is
+retried on the next apply. AxePower's own plans are not deleted on uninstall.
 
 ## Apply path (`PowerPlanService.ApplyModeAsync`)
 1. `EnsurePlan` for the mode, as above.

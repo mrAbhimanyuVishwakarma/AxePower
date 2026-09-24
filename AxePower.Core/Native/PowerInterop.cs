@@ -63,6 +63,9 @@ internal static class PowerInterop
     [DllImport("powrprof.dll")]
     private static extern uint PowerWriteDCValueIndex(IntPtr RootPowerKey, ref Guid SchemeGuid, ref Guid SubGroupOfPowerSettingsGuid, ref Guid PowerSettingGuid, uint DcValueIndex);
 
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerDeleteScheme(IntPtr RootPowerKey, ref Guid SchemeGuid);
+
     public const int ACCESS_SCHEME = 16;
 
     public static Guid? GetActiveScheme()
@@ -163,6 +166,9 @@ internal static class PowerInterop
             Marshal.FreeHGlobal(pDestination);
         }
     }
+
+    /// <summary>Fails for the active scheme; Windows will not delete the plan in use.</summary>
+    public static bool DeleteScheme(Guid scheme) => PowerDeleteScheme(IntPtr.Zero, ref scheme) == ERROR_SUCCESS;
 
     public static bool WriteFriendlyName(Guid scheme, string name)
     {

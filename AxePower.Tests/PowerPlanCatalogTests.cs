@@ -56,16 +56,25 @@ public class PowerPlanCatalogTests : IDisposable
     }
 
     [Fact]
-    public async Task Beast_IsCopiedFromUltimate_OrHighPerformanceWhenTheTemplateIsBlocked()
+    public async Task Beast_IsCopiedFromTheUltimateTemplate()
     {
-        var service = CreateService();
-        await service.ApplyModeAsync(PowerMode.Beast);
-        Assert.Equal(PowerPlanService.UltimatePerformanceTemplateGuid, _schemes.Duplicates.Single().Source);
+        await CreateService().ApplyModeAsync(PowerMode.Beast);
 
-        _schemes.UltimateTemplateAvailable = false;
-        await service.ApplyModeAsync(PowerMode.GameMode);
-        Assert.Equal(PowerPlanService.HighPerformanceGuid, _schemes.Duplicates.Last().Source);
+        Assert.Equal(PowerPlanService.UltimatePerformanceTemplateGuid, SourceOf(PowerPlanCatalog.Beast));
+        Assert.Equal(PowerPlanService.UltimatePerformanceTemplateGuid, SourceOf(PowerPlanCatalog.GameMode));
     }
+
+    [Fact]
+    public async Task Beast_IsCopiedFromHighPerformance_WhenTheUltimateTemplateIsBlocked()
+    {
+        _schemes.UltimateTemplateAvailable = false;
+
+        await CreateService().ApplyModeAsync(PowerMode.GameMode);
+
+        Assert.Equal(PowerPlanService.HighPerformanceGuid, SourceOf(PowerPlanCatalog.GameMode));
+    }
+
+    private Guid SourceOf(AxePowerPlan plan) => _schemes.Duplicates.Single(d => d.Destination == plan.Guid).Source;
 
     [Fact]
     public async Task Eco_OnAModernStandbyMachineWithOnlyBalanced_IsCopiedFromBalanced()
@@ -75,12 +84,12 @@ public class PowerPlanCatalogTests : IDisposable
 
         Assert.True(await CreateService().ApplyModeAsync(PowerMode.Eco));
 
-        Assert.Equal(PowerPlanService.BalancedGuid, _schemes.Duplicates.Single().Source);
+        Assert.Equal(PowerPlanService.BalancedGuid, SourceOf(PowerPlanCatalog.Eco));
         Assert.Equal(PowerPlanCatalog.Eco.Guid, _schemes.Active);
     }
 
     [Fact]
-    public async Task ApplyingAgain_ReusesThePlan_RestoresItsName_AndRewritesItsSettings()
+    public async Task ApplyingAgain_UsesTheExistingPlanAsIs_WithoutRecreatingOrRewritingIt()
     {
         var service = CreateService();
         await service.ApplyModeAsync(PowerMode.Eco);
@@ -88,12 +97,63 @@ public class PowerPlanCatalogTests : IDisposable
         var cap = eco.Settings.First(s => s.Label.StartsWith("CPU maximum"));
         _schemes.Names[eco.Guid] = "Renamed by user";
         _schemes.Values[(eco.Guid, cap.Setting)] = (100, 100);
+        int created = _schemes.Duplicates.Count;
 
         await service.ApplyModeAsync(PowerMode.Eco);
 
-        Assert.Single(_schemes.Duplicates);
-        Assert.Equal("Eco", _schemes.Names[eco.Guid]);
-        Assert.Equal((cap.Ac, cap.Dc), _schemes.Values[(eco.Guid, cap.Setting)]);
+        Assert.Equal(created, _schemes.Duplicates.Count);
+        Assert.Equal("Renamed by user", _schemes.Names[eco.Guid]);
+        Assert.Equal((100u, 100u), _schemes.Values[(eco.Guid, cap.Setting)]);
+        Assert.Equal(eco.Guid, _schemes.Active);
+    }
+
+    [Fact]
+    public async Task FirstApply_CreatesAllFourPlans_AndRemovesEveryNonStockPlan()
+    {
+        var ultimateCopy = Guid.NewGuid();
+        var oemPlan = Guid.NewGuid();
+        _schemes.Schemes.AddRange(new[] { ultimateCopy, oemPlan });
+        _schemes.Names[ultimateCopy] = "Ultimate Performance";
+        _schemes.Names[oemPlan] = "LOQ Gaming Mod";
+        _schemes.Active = oemPlan;
+        var settings = new SettingsService(_log, _settingsDirectory);
+
+        Assert.True(await CreateService(settings).ApplyModeAsync(PowerMode.Smart));
+
+        Assert.All(PowerPlanCatalog.All, p => Assert.Contains(p.Guid, _schemes.Schemes));
+        Assert.Equivalent(new[] { ultimateCopy, oemPlan }, _schemes.Deleted);
+        Assert.Contains(PowerPlanService.BalancedGuid, _schemes.Schemes);
+        Assert.Contains(PowerPlanService.PowerSaverGuid, _schemes.Schemes);
+        Assert.Contains(PowerPlanService.HighPerformanceGuid, _schemes.Schemes);
+        Assert.True(settings.GetSettings().PowerPlansInitialized);
+    }
+
+    [Fact]
+    public async Task Cleanup_RunsOnlyOncePerPc()
+    {
+        var settings = new SettingsService(_log, _settingsDirectory);
+        var service = CreateService(settings);
+        await service.ApplyModeAsync(PowerMode.Smart);
+
+        var laterPlan = Guid.NewGuid();
+        _schemes.Schemes.Add(laterPlan);
+        await service.ApplyModeAsync(PowerMode.Beast);
+
+        Assert.Contains(laterPlan, _schemes.Schemes);
+    }
+
+    [Fact]
+    public async Task WhenAPlanCannotBeCreated_NothingIsDeleted_AndCleanupIsRetriedLater()
+    {
+        var other = Guid.NewGuid();
+        _schemes.Schemes.Add(other);
+        _schemes.DuplicateWorks = false;
+        var settings = new SettingsService(_log, _settingsDirectory);
+
+        await CreateService(settings).ApplyModeAsync(PowerMode.Smart);
+
+        Assert.Empty(_schemes.Deleted);
+        Assert.False(settings.GetSettings().PowerPlansInitialized);
     }
 
     [Fact]

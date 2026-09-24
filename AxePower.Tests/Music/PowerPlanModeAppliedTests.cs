@@ -89,7 +89,7 @@ public class PowerPlanModeAppliedTests
     }
 
     [Fact]
-    public async Task BeastWithAUserUltimatePlan_UsesItsOwnPlan_AndLeavesTheUsersAlone()
+    public async Task BeastWithAnExistingUltimatePlan_ActivatesAxePowersOwnBeastPlan()
     {
         var (service, schemes, _) = Create();
         schemes.Schemes.Add(UltimateGuid);
@@ -100,7 +100,6 @@ public class PowerPlanModeAppliedTests
 
         Assert.True(ok);
         Assert.Equal(PowerPlanCatalog.Beast.Guid, schemes.Active);
-        Assert.Equal("Ultimate Performance", schemes.Names[UltimateGuid]);
         Assert.Equal(new[] { PowerMode.Beast }, raised);
     }
 

@@ -84,33 +84,33 @@ public class PowerPlanService
     }
 
     /// <summary>
-    /// Makes sure the mode's own plan exists in Windows under its name, with AxePower's settings
-    /// written into it. Settings are rewritten on every call, so a plan edited in Control Panel
-    /// or created by an older version is brought back in line.
+    /// Makes sure the mode's own plan exists in Windows. A missing plan is created once, and only
+    /// then are its name and settings written; an existing plan is used exactly as it is, so
+    /// changes made to it in Control Panel stay.
     /// </summary>
     public Guid? EnsurePlan(AxePowerPlan plan)
     {
-        if (!_schemes.EnumerateSchemes().Contains(plan.Guid))
-        {
-            bool created = false;
-            foreach (var source in plan.Sources)
-            {
-                if (_schemes.DuplicateScheme(source, plan.Guid))
-                {
-                    _logService.LogInfo($"Created power plan '{plan.Name}' ({plan.Guid}) from {source}.");
-                    created = true;
-                    break;
-                }
-            }
+        if (_schemes.EnumerateSchemes().Contains(plan.Guid))
+            return plan.Guid;
 
-            if (!created || !_schemes.EnumerateSchemes().Contains(plan.Guid))
+        bool created = false;
+        foreach (var source in plan.Sources)
+        {
+            if (_schemes.DuplicateScheme(source, plan.Guid))
             {
-                _logService.LogError($"Could not create power plan '{plan.Name}' from any source plan.");
-                return null;
+                _logService.LogInfo($"Created power plan '{plan.Name}' ({plan.Guid}) from {source}.");
+                created = true;
+                break;
             }
         }
 
-        if (_schemes.ReadFriendlyName(plan.Guid) != plan.Name && !_schemes.WriteFriendlyName(plan.Guid, plan.Name))
+        if (!created || !_schemes.EnumerateSchemes().Contains(plan.Guid))
+        {
+            _logService.LogError($"Could not create power plan '{plan.Name}' from any source plan.");
+            return null;
+        }
+
+        if (!_schemes.WriteFriendlyName(plan.Guid, plan.Name))
             _logService.LogWarning($"Could not name power plan {plan.Guid} '{plan.Name}'.");
         _schemes.WriteDescription(plan.Guid, plan.Description);
 
@@ -122,6 +122,43 @@ public class PowerPlanService
         }
 
         return plan.Guid;
+    }
+
+    /// <summary>Plans that are never deleted: Windows' own stock plans and AxePower's four.</summary>
+    public static bool IsKeptPlan(Guid scheme) =>
+        scheme == BalancedGuid || scheme == PowerSaverGuid || scheme == HighPerformanceGuid ||
+        scheme == UltimatePerformanceTemplateGuid || PowerPlanCatalog.ForGuid(scheme) != null;
+
+    /// <summary>
+    /// Once per PC: creates all four plans, then deletes every other plan except Windows' stock
+    /// ones (copies of Ultimate Performance, OEM and user plans alike). Nothing is deleted
+    /// unless all four exist, so the PC is never left without AxePower's plans to switch to.
+    /// The active plan is skipped because Windows refuses to delete it.
+    /// </summary>
+    public void InitializePlansOnce()
+    {
+        var settings = _settingsService.GetSettings();
+        if (settings.PowerPlansInitialized)
+            return;
+
+        if (PowerPlanCatalog.All.Any(plan => EnsurePlan(plan) == null))
+        {
+            _logService.LogWarning("Not all AxePower power plans could be created; other plans were left in place.");
+            return;
+        }
+
+        var active = _schemes.GetActiveScheme();
+        foreach (var scheme in _schemes.EnumerateSchemes().Where(s => !IsKeptPlan(s) && s != active))
+        {
+            var name = _schemes.ReadFriendlyName(scheme);
+            if (_schemes.DeleteScheme(scheme))
+                _logService.LogInfo($"Removed power plan '{name}' ({scheme}).");
+            else
+                _logService.LogWarning($"Could not remove power plan '{name}' ({scheme}).");
+        }
+
+        settings.PowerPlansInitialized = true;
+        _settingsService.SaveSettings(settings);
     }
 
     /// <summary>Which of AxePower's four plans exist right now. Read-only, for the self-test.</summary>
@@ -172,6 +209,15 @@ public class PowerPlanService
         }
 
         _logService.LogInfo($"Applied and verified power mode: {mode} ({targetGuid.Value})");
+        try
+        {
+            // After the switch, so the plan being left is no longer active and can be removed
+            InitializePlansOnce();
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("First-run power plan setup failed.", ex);
+        }
         ApplyRefreshRate(mode);
         RaiseModeApplied(mode);
         return true;
@@ -261,6 +307,7 @@ internal interface IPowerSchemeApi
     List<Guid> EnumerateSchemes();
     string? ReadFriendlyName(Guid scheme);
     bool DuplicateScheme(Guid source, Guid destination);
+    bool DeleteScheme(Guid scheme);
     bool WriteFriendlyName(Guid scheme, string name);
     bool WriteDescription(Guid scheme, string description);
     bool WriteValueIndex(Guid scheme, Guid subgroup, Guid setting, uint acValue, uint dcValue);
@@ -278,6 +325,8 @@ internal sealed class WindowsPowerSchemeApi : IPowerSchemeApi
     public string? ReadFriendlyName(Guid scheme) => PowerInterop.ReadFriendlyName(scheme);
 
     public bool DuplicateScheme(Guid source, Guid destination) => PowerInterop.DuplicateScheme(source, destination);
+
+    public bool DeleteScheme(Guid scheme) => PowerInterop.DeleteScheme(scheme);
 
     public bool WriteFriendlyName(Guid scheme, string name) => PowerInterop.WriteFriendlyName(scheme, name);
 

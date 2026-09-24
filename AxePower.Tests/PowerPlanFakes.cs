@@ -67,6 +67,17 @@ internal sealed class FakePowerSchemes : IPowerSchemeApi
         return true;
     }
 
+    public List<Guid> Deleted { get; } = new();
+
+    public bool DeleteScheme(Guid scheme)
+    {
+        // Windows refuses to delete the active plan
+        if (scheme == Active || !Schemes.Remove(scheme)) return false;
+        Names.Remove(scheme);
+        Deleted.Add(scheme);
+        return true;
+    }
+
     public bool WriteFriendlyName(Guid scheme, string name)
     {
         if (!Schemes.Contains(scheme)) return false;
