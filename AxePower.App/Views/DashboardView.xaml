@@ -121,30 +121,12 @@
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick" Command="{Binding SelectModeCommand}" CommandParameter="Eco"/>
                     </Border.InputBindings>
-                    <StackPanel Margin="24" HorizontalAlignment="Center">
-                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,16,0,24">
+                    <StackPanel Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,0,0,20">
                             <Image Source="/Resources/icon_saver.png" Stretch="Uniform"/>
                         </Grid>
                         <TextBlock Text="Eco" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                        <TextBlock Text="Maximum efficiency&#x0a;for everyday tasks." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,32"/>
-                        
-                        <StackPanel>
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="/Resources/icons/battery_eco.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                <TextBlock Grid.Column="1" Text="Best battery life" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="/Resources/icons/thermostat_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                <TextBlock Grid.Column="1" Text="Lower temps" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="/Resources/icons/volume_eco.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                <TextBlock Grid.Column="1" Text="Whisper quiet" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            </Grid>
-                        </StackPanel>
+                        <TextBlock Text="Maximum efficiency&#x0a;for everyday tasks." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                     </StackPanel>
                 </Border>
 
@@ -164,30 +146,12 @@
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick" Command="{Binding SelectModeCommand}" CommandParameter="Smart"/>
                     </Border.InputBindings>
-                    <StackPanel Margin="24" HorizontalAlignment="Center">
-                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,16,0,24">
+                    <StackPanel Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,0,0,20">
                             <Image Source="/Resources/icon_smart.png" Stretch="Uniform"/>
                         </Grid>
                         <TextBlock Text="Smart" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                        <TextBlock Text="Intelligent balance&#x0a;for any situation." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,32"/>
-                        
-                        <StackPanel>
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="/Resources/icons/performance_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                <TextBlock Grid.Column="1" Text="Balanced performance" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="/Resources/icons/battery_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                <TextBlock Grid.Column="1" Text="Optimized battery" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="/Resources/icons/thermostat_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                <TextBlock Grid.Column="1" Text="Smart fan control" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                            </Grid>
-                        </StackPanel>
+                        <TextBlock Text="Intelligent balance&#x0a;for any situation." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                     </StackPanel>
                 </Border>
 
@@ -220,10 +184,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="12" Background="#1A8B5CF6" Margin="0,0,14,0">
-                                    <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="22" Foreground="#8B5CF6"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
+                                <Image Grid.Column="0" Source="/Resources/Gamemode.png" Width="52" Height="52" Margin="0,0,14,0"
+                                       Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,18,0">
                                     <TextBlock Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="SemiBold"/>
                                     <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0">
@@ -261,34 +223,13 @@
                         <Border.InputBindings>
                             <MouseBinding MouseAction="LeftClick" Command="{Binding SelectModeCommand}" CommandParameter="Beast"/>
                         </Border.InputBindings>
-                        <!-- Shrinks, never grows, so the card keeps Eco and Smart's look but fits its 70% -->
-                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="16">
-                        <StackPanel Margin="8" HorizontalAlignment="Center">
-                            <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,16,0,24">
+                        <StackPanel Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,0,0,20">
                                 <Image Source="/Resources/icon_beast.png" Stretch="Uniform"/>
                             </Grid>
                             <TextBlock Text="Beast" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="Maximum performance&#x0a;for demanding workloads." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,32"/>
-                        
-                            <StackPanel>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <Image Grid.Column="0" Source="/Resources/icons/performance_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                    <TextBlock Grid.Column="1" Text="Top performance" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <Image Grid.Column="0" Source="/Resources/icons/thermometer_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                    <TextBlock Grid.Column="1" Text="Aggressive cooling" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                </Grid>
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <Image Grid.Column="0" Source="/Resources/icons/bolt_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                    <TextBlock Grid.Column="1" Text="Higher power usage" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                </Grid>
-                            </StackPanel>
+                            <TextBlock Text="Maximum performance&#x0a;for demanding workloads." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                         </StackPanel>
-                        </Viewbox>
                     </Border>
                 </Grid>
             </Grid>
