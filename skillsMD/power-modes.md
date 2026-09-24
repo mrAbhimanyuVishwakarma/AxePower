@@ -53,6 +53,16 @@ After the first successful apply on a PC (normally the startup switch to Smart):
 If any of the four plans cannot be created, nothing is deleted and the flag stays off, so it is
 retried on the next apply. AxePower's own plans are not deleted on uninstall.
 
+### No duplicates
+- AxePower's plans have fixed GUIDs, and Windows refuses a second plan with the same GUID, so a
+  plan can never be copied twice. A plan deleted later is created again the next time its mode is
+  applied.
+- **On every apply**, `RemoveSameNamedPlans` deletes any other plan named Eco, Smart, Beast or
+  GameMode (case and surrounding spaces ignored), such as a Control Panel copy. Stock plans and
+  the active plan are left alone.
+- Creating, cleaning up and deleting plans run under one lock, because startup, Auto Switch and
+  app rules can apply a mode at the same moment.
+
 ## Apply path (`PowerPlanService.ApplyModeAsync`)
 1. `EnsurePlan` for the mode, as above.
 2. Call `PowerInterop.SetActiveScheme`, then **verify** by reading the active scheme back.

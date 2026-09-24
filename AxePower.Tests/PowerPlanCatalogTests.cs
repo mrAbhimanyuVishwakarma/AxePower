@@ -143,6 +143,56 @@ public class PowerPlanCatalogTests : IDisposable
     }
 
     [Fact]
+    public async Task APlanDeletedLater_IsCreatedAgainWhenItsModeIsSelected()
+    {
+        var service = CreateService();
+        await service.ApplyModeAsync(PowerMode.Smart);
+        var eco = PowerPlanCatalog.Eco;
+        _schemes.Schemes.Remove(eco.Guid);
+
+        Assert.True(await service.ApplyModeAsync(PowerMode.Eco));
+
+        Assert.Equal(eco.Guid, _schemes.Active);
+        Assert.Equal("Eco", _schemes.Names[eco.Guid]);
+        Assert.Equal(2, _schemes.Duplicates.Count(d => d.Destination == eco.Guid));
+    }
+
+    [Fact]
+    public async Task EveryApply_RemovesForeignPlansWithAnAxePowerName_EvenAfterTheOneTimeCleanup()
+    {
+        var service = CreateService();
+        await service.ApplyModeAsync(PowerMode.Smart);
+
+        var copyOfEco = Guid.NewGuid();
+        var otherBeast = Guid.NewGuid();
+        var unrelated = Guid.NewGuid();
+        _schemes.Schemes.AddRange(new[] { copyOfEco, otherBeast, unrelated });
+        _schemes.Names[copyOfEco] = "Eco";
+        _schemes.Names[otherBeast] = " beast ";
+        _schemes.Names[unrelated] = "My plan";
+        _schemes.Active = copyOfEco;
+
+        await service.ApplyModeAsync(PowerMode.Eco);
+
+        Assert.DoesNotContain(copyOfEco, _schemes.Schemes);
+        Assert.DoesNotContain(otherBeast, _schemes.Schemes);
+        Assert.Contains(unrelated, _schemes.Schemes);
+        Assert.All(PowerPlanCatalog.All, p => Assert.Single(_schemes.Schemes, s => _schemes.Names[s].Trim().Equals(p.Name, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    [Fact]
+    public async Task SimultaneousApplies_CreateThePlanOnce_AndAllSucceed()
+    {
+        var service = CreateService();
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(() => service.ApplyModeAsync(PowerMode.Eco))));
+
+        Assert.All(results, Assert.True);
+        Assert.Single(_schemes.Duplicates, d => d.Destination == PowerPlanCatalog.Eco.Guid);
+        Assert.Equal(PowerPlanCatalog.Eco.Guid, _schemes.Active);
+    }
+
+    [Fact]
     public async Task WhenAPlanCannotBeCreated_NothingIsDeleted_AndCleanupIsRetriedLater()
     {
         var other = Guid.NewGuid();

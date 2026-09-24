@@ -16,6 +16,11 @@ public class PowerPlanService
     private readonly IPowerSchemeApi _schemes;
     private readonly Func<bool> _isOnBattery;
 
+    // Creating, cleaning up and deleting plans run one caller at a time: startup, Auto Switch and
+    // app rules can all apply a mode at once, and two of them creating the same plan would
+    // otherwise see each other's copy as a failure.
+    private readonly object _planLock = new();
+
     // Standard Windows GUIDs. AxePower's own plans are copied from these (see PowerPlanCatalog).
     public static readonly Guid BalancedGuid = new("381b4222-f694-41f0-9685-ff5bb260df2e");
     public static readonly Guid PowerSaverGuid = new("a1841308-3541-4fab-bc81-f71556f20b4a");
@@ -104,7 +109,12 @@ public class PowerPlanService
             }
         }
 
-        if (!created || !_schemes.EnumerateSchemes().Contains(plan.Guid))
+        // The copy is refused when the GUID already exists, e.g. created from outside AxePower
+        // in the meantime. The plan is there either way, so use it without touching it.
+        if (!created && _schemes.EnumerateSchemes().Contains(plan.Guid))
+            return plan.Guid;
+
+        if (!_schemes.EnumerateSchemes().Contains(plan.Guid))
         {
             _logService.LogError($"Could not create power plan '{plan.Name}' from any source plan.");
             return null;
@@ -161,6 +171,27 @@ public class PowerPlanService
         _settingsService.SaveSettings(settings);
     }
 
+    /// <summary>
+    /// Deletes any plan that is not AxePower's own but carries one of its names (a Control Panel
+    /// copy of "Eco", another app's "Beast"), so each name appears exactly once. Stock Windows
+    /// plans and the active plan are never touched.
+    /// </summary>
+    public void RemoveSameNamedPlans()
+    {
+        var active = _schemes.GetActiveScheme();
+        foreach (var scheme in _schemes.EnumerateSchemes().Where(s => !IsKeptPlan(s) && s != active))
+        {
+            var name = _schemes.ReadFriendlyName(scheme)?.Trim();
+            if (name == null || !PowerPlanCatalog.All.Any(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            if (_schemes.DeleteScheme(scheme))
+                _logService.LogInfo($"Removed duplicate power plan '{name}' ({scheme}).");
+            else
+                _logService.LogWarning($"Could not remove duplicate power plan '{name}' ({scheme}).");
+        }
+    }
+
     /// <summary>Which of AxePower's four plans exist right now. Read-only, for the self-test.</summary>
     public IReadOnlyList<(AxePowerPlan Plan, bool Present)> GetPlanPresence()
     {
@@ -171,7 +202,11 @@ public class PowerPlanService
     public async Task<bool> ApplyModeAsync(PowerMode mode)
     {
         var plan = PowerPlanCatalog.For(mode);
-        Guid? targetGuid = EnsurePlan(plan);
+        Guid? targetGuid;
+        lock (_planLock)
+        {
+            targetGuid = EnsurePlan(plan);
+        }
 
         if (targetGuid == null)
         {
@@ -212,11 +247,15 @@ public class PowerPlanService
         try
         {
             // After the switch, so the plan being left is no longer active and can be removed
-            InitializePlansOnce();
+            lock (_planLock)
+            {
+                InitializePlansOnce();
+                RemoveSameNamedPlans();
+            }
         }
         catch (Exception ex)
         {
-            _logService.LogError("First-run power plan setup failed.", ex);
+            _logService.LogError("Power plan cleanup failed.", ex);
         }
         ApplyRefreshRate(mode);
         RaiseModeApplied(mode);
