@@ -69,6 +69,8 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="16" />
         <Setter Property="Padding" Value="24" />
+        <!-- A shadow in the Glass theme only (null elsewhere) -->
+        <Setter Property="Effect" Value="{DynamicResource CardShadowEffect}" />
     </Style>
 
     <Style TargetType="Border" x:Key="CardElevatedStyle" BasedOn="{StaticResource CardStyle}">
@@ -382,15 +384,6 @@
     </Style>
 
     <!-- Flat ComboBox Style -->
-    <!-- Glass cards (Dashboard), matching the music header player: GlassCardSurfaceBrush from the
-         theme, this lit rim (brightest top-left) and a soft drop shadow -->
-    <LinearGradientBrush x:Key="GlassRimBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#40FFFFFF" Offset="0" />
-        <GradientStop Color="#0FFFFFFF" Offset="0.6" />
-        <GradientStop Color="#1AFFFFFF" Offset="1" />
-    </LinearGradientBrush>
-    <DropShadowEffect x:Key="GlassCardShadow" BlurRadius="24" ShadowDepth="4" Direction="270" Opacity="0.28" Color="#000000" />
-
     <Style TargetType="ComboBox" x:Key="AppComboBoxStyle">
         <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />

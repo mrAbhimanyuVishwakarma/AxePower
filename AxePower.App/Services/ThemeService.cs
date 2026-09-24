@@ -219,7 +219,7 @@ public class ThemeService
             {
                 AccentState = AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
                 AccentFlags = 2,
-                GradientColor = 0x55111622 // Translucent dark glass tint
+                GradientColor = unchecked((int)0xA6000000) // Black glass tint (AABBGGRR)
             };
 
             var accentSize = Marshal.SizeOf(accent);
