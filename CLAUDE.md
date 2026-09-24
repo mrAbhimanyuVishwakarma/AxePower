@@ -39,3 +39,6 @@ something as working because its tests are green.
 - Branch `v2.0` (one branch per release line). Do not push; commit locally unless told otherwise.
 - Leave the untracked reference clones (`LenovoLegionToolkit/`, `lenovo_vantage/`) out of commits.
 - UI must match the images in `ui reference/` closely.
+- Themes are skins: `skins/<id>/skin.json`. To add or change a look, follow
+  [`skins/README.md`](skins/README.md) and edit a skin. There are no theme XAML files any more. A new
+  theme resource key belongs in `SkinCompiler`, and every skin has to produce it.

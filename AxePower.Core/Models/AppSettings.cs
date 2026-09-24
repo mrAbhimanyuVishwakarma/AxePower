@@ -93,6 +93,13 @@ public class AppSettings
     [JsonConverter(typeof(AppThemeJsonConverter))]
     public AppTheme Theme { get; set; } = AppTheme.System;
 
+    /// <summary>
+    /// The chosen skin's id (skins\&lt;id&gt;\skin.json). Null follows <see cref="Theme"/>: System
+    /// switches between the light and dark skins with Windows, and Dark/Light/Glass pick those.
+    /// </summary>
+    [JsonPropertyName("skinId")]
+    public string? SkinId { get; set; }
+
     [JsonPropertyName("reduceMotion")]
     public bool ReduceMotion { get; set; } = false;
 
@@ -187,6 +194,7 @@ public class AppSettings
             RunAsAdministrator = this.RunAsAdministrator,
             CloseBehaviour = this.CloseBehaviour,
             Theme = this.Theme,
+            SkinId = this.SkinId,
             ReduceMotion = this.ReduceMotion,
             SuspendBackgroundAppsOnBattery = this.SuspendBackgroundAppsOnBattery,
             AppRulesEnabled = this.AppRulesEnabled,

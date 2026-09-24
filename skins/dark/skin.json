@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "dark",
+  "name": "Dark",
+  "description": "AxePower's default: near-black surfaces with blue accents.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#090A0D",
+    "sidebar": "#0F1117",
+    "card": "#14161C",
+    "cardElevated": "#1A1C23",
+    "hover": "#20232B",
+    "border": "#2A2D35",
+    "divider": "#21232B",
+    "textPrimary": "#F3F4F6",
+    "textSecondary": "#9CA3AF",
+    "textMuted": "#6B7280",
+    "textDisabled": "#4B5563",
+    "accent": "#3B82F6",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444",
+    "eco": "#10B981",
+    "smart": "#3B82F6",
+    "beast": "#F97316",
+    "buttonPrimary": "#FFFFFF",
+    "buttonPrimaryText": "#090A0D"
+  },
+  "glass": { "backdrop": "none", "sheen": 0, "rim": false, "shadow": false },
+  "overrides": {
+    "WindowSecondaryBackgroundColor": "#0E1015",
+    "WindowSecondaryBackgroundBrush": "#0E1015",
+    "AccentHoverBrush": "#60A5FA",
+    "AccentPressedBrush": "#2563EB",
+    "MusicPlayGlyphBrush": "#0B0D12"
+  }
+}

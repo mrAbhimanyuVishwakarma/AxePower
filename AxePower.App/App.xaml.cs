@@ -129,7 +129,7 @@ public partial class App : Application
             if (TryElevateAndExit(settingsService, e.Args)) return;
 
             var themeService = Services.GetRequiredService<ThemeService>();
-            themeService.ApplyTheme(settingsService.GetSettings().Theme);
+            themeService.ApplyTheme(settingsService.GetSettings().Theme, settingsService.GetSettings().SkinId);
 
             var startupService = Services.GetRequiredService<StartupService>();
             startupService.Initialize();
@@ -236,6 +236,7 @@ public partial class App : Application
         services.AddSingleton<GameModeGuard>();
         services.AddSingleton<IGpuDisplayModeController, LenovoGpuDisplayModeService>();
         services.AddSingleton<IGameModePrompts, WindowGameModePrompts>();
+        services.AddSingleton<AxePower.Core.Services.Skins.SkinCatalog>();
         services.AddSingleton<ThemeService>();
         services.AddSingleton<SystemServiceOptimizer>();
         services.AddSingleton<DisplayService>();
@@ -378,6 +379,12 @@ public partial class App : Application
         Console.WriteLine(
             $"Power plans: {string.Join(", ", powerPlans.GetPlanPresence().Select(p => $"{p.Plan.Name} {(p.Present ? "present" : "not created yet")}"))}; " +
             $"active mode {activeMode}.");
+
+        // Skins are only read and compiled here, never applied
+        var skins = sp.GetRequiredService<AxePower.Core.Services.Skins.SkinCatalog>();
+        Console.WriteLine(
+            $"Skins: {skins.Skins.Count} ({string.Join(", ", skins.Skins.Select(k => k.Id))}); " +
+            $"{skins.Errors.Count} skipped{(skins.Errors.Count > 0 ? ": " + string.Join(" | ", skins.Errors) : "")}.");
 
         // Read-only: asks the firmware whether a MUX exists, changes nothing
         var gameModeSettings = sp.GetRequiredService<SettingsService>().GetSettings();

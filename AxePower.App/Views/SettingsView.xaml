@@ -58,10 +58,19 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
                                     <TextBlock Text="Theme" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Choose Dark, Light, or System appearance." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                    <TextBlock Text="System follows Windows. Add your own skins in the skins folder." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
-                                          ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenSkinsFolderCommand}"
+                                            Padding="9,7" Margin="0,0,8,0"
+                                            ToolTip="Open the skins folder (%APPDATA%\AxePower\Skins)" AutomationProperties.Name="Open the skins folder">
+                                        <!-- Explicit TextBlock: the implicit TextBlock style would swap the icon font -->
+                                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="13"/>
+                                    </Button>
+                                    <ComboBox Style="{DynamicResource AppComboBoxStyle}" Width="160"
+                                              ItemsSource="{Binding ThemeChoices}" SelectedItem="{Binding SelectedThemeChoice}"
+                                              DisplayMemberPath="Name" AutomationProperties.Name="Theme"/>
+                                </StackPanel>
                             </Grid>
 
                             <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>

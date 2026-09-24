@@ -10,6 +10,9 @@ namespace AxePower.App.ViewModels;
 
 public sealed record DisplayModeOption(GpuDisplayMode Mode, string DisplayName);
 
+/// <summary>One entry in Settings → Theme: "System" (no skin id) or a skin.</summary>
+public sealed record ThemeChoice(string? SkinId, AxePower.Core.Models.AppTheme Theme, string Name);
+
 /// <summary>The Game Mode card: dedicated GPU in Game Mode, and the Optimus / dGPU-only display mode.</summary>
 public partial class SettingsViewModel
 {

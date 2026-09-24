@@ -132,16 +132,61 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    [ObservableProperty]
-    private AppTheme _selectedTheme;
+    /// <summary>"System" first, then every skin found (built-in, shipped and the user's own).</summary>
+    public ObservableCollection<ThemeChoice> ThemeChoices { get; } = new();
 
-    partial void OnSelectedThemeChanged(AppTheme value)
+    [ObservableProperty]
+    private ThemeChoice? _selectedThemeChoice;
+
+    partial void OnSelectedThemeChoiceChanged(ThemeChoice? value)
     {
-        if (CurrentSettings != null)
+        if (CurrentSettings == null || value == null || _isLoadingThemeChoices) return;
+
+        CurrentSettings.Theme = value.Theme;
+        CurrentSettings.SkinId = value.SkinId;
+        _themeService.ApplyTheme(value.Theme, value.SkinId);
+        SaveCurrentSettings();
+    }
+
+    private bool _isLoadingThemeChoices;
+
+    /// <summary>Re-reads the skin folders, so a skin added while AxePower runs can be picked.</summary>
+    private void LoadThemeChoices()
+    {
+        _isLoadingThemeChoices = true;
+        try
         {
-            CurrentSettings.Theme = value;
-            _themeService.ApplyTheme(value);
-            SaveCurrentSettings();
+            _themeService.Catalog.Reload();
+            ThemeChoices.Clear();
+            ThemeChoices.Add(new ThemeChoice(null, AppTheme.System, "System"));
+            foreach (var skin in _themeService.Catalog.Skins)
+                ThemeChoices.Add(new ThemeChoice(skin.Id, ThemeService.ToAppTheme(skin), skin.Name));
+
+            // Older settings have no skin id: Dark/Light/Glass map to those skins
+            string? id = _currentSettings.SkinId
+                ?? (_currentSettings.Theme == AppTheme.System ? null : _currentSettings.Theme.ToString().ToLowerInvariant());
+            SelectedThemeChoice = ThemeChoices.FirstOrDefault(c => string.Equals(c.SkinId, id, StringComparison.OrdinalIgnoreCase))
+                ?? ThemeChoices[0];
+        }
+        finally
+        {
+            _isLoadingThemeChoices = false;
+        }
+    }
+
+    /// <summary>Opens %APPDATA%\AxePower\Skins, where your own skins go.</summary>
+    [RelayCommand]
+    private void OpenSkinsFolder()
+    {
+        try
+        {
+            var folder = AxePower.Core.Services.Skins.SkinCatalog.UserSkinsFolder;
+            System.IO.Directory.CreateDirectory(folder);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show($"Could not open the skins folder: {ex.Message}");
         }
     }
 
@@ -241,7 +286,6 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     public IEnumerable<PowerMode> AvailableModes => Enum.GetValues(typeof(PowerMode)).Cast<PowerMode>();
-    public IEnumerable<AppTheme> AvailableThemes => Enum.GetValues(typeof(AppTheme)).Cast<AppTheme>();
     public IEnumerable<CloseBehaviour> AvailableCloseBehaviours => Enum.GetValues(typeof(CloseBehaviour)).Cast<CloseBehaviour>();
 
     private readonly UpdateService? _updateService;
@@ -346,7 +390,7 @@ public partial class SettingsViewModel : ObservableObject
         _elevationService = elevationService;
         _currentSettings = _settingsService.GetSettings();
         InitializeGameMode(gameModeGpu, displayModeController, gameModePrompts, gameModeGpu != null ? new GpuControlAppService() : null);
-        _selectedTheme = _currentSettings.Theme;
+        LoadThemeChoices();
         _startWithLastSelectedMode = _currentSettings.StartWithLastSelectedMode;
         _startWithWindows = _currentSettings.StartWithWindows;
         _startMinimised = _currentSettings.StartMinimised;

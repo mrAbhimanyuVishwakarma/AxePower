@@ -36,4 +36,11 @@
     <InternalsVisibleTo Include="AxePower.Tests" />
   </ItemGroup>
 
+  <!-- Built-in skins, embedded so AxePower always has a theme even if the skins folder is missing -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\skins\dark\skin.json" LogicalName="AxePower.Skins.dark.json" />
+    <EmbeddedResource Include="..\skins\light\skin.json" LogicalName="AxePower.Skins.light.json" />
+    <EmbeddedResource Include="..\skins\glass\skin.json" LogicalName="AxePower.Skins.glass.json" />
+  </ItemGroup>
+
 </Project>

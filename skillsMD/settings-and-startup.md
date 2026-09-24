@@ -67,9 +67,17 @@ Turning off `StartWithWindows` deletes the task. The task is re-registered on ev
 - **Tray menu** (Hardcodet TaskbarIcon): Eco / Smart / Beast / Game Mode, Dashboard, Battery, Phone Control, Second Monitor, Maintenance, Utilities, Update PC, Settings, Exit.
 - Telemetry sampling pauses while the window is hidden (see [cpu-gpu-telemetry.md](cpu-gpu-telemetry.md)).
 
-## Themes
-- `AppTheme`: `System`, `Dark`, `Light`, `Glass`. The legacy value `"Transparent"` is read as `Glass`.
-- **Glass** uses the Windows 11 DWM backdrop (`DWMWA_SYSTEMBACKDROP_TYPE` = Acrylic) on build ≥ 22000, and the `SetWindowCompositionAttribute` acrylic blur on Windows 10.
+## Themes (skins)
+- Every theme is a **skin**: `skins/<id>/skin.json`, with ~20 core colours and glass switches. The guide is [skins/README.md](../skins/README.md).
+- [SkinCompiler.cs](../AxePower.Core/Services/Skins/SkinCompiler.cs) derives the 61 theme resources.
+- [SkinCatalog.cs](../AxePower.Core/Services/Skins/SkinCatalog.cs) finds skins in three places:
+  - Built-in `dark`, `light` and `glass`, embedded in Core.
+  - `skins\` next to the exe.
+  - `%APPDATA%\AxePower\Skins`.
+- [SkinResourceFactory.cs](../AxePower.App/Services/SkinResourceFactory.cs) turns a compiled skin into the WPF dictionary that `ThemeService` merges.
+- Settings stores `skinId`. Null means follow `theme`: `System` switches light/dark with Windows, and `Dark`/`Light`/`Glass` pick those skins. The legacy value `"Transparent"` is read as `Glass`.
+- A skin with `glass.backdrop: "acrylic"` uses the Windows 11 DWM backdrop (`DWMWA_SYSTEMBACKDROP_TYPE` = Acrylic) on build ≥ 22621. On Windows 10 it uses the `SetWindowCompositionAttribute` acrylic blur, tinted with the skin's window colour.
+- The original theme XAML files now live in `AxePower.Tests/Fixtures/LegacyThemes/`. `SkinCompilerTests` proves the built-in skins still reproduce them resource for resource.
 - `ThemeService.ThemeChanged` notifies listeners, and the tray icon swaps between light and dark variants to match the taskbar.
 
 ## Other Settings page items

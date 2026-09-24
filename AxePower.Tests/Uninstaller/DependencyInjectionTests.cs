@@ -41,6 +41,7 @@ public class DependencyInjectionTests
             services.AddSingleton<TimeoutService>();
             services.AddSingleton<AppMonitorService>();
             services.AddSingleton<GameScannerService>();
+            services.AddSingleton<AxePower.Core.Services.Skins.SkinCatalog>();
             services.AddSingleton<ThemeService>();
             services.AddSingleton<SystemServiceOptimizer>();
             services.AddSingleton<DisplayService>();

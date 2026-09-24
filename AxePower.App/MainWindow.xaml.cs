@@ -372,7 +372,9 @@ public partial class MainWindow : Window
             {
                 UpdateTrayIcon();
                 UpdateWindowIcon();
-                if (_settingsService.GetSettings().Theme == AxePower.Core.Models.AppTheme.System)
+                // Only "System" follows Windows; a chosen skin stays as it is
+                var current = _settingsService.GetSettings();
+                if (current.Theme == AxePower.Core.Models.AppTheme.System && current.SkinId == null)
                 {
                     _themeService.ApplyTheme(AxePower.Core.Models.AppTheme.System);
                 }
@@ -402,7 +404,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var actual = _themeService.ResolveActualTheme(_settingsService.GetSettings().Theme);
+            var actual = _themeService.ActualTheme;
             var uri = new Uri(actual == AxePower.Core.Models.AppTheme.Light
                 ? "pack://application:,,,/Resources/AxePower_black.ico"
                 : "pack://application:,,,/Resources/AxePower_white.ico", UriKind.Absolute);
