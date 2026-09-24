@@ -91,11 +91,61 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,32">
-                <TextBlock Text="Choose your power" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                <TextBlock Text="Balance performance, battery life, and fan noise." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15"/>
-            </StackPanel>
+            <!-- Header, with the Game Mode toggle lined up over the Beast column -->
+            <Grid Grid.Row="0" Margin="0,0,0,32">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Grid.ColumnSpan="2">
+                    <TextBlock Text="Choose your power" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Balance performance, battery life, and fan noise." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15"/>
+                </StackPanel>
+
+                <!-- The same Game Mode as the Game Mode page: one toggle, mirrored -->
+                <Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Bottom" CornerRadius="12" Padding="14,10"
+                        Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1"
+                        DataContext="{Binding DataContext.GameModeVm, RelativeSource={RelativeSource AncestorType=Window}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
+                                    <Setter Property="BorderBrush" Value="#8B5CF6"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Image Grid.Column="0" Source="/Resources/Gamemode.png" Width="34" Height="34" Margin="0,0,10,0"
+                               Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource MutedTextBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="Off"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
+                                                <Setter Property="Text" Value="On"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                        <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                  IsChecked="{Binding IsManualGameModeActive}" AutomationProperties.Name="Game Mode"/>
+                    </Grid>
+                </Border>
+            </Grid>
             
             <!-- Cards -->
             <Grid Grid.Row="1">
@@ -121,12 +171,30 @@
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick" Command="{Binding SelectModeCommand}" CommandParameter="Eco"/>
                     </Border.InputBindings>
-                    <StackPanel Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <StackPanel Margin="24" HorizontalAlignment="Center">
+                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,16,0,24">
                             <Image Source="/Resources/icon_saver.png" Stretch="Uniform"/>
                         </Grid>
                         <TextBlock Text="Eco" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                        <TextBlock Text="Maximum efficiency&#x0a;for everyday tasks." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
+                        <TextBlock Text="Maximum efficiency&#x0a;for everyday tasks." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,32"/>
+                        
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/battery_eco.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Best battery life" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/thermostat_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Lower temps" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/volume_eco.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Whisper quiet" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -146,92 +214,75 @@
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick" Command="{Binding SelectModeCommand}" CommandParameter="Smart"/>
                     </Border.InputBindings>
-                    <StackPanel Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <StackPanel Margin="24" HorizontalAlignment="Center">
+                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,16,0,24">
                             <Image Source="/Resources/icon_smart.png" Stretch="Uniform"/>
                         </Grid>
                         <TextBlock Text="Smart" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                        <TextBlock Text="Intelligent balance&#x0a;for any situation." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
+                        <TextBlock Text="Intelligent balance&#x0a;for any situation." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,32"/>
+                        
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/performance_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Balanced performance" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/battery_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Optimized battery" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/thermostat_smart.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Smart fan control" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <!-- Beast column: Game Mode (30%) above Beast (70%), two separate cards -->
-                <Grid Grid.Column="2" Margin="12,0,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="3*"/>
-                        <RowDefinition Height="16"/>
-                        <RowDefinition Height="7*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Game Mode (30%): the same toggle as the Game Mode page -->
-                    <Border Grid.Row="0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16"
-                            DataContext="{Binding DataContext.GameModeVm, RelativeSource={RelativeSource AncestorType=Window}}">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
-                                        <Setter Property="BorderBrush" Value="#8B5CF6"/>
-                                        <Setter Property="BorderThickness" Value="2"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="18,12">
+                <!-- Beast Mode -->
+                <Border Grid.Column="2" Margin="12,0,0,0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedMode}" Value="Beast">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource BeastBrush}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Border.InputBindings>
+                        <MouseBinding MouseAction="LeftClick" Command="{Binding SelectModeCommand}" CommandParameter="Beast"/>
+                    </Border.InputBindings>
+                    <StackPanel Margin="24" HorizontalAlignment="Center">
+                        <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,16,0,24">
+                            <Image Source="/Resources/icon_beast.png" Stretch="Uniform"/>
+                        </Grid>
+                        <TextBlock Text="Beast" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Text="Maximum performance&#x0a;for demanding workloads." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,32"/>
+                        
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/performance_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Top performance" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/thermometer_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Aggressive cooling" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            </Grid>
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <Image Grid.Column="0" Source="/Resources/Gamemode.png" Width="52" Height="52" Margin="0,0,14,0"
-                                       Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,18,0">
-                                    <TextBlock Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="SemiBold"/>
-                                    <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,2,0,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="Off"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
-                                                        <Setter Property="Text" Value="On"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </StackPanel>
-                                <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" VerticalAlignment="Center"
-                                          IsChecked="{Binding IsManualGameModeActive}" AutomationProperties.Name="Game Mode"/>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Image Grid.Column="0" Source="/Resources/icons/bolt_beast.png" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBlock Grid.Column="1" Text="Higher power usage" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </Grid>
-                        </Viewbox>
-                    </Border>
-
-                    <!-- Beast Mode (70%) -->
-                    <Border Grid.Row="2" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedMode}" Value="Beast">
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BeastBrush}"/>
-                                        <Setter Property="BorderThickness" Value="2"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Border.InputBindings>
-                            <MouseBinding MouseAction="LeftClick" Command="{Binding SelectModeCommand}" CommandParameter="Beast"/>
-                        </Border.InputBindings>
-                        <StackPanel Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Grid Width="123" Height="123" HorizontalAlignment="Center" Margin="0,0,0,20">
-                                <Image Source="/Resources/icon_beast.png" Stretch="Uniform"/>
-                            </Grid>
-                            <TextBlock Text="Beast" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="Maximum performance&#x0a;for demanding workloads." TextAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13"/>
                         </StackPanel>
-                    </Border>
-                </Grid>
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <Button Grid.Row="2" 
