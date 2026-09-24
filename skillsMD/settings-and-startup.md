@@ -73,7 +73,7 @@ Turning off `StartWithWindows` deletes the task. The task is re-registered on ev
 - `ThemeService.ThemeChanged` notifies listeners, and the tray icon swaps between light and dark variants to match the taskbar.
 
 ## Other Settings page items
-- Default AC and battery modes, and fan mode on battery.
+- (The Performance Defaults card, with default AC/battery modes and a fan profile that did nothing, was removed. The AC/battery modes remain on the Auto Switch page.)
 - ("Start with last selected mode" is gone: AxePower always starts in Smart.)
 - Notification toggles.
 - Display refresh rate: "Auto (Smart)" or a fixed Hz value (see [power-modes.md](power-modes.md)).

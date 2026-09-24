@@ -36,9 +36,6 @@ public class AppSettings
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PowerMode LastSelectedPowerMode { get; set; } = PowerMode.Beast;
 
-    [JsonPropertyName("fanModeOnBattery")]
-    public string FanModeOnBattery { get; set; } = "Smart";
-
     [JsonPropertyName("lowBatteryRuleEnabled")]
     public bool LowBatteryRuleEnabled { get; set; } = true;
 
@@ -165,7 +162,6 @@ public class AppSettings
             StartWithLastSelectedMode = this.StartWithLastSelectedMode,
             LastSelectedPowerMode = this.LastSelectedPowerMode,
             PowerPlansInitialized = this.PowerPlansInitialized,
-            FanModeOnBattery = this.FanModeOnBattery,
             LowBatteryRuleEnabled = this.LowBatteryRuleEnabled,
             LowBatteryThresholdPercent = this.LowBatteryThresholdPercent,
             LowBatteryMode = this.LowBatteryMode,

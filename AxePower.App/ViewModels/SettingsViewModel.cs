@@ -11,14 +11,6 @@ using AxePower.App.Services;
 
 namespace AxePower.App.ViewModels;
 
-public class PowerModeDisplayItem
-{
-    public PowerMode Mode { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-    public string Glyph { get; set; } = "\uE945";
-    public string ColorHex { get; set; } = "#3B82F6";
-}
-
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsService _settingsService;
@@ -30,57 +22,6 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private AppSettings _currentSettings;
-
-    public ObservableCollection<PowerModeDisplayItem> AvailablePowerModeItems { get; } = new()
-    {
-        new PowerModeDisplayItem { Mode = PowerMode.Eco, DisplayName = "Eco Mode", Glyph = "\uE945", ColorHex = "#10B981" },
-        new PowerModeDisplayItem { Mode = PowerMode.Smart, DisplayName = "Smart Mode", Glyph = "\uE945", ColorHex = "#3B82F6" },
-        new PowerModeDisplayItem { Mode = PowerMode.Beast, DisplayName = "Beast Mode", Glyph = "\uE945", ColorHex = "#F97316" },
-        new PowerModeDisplayItem { Mode = PowerMode.GameMode, DisplayName = "Game Mode", Glyph = "\uE7FC", ColorHex = "#8B5CF6" }
-    };
-
-    public ObservableCollection<string> AvailableFanModes { get; } = new()
-    {
-        "Smart",
-        "Eco (Quiet)",
-        "Beast (Turbo)"
-    };
-
-    [ObservableProperty]
-    private PowerMode _selectedUnpluggedMode = PowerMode.Smart;
-
-    partial void OnSelectedUnpluggedModeChanged(PowerMode value)
-    {
-        if (CurrentSettings != null)
-        {
-            CurrentSettings.UnpluggedMode = value;
-            SaveCurrentSettings();
-        }
-    }
-
-    [ObservableProperty]
-    private PowerMode _selectedPluggedInMode = PowerMode.Smart;
-
-    partial void OnSelectedPluggedInModeChanged(PowerMode value)
-    {
-        if (CurrentSettings != null)
-        {
-            CurrentSettings.PluggedInMode = value;
-            SaveCurrentSettings();
-        }
-    }
-
-    [ObservableProperty]
-    private string _selectedFanModeOnBattery = "Smart";
-
-    partial void OnSelectedFanModeOnBatteryChanged(string value)
-    {
-        if (CurrentSettings != null)
-        {
-            CurrentSettings.FanModeOnBattery = value;
-            SaveCurrentSettings();
-        }
-    }
 
     [ObservableProperty]
     private bool _startWithLastSelectedMode;
@@ -402,9 +343,6 @@ public partial class SettingsViewModel : ObservableObject
         _elevationService = elevationService;
         _currentSettings = _settingsService.GetSettings();
         _selectedTheme = _currentSettings.Theme;
-        _selectedUnpluggedMode = _currentSettings.UnpluggedMode;
-        _selectedPluggedInMode = _currentSettings.PluggedInMode;
-        _selectedFanModeOnBattery = _currentSettings.FanModeOnBattery ?? "Smart";
         _startWithLastSelectedMode = _currentSettings.StartWithLastSelectedMode;
         _startWithWindows = _currentSettings.StartWithWindows;
         _startMinimised = _currentSettings.StartMinimised;

@@ -22,7 +22,6 @@ public class AppSettingsTests
         Assert.True(settings.AutoDownloadUpdates);
         Assert.Equal(PowerMode.Smart, settings.PluggedInMode);
         Assert.Equal(PowerMode.Eco, settings.UnpluggedMode);
-        Assert.Equal("Smart", settings.FanModeOnBattery);
         Assert.Equal(TemperatureUnit.Celsius, settings.TemperatureUnit);
         Assert.Equal(0, settings.DisplayRefreshRate);
         Assert.False(settings.StartWithLastSelectedMode);
@@ -40,8 +39,7 @@ public class AppSettingsTests
             LowBatteryThresholdPercent = 50,
             SwitchDelaySeconds = 15,
             StartWithLastSelectedMode = true,
-            LastSelectedPowerMode = PowerMode.Beast,
-            FanModeOnBattery = "Eco (Quiet)"
+            LastSelectedPowerMode = PowerMode.Beast
         };
 
         var cloned = original.Clone();
@@ -52,6 +50,5 @@ public class AppSettingsTests
         Assert.Equal(original.SwitchDelaySeconds, cloned.SwitchDelaySeconds);
         Assert.True(cloned.StartWithLastSelectedMode);
         Assert.Equal(PowerMode.Beast, cloned.LastSelectedPowerMode);
-        Assert.Equal("Eco (Quiet)", cloned.FanModeOnBattery);
     }
 }
