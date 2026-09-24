@@ -104,7 +104,7 @@
                 </StackPanel>
 
                 <!-- The same Game Mode as the Game Mode page: one toggle, mirrored -->
-                <Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Bottom" CornerRadius="12" Padding="12,9"
+                <Border Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Bottom" CornerRadius="12" Padding="12,9"
                         Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1"
                         DataContext="{Binding DataContext.GameModeVm, RelativeSource={RelativeSource AncestorType=Window}}">
                     <Border.Style>
@@ -152,7 +152,8 @@
                 </Border>
             </Grid>
             
-            <!-- Cards -->
+            <!-- Cards: each gives up 16 px of margin in total, so all three are the same width
+                 and both gaps are 24 px -->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -161,7 +162,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Eco Mode -->
-                <Border Grid.Column="0" Margin="0,0,12,0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
+                <Border Grid.Column="0" Margin="0,0,16,0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
@@ -204,7 +205,7 @@
                 </Border>
 
                 <!-- Smart Mode -->
-                <Border Grid.Column="1" Margin="12,0,12,0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
+                <Border Grid.Column="1" Margin="8,0,8,0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
@@ -247,7 +248,7 @@
                 </Border>
 
                 <!-- Beast Mode -->
-                <Border Grid.Column="2" Margin="12,0,0,0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
+                <Border Grid.Column="2" Margin="16,0,0,0" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" CornerRadius="16" Cursor="Hand">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
