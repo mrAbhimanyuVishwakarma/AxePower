@@ -104,7 +104,7 @@
                 </StackPanel>
 
                 <!-- The same Game Mode as the Game Mode page: one toggle, mirrored -->
-                <Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Bottom" CornerRadius="12" Padding="14,10"
+                <Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Bottom" CornerRadius="12" Padding="12,9"
                         Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1"
                         DataContext="{Binding DataContext.GameModeVm, RelativeSource={RelativeSource AncestorType=Window}}">
                     <Border.Style>
@@ -123,11 +123,11 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Image Grid.Column="0" Source="/Resources/Gamemode.png" Width="34" Height="34" Margin="0,0,10,0"
+                        <Image Grid.Column="0" Source="/Resources/Gamemode.png" Width="30" Height="30" Margin="0,0,9,0"
                                Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13.5" FontWeight="SemiBold"
+                                       TextWrapping="NoWrap"/>
                             <TextBlock FontSize="11" Foreground="{DynamicResource MutedTextBrush}">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
@@ -141,8 +141,13 @@
                                 </TextBlock.Style>
                             </TextBlock>
                         </StackPanel>
-                        <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" VerticalAlignment="Center"
-                                  IsChecked="{Binding IsManualGameModeActive}" AutomationProperties.Name="Game Mode"/>
+                        <!-- The shared switch is 54 px wide; at 75% the title fits in a narrow column -->
+                        <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}" VerticalAlignment="Center" Margin="8,0,0,0"
+                                  IsChecked="{Binding IsManualGameModeActive}" AutomationProperties.Name="Game Mode">
+                            <CheckBox.LayoutTransform>
+                                <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                            </CheckBox.LayoutTransform>
+                        </CheckBox>
                     </Grid>
                 </Border>
             </Grid>
