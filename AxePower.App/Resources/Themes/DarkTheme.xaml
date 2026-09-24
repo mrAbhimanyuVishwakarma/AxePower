@@ -67,6 +67,13 @@
     <!-- AxePower Music -->
     <SolidColorBrush x:Key="MusicAccentBrush" Color="#3B82F6" />
     <SolidColorBrush x:Key="MusicGlassSurfaceBrush" Color="#E61A1C23" />
+    <!-- Glass cards on the Dashboard: the music card's surface with its top-left sheen baked in -->
+    <LinearGradientBrush x:Key="GlassCardSurfaceBrush" StartPoint="0,0" EndPoint="0.9,0.65">
+        <GradientStop Color="#E93A3C42" Offset="0" />
+        <GradientStop Color="#E726282E" Offset="0.44" />
+        <GradientStop Color="#E61D1F26" Offset="0.45" />
+        <GradientStop Color="#E61A1C23" Offset="1" />
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="MusicTrackBrush" Color="#33FFFFFF" />
     <SolidColorBrush x:Key="MusicPlayGlyphBrush" Color="#0B0D12" />
     <LinearGradientBrush x:Key="MusicPlaceholderArtBrush" StartPoint="1,0" EndPoint="0,1">
