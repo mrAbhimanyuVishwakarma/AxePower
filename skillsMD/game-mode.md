@@ -50,7 +50,7 @@ The HTTP timeout is 5 s. Downloaded images are cached.
 
 ## Manual Game Mode (`ToggleManualGameMode`)
 **Turning it on** (`ApplyGameModeStateAsync(true)`):
-1. `PowerPlanService.ApplyModeAsync(Beast)`.
+1. `PowerPlanService.ApplyModeAsync(GameMode)`, the GameMode plan. It used to apply Beast.
 2. `KillSelectedNow()` kills the background apps selected in the list.
 3. `OptimizeSelectedServices()` stops the selected services and sets them to **manual start** (`sc config <svc> start= demand`).
 
@@ -59,6 +59,20 @@ The HTTP timeout is 5 s. Downloaded images are cached.
 > **Not reverted:** services changed in step 3 stay on manual start after Game Mode is turned off. Killed apps are not restarted either (only the rule-driven Game Booster in `AppMonitorService` restarts apps).
 
 `SystemServiceOptimizer.OptimizableServices` includes Print Spooler, SysMain, Windows Search, Edge Update, WaaSMedicSvc, the Xbox Live services, VMware services and MongoDB. Only services that are present are listed.
+
+## Dedicated GPU and display mode (Settings → Game Mode card)
+**Use dedicated GPU in Game Mode** ([GameModeGpuService.cs](../AxePower.Core/Services/GameModeGpuService.cs)):
+- Off by default. Turning it on shows a 10 s caution dialog ([CountdownConfirmWindow.xaml](../AxePower.App/Windows/CountdownConfirmWindow.xaml)). If there is no click within 10 s, it cancels and the toggle flips back. Turning it off needs no confirmation.
+- It follows `PowerPlanService.ModeApplied`:
+  - **Entering GameMode** writes `GpuPreference=2` (High performance) under `HKCU\Software\Microsoft\DirectX\UserGpuPreferences`. The entries cover library games (Steam and Epic exe paths) and running processes that match an app rule or a library game.
+  - **Leaving GameMode** restores each value exactly, including deleting values that did not exist before. A value the user changed in the meantime is left alone.
+- What was changed is kept in `gpuPreferenceBackups` in settings.json. If AxePower crashes during Game Mode, the startup switch to Smart undoes it.
+- Windows reads the preference when a process starts, so a game already running when Game Mode begins keeps its GPU until it is restarted.
+
+**Display mode** ([GpuDisplayModeService.cs](../AxePower.Core/Services/GpuDisplayModeService.cs)) offers Optimus (Hybrid) or Dedicated GPU only, the same choice as "Manage Display Mode" in NVIDIA Control Panel.
+- Lenovo only, through the GameZone WMI methods `IsSupportGSync`, `GetGSyncStatus` and `SetGSyncStatus` (1 = dGPU only). It needs admin, and the row appears only when the firmware reports support.
+- A change shows the 10 s caution, then offers **Restart now** (`shutdown /r /t 5`) or **Later**. A "Restart pending" note stays until the restart.
+- On other machines, the row shows an **Open GPU control panel** button instead (NVIDIA App, AMD, or Windows Graphics settings), because NVIDIA has no public API for apps to switch the mode.
 
 ## Service throttling and RAM (buttons on this page)
 - **Toggle service throttling:** `ServiceThrottlerService` pauses or restores `SysMain`, `WSearch`, `DiagTrack`, `WerSvc` and `DoSvc`, and remembers which ones it stopped so it can restore exactly those.
