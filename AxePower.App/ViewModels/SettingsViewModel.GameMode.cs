@@ -57,7 +57,8 @@ public partial class SettingsViewModel
         _displayModeController = displayMode;
         _gameModePrompts = prompts;
         _gpuControl = gpuControl;
-        _gameModeUseDedicatedGpu = _currentSettings.GameModeUseDedicatedGpu;
+        // Loading the saved value must not ask for confirmation or save again
+        Rollback(() => GameModeUseDedicatedGpu = CurrentSettings.GameModeUseDedicatedGpu);
 
         if (_displayModeController != null)
             _ = LoadDisplayModeAsync();
