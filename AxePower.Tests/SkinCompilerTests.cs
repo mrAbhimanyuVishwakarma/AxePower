@@ -23,6 +23,17 @@ public class SkinCompilerTests : IDisposable
         try { if (Directory.Exists(_folder)) Directory.Delete(_folder, true); } catch { }
     }
 
+    /// <summary>skin id → resource → expected value, for changes made after the theme files were retired.</summary>
+    private static readonly Dictionary<string, Dictionary<string, string>> DeliberateChanges = new()
+    {
+        // 2026-09-25: #E2E8F0 card borders vanished against the #F1F5F9 window
+        ["light"] = new()
+        {
+            ["CardBorderColor"] = "Color #FFCBD5E1",
+            ["CardBorderBrush"] = "Solid #FFCBD5E1",
+        },
+    };
+
     [Theory]
     [InlineData("dark", "DarkTheme.xaml")]
     [InlineData("light", "LightTheme.xaml")]
@@ -31,6 +42,10 @@ public class SkinCompilerTests : IDisposable
     {
         var expected = ReadLegacy(Path.Combine(AppContext.BaseDirectory, "Fixtures", "LegacyThemes", legacyFile));
         var actual = Describe(new SkinCatalog(null, Array.Empty<string>()).Find(id)!.Compiled);
+
+        // Changes made on purpose after the move to skins; anything else that differs is a regression
+        foreach (var (key, value) in DeliberateChanges.GetValueOrDefault(id, new()))
+            expected[key] = value;
 
         var differences = expected.Keys.Union(actual.Keys)
             .Where(k => !expected.TryGetValue(k, out var e) || !actual.TryGetValue(k, out var a) || e != a)
