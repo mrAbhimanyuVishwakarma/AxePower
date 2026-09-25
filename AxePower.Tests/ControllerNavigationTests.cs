@@ -19,7 +19,7 @@ public class ControllerNavigationTests
     {
         _logService = new LogService();
         _controllerService = new ControllerNavigationService(_logService);
-        _settingsService = new SettingsService(_logService);
+        _settingsService = new SettingsService(_logService, System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"axepower_tests_{System.Guid.NewGuid():N}"));
         _powerPlanService = TestPowerPlan.Create(_logService, _settingsService);
         _batteryService = new BatteryService(_logService);
         _notificationService = new NotificationService();

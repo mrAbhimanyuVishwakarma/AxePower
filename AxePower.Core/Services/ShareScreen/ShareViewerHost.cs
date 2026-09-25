@@ -51,6 +51,15 @@ public sealed class ShareViewerHost : IDisposable
     /// <summary>Raised when a viewer takes or drops control, with true for taken.</summary>
     public event EventHandler<bool>? ControlHolderChanged;
 
+    private readonly List<Socket> _chatSockets = new();
+    private readonly object _chatLock = new();
+    private readonly List<Socket> _voiceSockets = new();
+    private readonly object _voiceLock = new();
+
+    /// <summary>Raised when a participant sends a chat message in the room.</summary>
+    public event EventHandler<ShareChatMessage>? ChatMessageReceived;
+    public event EventHandler<byte[]>? VoicePacketReceived;
+
     public ShareViewerHost(LogService logService, RemoteInputService input)
     {
         _logService = logService;
@@ -76,7 +85,9 @@ public sealed class ShareViewerHost : IDisposable
     }
 
     /// <summary>The link to hand a friend. View-only: it carries no control code.</summary>
-    public string ViewerUrl => _room == null ? string.Empty : $"http://{_hostName}:{Port}/{_room.PathName}";
+    public string ViewerUrl => _room == null
+        ? string.Empty
+        : $"http://{_hostName}:{Port}/{_room.PathName}#v={_room.ViewerToken}";
 
     // -- Control gate --------------------------------------------------------
 
@@ -161,7 +172,7 @@ public sealed class ShareViewerHost : IDisposable
             // The path is the session secret; anything else gets nothing, not even a hint.
             if (path == $"/{room.PathName}")
             {
-                await SendPageAsync(socket, room, ct);
+                await SendPageAsync(socket, room, headers, ct);
                 socket.Close();
                 return;
             }
@@ -169,6 +180,18 @@ public sealed class ShareViewerHost : IDisposable
             if (path == $"/{room.PathName}/ws")
             {
                 await HandleControlSocketAsync(socket, headers, query, ct);
+                return;
+            }
+
+            if (path == $"/{room.PathName}/chat")
+            {
+                await HandleChatSocketAsync(socket, headers, query, ct);
+                return;
+            }
+
+            if (path == $"/{room.PathName}/voice")
+            {
+                await HandleVoiceSocketAsync(socket, headers, query, ct);
                 return;
             }
 
@@ -215,13 +238,22 @@ public sealed class ShareViewerHost : IDisposable
         return null;
     }
 
-    private async Task SendPageAsync(Socket socket, ShareRoom room, CancellationToken ct)
+    private async Task SendPageAsync(
+        Socket socket,
+        ShareRoom room,
+        Dictionary<string, string> headers,
+        CancellationToken ct)
     {
+        var requestHost = headers.GetValueOrDefault("Host") ?? string.Empty;
+        var mediaHost = requestHost.StartsWith("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+                        requestHost.StartsWith("localhost", StringComparison.OrdinalIgnoreCase)
+            ? "127.0.0.1"
+            : _hostName;
         var html = ShareViewerPage.Html
-            .Replace("__TITLE__", $"AxePower — room {room.FormattedCode}")
+            .Replace("__TITLE__", $"AxePower - room {room.FormattedCode}")
             .Replace("__NAME__", WebUtility.HtmlEncode(Environment.UserName))
-            .Replace("__WHEP__", $"http://{_hostName}:{_webrtcPort}/{room.PathName}/whep")
-            .Replace("__WS__", $"ws://{_hostName}:{Port}/{room.PathName}/ws");
+            .Replace("__WHEP__", $"http://{mediaHost}:{_webrtcPort}/{room.PathName}/whep")
+            .Replace("__WS__", $"ws://{mediaHost}:{Port}/{room.PathName}/ws");
 
         var body = Encoding.UTF8.GetBytes(html);
         var head = Encoding.ASCII.GetBytes(
@@ -452,9 +484,261 @@ public sealed class ShareViewerHost : IDisposable
         return preferred;
     }
 
+    public void BroadcastChatMessage(ShareChatMessage message)
+    {
+        try
+        {
+            var room = _room;
+            if (room == null) return;
+            var payload = RoomMessageCrypto.Encrypt(message, room.ViewerToken);
+            var frame = EncodeTextFrame(payload);
+
+            List<Socket> sockets;
+            lock (_chatLock) { sockets = _chatSockets.ToList(); }
+
+            foreach (var s in sockets)
+            {
+                try { SendFrame(s, frame); } catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("[ShareScreen] Could not broadcast chat message", ex);
+        }
+    }
+
+    private static byte[] EncodeTextFrame(byte[] payload)
+        => EncodeFrame(payload, 0x1);
+
+    private static byte[] EncodeBinaryFrame(byte[] payload)
+        => EncodeFrame(payload, 0x2);
+
+    private static void SendFrame(Socket socket, byte[] frame)
+    {
+        lock (socket)
+        {
+            var sent = 0;
+            while (sent < frame.Length)
+            {
+                var count = socket.Send(frame, sent, frame.Length - sent, SocketFlags.None);
+                if (count <= 0) throw new IOException("The WebSocket connection closed during send.");
+                sent += count;
+            }
+        }
+    }
+
+    private static byte[] EncodeFrame(byte[] payload, int opcode)
+    {
+        if (payload.Length <= 125)
+        {
+            var frame = new byte[payload.Length + 2];
+            frame[0] = (byte)(0x80 | opcode);
+            frame[1] = (byte)payload.Length;
+            Buffer.BlockCopy(payload, 0, frame, 2, payload.Length);
+            return frame;
+        }
+        else if (payload.Length <= 65535)
+        {
+            var frame = new byte[payload.Length + 4];
+            frame[0] = (byte)(0x80 | opcode);
+            frame[1] = 126;
+            frame[2] = (byte)(payload.Length >> 8);
+            frame[3] = (byte)(payload.Length & 0xFF);
+            Buffer.BlockCopy(payload, 0, frame, 4, payload.Length);
+            return frame;
+        }
+        else
+        {
+            var frame = new byte[payload.Length + 10];
+            frame[0] = (byte)(0x80 | opcode);
+            frame[1] = 127;
+            for (int i = 0; i < 8; i++)
+            {
+                frame[2 + i] = (byte)((payload.Length >> (56 - i * 8)) & 0xFF);
+            }
+            Buffer.BlockCopy(payload, 0, frame, 10, payload.Length);
+            return frame;
+        }
+    }
+
+    private async Task HandleChatSocketAsync(Socket socket, Dictionary<string, string> headers, string query, CancellationToken ct)
+    {
+        var room = _room;
+        var suppliedToken = ParseQuery(query).GetValueOrDefault("v");
+        if (room == null || string.IsNullOrWhiteSpace(suppliedToken) ||
+            !CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(suppliedToken), Encoding.UTF8.GetBytes(room.ViewerToken)))
+        {
+            await SendSimpleAsync(socket, 403, "Forbidden", ct);
+            socket.Close();
+            return;
+        }
+
+        if (!headers.TryGetValue("Sec-WebSocket-Key", out var key))
+        {
+            await SendSimpleAsync(socket, 400, "Bad Request", ct);
+            socket.Close();
+            return;
+        }
+
+        var accept = Convert.ToBase64String(SHA1.HashData(Encoding.ASCII.GetBytes(key + WebSocketGuid)));
+        var response = Encoding.ASCII.GetBytes(
+            "HTTP/1.1 101 Switching Protocols\r\n" +
+            "Upgrade: websocket\r\nConnection: Upgrade\r\n" +
+            $"Sec-WebSocket-Accept: {accept}\r\n\r\n");
+        await socket.SendAsync(response, SocketFlags.None, ct);
+
+        lock (_chatLock) { _chatSockets.Add(socket); }
+
+        try
+        {
+            var buffer = new byte[8192];
+            while (!ct.IsCancellationRequested)
+            {
+                var frame = await ReadFrameAsync(socket, buffer, ct);
+                if (frame == null) break;
+
+                var (opcode, payload) = frame.Value;
+                if (opcode == 0x8) break;
+                if (opcode != 0x1) continue;
+
+                try
+                {
+                    if (RoomMessageCrypto.TryDecrypt(payload, room.ViewerToken, out var msg) &&
+                        msg != null && IsAcceptedChatPayload(msg))
+                    {
+                        ChatMessageReceived?.Invoke(this, msg);
+
+                        var echoFrame = EncodeTextFrame(payload);
+                        List<Socket> others;
+                        lock (_chatLock) { others = _chatSockets.Where(s => s != socket).ToList(); }
+                        foreach (var other in others)
+                        {
+                            try { SendFrame(other, echoFrame); } catch { }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+        catch { }
+        finally
+        {
+            lock (_chatLock) { _chatSockets.Remove(socket); }
+            try { socket.Close(); } catch { }
+        }
+    }
+
+    private static bool IsAcceptedChatPayload(ShareChatMessage message)
+    {
+        if (message.Kind == ShareChatKinds.Text)
+            return !string.IsNullOrWhiteSpace(message.Text) && message.Text.Length <= 4000;
+
+        if (message.Kind is ShareChatKinds.FileOffer or ShareChatKinds.FileComplete)
+            return IsHexId(message.AttachmentId) &&
+                   message.AttachmentSize is > 0 and <= ShareAttachmentStore.MaxAttachmentBytes &&
+                   message.ChunkCount is > 0 and <= ShareAttachmentStore.MaxWireChunks &&
+                   message.AttachmentSha256.Length == 64 &&
+                   message.AttachmentSha256.All(char.IsAsciiHexDigit);
+
+        if (message.Kind == ShareChatKinds.FileChunk)
+            return IsHexId(message.AttachmentId) &&
+                   message.ChunkIndex >= 0 &&
+                   message.ChunkIndex < message.ChunkCount &&
+                   message.ChunkCount is > 0 and <= ShareAttachmentStore.MaxWireChunks &&
+                   message.ChunkData.Length <= 32 * 1024;
+
+        return false;
+    }
+
+    private static bool IsHexId(string value) =>
+        value.Length == 32 && value.All(char.IsAsciiHexDigit);
+
+    public void BroadcastVoicePacket(byte[] opusPacket)
+    {
+        var room = _room;
+        if (room == null || opusPacket.Length is 0 or > 4096) return;
+        var frame = EncodeBinaryFrame(RoomVoiceCrypto.Encrypt(opusPacket, room.ViewerToken));
+        List<Socket> sockets;
+        lock (_voiceLock) { sockets = _voiceSockets.ToList(); }
+        foreach (var socket in sockets)
+        {
+            try { SendFrame(socket, frame); } catch { }
+        }
+    }
+
+    private async Task HandleVoiceSocketAsync(Socket socket, Dictionary<string, string> headers, string query, CancellationToken ct)
+    {
+        var room = _room;
+        var token = ParseQuery(query).GetValueOrDefault("v");
+        if (room == null || string.IsNullOrWhiteSpace(token) ||
+            !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(token), Encoding.UTF8.GetBytes(room.ViewerToken)))
+        {
+            await SendSimpleAsync(socket, 403, "Forbidden", ct);
+            socket.Close();
+            return;
+        }
+
+        if (!headers.TryGetValue("Sec-WebSocket-Key", out var key))
+        {
+            await SendSimpleAsync(socket, 400, "Bad Request", ct);
+            socket.Close();
+            return;
+        }
+
+        var accept = Convert.ToBase64String(SHA1.HashData(Encoding.ASCII.GetBytes(key + WebSocketGuid)));
+        var response = Encoding.ASCII.GetBytes(
+            "HTTP/1.1 101 Switching Protocols\r\n" +
+            "Upgrade: websocket\r\nConnection: Upgrade\r\n" +
+            $"Sec-WebSocket-Accept: {accept}\r\n\r\n");
+        await socket.SendAsync(response, SocketFlags.None, ct);
+        lock (_voiceLock) { _voiceSockets.Add(socket); }
+
+        try
+        {
+            var scratch = new byte[4096];
+            while (!ct.IsCancellationRequested)
+            {
+                var frame = await ReadFrameAsync(socket, scratch, ct);
+                if (frame == null || frame.Value.Opcode == 0x8) break;
+                if (frame.Value.Opcode != 0x2) continue;
+                if (!RoomVoiceCrypto.TryDecrypt(frame.Value.Payload, room.ViewerToken, out var opusPacket) || opusPacket.Length > 4096)
+                    continue;
+
+                VoicePacketReceived?.Invoke(this, opusPacket);
+
+                var relay = EncodeBinaryFrame(frame.Value.Payload);
+                List<Socket> peers;
+                lock (_voiceLock) { peers = _voiceSockets.Where(peer => peer != socket).ToList(); }
+                foreach (var peer in peers)
+                {
+                    try { SendFrame(peer, relay); } catch { }
+                }
+            }
+        }
+        catch (Exception ex) when (ex is SocketException or IOException or OperationCanceledException) { }
+        finally
+        {
+            lock (_voiceLock) { _voiceSockets.Remove(socket); }
+            try { socket.Close(); } catch { }
+        }
+    }
+
     public void Stop()
     {
         DisableControl();
+
+        lock (_chatLock)
+        {
+            foreach (var s in _chatSockets) { try { s.Close(); } catch { } }
+            _chatSockets.Clear();
+        }
+
+        lock (_voiceLock)
+        {
+            foreach (var s in _voiceSockets) { try { s.Close(); } catch { } }
+            _voiceSockets.Clear();
+        }
 
         _cts?.Cancel();
         _cts?.Dispose();

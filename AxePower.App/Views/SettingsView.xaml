@@ -58,10 +58,19 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
                                     <TextBlock Text="Theme" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Choose Dark, Light, or System appearance." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                    <TextBlock Text="System follows Windows. Add your own skins in the skins folder." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
-                                          ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenSkinsFolderCommand}"
+                                            Padding="9,7" Margin="0,0,8,0"
+                                            ToolTip="Open the skins folder (%APPDATA%\AxePower\Skins)" AutomationProperties.Name="Open the skins folder">
+                                        <!-- Explicit TextBlock: the implicit TextBlock style would swap the icon font -->
+                                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="13"/>
+                                    </Button>
+                                    <ComboBox Style="{DynamicResource AppComboBoxStyle}" Width="160"
+                                              ItemsSource="{Binding ThemeChoices}" SelectedItem="{Binding SelectedThemeChoice}"
+                                              DisplayMemberPath="Name" AutomationProperties.Name="Theme"/>
+                                </StackPanel>
                             </Grid>
 
                             <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
@@ -120,97 +129,62 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- CARD 2: Performance Defaults -->
+                    <!-- CARD 2: Game Mode (dedicated GPU and display mode) -->
                     <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
                         <StackPanel>
                             <!-- Card Header -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-                                <Border Width="38" Height="38" CornerRadius="10" Background="#1AF97316" Margin="0,0,14,0">
-                                    <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#F97316"
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A8B5CF6" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#8B5CF6"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Performance Defaults" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                    <TextBlock Text="Default power plans and automatic fan profile switching." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                    <TextBlock Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Which graphics card your games and screen use." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- Default Mode on Battery -->
+                            <!-- Dedicated GPU in Game Mode -->
                             <Grid Margin="0,0,0,14">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Default mode on battery" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Power mode applied when unplugged." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Use dedicated GPU in Game Mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="While Game Mode is on, games run on the high-performance GPU. Restored when it ends." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
-                                          ItemsSource="{Binding AvailablePowerModeItems}"
-                                          SelectedValuePath="Mode"
-                                          SelectedValue="{Binding SelectedUnpluggedMode}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" Foreground="{Binding ColorHex}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding GameModeUseDedicatedGpu}" VerticalAlignment="Center"
+                                          AutomationProperties.Name="Use dedicated GPU in Game Mode"/>
                             </Grid>
 
                             <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
 
-                            <!-- Default Mode when Plugged In -->
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Default mode when plugged in" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Power mode applied when connected to charger." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
-                                          ItemsSource="{Binding AvailablePowerModeItems}"
-                                          SelectedValuePath="Mode"
-                                          SelectedValue="{Binding SelectedPluggedInMode}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" Foreground="{Binding ColorHex}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Fan Mode on Battery -->
+                            <!-- Display mode (MUX) -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Fan profile on battery" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Thermal cooling profile when running on battery." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Display mode" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Optimus lets Windows pick a GPU per app; Dedicated GPU only drives the screen from the graphics card. Needs a restart." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Restart pending — the new mode applies after a restart." Foreground="#F59E0B" FontSize="11.5" TextWrapping="Wrap" Margin="0,6,0,0"
+                                               Visibility="{Binding DisplayModeRestartRequired, Converter={StaticResource BoolToVis}}"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" Width="160" VerticalAlignment="Center"
-                                          ItemsSource="{Binding AvailableFanModes}"
-                                          SelectedItem="{Binding SelectedFanModeOnBattery}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource SmartBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <ComboBox Style="{DynamicResource AppComboBoxStyle}" Width="180"
+                                              ItemsSource="{Binding DisplayModeOptions}" SelectedItem="{Binding SelectedDisplayMode}"
+                                              DisplayMemberPath="DisplayName" AutomationProperties.Name="Display mode"
+                                              Visibility="{Binding IsDisplayModeSupported, Converter={StaticResource BoolToVis}}"/>
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RestartForDisplayModeCommand}"
+                                            Content="Restart now" Margin="0,8,0,0" Padding="14,6" HorizontalAlignment="Right"
+                                            Visibility="{Binding DisplayModeRestartRequired, Converter={StaticResource BoolToVis}}"/>
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenGpuControlPanelCommand}"
+                                            Content="Open GPU control panel" Padding="14,6"
+                                            ToolTip="This laptop does not let apps switch the display mode; change it in NVIDIA Control Panel or the NVIDIA App."
+                                            Visibility="{Binding IsDisplayModeUnsupported, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -387,7 +361,8 @@
                                     <TextBlock Text="Display" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="Which monitor your friends see." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding Displays}" SelectedItem="{Binding SelectedDisplay}"
                                           DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Display"/>
                             </Grid>
@@ -404,7 +379,8 @@
                                     <TextBlock Text="Quality" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="Every rung targets 60 FPS; a struggling link costs resolution, not smoothness." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding QualityPresets}" SelectedItem="{Binding SelectedQuality}"
                                           DisplayMemberPath="DisplayName" AutomationProperties.Name="Quality"/>
                             </Grid>
@@ -438,7 +414,8 @@
                                     <TextBlock Text="Output device" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="The speakers or headphones whose sound gets shared." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding SystemAudioDevices}" SelectedItem="{Binding SelectedSystemAudioDevice}"
                                           DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Output device"/>
                             </Grid>
@@ -453,7 +430,8 @@
                                     <TextBlock Text="Microphone" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="Your friends hear you, but not the game." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" VerticalAlignment="Center"
+                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                           ItemsSource="{Binding Microphones}" SelectedItem="{Binding SelectedMicrophone}"
                                           DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Microphone"/>
                             </Grid>
@@ -489,8 +467,6 @@
                                 <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AdaptiveQuality}" VerticalAlignment="Center"
                                           AutomationProperties.Name="Adapt automatically"/>
                             </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
 
                             <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
 

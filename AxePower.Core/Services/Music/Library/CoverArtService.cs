@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -20,9 +21,11 @@ namespace AxePower.Core.Services.Music;
 /// </summary>
 public sealed class CoverArtService : ICoverArtService
 {
+    private const int MaxRemoteArtworkBytes = 10 * 1024 * 1024;
     private static readonly int[] Sizes = { 128, 256, 512 };
     private static readonly string[] FolderImageNames = { "cover", "folder", "front", "album" };
     private static readonly string[] FolderImageExtensions = { ".jpg", ".jpeg", ".png" };
+    private static readonly HttpClient ArtworkClient = CreateArtworkClient();
 
     private readonly ITagReader _tags;
     private readonly MusicStoragePaths _paths;
@@ -45,6 +48,12 @@ public sealed class CoverArtService : ICoverArtService
 
         try
         {
+            if (!track.IsLocal && Uri.TryCreate(track.ThumbnailUrl, UriKind.Absolute, out var thumbnailUri)
+                && (thumbnailUri.Scheme == Uri.UriSchemeHttps || thumbnailUri.Scheme == Uri.UriSchemeHttp))
+            {
+                return await GetRemoteCoverAsync(thumbnailUri, size, ct);
+            }
+
             var (key, loadBytes) = ResolveSource(track);
             if (key == null) return null;
 
@@ -74,9 +83,57 @@ public sealed class CoverArtService : ICoverArtService
         }
         catch (Exception ex)
         {
-            _log?.LogWarning($"[Music] Cover art unavailable for '{Path.GetFileName(track.Path)}': {ex.Message}");
+            _log?.LogWarning($"[Music] Cover art unavailable for '{track.DisplayName}': {ex.Message}");
             return null;
         }
+    }
+
+    private async Task<string?> GetRemoteCoverAsync(Uri uri, int size, CancellationToken ct)
+    {
+        string key = Sha1(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
+        string target = Path.Combine(_paths.CoversDirectory, $"{key}_{size}.jpg");
+        if (File.Exists(target)) return target;
+
+        await _generate.WaitAsync(ct);
+        try
+        {
+            if (File.Exists(target)) return target;
+
+            using var response = await ArtworkClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
+            response.EnsureSuccessStatusCode();
+            if (response.Content.Headers.ContentLength > MaxRemoteArtworkBytes)
+                throw new InvalidDataException("Remote artwork exceeds the 10 MB safety limit.");
+
+            await using var source = await response.Content.ReadAsStreamAsync(ct);
+            using var bytes = new MemoryStream();
+            var buffer = new byte[81920];
+            int total = 0;
+            while (true)
+            {
+                int read = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), ct);
+                if (read == 0) break;
+                total += read;
+                if (total > MaxRemoteArtworkBytes)
+                    throw new InvalidDataException("Remote artwork exceeds the 10 MB safety limit.");
+                await bytes.WriteAsync(buffer.AsMemory(0, read), ct);
+            }
+
+            if (bytes.Length == 0) return null;
+            Directory.CreateDirectory(_paths.CoversDirectory);
+            await WriteResizedJpegAsync(bytes.ToArray(), size, target, ct);
+            return target;
+        }
+        finally
+        {
+            _generate.Release();
+        }
+    }
+
+    private static HttpClient CreateArtworkClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.0.4");
+        return client;
     }
 
     /// <summary>Accent from artwork arrives in Phase 3.</summary>

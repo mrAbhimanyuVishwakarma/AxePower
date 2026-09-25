@@ -11,14 +11,6 @@ using AxePower.App.Services;
 
 namespace AxePower.App.ViewModels;
 
-public class PowerModeDisplayItem
-{
-    public PowerMode Mode { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-    public string Glyph { get; set; } = "\uE945";
-    public string ColorHex { get; set; } = "#3B82F6";
-}
-
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsService _settingsService;
@@ -30,57 +22,6 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private AppSettings _currentSettings;
-
-    public ObservableCollection<PowerModeDisplayItem> AvailablePowerModeItems { get; } = new()
-    {
-        new PowerModeDisplayItem { Mode = PowerMode.Eco, DisplayName = "Eco Mode", Glyph = "\uE945", ColorHex = "#10B981" },
-        new PowerModeDisplayItem { Mode = PowerMode.Smart, DisplayName = "Smart Mode", Glyph = "\uE945", ColorHex = "#3B82F6" },
-        new PowerModeDisplayItem { Mode = PowerMode.Beast, DisplayName = "Beast Mode", Glyph = "\uE945", ColorHex = "#F97316" },
-        new PowerModeDisplayItem { Mode = PowerMode.GameMode, DisplayName = "Game Mode", Glyph = "\uE7FC", ColorHex = "#8B5CF6" }
-    };
-
-    public ObservableCollection<string> AvailableFanModes { get; } = new()
-    {
-        "Smart",
-        "Eco (Quiet)",
-        "Beast (Turbo)"
-    };
-
-    [ObservableProperty]
-    private PowerMode _selectedUnpluggedMode = PowerMode.Smart;
-
-    partial void OnSelectedUnpluggedModeChanged(PowerMode value)
-    {
-        if (CurrentSettings != null)
-        {
-            CurrentSettings.UnpluggedMode = value;
-            SaveCurrentSettings();
-        }
-    }
-
-    [ObservableProperty]
-    private PowerMode _selectedPluggedInMode = PowerMode.Smart;
-
-    partial void OnSelectedPluggedInModeChanged(PowerMode value)
-    {
-        if (CurrentSettings != null)
-        {
-            CurrentSettings.PluggedInMode = value;
-            SaveCurrentSettings();
-        }
-    }
-
-    [ObservableProperty]
-    private string _selectedFanModeOnBattery = "Smart";
-
-    partial void OnSelectedFanModeOnBatteryChanged(string value)
-    {
-        if (CurrentSettings != null)
-        {
-            CurrentSettings.FanModeOnBattery = value;
-            SaveCurrentSettings();
-        }
-    }
 
     [ObservableProperty]
     private bool _startWithLastSelectedMode;
@@ -191,16 +132,62 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    [ObservableProperty]
-    private AppTheme _selectedTheme;
+    /// <summary>"System" first, then every skin found (built-in, shipped and the user's own).</summary>
+    public ObservableCollection<ThemeChoice> ThemeChoices { get; } = new();
 
-    partial void OnSelectedThemeChanged(AppTheme value)
+    [ObservableProperty]
+    private ThemeChoice? _selectedThemeChoice;
+
+    partial void OnSelectedThemeChoiceChanged(ThemeChoice? value)
     {
-        if (CurrentSettings != null)
+        if (CurrentSettings == null || value == null || _isLoadingThemeChoices) return;
+
+        CurrentSettings.Theme = value.Theme;
+        CurrentSettings.SkinId = value.SkinId;
+        _themeService.ApplyTheme(value.Theme, value.SkinId);
+        SaveCurrentSettings();
+    }
+
+    private bool _isLoadingThemeChoices;
+
+    /// <summary>Re-reads the skin folders, so a skin added while AxePower runs can be picked.
+    /// Called when the Settings page is opened.</summary>
+    public void RefreshThemeChoices()
+    {
+        _isLoadingThemeChoices = true;
+        try
         {
-            CurrentSettings.Theme = value;
-            _themeService.ApplyTheme(value);
-            SaveCurrentSettings();
+            _themeService.Catalog.Reload();
+            ThemeChoices.Clear();
+            ThemeChoices.Add(new ThemeChoice(null, AppTheme.System, "System"));
+            foreach (var skin in _themeService.Catalog.Skins)
+                ThemeChoices.Add(new ThemeChoice(skin.Id, ThemeService.ToAppTheme(skin), skin.Name));
+
+            // Older settings have no skin id: Dark/Light/Glass map to those skins
+            string? id = CurrentSettings.SkinId
+                ?? (CurrentSettings.Theme == AppTheme.System ? null : CurrentSettings.Theme.ToString().ToLowerInvariant());
+            SelectedThemeChoice = ThemeChoices.FirstOrDefault(c => string.Equals(c.SkinId, id, StringComparison.OrdinalIgnoreCase))
+                ?? ThemeChoices[0];
+        }
+        finally
+        {
+            _isLoadingThemeChoices = false;
+        }
+    }
+
+    /// <summary>Opens %APPDATA%\AxePower\Skins, where your own skins go.</summary>
+    [RelayCommand]
+    private void OpenSkinsFolder()
+    {
+        try
+        {
+            var folder = AxePower.Core.Services.Skins.SkinCatalog.UserSkinsFolder;
+            System.IO.Directory.CreateDirectory(folder);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Show($"Could not open the skins folder: {ex.Message}");
         }
     }
 
@@ -244,11 +231,8 @@ public partial class SettingsViewModel : ObservableObject
             CurrentSettings.DisplayRefreshRate = 0;
             SaveCurrentSettings();
 
-            Task.Run(async () =>
-            {
-                var mode = await _powerPlanService.GetActivePowerModeAsync();
-                _displayService.SetSmartRefreshRate(mode == PowerMode.Eco);
-            });
+            // Same rule as a mode change: 60 Hz only for Eco on battery
+            Task.Run(_powerPlanService.SyncRefreshRateAsync);
             _notificationService.Show("Display refresh rate set to Auto (Smart).");
         }
         else
@@ -303,14 +287,13 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     public IEnumerable<PowerMode> AvailableModes => Enum.GetValues(typeof(PowerMode)).Cast<PowerMode>();
-    public IEnumerable<AppTheme> AvailableThemes => Enum.GetValues(typeof(AppTheme)).Cast<AppTheme>();
     public IEnumerable<CloseBehaviour> AvailableCloseBehaviours => Enum.GetValues(typeof(CloseBehaviour)).Cast<CloseBehaviour>();
 
     private readonly UpdateService? _updateService;
     private readonly BatteryService? _batteryService;
     private readonly ElevationService? _elevationService;
 
-    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "1.9.0";
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "2.0.3";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]
@@ -369,10 +352,14 @@ public partial class SettingsViewModel : ObservableObject
         var latest = _settingsService.GetSettings();
         CurrentSettings.SidebarMaintenanceExpanded = latest.SidebarMaintenanceExpanded;
         CurrentSettings.SidebarUtilitiesExpanded = latest.SidebarUtilitiesExpanded;
+        CurrentSettings.SidebarCollapsed = latest.SidebarCollapsed;
         // The music section is edited elsewhere (Music group, header player); never save a stale copy of it
         CurrentSettings.Music = latest.Music;
         // Same for Share Screen: its pickers write straight through, so a snapshot here is stale
         CurrentSettings.ShareScreen = latest.ShareScreen;
+        // Written in the background by the power-plan and Game Mode GPU services
+        CurrentSettings.PowerPlansInitialized = latest.PowerPlansInitialized;
+        CurrentSettings.GpuPreferenceBackups = latest.GpuPreferenceBackups;
         _settingsService.SaveSettings(CurrentSettings);
     }
 
@@ -387,7 +374,10 @@ public partial class SettingsViewModel : ObservableObject
         BatteryService? batteryService = null,
         ElevationService? elevationService = null,
         AxePower.App.ViewModels.Music.MusicSettingsViewModel? music = null,
-        AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? shareScreen = null)
+        AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? shareScreen = null,
+        GameModeGpuService? gameModeGpu = null,
+        IGpuDisplayModeController? displayModeController = null,
+        AxePower.App.Services.IGameModePrompts? gameModePrompts = null)
     {
         Music = music;
         ShareScreen = shareScreen;
@@ -401,10 +391,8 @@ public partial class SettingsViewModel : ObservableObject
         _batteryService = batteryService;
         _elevationService = elevationService;
         _currentSettings = _settingsService.GetSettings();
-        _selectedTheme = _currentSettings.Theme;
-        _selectedUnpluggedMode = _currentSettings.UnpluggedMode;
-        _selectedPluggedInMode = _currentSettings.PluggedInMode;
-        _selectedFanModeOnBattery = _currentSettings.FanModeOnBattery ?? "Smart";
+        InitializeGameMode(gameModeGpu, displayModeController, gameModePrompts, gameModeGpu != null ? new GpuControlAppService() : null);
+        RefreshThemeChoices();
         _startWithLastSelectedMode = _currentSettings.StartWithLastSelectedMode;
         _startWithWindows = _currentSettings.StartWithWindows;
         _startMinimised = _currentSettings.StartMinimised;

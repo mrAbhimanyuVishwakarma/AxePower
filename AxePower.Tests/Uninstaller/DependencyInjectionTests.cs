@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
@@ -41,6 +41,7 @@ public class DependencyInjectionTests
             services.AddSingleton<TimeoutService>();
             services.AddSingleton<AppMonitorService>();
             services.AddSingleton<GameScannerService>();
+            services.AddSingleton<AxePower.Core.Services.Skins.SkinCatalog>();
             services.AddSingleton<ThemeService>();
             services.AddSingleton<SystemServiceOptimizer>();
             services.AddSingleton<DisplayService>();
@@ -102,6 +103,7 @@ public class DependencyInjectionTests
             services.AddTransient<UninstallerViewModel>();
             services.AddTransient<SystemOptimizerViewModel>();
             services.AddTransient<SystemDoctorViewModel>();
+            services.AddTransient<DebloatViewModel>();
             services.AddTransient<SoftwareHubViewModel>();
             services.AddTransient<PhoneHubViewModel>();
             services.AddTransient<LanDropViewModel>();
@@ -121,6 +123,7 @@ public class DependencyInjectionTests
             Assert.NotNull(mainVm.UninstallerVm);
             Assert.NotNull(mainVm.OptimizerVm);
             Assert.NotNull(mainVm.DoctorVm);
+            Assert.NotNull(mainVm.DebloatVm);
             Assert.NotNull(mainVm.SoftwareHubVm);
             Assert.NotNull(mainVm.PhoneHubVm);
 
@@ -137,6 +140,9 @@ public class DependencyInjectionTests
 
             mainVm.NavigateCommand.Execute("Doctor");
             Assert.Equal(mainVm.DoctorVm, mainVm.CurrentView);
+
+            mainVm.NavigateCommand.Execute("Debloat");
+            Assert.Equal(mainVm.DebloatVm, mainVm.CurrentView);
 
             mainVm.NavigateCommand.Execute("SoftwareHub");
             Assert.Equal(mainVm.SoftwareHubVm, mainVm.CurrentView);

@@ -114,15 +114,27 @@ public class MusicSettings
     [JsonPropertyName("lyricsFromFiles")]
     public bool LyricsFromFiles { get; set; } = true;
 
-    /// <summary>Online lookups are opt-in: nothing leaves the PC until this is turned on.</summary>
+    /// <summary>Catalogue lyrics are enabled by default; YouTube playback also uses video captions.</summary>
     [JsonPropertyName("lyricsOnline")]
-    public bool LyricsOnline { get; set; } = false;
+    public bool LyricsOnline { get; set; } = true;
 
     [JsonPropertyName("showTrackChangeNotification")]
     public bool ShowTrackChangeNotification { get; set; } = false;
 
     [JsonPropertyName("integrations")]
     public IntegrationSettings Integrations { get; set; } = new();
+
+    // ── Sources (providers) ─────────────────────────────────────────────────
+
+    /// <summary>Which providers are switched on, which one is active per kind, and how streams are cached.</summary>
+    [JsonPropertyName("providers")]
+    public ProviderSettings Providers { get; set; } = new();
+
+    // ── Shortcuts ───────────────────────────────────────────────────
+
+    /// <summary>Keyboard shortcuts for playback, and whether they work outside AxePower.</summary>
+    [JsonPropertyName("shortcuts")]
+    public ShortcutSettings Shortcuts { get; set; } = new();
 
     public MusicSettings Clone()
     {
@@ -156,9 +168,75 @@ public class MusicSettings
             LyricsFromFiles = LyricsFromFiles,
             LyricsOnline = LyricsOnline,
             ShowTrackChangeNotification = ShowTrackChangeNotification,
-            Integrations = (Integrations ?? new IntegrationSettings()).Clone()
+            Integrations = (Integrations ?? new IntegrationSettings()).Clone(),
+            Providers = (Providers ?? new ProviderSettings()).Clone(),
+            Shortcuts = (Shortcuts ?? new ShortcutSettings()).Clone()
         };
     }
+}
+
+/// <summary>
+/// Which music sources are available and which one answers each job. Provider ids are stable
+/// strings ("local", "youtube"); an id that no longer exists is ignored on load.
+/// </summary>
+public class ProviderSettings
+{
+    /// <summary>Providers the user has switched on. "local" is always on and cannot be removed.</summary>
+    [JsonPropertyName("enabled")]
+    public List<string> Enabled { get; set; } = new() { "local", "youtube" };
+
+    /// <summary>The provider that supplies audio for tracks that are not local files.</summary>
+    [JsonPropertyName("activeStreaming")]
+    public string ActiveStreaming { get; set; } = "youtube";
+
+    /// <summary>The provider that answers searches and lists playlists.</summary>
+    [JsonPropertyName("activeMetadata")]
+    public string ActiveMetadata { get; set; } = "youtube";
+
+    /// <summary>How long a resolved remote URL is trusted before it is fetched again.</summary>
+    [JsonPropertyName("streamExpiryMinutes")]
+    public int StreamExpiryMinutes { get; set; } = 60;
+
+    /// <summary>How many candidates to try before giving up on a track.</summary>
+    [JsonPropertyName("streamResolutionRetries")]
+    public int StreamResolutionRetries { get; set; } = 3;
+
+    /// <summary>
+    /// Download each streamed track to the cache before playing instead of streaming it
+    /// progressively. Slower to start, but survives a flaky connection.
+    /// </summary>
+    [JsonPropertyName("cacheStreamsToDisk")]
+    public bool CacheStreamsToDisk { get; set; } = false;
+
+    /// <summary>Upper bound for the streamed-audio cache. Oldest files are pruned first.</summary>
+    [JsonPropertyName("streamCacheMaxMb")]
+    public int StreamCacheMaxMb { get; set; } = 1024;
+
+    /// <summary>Keep the queue going by appending recommendations when it runs out.</summary>
+    [JsonPropertyName("discoveryEnabled")]
+    public bool DiscoveryEnabled { get; set; } = false;
+
+    /// <summary>0 = stay with the artists playing, 100 = look furthest afield.</summary>
+    [JsonPropertyName("discoveryVariety")]
+    public int DiscoveryVariety { get; set; } = 50;
+
+    /// <summary>How many tracks to append each time the queue runs out.</summary>
+    [JsonPropertyName("discoveryBatchSize")]
+    public int DiscoveryBatchSize { get; set; } = 10;
+
+    public ProviderSettings Clone() => new()
+    {
+        Enabled = new List<string>(Enabled ?? new List<string>()),
+        ActiveStreaming = ActiveStreaming,
+        ActiveMetadata = ActiveMetadata,
+        StreamExpiryMinutes = StreamExpiryMinutes,
+        StreamResolutionRetries = StreamResolutionRetries,
+        CacheStreamsToDisk = CacheStreamsToDisk,
+        StreamCacheMaxMb = StreamCacheMaxMb,
+        DiscoveryEnabled = DiscoveryEnabled,
+        DiscoveryVariety = DiscoveryVariety,
+        DiscoveryBatchSize = DiscoveryBatchSize
+    };
 }
 
 public class MiniPlayerSettings
@@ -251,8 +329,8 @@ public class AutomationSettings
 }
 
 /// <summary>
-/// Online integrations. All are off by default. Credentials (Last.fm session, Spotify refresh
-/// token) are never stored here; they go through the DPAPI secret store.
+/// Online integrations. All are off by default. Credentials such as the Last.fm session key
+/// are never stored here; they go through the DPAPI secret store.
 /// </summary>
 public class IntegrationSettings
 {
@@ -266,21 +344,13 @@ public class IntegrationSettings
     [JsonPropertyName("lastFmUsername")]
     public string? LastFmUsername { get; set; }
 
-    [JsonPropertyName("spotifyEnabled")]
-    public bool SpotifyEnabled { get; set; } = false;
-
-    [JsonPropertyName("spotifyClientId")]
-    public string? SpotifyClientId { get; set; }
-
     public IntegrationSettings Clone()
     {
         return new IntegrationSettings
         {
             DiscordRpc = DiscordRpc,
             LastFmEnabled = LastFmEnabled,
-            LastFmUsername = LastFmUsername,
-            SpotifyEnabled = SpotifyEnabled,
-            SpotifyClientId = SpotifyClientId
+            LastFmUsername = LastFmUsername
         };
     }
 }

@@ -65,12 +65,10 @@ public class MusicSettingsTests
     {
         var s = new MusicSettings();
 
-        Assert.False(s.LyricsOnline);
+        Assert.True(s.LyricsOnline);
         Assert.False(s.Integrations.DiscordRpc);
         Assert.False(s.Integrations.LastFmEnabled);
         Assert.Null(s.Integrations.LastFmUsername);
-        Assert.False(s.Integrations.SpotifyEnabled);
-        Assert.Null(s.Integrations.SpotifyClientId);
     }
 
     [Fact]
@@ -231,9 +229,65 @@ public class MusicSettingsTests
         {
             DiscordRpc = true,
             LastFmEnabled = true,
-            LastFmUsername = "listener",
-            SpotifyEnabled = true,
-            SpotifyClientId = "abc123"
+            LastFmUsername = "listener"
         }
     };
+
+    [Fact]
+    public void Providers_DefaultToLocalAndYouTube()
+    {
+        var providers = new MusicSettings().Providers;
+
+        Assert.Equal(new[] { "local", "youtube" }, providers.Enabled);
+        Assert.Equal("youtube", providers.ActiveStreaming);
+        Assert.Equal("youtube", providers.ActiveMetadata);
+        Assert.Equal(60, providers.StreamExpiryMinutes);
+        Assert.Equal(3, providers.StreamResolutionRetries);
+        Assert.False(providers.CacheStreamsToDisk);
+        Assert.Equal(1024, providers.StreamCacheMaxMb);
+    }
+
+    [Fact]
+    public void Providers_SurviveACloneWithoutSharingTheirList()
+    {
+        var original = new MusicSettings();
+        original.Providers.Enabled.Add("catalog");
+        original.Providers.ActiveMetadata = "catalog";
+        original.Providers.CacheStreamsToDisk = true;
+
+        var copy = original.Clone();
+        copy.Providers.Enabled.Add("something-else");
+
+        Assert.Equal("catalog", copy.Providers.ActiveMetadata);
+        Assert.True(copy.Providers.CacheStreamsToDisk);
+        Assert.DoesNotContain("something-else", original.Providers.Enabled);
+    }
+
+    [Fact]
+    public void Providers_RoundTripThroughJson()
+    {
+        var original = new MusicSettings();
+        original.Providers.ActiveStreaming = "youtube";
+        original.Providers.ActiveMetadata = "catalog";
+        original.Providers.Enabled.Add("catalog");
+        original.Providers.StreamExpiryMinutes = 15;
+
+        string json = JsonSerializer.Serialize(original, WriteOptions);
+        var loaded = JsonSerializer.Deserialize<MusicSettings>(json, ReadOptions)!;
+
+        Assert.Equal("catalog", loaded.Providers.ActiveMetadata);
+        Assert.Equal(15, loaded.Providers.StreamExpiryMinutes);
+        Assert.Contains("catalog", loaded.Providers.Enabled);
+    }
+
+    [Fact]
+    public void SettingsWrittenBeforeSourcesExisted_LoadWithTheDefaultSources()
+    {
+        // Upgrading from an earlier build must not leave the player with no source at all.
+        var loaded = JsonSerializer.Deserialize<MusicSettings>("{\"allowVolumeBoost\":true}", ReadOptions)!;
+
+        Assert.True(loaded.AllowVolumeBoost);
+        Assert.NotNull(loaded.Providers);
+        Assert.Equal("youtube", loaded.Providers.ActiveStreaming);
+    }
 }

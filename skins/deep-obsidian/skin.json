@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "deep-obsidian",
+  "name": "Deep Obsidian",
+  "description": "Pitch-black stealth design with sharp amber tactical accents.",
+  "author": "AxeDude7",
+  "base": "dark",
+  "colors": {
+    "window": "#000000",
+    "sidebar": "#080808",
+    "card": "#111111",
+    "cardElevated": "#181818",
+    "hover": "#222222",
+    "border": "#2C2C2C",
+    "divider": "#1A1A1A",
+    "textPrimary": "#FAFAFA",
+    "textSecondary": "#A1A1AA",
+    "textMuted": "#71717A",
+    "textDisabled": "#3F3F46",
+    "accent": "#F59E0B",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444",
+    "eco": "#10B981",
+    "smart": "#F59E0B",
+    "beast": "#DC2626",
+    "buttonPrimary": "#F59E0B",
+    "buttonPrimaryText": "#000000"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 20,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {}
+}

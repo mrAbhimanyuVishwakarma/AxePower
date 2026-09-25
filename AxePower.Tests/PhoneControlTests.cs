@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading.Tasks;
 using AxePower.App.ViewModels;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Music;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace AxePower.Tests;
@@ -59,7 +61,7 @@ public class PhoneControlTests
     public async Task LanDrop_ServerCanStartAndStopGracefully()
     {
         var log = new LogService();
-        var lan = new LanDropService(log);
+        var lan = new LanDropService(log, new PortalAccessToken(new InMemorySecretStore()));
 
         bool started = await lan.StartServerAsync("127.0.0.1", 5058);
         Assert.True(started);
@@ -68,6 +70,72 @@ public class PhoneControlTests
 
         lan.StopServer();
         Assert.False(lan.IsRunning);
+    }
+
+    [Fact]
+    public async Task LanDrop_RefusesToListenWithoutAnAccessToken()
+    {
+        // The portal binds to every interface, so starting it with no way to tell an intended
+        // request from any other would expose file upload and the remote to the whole network.
+        var lan = new LanDropService(new LogService());
+
+        bool started = await lan.StartServerAsync("127.0.0.1", 5059);
+
+        Assert.False(started);
+        Assert.False(lan.IsRunning);
+    }
+
+    [Fact]
+    public async Task LanDrop_PortalLinkCarriesTheAccessToken()
+    {
+        var token = new PortalAccessToken(new InMemorySecretStore());
+        var lan = new LanDropService(new LogService(), token);
+
+        await lan.StartServerAsync("127.0.0.1", 5060);
+        try
+        {
+            // The QR encodes this link, so the phone that scans it is authorised by opening it.
+            Assert.Equal($"http://127.0.0.1:5060/?t={token.Value}", lan.PortalUrl);
+            Assert.DoesNotContain(token.Value, lan.ServerUrl);
+        }
+        finally
+        {
+            lan.StopServer();
+        }
+    }
+
+    [Fact]
+    public void RealContainer_GivesTheLanPortalItsTokenAndTheMusicRemote()
+    {
+        // LanDropService takes both as optional constructor parameters. If the container failed
+        // to supply the token, the portal would refuse to start and LAN Drop would stop working
+        // altogether, with nothing but a log line to say why.
+        var provider = AxePower.App.App.ConfigureServices();
+        var lan = provider.GetRequiredService<LanDropService>();
+
+        var tokenField = typeof(LanDropService).GetField("_token",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var musicField = typeof(LanDropService).GetField("_music",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+        Assert.NotNull(tokenField);
+        Assert.NotNull(musicField);
+        Assert.NotNull(tokenField!.GetValue(lan));
+        Assert.NotNull(musicField!.GetValue(lan));
+    }
+
+    /// <summary>Credentials in memory, so no test writes the real DPAPI secret file.</summary>
+    private sealed class InMemorySecretStore : ISecretStore
+    {
+        private readonly System.Collections.Generic.Dictionary<string, string> _values = new();
+
+        public string? Get(string key) => _values.TryGetValue(key, out var value) ? value : null;
+
+        public void Set(string key, string? value)
+        {
+            if (value is null) _values.Remove(key);
+            else _values[key] = value;
+        }
     }
 
     [Fact]

@@ -59,6 +59,10 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
     private DateTime _lastSaveUtc;
     private CancellationTokenSource? _loadCts;
     private bool _shutDown;
+    private Guid? _streamRecoveryAttemptedKey;
+
+    /// <summary>Null in tests and in builds with no streaming sources: every track is then local.</summary>
+    private readonly IStreamResolver? _resolver;
 
     public MusicPlayerService(
         IAudioEngine engine,
@@ -67,8 +71,9 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         SettingsService settings,
         NotificationService notifications,
         LogService log,
-        IClock clock)
-        : this(engine, store, trackReader, settings, notifications, log, clock, new PlaybackQueue())
+        IClock clock,
+        IStreamResolver? resolver = null)
+        : this(engine, store, trackReader, settings, notifications, log, clock, new PlaybackQueue(), resolver)
     {
     }
 
@@ -80,8 +85,10 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         NotificationService notifications,
         LogService log,
         IClock clock,
-        PlaybackQueue queue)
+        PlaybackQueue queue,
+        IStreamResolver? resolver = null)
     {
+        _resolver = resolver;
         _engine = engine;
         _store = store;
         _trackReader = trackReader;
@@ -529,6 +536,23 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         if (current == null || (error.Key != current.Key && error.Key != _loadedKey && error.Key != Guid.Empty)) return;
 
         _log.LogWarning($"[Music] Playback error: {error.Message}");
+
+        // Some signed URLs fail only after the decoder starts reading, most notably as a 403.
+        // Refresh the same candidate once before treating the track as unplayable. Keeping the
+        // guard for the duration of this load prevents a permanently bad source from looping.
+        if (_resolver is not null
+            && !current.Track.IsLocal
+            && _streamRecoveryAttemptedKey != current.Key)
+        {
+            _streamRecoveryAttemptedKey = current.Key;
+            var resumeAt = _engine.Position > TimeSpan.Zero ? _engine.Position : _position;
+            _log.LogInfo($"[Music] Refreshing the playback URL for '{current.Track.Title}'.");
+            await LoadCurrentAsync(resumeAt, play: true, countFailure: true,
+                resetStreamRecovery: false, forceStreamRefresh: true);
+            Publish();
+            return;
+        }
+
         await HandleFailureAsync(current, play: true);
         Publish();
     }
@@ -583,10 +607,17 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         }
     }
 
-    private async Task LoadCurrentAsync(TimeSpan start, bool play, bool countFailure)
+    private async Task LoadCurrentAsync(
+        TimeSpan start,
+        bool play,
+        bool countFailure,
+        bool resetStreamRecovery = true,
+        bool forceStreamRefresh = false)
     {
         var item = _queue.Current;
         if (item == null) return;
+
+        if (resetStreamRecovery) _streamRecoveryAttemptedKey = null;
 
         _loadCts?.Cancel();
         _loadCts = new CancellationTokenSource();
@@ -594,7 +625,34 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
 
         try
         {
-            await _engine.LoadAsync(item, start, play, ct);
+            item = forceStreamRefresh
+                ? await RefreshAsync(item, preferLocalCopy: false, ct)
+                : await ResolveAsync(item, preferLocalCopy: false, ct);
+
+            try
+            {
+                await _engine.LoadAsync(item, start, play, ct);
+            }
+            catch (Exception ex) when (!item.Track.IsLocal && !ct.IsCancellationRequested)
+            {
+                // The provider may reject a signed URL before its advertised expiry. Resolve
+                // the same candidate again first; only then fall back to a complete download.
+                _streamRecoveryAttemptedKey = item.Key;
+                _log.LogWarning($"[Music] Streaming '{item.Track.Title}' failed ({ex.Message}); refreshing its URL.");
+                item = await RefreshAsync(item, preferLocalCopy: false, ct);
+
+                try
+                {
+                    await _engine.LoadAsync(item, start, play, ct);
+                }
+                catch (Exception refreshedEx) when (!ct.IsCancellationRequested)
+                {
+                    _log.LogWarning($"[Music] Refreshed stream for '{item.Track.Title}' failed ({refreshedEx.Message}); downloading it instead.");
+                    item = await RefreshAsync(item, preferLocalCopy: true, ct);
+                    await _engine.LoadAsync(item, start, play, ct);
+                }
+            }
+
             _loadedKey = item.Key;
             _playing = play;
             _completed = false;
@@ -609,9 +667,61 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         }
         catch (Exception ex)
         {
-            _log.LogWarning($"[Music] Could not open '{Path.GetFileName(item.Track.Path)}': {ex.Message}");
+            _log.LogWarning($"[Music] Could not open '{item.Track.DisplayName}': {ex.Message}");
             if (countFailure) await HandleFailureAsync(item, play);
         }
+    }
+
+    /// <summary>
+    /// Gives a queue entry a playable stream, and writes the result back into the queue so the
+    /// candidate list is there for the UI and is not searched for again on the next play.
+    /// </summary>
+    public Task SelectCandidateAsync(int index, string candidateId) => RunGatedAsync(async () =>
+    {
+        if (_resolver is null || index < 0 || index >= _queue.Items.Count) return;
+
+        var item = _queue.Items[index];
+        var track = _resolver.SelectCandidate(item.Track, candidateId);
+        if (ReferenceEquals(track, item.Track)) return;
+
+        if (_queue.Replace(item.Key, track)) _queueDirty = true;
+
+        // Switching the source of the track that is playing restarts it from the beginning on
+        // the new one; any other entry simply takes effect when its turn comes.
+        if (_loadedKey == item.Key)
+        {
+            bool wasPlaying = _playing;
+            _consecutiveFailures = 0;
+            await LoadCurrentAsync(TimeSpan.Zero, wasPlaying, countFailure: true);
+        }
+        else if (_queue.PeekAfterEnd()?.Key == item.Key)
+        {
+            UpdateNext();
+        }
+
+        Publish();
+    });
+
+    private async Task<QueueItem> ResolveAsync(QueueItem item, bool preferLocalCopy, CancellationToken ct)
+    {
+        if (_resolver is null || item.Track.IsLocal) return item;
+
+        var track = await _resolver.PrepareAsync(item.Track, preferLocalCopy, ct);
+        if (ReferenceEquals(track, item.Track)) return item;
+
+        // The published state keeps a cached copy of the queue, so a track swapped in place has
+        // to mark it stale or the candidates and the resolved source never reach any surface.
+        if (_queue.Replace(item.Key, track)) _queueDirty = true;
+        return item with { Track = track };
+    }
+
+    private async Task<QueueItem> RefreshAsync(QueueItem item, bool preferLocalCopy, CancellationToken ct)
+    {
+        if (_resolver is null || item.Track.IsLocal) return item;
+
+        var track = await _resolver.RefreshAsync(item.Track, preferLocalCopy, ct);
+        if (_queue.Replace(item.Key, track)) _queueDirty = true;
+        return item with { Track = track };
     }
 
     /// <summary>
@@ -661,7 +771,16 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
     {
         var next = _queue.PeekAfterEnd();
         _repeatOneKey = _queue.Repeat == RepeatMode.One ? next?.Key : null;
-        _engine.SetNext(next);
+
+        if (_resolver is null || next is null || next.Track.IsLocal)
+        {
+            _engine.SetNext(next);
+            return;
+        }
+
+        // Signed remote URLs are deliberately resolved only after the queue advances to the
+        // track. Keeping them out of engine preloading eliminates expiry while a queue sits idle.
+        _engine.SetNext(null);
     }
 
     private void ApplyMusicSettings(MusicSettings music)

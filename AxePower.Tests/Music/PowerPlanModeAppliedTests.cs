@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
@@ -23,7 +24,7 @@ public class PowerPlanModeAppliedTests
         bool ok = await service.ApplyModeAsync(PowerMode.Eco);
 
         Assert.True(ok);
-        Assert.Equal(PowerPlanService.PowerSaverGuid, schemes.Active);
+        Assert.Equal(PowerPlanCatalog.Eco.Guid, schemes.Active);
         Assert.Equal(new[] { PowerMode.Eco }, raised);
     }
 
@@ -52,9 +53,9 @@ public class PowerPlanModeAppliedTests
         bool ok = await service.ApplyModeAsync(PowerMode.Smart);
 
         Assert.True(ok);
-        Assert.Equal(PowerPlanService.BalancedGuid, schemes.Active);
+        Assert.Equal(PowerPlanCatalog.Smart.Guid, schemes.Active);
         Assert.Equal(new[] { PowerMode.Smart }, raised);
-        // Existing behaviour on this path: the refresh rate is synced once
+        // The refresh rate is synced once, whichever path applied the plan
         Assert.Equal(1, display.SmartCalls);
     }
 
@@ -88,7 +89,7 @@ public class PowerPlanModeAppliedTests
     }
 
     [Fact]
-    public async Task BeastWithExistingUltimatePlan_ReusesIt_AndNeverDuplicatesAnother()
+    public async Task BeastWithAnExistingUltimatePlan_ActivatesAxePowersOwnBeastPlan()
     {
         var (service, schemes, _) = Create();
         schemes.Schemes.Add(UltimateGuid);
@@ -98,8 +99,7 @@ public class PowerPlanModeAppliedTests
         bool ok = await service.ApplyModeAsync(PowerMode.Beast);
 
         Assert.True(ok);
-        Assert.Equal(UltimateGuid, schemes.Active);
-        Assert.Equal(0, schemes.DuplicateCalls);
+        Assert.Equal(PowerPlanCatalog.Beast.Guid, schemes.Active);
         Assert.Equal(new[] { PowerMode.Beast }, raised);
     }
 
@@ -108,7 +108,7 @@ public class PowerPlanModeAppliedTests
         var schemes = new FakePowerSchemes();
         var display = new FakeRefreshRate();
         var log = new LogService();
-        var service = new PowerPlanService(log, display, new SettingsService(log), schemes);
+        var service = new PowerPlanService(log, display, new SettingsService(log, Path.Combine(Path.GetTempPath(), $"axepower_pp_{Guid.NewGuid():N}")), schemes);
         return (service, schemes, display);
     }
 

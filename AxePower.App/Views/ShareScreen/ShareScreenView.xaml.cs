@@ -50,7 +50,11 @@ public partial class ShareScreenView : UserControl
         if (e.PropertyName is nameof(ShareScreenViewModel.ViewerUrl)
             or nameof(ShareScreenViewModel.IsLive)
             or nameof(ShareScreenViewModel.IsPreviewEnabled)
-            or nameof(ShareScreenViewModel.State))
+            or nameof(ShareScreenViewModel.State)
+            or nameof(ShareScreenViewModel.IsWatchingFriend)
+            or nameof(ShareScreenViewModel.ActiveFriendWatchUrl)
+            or nameof(ShareScreenViewModel.IsStageActive)
+            or nameof(ShareScreenViewModel.IsJoinModalOpen))
         {
             UpdatePlaceholder();
             _ = SyncPreviewAsync();
@@ -63,21 +67,31 @@ public partial class ShareScreenView : UserControl
         var vm = _viewModel;
         if (vm == null) return;
 
-        if (!vm.IsLive)
+        // WebView2 is an HWND and would otherwise render above the WPF join dialog, leaving the
+        // user with a dimmed page and an apparently missing modal.
+        if (vm.IsJoinModalOpen)
         {
-            TileGlyph.Text = "";
+            StopPreview();
+            return;
+        }
+
+        if (vm.IsWatchingFriend)
+        {
+            TileHeadline.Text = $"Watching {vm.FriendName}'s screen...";
+            TileSubtext.Visibility = Visibility.Collapsed;
+        }
+        else if (!vm.IsLive)
+        {
             TileHeadline.Text = "Your screen isn't being shared";
             TileSubtext.Visibility = Visibility.Visible;
         }
         else if (!vm.IsPreviewEnabled)
         {
-            TileGlyph.Text = "";
             TileHeadline.Text = "Preview hidden";
             TileSubtext.Visibility = Visibility.Collapsed;
         }
         else
         {
-            TileGlyph.Text = "";
             TileHeadline.Text = "Connecting to the stream...";
             TileSubtext.Visibility = Visibility.Collapsed;
         }
@@ -89,8 +103,22 @@ public partial class ShareScreenView : UserControl
         var vm = _viewModel;
         if (vm == null) return;
 
-        var wanted = vm.IsLive && vm.IsPreviewEnabled && !string.IsNullOrWhiteSpace(vm.ViewerUrl);
-        if (!wanted)
+        if (vm.IsJoinModalOpen)
+        {
+            StopPreview();
+            return;
+        }
+
+        string targetUrl;
+        if (vm.IsWatchingFriend && !string.IsNullOrWhiteSpace(vm.ActiveFriendWatchUrl))
+        {
+            targetUrl = vm.ActiveFriendWatchUrl;
+        }
+        else if (vm.IsLive && vm.IsPreviewEnabled && !string.IsNullOrWhiteSpace(vm.LocalPreviewUrl))
+        {
+            targetUrl = vm.LocalPreviewUrl;
+        }
+        else
         {
             StopPreview();
             return;
@@ -99,10 +127,10 @@ public partial class ShareScreenView : UserControl
         if (_browserFailed) return;
         if (!await EnsureBrowserAsync()) return;
 
-        if (_shownUrl == vm.ViewerUrl) return;
-        _shownUrl = vm.ViewerUrl;
+        if (_shownUrl == targetUrl) return;
+        _shownUrl = targetUrl;
 
-        PreviewBrowser.CoreWebView2.Navigate(vm.ViewerUrl);
+        PreviewBrowser.CoreWebView2.Navigate(targetUrl);
     }
 
     private async Task<bool> EnsureBrowserAsync()
@@ -143,7 +171,6 @@ public partial class ShareScreenView : UserControl
         {
             // A missing WebView2 runtime must not take sharing down with it.
             _browserFailed = true;
-            TileGlyph.Text = "";
             TileHeadline.Text = "Preview unavailable";
             TileSubtext.Text =
                 "The in-app preview needs the Microsoft Edge WebView2 runtime. Sharing still works — " +
@@ -160,8 +187,43 @@ public partial class ShareScreenView : UserControl
 
         if (!e.IsSuccess)
         {
-            TileHeadline.Text = "Could not reach the stream — it may still be starting.";
+            if (vm.IsWatchingFriend)
+            {
+                vm.JoinStatusMessage = "Could not reach friend's stream. Ensure the host is live and network is reachable.";
+                vm.IsWatchingFriend = false;
+            }
+            else
+            {
+                TileHeadline.Text = "Could not reach the stream — it may still be starting.";
+            }
             _shownUrl = string.Empty;   // let the next sync retry
+            return;
+        }
+
+        if (vm.IsWatchingFriend)
+        {
+            try
+            {
+                await PreviewBrowser.CoreWebView2.ExecuteScriptAsync("""
+                    (function () {
+                      var v = document.querySelector('video');
+                      if (v) {
+                        v.muted = false;
+                        v.volume = 1.0;
+                        v.play().catch(function () {});
+                      }
+                      var snd = document.getElementById('snd');
+                      if (snd) { snd.textContent = 'Mute'; }
+                    })();
+                    """);
+                PreviewBrowser.Visibility = Visibility.Visible;
+                TilePlaceholder.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception)
+            {
+                PreviewBrowser.Visibility = Visibility.Visible;
+                TilePlaceholder.Visibility = Visibility.Collapsed;
+            }
             return;
         }
 
@@ -257,7 +319,7 @@ public partial class ShareScreenView : UserControl
         Tile.Margin = _isFullscreen ? new Thickness(0) : new Thickness(0, 4, 0, 14);
         Tile.CornerRadius = new CornerRadius(_isFullscreen ? 0 : 10);
 
-        FullscreenButton.Content = _isFullscreen ? "" : "";
+        FullscreenGlyph.Text = _isFullscreen ? "\uE73F" : "\uE740";
         FullscreenButton.ToolTip = _isFullscreen ? "Shrink the preview" : "Fill the window with the preview";
     }
 

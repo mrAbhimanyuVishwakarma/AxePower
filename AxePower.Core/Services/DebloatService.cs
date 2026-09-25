@@ -32,14 +32,41 @@ public class DebloatService
     }
 
     /// <summary>
-    /// Launches the elevated Windows Debloat & Utility interface.
+    /// Launches the elevated Windows Debloat &amp; Utility interface (Win11Debloat by Raphire).
     /// If an instance is already active, restores and focuses it.
     /// </summary>
-    public bool LaunchDebloatUtility()
+    public bool LaunchDebloatUtility() => LaunchWin11Debloat();
+
+    /// <summary>
+    /// Launches Win11Debloat by Raphire.
+    /// </summary>
+    public bool LaunchWin11Debloat()
+    {
+        return LaunchScript(
+            "Win11Debloat by Raphire",
+            "-NoProfile -ExecutionPolicy Bypass -Command \"& ([scriptblock]::Create((irm 'https://debloat.raphi.re/')))\"",
+            "Win11Debloat");
+    }
+
+    /// <summary>
+    /// Launches WinUtil by Chris Titus Tech.
+    /// </summary>
+    public bool LaunchWinUtil()
+    {
+        return LaunchScript(
+            "WinUtil by Chris Titus Tech",
+            "-NoProfile -ExecutionPolicy Bypass -Command \"irm 'https://christitus.com/win' | iex\"",
+            "WinUtil");
+    }
+
+    /// <summary>
+    /// Launches an elevated PowerShell script with single-instance window focusing.
+    /// </summary>
+    public bool LaunchScript(string displayName, string arguments, string titleMatch)
     {
         try
         {
-            if (TryFocusExistingWindow())
+            if (TryFocusExistingWindow(titleMatch))
             {
                 return true;
             }
@@ -47,28 +74,28 @@ public class DebloatService
             var psi = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = "-NoProfile -ExecutionPolicy Bypass -Command \"& ([scriptblock]::Create((irm 'https://debloat.raphi.re/')))\"",
+                Arguments = arguments,
                 UseShellExecute = true,
                 Verb = "runas"
             };
 
-            _logService.LogInfo("Launching elevated Win11Debloat by Raphire...");
+            _logService.LogInfo($"Launching elevated {displayName}...");
             _activeProcess = Process.Start(psi);
             return true;
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
         {
-            _logService.LogWarning("Debloat utility UAC prompt was cancelled by user.");
+            _logService.LogWarning($"{displayName} UAC prompt was cancelled by user.");
             return false;
         }
         catch (Exception ex)
         {
-            _logService.LogError("Error launching Debloat utility", ex);
+            _logService.LogError($"Error launching {displayName}", ex);
             return false;
         }
     }
 
-    private bool TryFocusExistingWindow()
+    private bool TryFocusExistingWindow(string titleMatch)
     {
         IntPtr foundHwnd = IntPtr.Zero;
 
@@ -102,7 +129,10 @@ public class DebloatService
                 var sb = new StringBuilder(256);
                 GetWindowText(hWnd, sb, sb.Capacity);
                 var title = sb.ToString();
-                if (!string.IsNullOrEmpty(title) && (title.Contains("Win11Debloat", StringComparison.OrdinalIgnoreCase) || title.Contains("Debloat", StringComparison.OrdinalIgnoreCase)))
+                if (!string.IsNullOrEmpty(title) && 
+                    (title.Contains(titleMatch, StringComparison.OrdinalIgnoreCase) || 
+                     title.Contains("Debloat", StringComparison.OrdinalIgnoreCase) ||
+                     title.Contains("WinUtil", StringComparison.OrdinalIgnoreCase)))
                 {
                     foundHwnd = hWnd;
                     return false;
@@ -115,7 +145,7 @@ public class DebloatService
         {
             ShowWindow(foundHwnd, SW_RESTORE);
             SetForegroundWindow(foundHwnd);
-            _logService.LogInfo("Debloat utility is already running. Focused active window.");
+            _logService.LogInfo($"{titleMatch} is already running. Focused active window.");
             return true;
         }
 

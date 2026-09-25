@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "arctic-frost",
+  "name": "Arctic Frost",
+  "description": "Clean, crisp, high-clarity light mode for daytime performance.",
+  "author": "AxeDude7",
+  "base": "light",
+  "colors": {
+    "window": "#F8FAFC",
+    "sidebar": "#F1F5F9",
+    "card": "#FFFFFF",
+    "cardElevated": "#E2E8F0",
+    "hover": "#CBD5E1",
+    "border": "#94A3B8",
+    "divider": "#E2E8F0",
+    "textPrimary": "#0F172A",
+    "textSecondary": "#475569",
+    "textMuted": "#64748B",
+    "textDisabled": "#94A3B8",
+    "accent": "#2563EB",
+    "success": "#059669",
+    "warning": "#D97706",
+    "error": "#DC2626",
+    "eco": "#059669",
+    "smart": "#2563EB",
+    "beast": "#EA580C",
+    "buttonPrimary": "#0F172A",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 10,
+    "rim": false,
+    "shadow": true
+  },
+  "overrides": {}
+}

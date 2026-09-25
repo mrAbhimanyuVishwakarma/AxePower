@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -133,8 +133,12 @@ public partial class DashboardViewModel : ObservableObject
         UpdateService? updateService = null,
         SystemTelemetryService? telemetryService = null,
         DisplayService? displayService = null,
-        GraphicsDriverService? graphicsDriverService = null)
+        GraphicsDriverService? graphicsDriverService = null,
+        GameModeGuard? gameModeGuard = null,
+        AxePower.App.Services.IGameModePrompts? gameModePrompts = null)
     {
+        _gameModeGuard = gameModeGuard;
+        _gameModePrompts = gameModePrompts;
         _powerPlanService = powerPlanService;
         _batteryService = batteryService;
         _notificationService = notificationService;
@@ -445,9 +449,21 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
+    private readonly GameModeGuard? _gameModeGuard;
+    private readonly AxePower.App.Services.IGameModePrompts? _gameModePrompts;
+
     [RelayCommand]
     private async Task ApplyModeAsync()
     {
+        // Picking another mode ends Game Mode, but not behind a running game's back
+        if (_gameModeGuard != null && await _gameModeGuard.GetBlockingGameAsync(SelectedMode) is string game &&
+            _gameModePrompts?.ConfirmLeaveGameMode(game) != true)
+        {
+            await RefreshStatusAsync(syncSelectedMode: true);
+            _notificationService.Show($"Game Mode stays on while {game} is running.");
+            return;
+        }
+
         IsLoading = true;
         ApplyStatusText = "Applying...";
         try
@@ -587,7 +603,19 @@ public partial class DashboardViewModel : ObservableObject
     private void InitializeNewFeatures()
     {
         NewFeatures.Clear();
-        NewFeatures.Add(new AppFeatureItem
+        foreach (var feature in BuildNewFeatures()) NewFeatures.Add(feature);
+
+        SelectedFeature = NewFeatures.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// The "What's New" entries, newest first — the Dashboard shows the first one on load.
+    /// Static and public so the list can be checked without building a whole view model.
+    /// </summary>
+    public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
+    {
+        // Chosen by the owner for 2.0.2, in this order. Ask which to keep before the next release.
+        new()
         {
             Title = "DLSS 5 Swapper",
             Badge = "NEW GAMING TOOL",
@@ -595,35 +623,35 @@ public partial class DashboardViewModel : ObservableObject
             Glyph = "\uE7FC",
             Description = "1-Click portable downloader & runner. Swap DLSS, Streamline DLLs, RenoDX, and ReShade silently in games.",
             TargetNavigation = "UpdatePc:Apps:Gaming"
-        });
-        NewFeatures.Add(new AppFeatureItem
+        },
+        new()
         {
-            Title = "NVIDIA Driver Selector",
-            Badge = "ROLLBACK & STABLE",
-            BadgeColorHex = "#76B900",
-            Glyph = "\uE81C",
-            Description = "Choose proven stable Game Ready releases or rollback if new updates introduce stuttering or bugs.",
-            TargetNavigation = "UpdatePc:Updaters"
-        });
-        NewFeatures.Add(new AppFeatureItem
+            Title = "Share Screen",
+            Badge = "NEW IN 2.0",
+            BadgeColorHex = "#8B5CF6",
+            Glyph = "\uE72D",
+            Description = "Share a display to anyone on your network, in their browser, with no install. Hardware encoding on NVIDIA, AMD and Intel, and 60 FPS held by dropping resolution instead of frames.",
+            TargetNavigation = "ShareScreen"
+        },
+        new()
         {
-            Title = "In-App WinGet Updates",
-            Badge = "PACKAGE MANAGER",
-            BadgeColorHex = "#60A5FA",
-            Glyph = "\uE777",
-            Description = "Batch upgrade installed applications with live progress logs and install gaming runtimes.",
-            TargetNavigation = "UpdatePc:Apps:All"
-        });
-        NewFeatures.Add(new AppFeatureItem
+            Title = "Skins",
+            Badge = "NEW IN 2.0.2",
+            BadgeColorHex = "#A855F7",
+            Glyph = "\uE790",
+            Description = "Every theme is now a skin you can pick in Settings \u2192 Theme: Dark, Light, black Glass and Deep Obsidian (Glass). Drop a new skin folder in and it appears, no restart.",
+            TargetNavigation = "Settings"
+        },
+        new()
         {
-            Title = "BIOS & UEFI Center",
-            Badge = "FIRMWARE SCAN",
-            BadgeColorHex = "#818CF8",
-            Glyph = "\uE950",
-            Description = "Inspect motherboard BIOS, check UEFI Secure Boot status, and scan for Windows firmware capsules.",
-            TargetNavigation = "UpdatePc:Updaters"
-        });
-        NewFeatures.Add(new AppFeatureItem
+            Title = "Game Mode",
+            Badge = "NEW IN 2.0.2",
+            BadgeColorHex = "#8B5CF6",
+            Glyph = "\uE7FC",
+            Description = "Its own GameMode power plan, the dedicated GPU for your games while it is on, and a toggle right on the Dashboard. Picking another mode ends it, but never while a game is still running.",
+            TargetNavigation = "GameMode"
+        },
+        new()
         {
             Title = "Phone Control & LanDrop",
             Badge = "CROSS-DEVICE",
@@ -631,28 +659,26 @@ public partial class DashboardViewModel : ObservableObject
             Glyph = "\uE8EA",
             Description = "Instant Wi-Fi file transfers between PC and smartphone without cables, plus remote quick actions.",
             TargetNavigation = "PhoneHub"
-        });
-        NewFeatures.Add(new AppFeatureItem
+        },
+        new()
         {
-            Title = "System Doctor",
-            Badge = "HEALTH REPAIR",
-            BadgeColorHex = "#EC4899",
-            Glyph = "\uE958",
-            Description = "One-click Windows repair (SFC / DISM), DirectX/Vulkan shader cache cleaner, and DNS benchmark.",
-            TargetNavigation = "Doctor"
-        });
-        NewFeatures.Add(new AppFeatureItem
+            Title = "Uninstaller Pro",
+            Badge = "DEEP CLEAN",
+            BadgeColorHex = "#EF4444",
+            Glyph = "\uE74D",
+            Description = "Remove applications and clean only verified leftovers, with confidence scoring, a safety backup before cleaning, and a fixer for broken uninstall entries.",
+            TargetNavigation = "Uninstaller"
+        },
+        new()
         {
-            Title = "System Optimizer",
-            Badge = "GAMING LATENCY",
-            BadgeColorHex = "#06B6D4",
-            Glyph = "\uE90F",
-            Description = "Safe Windows debloating, background telemetry elimination, and low-latency gaming tweaks.",
-            TargetNavigation = "Optimizer"
-        });
-
-        SelectedFeature = NewFeatures.FirstOrDefault();
-    }
+            Title = "Terminal",
+            Badge = "BUILT-IN",
+            BadgeColorHex = "#F59E0B",
+            Glyph = "\uE756",
+            Description = "A real CMD and PowerShell inside AxePower, where Software Hub installs and System Doctor repairs stream their output, with a Stop button.",
+            TargetNavigation = "Terminal"
+        },
+    };
 }
 
 public class AppFeatureItem

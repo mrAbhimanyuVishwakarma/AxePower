@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "cyber-neon",
+  "name": "Cyber Neon",
+  "description": "High-voltage cyberpunk aesthetic with electric cyan and magenta highlights.",
+  "author": "AxeDude7",
+  "base": "dark",
+  "colors": {
+    "window": "#05050A",
+    "sidebar": "#0B0C16",
+    "card": "#121422",
+    "cardElevated": "#1A1D2E",
+    "hover": "#242840",
+    "border": "#2E3452",
+    "divider": "#1E2238",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#A5B4FC",
+    "textMuted": "#6366F1",
+    "textDisabled": "#3730A3",
+    "accent": "#06B6D4",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444",
+    "eco": "#10B981",
+    "smart": "#06B6D4",
+    "beast": "#EC4899",
+    "buttonPrimary": "#06B6D4",
+    "buttonPrimaryText": "#05050A"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 40,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {}
+}

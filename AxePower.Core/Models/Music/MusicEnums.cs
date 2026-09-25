@@ -40,8 +40,7 @@ public enum MusicSource
 {
     None,
     AxePower,
-    External,
-    Spotify
+    External
 }
 
 public enum MiniPlayerCorner

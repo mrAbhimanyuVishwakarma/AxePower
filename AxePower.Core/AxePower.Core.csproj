@@ -6,16 +6,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);CS8600;CS8602;CS8604</NoWarn>
-    <Version>1.9.0</Version>
-    <AssemblyVersion>1.9.0.0</AssemblyVersion>
-    <FileVersion>1.9.0.0</FileVersion>
+    <Version>2.0.4</Version>
+    <AssemblyVersion>2.0.4.0</AssemblyVersion>
+    <FileVersion>2.0.4.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
     <PackageReference Include="Microsoft.Management.Infrastructure" Version="3.0.0" />
     <PackageReference Include="Microsoft.Win32.SystemEvents" Version="10.0.10" />
     <PackageReference Include="System.Management" Version="10.0.10" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.10" />
     <PackageReference Include="YoutubeExplode" Version="6.6.2" />
   </ItemGroup>
@@ -32,6 +34,13 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="AxePower.Tests" />
+  </ItemGroup>
+
+  <!-- Built-in skins, embedded so AxePower always has a theme even if the skins folder is missing -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\skins\dark\skin.json" LogicalName="AxePower.Skins.dark.json" />
+    <EmbeddedResource Include="..\skins\light\skin.json" LogicalName="AxePower.Skins.light.json" />
+    <EmbeddedResource Include="..\skins\glass\skin.json" LogicalName="AxePower.Skins.glass.json" />
   </ItemGroup>
 
 </Project>

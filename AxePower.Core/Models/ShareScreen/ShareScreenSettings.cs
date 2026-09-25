@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace AxePower.Core.Models.ShareScreen;
@@ -92,6 +94,10 @@ public class ShareScreenSettings
     [JsonPropertyName("viewerPort")]
     public int ViewerPort { get; set; } = 8890;
 
+    /// <summary>List of saved/remembered friends and their addresses.</summary>
+    [JsonPropertyName("savedFriends")]
+    public List<SavedFriend> SavedFriends { get; set; } = new();
+
     public ShareScreenSettings Clone() => new()
     {
         DisplayIndex = DisplayIndex,
@@ -109,6 +115,7 @@ public class ShareScreenSettings
         AdaptiveQuality = AdaptiveQuality,
         KeepAwakeWhileSharing = KeepAwakeWhileSharing,
         AllowRemoteControl = AllowRemoteControl,
-        ViewerPort = ViewerPort
+        ViewerPort = ViewerPort,
+        SavedFriends = SavedFriends.Select(f => f with { }).ToList()
     };
 }

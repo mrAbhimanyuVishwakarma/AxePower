@@ -69,6 +69,8 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="16" />
         <Setter Property="Padding" Value="24" />
+        <!-- A shadow in the Glass theme only (null elsewhere) -->
+        <Setter Property="Effect" Value="{DynamicResource CardShadowEffect}" />
     </Style>
 
     <Style TargetType="Border" x:Key="CardElevatedStyle" BasedOn="{StaticResource CardStyle}">
@@ -160,6 +162,16 @@
         </Setter>
     </Style>
 
+    <!-- Sidebar item label: hidden when the sidebar is collapsed to its icon rail -->
+    <Style TargetType="TextBlock" x:Key="SidebarLabelStyle" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Sidebar Group Header Text -->
     <Style TargetType="TextBlock" x:Key="SidebarGroupHeaderTextStyle">
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
@@ -167,6 +179,24 @@
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="20,10,20,3" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Stands in for a group title in the collapsed icon rail -->
+    <Style TargetType="Border" x:Key="SidebarRailDividerStyle">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="22,12,22,6" />
+        <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Sidebar Expander Header Button (UTILITIES / SYSTEM) -->
@@ -203,6 +233,12 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <!-- The collapsed rail shows every group's tools, so the open/close header goes -->
+            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Sidebar Button -->
@@ -221,9 +257,13 @@
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
                         <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Margin="10,2" />
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="27,0,0,0" />
+                        </DataTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -252,9 +292,13 @@
                         <Border x:Name="border" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Margin="10,2">
                             <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,7" />
                         </Border>
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="22,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="27,0,0,0" />
+                        </DataTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
                         </Trigger>
@@ -274,9 +318,14 @@
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
                         <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Margin="16,2,10,2" />
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="28,0,0,0" />
+                            <Setter TargetName="border" Property="Margin" Value="10,2" />
+                        </DataTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="border" Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -305,9 +354,14 @@
                         <Border x:Name="border" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Margin="16,2,10,2">
                             <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,6" />
                         </Border>
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
+                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter TargetName="content" Property="Margin" Value="28,0,0,0" />
+                            <Setter TargetName="border" Property="Margin" Value="10,2" />
+                        </DataTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
                         </Trigger>
@@ -381,6 +435,11 @@
         </Setter>
     </Style>
 
+    <!-- Popups, Flyouts, and DropDown Menus (Opaque & high-contrast across all skins including Glass) -->
+    <SolidColorBrush x:Key="DropDownPopupBackgroundBrush" Color="#FF181A20" />
+    <SolidColorBrush x:Key="DropDownPopupBorderBrush" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="DropDownControlBackingBrush" Color="#E612141A" />
+
     <!-- Flat ComboBox Style -->
     <Style TargetType="ComboBox" x:Key="AppComboBoxStyle">
         <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />
@@ -402,14 +461,16 @@
                                       ClickMode="Press">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="30"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                                        </Grid>
+                                    <Border CornerRadius="10" Background="{DynamicResource DropDownControlBackingBrush}">
+                                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="30"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
+                                            </Grid>
+                                        </Border>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -429,13 +490,20 @@
                                           Margin="{TemplateBinding Padding}" 
                                           VerticalAlignment="Center" 
                                           HorizontalAlignment="Left"
-                                          TextElement.Foreground="{DynamicResource PrimaryTextBrush}" />
+                                          TextElement.Foreground="{DynamicResource PrimaryTextBrush}">
+                            <!-- A long selection (e.g. a monitor name) ends in "…" instead of being cut mid-letter -->
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
                             <Grid x:Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
-                                <Border x:Name="DropDownBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}" CornerRadius="10" Margin="0,4,0,0"
+                                <Border x:Name="DropDownBorder" Background="{DynamicResource DropDownPopupBackgroundBrush}" BorderThickness="1" BorderBrush="{DynamicResource DropDownPopupBorderBrush}" CornerRadius="10" Margin="0,4,0,0"
                                         TextElement.Foreground="{DynamicResource PrimaryTextBrush}">
                                     <Border.Effect>
-                                        <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.35" Color="#000000"/>
+                                        <DropShadowEffect BlurRadius="18" ShadowDepth="5" Opacity="0.55" Color="#000000"/>
                                     </Border.Effect>
                                     <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
                                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
@@ -625,8 +693,8 @@
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Grid.IsSharedSizeScope" Value="True"/>
         <Setter Property="HasDropShadow" Value="True"/>
-        <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource DropDownPopupBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DropDownPopupBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="MinWidth" Value="160"/>

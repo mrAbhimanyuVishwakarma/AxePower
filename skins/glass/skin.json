@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "glass",
+  "name": "Glass",
+  "description": "Black glass over the Windows blur: translucent cards with a sheen, lit edges and soft shadows.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#A6000000",
+    "sidebar": "#40000000",
+    "card": "#59050506",
+    "cardElevated": "#6B08090B",
+    "hover": "#7A15171C",
+    "border": "#2CFFFFFF",
+    "divider": "#1CFFFFFF",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#E2E8F0",
+    "textMuted": "#94A3B8",
+    "textDisabled": "#64748B",
+    "accent": "#38BDF8",
+    "success": "#34D399",
+    "warning": "#FBBF24",
+    "error": "#F87171",
+    "eco": "#34D399",
+    "smart": "#38BDF8",
+    "beast": "#FB923C",
+    "buttonPrimary": "#FFFFFF",
+    "buttonPrimaryText": "#090A0D"
+  },
+  "glass": { "backdrop": "acrylic", "sheen": 60, "rim": true, "shadow": true },
+  "overrides": {
+    "WindowSecondaryBackgroundColor": "#33000000",
+    "WindowSecondaryBackgroundBrush": "#33000000",
+    "AccentHoverBrush": "#7DD3FC",
+    "AccentPressedBrush": "#0284C7",
+    "MusicGlassSurfaceBrush": "#8008090B",
+    "MusicTrackBrush": "#40FFFFFF",
+    "MusicPlayGlyphBrush": "#0B1220"
+  }
+}

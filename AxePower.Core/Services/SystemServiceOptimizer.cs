@@ -39,6 +39,7 @@ public class SystemServiceOptimizer
                 {
                     ServiceName = svc.ServiceName,
                     DisplayName = OptimizableServices[svc.ServiceName],
+                    CautionReason = CloseCaution.ForService(svc.ServiceName),
                     IsRunning = svc.Status == ServiceControllerStatus.Running
                 });
             }
@@ -76,17 +77,37 @@ public class SystemServiceOptimizer
     }
 }
 
-public class SystemServiceObject
+/// <summary>One row in Game Mode's service list. Notifies, so select-all updates every checkbox.</summary>
+public class SystemServiceObject : System.ComponentModel.INotifyPropertyChanged
 {
+    private bool _isRunning, _isSelected, _isPaused;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
     public string ServiceName { get; set; } = string.Empty;
 
     public string DisplayName { get; set; } = string.Empty;
 
-    public bool IsRunning { get; set; }
+    /// <summary>Why stopping this service is risky, or null when it is safe (<see cref="CloseCaution"/>).</summary>
+    public string? CautionReason { get; set; }
 
-    public bool IsSelected { get; set; }
+    public bool IsCaution => CautionReason != null;
 
-    public bool IsPaused { get; set; }
+    public string GroupName => IsCaution ? CloseCaution.CautionGroup : "Safe to stop";
+
+    public bool IsRunning { get => _isRunning; set => Set(ref _isRunning, value, nameof(IsRunning)); }
+
+    public bool IsSelected { get => _isSelected; set => Set(ref _isSelected, value, nameof(IsSelected)); }
+
+    public bool IsPaused { get => _isPaused; set => Set(ref _isPaused, value, nameof(IsPaused)); }
 
     public string StatusText => IsPaused ? "Paused" : (IsRunning ? "Running" : "Stopped");
+
+    private void Set(ref bool field, bool value, string name)
+    {
+        if (field == value) return;
+        field = value;
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(StatusText)));
+    }
 }
