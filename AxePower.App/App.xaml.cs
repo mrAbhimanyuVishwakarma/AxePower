@@ -242,6 +242,7 @@ public partial class App : Application
         services.AddSingleton<DisplayService>();
         services.AddSingleton<DriverUpdateService>();
         services.AddSingleton<MsiAfterburnerService>();
+        services.AddSingleton<ToolsService>();
         services.AddSingleton<DebloatService>();
         services.AddSingleton<AndroidControlService>();
         services.AddSingleton<ControllerNavigationService>();
@@ -300,6 +301,8 @@ public partial class App : Application
         services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
 
         // Power timer: shut down / restart / sleep after a set time (in-process only)
+        services.AddSingleton<ITouchpadPlatform, WindowsTouchpadPlatform>();
+        services.AddSingleton<TouchpadService>();
         services.AddSingleton<IPowerActions, WindowsPowerActions>();
         services.AddSingleton<PowerTimerService>();
         services.AddSingleton<PowerTimerViewModel>();
@@ -367,6 +370,7 @@ public partial class App : Application
         services.AddTransient<SystemDoctorViewModel>();
         services.AddTransient<DebloatViewModel>();
         services.AddTransient<SoftwareHubViewModel>();
+        services.AddTransient<ToolsViewModel>();
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
         services.AddTransient<TerminalViewModel>();
@@ -456,6 +460,11 @@ public partial class App : Application
         Console.WriteLine(
             $"Power timer: {(powerTimer.IsRunning ? $"{powerTimer.Action} in {powerTimer.Remaining}" : "idle")}, " +
             $"actions {sp.GetRequiredService<IPowerActions>().GetType().Name}, view model {sp.GetRequiredService<PowerTimerViewModel>().GetType().Name}.");
+        // Read-only: looks for each app, installs and opens nothing
+        var toolsService = sp.GetRequiredService<ToolsService>();
+        sp.GetRequiredService<ToolsViewModel>();
+        Console.WriteLine("Tools: " + string.Join(", ", ToolsService.Tools.Select(t =>
+            $"{t.Name} {(toolsService.FindExe(t) is { } exe ? "installed at " + exe : "not installed")}")) + ".");
         var recentlyPlayed = sp.GetRequiredService<RecentlyPlayedService>();
         Console.WriteLine(
             $"Music history: {recentlyPlayed.Get(streamed: false).Count} local, {recentlyPlayed.Get(streamed: true).Count} streamed, " +

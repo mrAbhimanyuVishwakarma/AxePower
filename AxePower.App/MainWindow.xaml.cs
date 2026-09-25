@@ -250,6 +250,34 @@ public partial class MainWindow : Window
         OpenApp_Click(sender, e);
     }
 
+    /// <summary>
+    /// Shows only the tray items chosen in Settings → Taskbar preferences, and drops a separator
+    /// when there is nothing visible on one side of it.
+    /// </summary>
+    private void TrayMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        var hidden = new HashSet<string>(_settingsService.GetSettings().HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        var groupVisible = new Dictionary<string, bool>();
+
+        foreach (var entry in Models.TrayMenuCatalog.Entries)
+        {
+            bool show = entry.Permanent || !hidden.Contains(entry.Id);
+            if (FindName(Models.TrayMenuCatalog.ElementName(entry.Id)) is FrameworkElement item)
+                item.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            groupVisible[entry.Group] = groupVisible.GetValueOrDefault(entry.Group) || show;
+        }
+
+        // Separators sit between the groups, in menu order
+        var groups = Models.TrayMenuCatalog.Entries.Select(x => x.Group).Distinct().ToList();
+        var separators = new[] { TraySeparator1, TraySeparator2, TraySeparator3 };
+        for (int i = 0; i < separators.Length && i + 1 < groups.Count; i++)
+        {
+            bool before = groups.Take(i + 1).Any(g => groupVisible[g]);
+            bool after = groupVisible[groups[i + 1]];
+            separators[i].Visibility = before && after ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
     private void TraySecondMonitor_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is MainViewModel vm)

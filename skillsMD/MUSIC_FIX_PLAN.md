@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `v2.0.6` · **Last updated:** 2026-09-25 · **Last commit covered:** the v2.0.6 release commit (music rework, recent searches, lyrics fixes, library folders, session restore; M14 noted)
+> **Branch:** `v2.0.7` · **Last updated:** 2026-09-25 · **Last commit covered:** the v2.0.7 release commit (Music itself unchanged: only the version in the cover-art and lyrics user agents; nothing new found, nothing closed)
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and

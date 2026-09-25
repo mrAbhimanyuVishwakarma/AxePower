@@ -56,6 +56,7 @@ public partial class MainViewModel : ObservableObject
     public SoftwareHubViewModel SoftwareHubVm { get; }
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
+    public ToolsViewModel? ToolsVm { get; }
     public MusicViewModel? MusicVm { get; }
     public ShareScreenViewModel? ShareScreenVm { get; }
     public ShareScreenViewModel? FriendsVm => ShareScreenVm;
@@ -97,6 +98,7 @@ public partial class MainViewModel : ObservableObject
     public Style? DoctorActiveStyle => GetSubItemStyleForView(DoctorVm);
     public Style? DebloatActiveStyle => GetSubItemStyleForView(DebloatVm);
     public Style? TerminalActiveStyle => GetSubItemStyleForView(TerminalVm);
+    public Style? ToolsActiveStyle => GetSubItemStyleForView((object?)ToolsVm ?? new object());
     public Style? SoftwareHubActiveStyle => GetStyleForView(SoftwareHubVm);
     public Style? UpdatePcActiveStyle => GetSubItemStyleForView(SoftwareHubVm);
     public Style? PhoneHubActiveStyle => (_currentNavSection is "PhoneHub" or "PhoneControl") && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
@@ -169,8 +171,10 @@ public partial class MainViewModel : ObservableObject
         AutoSwitchViewModel? autoSwitchVm = null,
         MusicViewModel? musicVm = null,
         NowPlayingViewModel? nowPlaying = null,
-        ShareScreenViewModel? shareScreenVm = null)
+        ShareScreenViewModel? shareScreenVm = null,
+        ToolsViewModel? toolsVm = null)
     {
+        ToolsVm = toolsVm;
         MusicVm = musicVm;
         ShareScreenVm = shareScreenVm;
         if (ShareScreenVm != null) ShareScreenVm.NavigateTo = target => Navigate(target);
@@ -362,6 +366,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(DoctorActiveStyle));
         OnPropertyChanged(nameof(DebloatActiveStyle));
         OnPropertyChanged(nameof(TerminalActiveStyle));
+        OnPropertyChanged(nameof(ToolsActiveStyle));
         OnPropertyChanged(nameof(SoftwareHubActiveStyle));
         OnPropertyChanged(nameof(UpdatePcActiveStyle));
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
@@ -397,7 +402,7 @@ public partial class MainViewModel : ObservableObject
         {
             IsMaintenanceExpanded = true;
         }
-        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat")
+        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat" or "Tools")
         {
             IsUtilitiesExpanded = true;
         }
@@ -419,6 +424,7 @@ public partial class MainViewModel : ObservableObject
             "Maintenance" => DoctorVm,
             "Debloat"     => DebloatVm,
             "Terminal"    => TerminalVm,
+            "Tools"       => (object?)ToolsVm ?? DashboardVm,
             "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
             "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
             "ShareScreen" => (object?)ShareScreenVm ?? DashboardVm,
@@ -702,7 +708,7 @@ public partial class MainViewModel : ObservableObject
             Overview = "The industry-standard graphics card utility for real-time in-game telemetry, FPS counter overlay, GPU temperature tracking, and customizable cooling fan curves.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "Click 'MSI Afterburner' in the sidebar or 'Launch Tool' below.",
+                "Open Tools in the sidebar and click Open on MSI Afterburner, or use 'Launch Tool' below.",
                 "AxePower launches Afterburner in the background (minimized) with hardware monitoring enabled.",
                 "Open Afterburner Settings > Monitoring tab to choose which metrics (FPS, GPU Temp, VRAM Usage, CPU Clock) display in the on-screen display (OSD).",
                 "Launch your game — the real-time overlay will display your thermal and performance metrics."

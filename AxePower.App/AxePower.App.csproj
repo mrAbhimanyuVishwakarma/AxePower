@@ -12,10 +12,10 @@
     <RootNamespace>AxePower.App</RootNamespace>
     <ApplicationIcon>Resources\AxePower_white.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.0.6</Version>
-    <AssemblyVersion>2.0.6.0</AssemblyVersion>
-    <FileVersion>2.0.6.0</FileVersion>
-    <InformationalVersion>2.0.6</InformationalVersion>
+    <Version>2.0.7</Version>
+    <AssemblyVersion>2.0.7.0</AssemblyVersion>
+    <FileVersion>2.0.7.0</FileVersion>
+    <InformationalVersion>2.0.7</InformationalVersion>
     <Authors>Abhimanyu Vishwakarma</Authors>
     <Company>AxePower</Company>
     <Product>AxePower</Product>
@@ -48,6 +48,37 @@
     <None Include="..\skins\light\**\*" LinkBase="skins\light" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\skins\glass\**\*" LinkBase="skins\glass" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\skins\deep-obsidian-glass\**\*" LinkBase="skins\deep-obsidian-glass" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The 2.0.7 set -->
+    <None Include="..\skins\midnight-sakura\**\*" LinkBase="skins\midnight-sakura" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\synthwave-sunset\**\*" LinkBase="skins\synthwave-sunset" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\molten-lava\**\*" LinkBase="skins\molten-lava" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\deep-ocean\**\*" LinkBase="skins\deep-ocean" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\matrix-terminal\**\*" LinkBase="skins\matrix-terminal" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\paper-and-ink\**\*" LinkBase="skins\paper-and-ink" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\mint-latte\**\*" LinkBase="skins\mint-latte" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\aurora-glass\**\*" LinkBase="skins\aurora-glass" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\frosted-rose-glass\**\*" LinkBase="skins\frosted-rose-glass" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\high-contrast\**\*" LinkBase="skins\high-contrast" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\vampire-night\**\*" LinkBase="skins\vampire-night" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\polar-night\**\*" LinkBase="skins\polar-night" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\mocha-pastel\**\*" LinkBase="skins\mocha-pastel" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\retro-groove\**\*" LinkBase="skins\retro-groove" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\neon-tokyo\**\*" LinkBase="skins\neon-tokyo" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\solar-cream\**\*" LinkBase="skins\solar-cream" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\one-midnight\**\*" LinkBase="skins\one-midnight" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\dusky-rose\**\*" LinkBase="skins\dusky-rose" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\spice-market\**\*" LinkBase="skins\spice-market" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\clean-slate\**\*" LinkBase="skins\clean-slate" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\stealth-ops\**\*" LinkBase="skins\stealth-ops" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\esports-red\**\*" LinkBase="skins\esports-red" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\neon-city\**\*" LinkBase="skins\neon-city" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\glacier-night\**\*" LinkBase="skins\glacier-night" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\toxic-green\**\*" LinkBase="skins\toxic-green" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\royal-gold\**\*" LinkBase="skins\royal-gold" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\blood-moon\**\*" LinkBase="skins\blood-moon" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\arcade\**\*" LinkBase="skins\arcade" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\carbon-fibre\**\*" LinkBase="skins\carbon-fibre" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\skins\plasma-glass\**\*" LinkBase="skins\plasma-glass" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

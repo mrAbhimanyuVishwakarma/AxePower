@@ -70,9 +70,11 @@
                                 <!-- Developer Section -->
                                 <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,20,0,16"/>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Border Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,14,0" VerticalAlignment="Center">
-                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
+                                    <!-- A soft circle of the skin's accent, so the badge suits every theme -->
+                                    <Grid Width="36" Height="36" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
 
                                     <StackPanel VerticalAlignment="Center">
                                         <Button Command="{Binding OpenDeveloperCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand">
@@ -107,9 +109,11 @@
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
+                                                    <!-- A soft circle of the skin's accent, so the badge suits every theme -->
+                                                    <Grid Grid.Column="0" Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Grid>
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                         <TextBlock Text="Visit website" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                         <TextBlock Text="Explore features, guides, and more." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
@@ -139,9 +143,11 @@
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#122538" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                        <TextBlock Text="&#xE715;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
+                                                    <!-- A soft circle of the skin's accent, so the badge suits every theme -->
+                                                    <Grid Grid.Column="0" Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                                        <TextBlock Text="&#xE715;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Grid>
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                         <TextBlock Text="Contact support" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                         <TextBlock Text="We're here to help." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
@@ -236,7 +242,7 @@
                     <Button HorizontalAlignment="Left" VerticalAlignment="Center" Command="{Binding CheckForUpdatesCommand}" Cursor="Hand" IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border x:Name="chkBorder" Background="#141A24" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="18" Padding="20,8">
+                                <Border x:Name="chkBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="18" Padding="20,8">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="{Binding CheckButtonText}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
@@ -245,7 +251,7 @@
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="chkBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                                        <Setter TargetName="chkBorder" Property="BorderBrush" Value="#3B82F6"/>
+                                        <Setter TargetName="chkBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>

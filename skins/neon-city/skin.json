@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "neon-city",
+  "name": "Neon City",
+  "description": "Signal yellow on black, with cyan and red neon.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0A0A08",
+    "sidebar": "#0F0F0B",
+    "card": "#151510",
+    "cardElevated": "#1D1D16",
+    "hover": "#28281E",
+    "border": "#3D3A1E",
+    "divider": "#1D1D16",
+    "textPrimary": "#FFFBE6",
+    "textSecondary": "#F0E6A8",
+    "textMuted": "#A89F6A",
+    "textDisabled": "#5E5A3C",
+    "accent": "#FCEE0A",
+    "success": "#3CFFB0",
+    "warning": "#FF8A00",
+    "error": "#FF003C",
+    "eco": "#3CFFB0",
+    "smart": "#00F0FF",
+    "beast": "#FF003C",
+    "buttonPrimary": "#FCEE0A",
+    "buttonPrimaryText": "#0A0A08"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 30,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#FCEE0A, #00F0FF, #FF003C"
+  }
+}

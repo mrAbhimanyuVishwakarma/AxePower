@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,8 +16,31 @@ public partial class SettingsView : UserControl
         InitializeComponent();
 
         DataContextChanged += OnDataContextChanged;
-        Loaded += (_, _) => ScrollToRequestedSection();
+        Loaded += (_, _) =>
+        {
+            ScrollToRequestedSection();
+            StartTouchpadSync();
+            _viewModel?.LinkUpdateStateToAbout();
+        };
+        Unloaded += (_, _) => _touchpadSync?.Stop();
     }
+
+    private DispatcherTimer? _touchpadSync;
+
+    /// <summary>
+    /// Keeps the Touchpad switch matching Windows while this page is open, so turning it off in
+    /// Windows Settings or with a laptop Fn key shows up here within a couple of seconds.
+    /// </summary>
+    private void StartTouchpadSync()
+    {
+        _viewModel?.RefreshTouchpadState();
+        _touchpadSync ??= new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _touchpadSync.Tick -= OnTouchpadSyncTick;
+        _touchpadSync.Tick += OnTouchpadSyncTick;
+        _touchpadSync.Start();
+    }
+
+    private void OnTouchpadSyncTick(object? sender, EventArgs e) => _viewModel?.RefreshTouchpadState();
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
@@ -31,6 +55,8 @@ public partial class SettingsView : UserControl
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SettingsViewModel.RequestedSection)) ScrollToRequestedSection();
+        // Each category opens at its top
+        else if (e.PropertyName == nameof(SettingsViewModel.SelectedCategory)) CategoryScroller.ScrollToTop();
     }
 
     /// <summary>

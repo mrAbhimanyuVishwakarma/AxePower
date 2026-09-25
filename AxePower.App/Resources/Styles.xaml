@@ -539,13 +539,8 @@
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="ContentTemplate">
-            <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" Foreground="{Binding Path=(TextElement.Foreground), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" />
-                </DataTemplate>
-            </Setter.Value>
-        </Setter>
+        <!-- No ContentTemplate here: one would override DisplayMemberPath and show the item's
+             type name (e.g. "ThemeChoice { ... }"). The TextBlock style above sets the colour. -->
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">

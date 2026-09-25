@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "molten-lava",
+  "name": "Molten Lava",
+  "description": "Cooled basalt with glowing magma underneath.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0C0908",
+    "sidebar": "#110C0A",
+    "card": "#1A1311",
+    "cardElevated": "#231915",
+    "hover": "#2E201A",
+    "border": "#4A2A1C",
+    "divider": "#261A15",
+    "textPrimary": "#FFF7ED",
+    "textSecondary": "#FED7AA",
+    "textMuted": "#B08968",
+    "textDisabled": "#5C4033",
+    "accent": "#FF5A1F",
+    "success": "#84CC16",
+    "warning": "#FACC15",
+    "error": "#EF4444",
+    "eco": "#84CC16",
+    "smart": "#F97316",
+    "beast": "#EF4444",
+    "buttonPrimary": "#FF5A1F",
+    "buttonPrimaryText": "#140A05"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 40,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#FF5A1F, #EF4444, #FACC15"
+  }
+}

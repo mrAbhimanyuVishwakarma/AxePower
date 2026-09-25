@@ -175,8 +175,8 @@
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="Temperature" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,2"/>
                             <TextBlock Text="{Binding Temperature}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="Bold"/>
-                            <TextBlock Text="Normal" Foreground="#FF5722" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                            <TextBlock Text="Battery temperature is within normal range." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10.5" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding TemperatureStatus}" Foreground="#FF5722" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding TemperatureDescription}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10.5" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -195,8 +195,8 @@
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="Current Power Usage" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,2"/>
                             <TextBlock Text="{Binding CurrentPowerUsage}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="Bold"/>
-                            <TextBlock Text="Live Draw" Foreground="{DynamicResource WarningBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                            <TextBlock Text="Power draw based on live sensor telemetry." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10.5" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding PowerFlowLabel}" Foreground="{DynamicResource WarningBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding PowerFlowDescription}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10.5" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Grid>
                 </Border>

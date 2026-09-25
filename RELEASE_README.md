@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.6-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.7-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -38,7 +38,22 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 ---
 
-## 🌟 What's New in v2.0.6
+## 🌟 What's New in v2.0.7
+
+- 🧰 **Tools**: the sidebar's MSI Afterburner entry is now **Tools**, a page with MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo. Each card opens the app, or installs it through WinGet straight from its publisher, and shows whether it is running. AxePower never bundles these apps.
+- 🎨 **30 new skins**: Midnight Sakura, Synthwave Sunset, Molten Lava, Deep Ocean, Matrix Terminal, Paper & Ink, Mint Latte, Aurora Glass, Frosted Rose Glass (the first light glass skin), High Contrast, and twenty more across classic editor palettes and gaming looks. Every one passes a text-contrast check.
+- ⚙️ **Settings**:
+  - A category list beside the settings (it folds into an icon rail), one category per page, and slightly more compact rows.
+  - **Taskbar preferences**: choose which items the tray menu shows. Settings and Exit always stay.
+  - **Check for updates** in Settings works like the one in About, patch notes included.
+  - The Theme list shows skin names, sorted with each glass version under its skin, and the mouse wheel no longer flicks through themes.
+- 🔋 **Battery**: plugged in but not charging (for example with Conservation Mode) is shown as such; temperature comes from the battery's own sensor in °C or °F; the serial number and manufacture date are the battery's own. Chemistry shows "Not reported" when the battery doesn't say.
+- 🖱️ **Touchpad**: the Settings switch really turns the touchpad off and on, using the same switch as Windows, and stays in step with it.
+- 👥 **Friends**: the page follows every skin, glass included. Its settings category is renamed Friends.
+- 🧹 **Fixes**: About page icons and Check for updates follow every skin; tray menu modes keep their colours (Eco green, Smart blue, Beast red, Game Mode purple).
+- 📦 **Packaging**: ships as **`AxePower-v2.0.7-Setup.exe`**.
+
+## What's New in v2.0.6
 
 - ⏱️ **Power timer**:
   - Shut down, restart or sleep your PC after the time you type, or a quick 15 m / 30 m / 1 h / 2 h preset, from the button in the bottom-right corner of every page.

@@ -614,13 +614,40 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
     {
-        // 2.0.6 additions first; the 2.0.2 list the owner chose follows in its order.
+        // 2.0.7 additions first, then 2.0.6; the 2.0.2 list the owner chose follows in its order.
+        new()
+        {
+            Title = "Tools",
+            Badge = "NEW IN 2.0.7",
+            BadgeColorHex = "#3B82F6",
+            Glyph = "\uEC7A",
+            Description = "MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo on one page. Open the ones you have, or install the rest straight from each publisher.",
+            TargetNavigation = "Tools"
+        },
+        new()
+        {
+            Title = "30 New Skins",
+            Badge = "NEW IN 2.0.7",
+            BadgeColorHex = "#EC4899",
+            Glyph = "\uE790",
+            Description = "From Midnight Sakura and Synthwave Sunset to Matrix Terminal, High Contrast and the first light glass skin. Pick one in Settings, Appearance & Display.",
+            TargetNavigation = "Settings"
+        },
+        new()
+        {
+            Title = "New Settings",
+            Badge = "NEW IN 2.0.7",
+            BadgeColorHex = "#8B5CF6",
+            Glyph = "\uE713",
+            Description = "Settings now has a category list like Friends, one page per category, and Taskbar preferences to choose what the tray menu shows.",
+            TargetNavigation = "Settings"
+        },
         new()
         {
             Title = "Power Timer",
             Badge = "NEW IN 2.0.6",
             BadgeColorHex = "#F59E0B",
-            Glyph = "",
+            Glyph = "\uE916",
             Description = "Shut down, restart or sleep after the time you set, from the button in the bottom-right corner of every page. Two minutes before, the countdown turns red and a warning appears on screen.",
             TargetNavigation = "Dashboard"
         },
@@ -629,7 +656,7 @@ public partial class DashboardViewModel : ObservableObject
             Title = "Ambient Mode",
             Badge = "NEW IN 2.0.6",
             BadgeColorHex = "#8B5CF6",
-            Glyph = "",
+            Glyph = "\uE8D6",
             Description = "Album art and synced lyrics fill the whole screen. It can open by itself like a screensaver while music plays, and lyrics are now found for far more songs.",
             TargetNavigation = "Music"
         },
@@ -638,7 +665,7 @@ public partial class DashboardViewModel : ObservableObject
             Title = "Battery Health",
             Badge = "NEW IN 2.0.6",
             BadgeColorHex = "#10B981",
-            Glyph = "",
+            Glyph = "\uE83F",
             Description = "Real battery health from your battery's own design capacity, a chart of how its capacity has changed, and the full Windows battery report in one click.",
             TargetNavigation = "Battery"
         },

@@ -160,7 +160,12 @@ public partial class SettingsViewModel : ObservableObject
             _themeService.Catalog.Reload();
             ThemeChoices.Clear();
             ThemeChoices.Add(new ThemeChoice(null, AppTheme.System, "System"));
-            foreach (var skin in _themeService.Catalog.Skins)
+            // Dark, Light and Glass first, then the rest A-Z, which puts each "(Glass)" twin under its skin
+            var builtIn = AxePower.Core.Services.Skins.SkinCatalog.BuiltInIds;
+            var ordered = _themeService.Catalog.Skins
+                .OrderBy(s => Array.IndexOf(builtIn, s.Id) is var i && i >= 0 ? i : builtIn.Length)
+                .ThenBy(s => s.Name, StringComparer.CurrentCultureIgnoreCase);
+            foreach (var skin in ordered)
                 ThemeChoices.Add(new ThemeChoice(skin.Id, ThemeService.ToAppTheme(skin), skin.Name));
 
             // Older settings have no skin id: Dark/Light/Glass map to those skins
@@ -264,16 +269,55 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isTouchpadEnabled = true;
 
+    /// <summary>False on PCs without a precision touchpad; the switch is then greyed out.</summary>
+    [ObservableProperty]
+    private bool _isTouchpadAvailable = true;
+
+    private TouchpadService? _touchpad;
+    private bool _syncingTouchpad;
+
+    /// <summary>
+    /// Reads the touchpad's real state from Windows, so this switch always matches the one in
+    /// Windows Settings, including after a laptop Fn key or a change made there.
+    /// </summary>
+    public void RefreshTouchpadState()
+    {
+        var state = _touchpad?.IsEnabled();
+        IsTouchpadAvailable = state is not null;
+        if (state is not bool enabled || enabled == IsTouchpadEnabled) return;
+
+        _syncingTouchpad = true;
+        try { IsTouchpadEnabled = enabled; }
+        finally { _syncingTouchpad = false; }
+    }
+
     partial void OnIsTouchpadEnabledChanged(bool value)
     {
-        if (CurrentSettings != null)
+        if (_syncingTouchpad) return;
+        _ = ApplyTouchpadAsync(value);
+    }
+
+    private async Task ApplyTouchpadAsync(bool value)
+    {
+        if (_touchpad == null) return;
+
+        bool applied = await _touchpad.SetEnabledAsync(value);
+        if (applied)
         {
-            CurrentSettings.TouchpadEnabled = value;
-            SaveCurrentSettings();
+            if (CurrentSettings != null)
+            {
+                CurrentSettings.TouchpadEnabled = value;
+                SaveCurrentSettings();
+            }
+            _notificationService.Show(value ? "Touchpad turned on." : "Touchpad turned off.");
+            return;
         }
 
-        _batteryService?.SetTouchpad(value);
-        _notificationService.Show(value ? "Touchpad enabled." : "Touchpad disabled.");
+        // Windows did not change it: put the switch back to what is really happening
+        _notificationService.Show(IsTouchpadAvailable
+            ? "Windows did not change the touchpad. Try the switch in Windows Settings."
+            : "This PC has no precision touchpad that Windows can switch off.");
+        RefreshTouchpadState();
     }
 
     [RelayCommand]
@@ -344,7 +388,85 @@ public partial class SettingsViewModel : ObservableObject
     public string? RequestedSection
     {
         get => _requestedSection;
-        set { _requestedSection = value; OnPropertyChanged(nameof(RequestedSection)); }
+        set
+        {
+            _requestedSection = value;
+            OnPropertyChanged(nameof(RequestedSection));
+            // A deep link now simply opens its category
+            if (!string.IsNullOrEmpty(value) && Categories.Any(c => c.Id == value)) SelectedCategory = value;
+        }
+    }
+
+    // ── Categories (the collapsible list beside the settings) ───────────────
+
+    /// <summary>One entry per settings card; "About" opens the About page instead.</summary>
+    public IReadOnlyList<SettingsCategoryItem> Categories { get; } = new[]
+    {
+        new SettingsCategoryItem("Appearance", "Appearance & Display", "\uE790"),
+        new SettingsCategoryItem("GameMode", "Game Mode", "\uE7FC"),
+        new SettingsCategoryItem("Notifications", "Notifications & Alerts", "\uEA8F"),
+        new SettingsCategoryItem("Startup", "Startup & Elevation", "\uE7E8"),
+        new SettingsCategoryItem("Taskbar", "Taskbar preferences", "\uE75B"),
+        new SettingsCategoryItem("ShareScreen", "Friends", "\uE779"),
+        new SettingsCategoryItem("Music", "Music & Playlists", "\uE8D6"),
+        new SettingsCategoryItem("Updates", "Updates & Maintenance", "\uE777"),
+    };
+
+    [ObservableProperty]
+    private string _selectedCategory = "Appearance";
+
+    partial void OnSelectedCategoryChanged(string value)
+    {
+        foreach (var category in Categories) category.IsSelected = category.Id == value;
+    }
+
+    [RelayCommand]
+    private void SelectCategory(string? id)
+    {
+        if (!string.IsNullOrEmpty(id)) SelectedCategory = id;
+    }
+
+    /// <summary>Folds the list to an icon rail; remembered across restarts.</summary>
+    [ObservableProperty]
+    private bool _isCategoryListCollapsed;
+
+    partial void OnIsCategoryListCollapsedChanged(bool value)
+    {
+        var settings = _settingsService.GetSettings();
+        if (settings.SettingsCategoriesCollapsed == value) return;
+        settings.SettingsCategoriesCollapsed = value;
+        _settingsService.SaveSettings(settings);
+    }
+
+    [RelayCommand]
+    private void ToggleCategoryList() => IsCategoryListCollapsed = !IsCategoryListCollapsed;
+
+    // ── Taskbar preferences (which items the tray menu shows) ───────────────
+
+    /// <summary>Every tray menu item, in menu order; Settings and Exit are always shown.</summary>
+    public IReadOnlyList<TrayMenuOption> TrayMenuOptions { get; private set; } = Array.Empty<TrayMenuOption>();
+
+    private void LoadTrayMenuOptions()
+    {
+        var hidden = new HashSet<string>(_currentSettings.HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        string? previousGroup = null;
+        TrayMenuOptions = AxePower.App.Models.TrayMenuCatalog.Entries.Select(entry =>
+        {
+            var option = new TrayMenuOption(entry.Id, entry.Title, entry.Group == previousGroup ? null : entry.Group,
+                entry.Permanent, entry.Permanent || !hidden.Contains(entry.Id), SaveTrayMenuChoice);
+            previousGroup = entry.Group;
+            return option;
+        }).ToList();
+    }
+
+    private void SaveTrayMenuChoice(TrayMenuOption option)
+    {
+        if (option.IsPermanent) return;
+        var settings = _settingsService.GetSettings();
+        settings.HiddenTrayMenuItems ??= new List<string>();
+        settings.HiddenTrayMenuItems.RemoveAll(id => string.Equals(id, option.Id, StringComparison.OrdinalIgnoreCase));
+        if (!option.IsShown) settings.HiddenTrayMenuItems.Add(option.Id);
+        _settingsService.SaveSettings(settings);
     }
 
     private void SaveCurrentSettings()
@@ -377,8 +499,10 @@ public partial class SettingsViewModel : ObservableObject
         AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? shareScreen = null,
         GameModeGpuService? gameModeGpu = null,
         IGpuDisplayModeController? displayModeController = null,
-        AxePower.App.Services.IGameModePrompts? gameModePrompts = null)
+        AxePower.App.Services.IGameModePrompts? gameModePrompts = null,
+        TouchpadService? touchpad = null)
     {
+        _touchpad = touchpad;
         Music = music;
         ShareScreen = shareScreen;
         _settingsService = settingsService;
@@ -391,6 +515,9 @@ public partial class SettingsViewModel : ObservableObject
         _batteryService = batteryService;
         _elevationService = elevationService;
         _currentSettings = _settingsService.GetSettings();
+        _isCategoryListCollapsed = _currentSettings.SettingsCategoriesCollapsed;
+        LoadTrayMenuOptions();
+        foreach (var category in Categories) category.IsSelected = category.Id == _selectedCategory;
         InitializeGameMode(gameModeGpu, displayModeController, gameModePrompts, gameModeGpu != null ? new GpuControlAppService() : null);
         RefreshThemeChoices();
         _startWithLastSelectedMode = _currentSettings.StartWithLastSelectedMode;
@@ -400,7 +527,9 @@ public partial class SettingsViewModel : ObservableObject
         _showNotifications = _currentSettings.ShowNotifications;
         _notifyOnModeSwitch = _currentSettings.NotifyOnModeSwitch;
         _lowBatteryAlertSound = _currentSettings.LowBatteryAlertSound;
-        _isTouchpadEnabled = _currentSettings.TouchpadEnabled;
+        // Windows is the source of truth; the saved value is only a fallback when it cannot be read
+        _isTouchpadEnabled = _touchpad?.IsEnabled() ?? _currentSettings.TouchpadEnabled;
+        _isTouchpadAvailable = _touchpad?.IsEnabled() is not null;
         _autoCheckUpdates = _currentSettings.AutoCheckUpdates;
         _autoDownloadUpdates = _currentSettings.AutoDownloadUpdates;
 
@@ -480,10 +609,54 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _checkButtonText = "Check for updates";
 
+    private AboutViewModel? _linkedAbout;
+
+    /// <summary>The About page's view model — the one MainWindow's update banner and patch notes bind to.</summary>
+    private static MainViewModel? MainVm => System.Windows.Application.Current?.MainWindow?.DataContext as MainViewModel;
+
+    /// <summary>
+    /// Mirrors the About page's update state (button text, checking, last checked) so both pages
+    /// show the same thing whichever one ran the check. Called when the Settings page loads.
+    /// </summary>
+    public void LinkUpdateStateToAbout()
+    {
+        var about = MainVm?.AboutVm;
+        if (about == null || ReferenceEquals(about, _linkedAbout)) return;
+        if (_linkedAbout != null) _linkedAbout.PropertyChanged -= OnAboutUpdateStateChanged;
+        _linkedAbout = about;
+        about.PropertyChanged += OnAboutUpdateStateChanged;
+        CopyUpdateStateFrom(about);
+    }
+
+    private void OnAboutUpdateStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (sender is AboutViewModel about
+            && e.PropertyName is nameof(AboutViewModel.CheckButtonText) or nameof(AboutViewModel.IsCheckingForUpdate) or nameof(AboutViewModel.LastCheckedTime))
+            CopyUpdateStateFrom(about);
+    }
+
+    private void CopyUpdateStateFrom(AboutViewModel about)
+    {
+        IsCheckingForUpdate = about.IsCheckingForUpdate;
+        CheckButtonText = about.CheckButtonText;
+        LastCheckedTime = about.LastCheckedTime;
+    }
+
     [RelayCommand]
     private async Task CheckForUpdatesAsync()
     {
         if (IsCheckingForUpdate) return;
+
+        // Same check as the About page: the up-to-date banner with its patch notes, or the
+        // update dialog with Update Now. That dialog lives on the About page, so go there for it.
+        var mainVm = MainVm;
+        if (mainVm?.AboutVm is { } about)
+        {
+            LinkUpdateStateToAbout();
+            await about.CheckForUpdatesCommand.ExecuteAsync(null);
+            if (about.IsUpdateAvailable && about.IsUpdateModalOpen) mainVm.Navigate("About");
+            return;
+        }
 
         IsCheckingForUpdate = true;
         CheckButtonText = "Checking...";
@@ -526,4 +699,53 @@ public partial class SettingsViewModel : ObservableObject
         await Task.Delay(3000);
         CheckButtonText = "Check for updates";
     }
+}
+
+/// <summary>A row in the Settings category list.</summary>
+public partial class SettingsCategoryItem : ObservableObject
+{
+    public SettingsCategoryItem(string id, string title, string glyph)
+    {
+        Id = id;
+        Title = title;
+        Glyph = glyph;
+    }
+
+    public string Id { get; }
+    public string Title { get; }
+    public string Glyph { get; }
+
+    [ObservableProperty]
+    private bool _isSelected;
+}
+
+/// <summary>A tray menu item's row in Settings → Taskbar preferences.</summary>
+public partial class TrayMenuOption : ObservableObject
+{
+    private readonly Action<TrayMenuOption> _save;
+
+    public TrayMenuOption(string id, string title, string? groupHeader, bool isPermanent, bool isShown, Action<TrayMenuOption> save)
+    {
+        Id = id;
+        Title = title;
+        GroupHeader = groupHeader;
+        IsPermanent = isPermanent;
+        _isShown = isShown;
+        _save = save;
+    }
+
+    public string Id { get; }
+    public string Title { get; }
+
+    /// <summary>Set on the first item of each group, so the list reads like the menu.</summary>
+    public string? GroupHeader { get; }
+
+    /// <summary>Settings and Exit: always in the menu, so the switch is locked on.</summary>
+    public bool IsPermanent { get; }
+    public bool CanChange => !IsPermanent;
+
+    [ObservableProperty]
+    private bool _isShown;
+
+    partial void OnIsShownChanged(bool value) => _save(this);
 }

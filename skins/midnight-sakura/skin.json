@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "midnight-sakura",
+  "name": "Midnight Sakura",
+  "description": "Plum-black night with cherry-blossom pink.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#120A10",
+    "sidebar": "#170D15",
+    "card": "#1E121B",
+    "cardElevated": "#281825",
+    "hover": "#331F2F",
+    "border": "#4A2B42",
+    "divider": "#2A1A26",
+    "textPrimary": "#FDF2F8",
+    "textSecondary": "#F5D0E6",
+    "textMuted": "#C08DAE",
+    "textDisabled": "#6B4A5F",
+    "accent": "#F472B6",
+    "success": "#4ADE80",
+    "warning": "#FBBF24",
+    "error": "#FB7185",
+    "eco": "#86EFAC",
+    "smart": "#F472B6",
+    "beast": "#FB923C",
+    "buttonPrimary": "#F472B6",
+    "buttonPrimaryText": "#1A0B14"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 30,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#F472B6, #FBCFE8, #C084FC"
+  }
+}

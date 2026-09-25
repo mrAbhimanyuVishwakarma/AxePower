@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "vampire-night",
+  "name": "Vampire Night",
+  "description": "Soft purple night with pastel neon, in the style of classic editor themes.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#21222C",
+    "sidebar": "#191A21",
+    "card": "#282A36",
+    "cardElevated": "#343746",
+    "hover": "#3E4152",
+    "border": "#44475A",
+    "divider": "#343746",
+    "textPrimary": "#F8F8F2",
+    "textSecondary": "#D6D6E0",
+    "textMuted": "#9EA3C2",
+    "textDisabled": "#6272A4",
+    "accent": "#BD93F9",
+    "success": "#50FA7B",
+    "warning": "#F1FA8C",
+    "error": "#FF5555",
+    "eco": "#50FA7B",
+    "smart": "#8BE9FD",
+    "beast": "#FFB86C",
+    "buttonPrimary": "#BD93F9",
+    "buttonPrimaryText": "#191A21"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 15,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#BD93F9, #FF79C6, #8BE9FD"
+  }
+}

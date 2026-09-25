@@ -492,7 +492,7 @@ public class BatteryService : IDisposable
                 IsPluggedIn = sps.ACLineStatus == 1,
                 BatteryPercentage = sps.BatteryLifePercent <= 100 ? sps.BatteryLifePercent : 0,
                 HasBattery = hasBattery,
-                IsCharging = hasBattery && sps.ACLineStatus == 1 && sps.BatteryFlag == 8
+                IsCharging = hasBattery && sps.ACLineStatus == 1 && (sps.BatteryFlag & 8) != 0 // a bit mask: 8 is charging, 1 is high
             };
 
             if (sps.BatteryLifeTime > 0 && sps.BatteryLifeTime < 100000)
@@ -537,7 +537,7 @@ public class BatteryService : IDisposable
         target.HealthPercentage = source.HealthPercentage;
         target.CycleCount = source.CycleCount;
         target.Chemistry = source.Chemistry;
-        target.Temperature = source.Temperature;
+        target.TemperatureC = source.TemperatureC;
         target.CurrentPowerUsage = source.CurrentPowerUsage;
         target.DesignCapacity = source.DesignCapacity;
         target.FullChargeCapacity = source.FullChargeCapacity;
@@ -566,7 +566,6 @@ public class BatteryService : IDisposable
                     var voltage = obj["DesignVoltage"]?.ToString();
                     var estRun = obj["EstimatedRunTime"]?.ToString();
 
-                    if (!string.IsNullOrWhiteSpace(name)) status.SerialNumber = name;
                     if (!string.IsNullOrWhiteSpace(devId))
                     {
                         if (devId.Contains("Sunwoda", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "Sunwoda";
@@ -575,8 +574,9 @@ public class BatteryService : IDisposable
                         else if (devId.Contains("LGC", StringComparison.OrdinalIgnoreCase) || devId.Contains("LG", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "LG Chem";
                         else status.Manufacturer = "OEM (Internal)";
                     }
-                    
-                    if (chem == "2" || string.IsNullOrWhiteSpace(status.Chemistry)) status.Chemistry = "Lithium-Ion";
+
+                    // Win32_Battery's Name is the model (e.g. L23D4PK4); the serial comes from the driver below
+                    status.Chemistry = chem switch { "3" => "Lead Acid", "4" => "Nickel Cadmium", "5" => "Nickel Metal Hydride", "6" => "Lithium-Ion", "7" => "Zinc Air", "8" => "Lithium-Polymer", _ => status.Chemistry };
 
                     if (double.TryParse(voltage, out var vMv) && vMv > 0)
                     {
@@ -654,15 +654,9 @@ public class BatteryService : IDisposable
                     var chgRate = Convert.ToDouble(obj["ChargeRate"] ?? 0);
                     var activeRate = Math.Max(disRate, chgRate);
 
-                    if (activeRate > 0)
-                    {
-                        double watts = (activeRate > 1000) ? activeRate / 1000.0 : activeRate;
-                        status.CurrentPowerUsage = $"{watts:F1} W";
-                    }
-                    else
-                    {
-                        status.CurrentPowerUsage = status.IsPluggedIn ? "0.0 W (AC Power)" : "0.0 W";
-                    }
+                    // Rates are in mW: what flows into the battery while charging, out of it on battery
+                    if (obj["Charging"] is bool charging) status.IsCharging = charging;
+                    status.CurrentPowerUsage = $"{activeRate / 1000.0:F1} W";
 
                     // Health is how much of the original capacity is left
                     if (fullCapacity > 0 && designCapacity > 0)
@@ -686,45 +680,33 @@ public class BatteryService : IDisposable
                         }
                         else if (status.IsPluggedIn)
                         {
-                            status.EstimatedTimeRemaining = status.BatteryPercentage >= 99 ? "Fully Charged" : "Charging on AC";
+                            status.EstimatedTimeRemaining = status.BatteryPercentage >= 99 ? "Fully charged"
+                                : status.IsCharging && chgRate > 0 && fullCapacity > remCap ? ToFull((fullCapacity - remCap) / chgRate)
+                                : status.IsCharging ? "Charging" : "Not charging";
                         }
                     }
                     break;
                 }
             }
 
-            // 5. Query live hardware thermal sensor for battery/chassis temperature
-            try
-            {
-                using var thermalSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation");
-                foreach (ManagementObject obj in thermalSearcher.Get())
-                {
-                    if (double.TryParse(obj["HighPrecisionTemperature"]?.ToString(), out var hpTemp) && hpTemp > 2000)
-                    {
-                        double cel = (hpTemp / 10.0) - 273.15;
-                        if (cel >= 0 && cel <= 110)
-                        {
-                            status.Temperature = $"{cel:F0}°C";
-                            break;
-                        }
-                    }
-                    else if (double.TryParse(obj["Temperature"]?.ToString(), out var tempK) && tempK > 200)
-                    {
-                        double cel = tempK - 273.15;
-                        if (cel >= 0 && cel <= 110)
-                        {
-                            status.Temperature = $"{cel:F0}°C";
-                            break;
-                        }
-                    }
-                }
-            }
-            catch { }
+            // 5. What the battery itself reports: serial, chemistry, temperature, manufacture date.
+            //    The ACPI thermal zone used before is not the battery, and stays put under load.
+            var device = BatteryDeviceReader.Read();
+            if (device.SerialNumber != null) status.SerialNumber = device.SerialNumber;
+            if (device.Chemistry != null) status.Chemistry = device.Chemistry;
+            status.TemperatureC = device.TemperatureC;
+            if (device.ManufactureDate is { } made) status.ManufactureDate = made.ToString("MMM d, yyyy");
         }
         catch (Exception ex)
         {
             _logService.LogWarning($"WMI battery query: {ex.Message}");
         }
+    }
+
+    private static string ToFull(double hours)
+    {
+        int minutes = (int)Math.Round(hours * 60);
+        return minutes >= 60 ? $"{minutes / 60}h {minutes % 60:D2}m to full" : $"{Math.Max(1, minutes)}m to full";
     }
 
     public void SetConservationMode(bool enabled)
@@ -847,20 +829,6 @@ public class BatteryService : IDisposable
         catch (Exception ex)
         {
             _logService.LogError("Failed to update FnLock in registry.", ex);
-        }
-    }
-
-    public void SetTouchpad(bool enabled)
-    {
-        try
-        {
-            const string hive = "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad\\Status";
-            using var key = Registry.CurrentUser.CreateSubKey(hive);
-            key?.SetValue("TouchPadEnabled", enabled ? 1 : 0, RegistryValueKind.DWord);
-        }
-        catch (Exception ex)
-        {
-            _logService.LogError("Failed to update Touchpad in registry.", ex);
         }
     }
 

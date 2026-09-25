@@ -137,7 +137,7 @@ public partial class PowerTimerViewModel : ObservableObject, IDisposable
     private string _runningLabel = string.Empty;
 
     [ObservableProperty]
-    private string _runningGlyph = "";
+    private string _runningGlyph = "\uE7E8";
 
     public string ButtonToolTip => IsRunning
         ? $"{RunningLabel} in {CountdownText}. Click to change or cancel."
@@ -193,9 +193,9 @@ public partial class PowerTimerViewModel : ObservableObject, IDisposable
 
     private static string Glyph(PowerTimerAction action) => action switch
     {
-        PowerTimerAction.Restart => "",
-        PowerTimerAction.Sleep => "",
-        _ => ""
+        PowerTimerAction.Restart => "\uE777",
+        PowerTimerAction.Sleep => "\uE708",
+        _ => "\uE7E8"
     };
 
     public void Dispose()

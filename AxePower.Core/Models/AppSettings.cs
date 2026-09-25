@@ -144,6 +144,14 @@ public class AppSettings
     [JsonPropertyName("touchpadEnabled")]
     public bool TouchpadEnabled { get; set; } = true;
 
+    /// <summary>Settings page: the category list is folded to its icon rail.</summary>
+    [JsonPropertyName("settingsCategoriesCollapsed")]
+    public bool SettingsCategoriesCollapsed { get; set; } = false;
+
+    /// <summary>Tray menu items the user hid in Settings → Taskbar preferences (by id).</summary>
+    [JsonPropertyName("hiddenTrayMenuItems")]
+    public List<string> HiddenTrayMenuItems { get; set; } = new();
+
     [JsonPropertyName("autoCheckUpdates")]
     public bool AutoCheckUpdates { get; set; } = true;
 
@@ -218,6 +226,8 @@ public class AppSettings
             OvernightBatteryChargingEnabled = this.OvernightBatteryChargingEnabled,
             FnLockEnabled = this.FnLockEnabled,
             TouchpadEnabled = this.TouchpadEnabled,
+            SettingsCategoriesCollapsed = this.SettingsCategoriesCollapsed,
+            HiddenTrayMenuItems = new List<string>(this.HiddenTrayMenuItems ?? new List<string>()),
             AutoCheckUpdates = this.AutoCheckUpdates,
             AutoDownloadUpdates = this.AutoDownloadUpdates,
             NotifyOnNewRelease = this.NotifyOnNewRelease,

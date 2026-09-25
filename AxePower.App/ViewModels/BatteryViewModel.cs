@@ -70,10 +70,22 @@ public partial class BatteryViewModel : ObservableObject
     private string _temperature = "--";
 
     [ObservableProperty]
+    private string _temperatureStatus = "--";
+
+    [ObservableProperty]
+    private string _temperatureDescription = string.Empty;
+
+    [ObservableProperty]
     private string _currentPowerUsage = "--";
 
     [ObservableProperty]
-    private string _deviceChemistry = "Lithium-Ion";
+    private string _powerFlowLabel = "--";
+
+    [ObservableProperty]
+    private string _powerFlowDescription = string.Empty;
+
+    [ObservableProperty]
+    private string _deviceChemistry = "--";
 
     [ObservableProperty]
     private string _designCapacity = "--";
@@ -530,6 +542,27 @@ public partial class BatteryViewModel : ObservableObject
             value ? "Overnight adaptive charging enabled." : "Overnight charging disabled.");
     }
 
+    /// <summary>The battery's own sensor, in the unit chosen in Settings.</summary>
+    private void ApplyTemperature(double? celsius)
+    {
+        if (celsius is not { } c)
+        {
+            Temperature = "Not reported";
+            TemperatureStatus = "No sensor";
+            TemperatureDescription = "This laptop doesn't report a battery temperature.";
+            return;
+        }
+
+        var unit = _settingsService?.GetSettings().TemperatureUnit ?? TemperatureUnit.Celsius;
+        Temperature = AxePower.Core.Helpers.TemperatureHelper.Format(c, unit);
+        (TemperatureStatus, TemperatureDescription) = c switch
+        {
+            < 40 => ("Normal", "Battery temperature is within normal range."),
+            < 50 => ("Warm", "The battery is warm. Heavy load or fast charging does this."),
+            _ => ("Hot", "The battery is hot. Let the laptop cool down."),
+        };
+    }
+
     private async Task RefreshStatusAsync()
     {
         var status = _batteryService.GetCurrentStatus();
@@ -537,15 +570,24 @@ public partial class BatteryViewModel : ObservableObject
         BatteryPercentage = $"{RawBatteryPercentage}%";
         IsPluggedIn = status.IsPluggedIn;
         PowerSource = status.IsPluggedIn ? "AC Power" : "Battery";
-        ChargingState = status.HasBattery ? (status.IsPluggedIn ? "Charging" : "Discharging") : "Not Applicable";
+        // Windows' own wording; plugged in is not the same as charging (Conservation mode holds ~80%)
+        ChargingState = !status.HasBattery ? "Not Applicable"
+            : status.IsCharging ? "Charging"
+            : !status.IsPluggedIn ? "On battery"
+            : status.BatteryPercentage >= 99 ? "Fully charged"
+            : "Plugged in, not charging";
         
         // Populate rich hardware telemetry
         HealthStatus = status.HealthStatus;
         HealthPercentage = status.HealthPercentage;
         CycleCount = status.CycleCount;
         DeviceChemistry = status.Chemistry;
-        Temperature = status.Temperature;
+        ApplyTemperature(status.TemperatureC);
         CurrentPowerUsage = status.CurrentPowerUsage;
+        (PowerFlowLabel, PowerFlowDescription) = !status.HasBattery ? ("No battery", "This PC runs from the charger only.")
+            : status.IsCharging ? ("Charging", "Power going into the battery.")
+            : !status.IsPluggedIn ? ("Discharging", "Power the laptop is drawing from the battery.")
+            : ("Battery idle", "Running on the charger; the battery is neither charging nor draining.");
         DesignCapacity = status.DesignCapacity;
         FullChargeCapacity = status.FullChargeCapacity;
         Voltage = status.Voltage;

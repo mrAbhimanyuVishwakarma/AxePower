@@ -81,7 +81,7 @@ public partial class PowerTimerWarningWindow : Window
         var label = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         label.Children.Add(new TextBlock
         {
-            Text = "",
+            Text = "\uE916",
             FontFamily = new FontFamily("Segoe MDL2 Assets"),
             FontSize = 11,
             Foreground = accent,

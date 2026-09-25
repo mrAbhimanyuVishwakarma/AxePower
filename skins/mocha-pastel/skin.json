@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "mocha-pastel",
+  "name": "Mocha Pastel",
+  "description": "Dark mocha with soft pastel lavender, pink and blue.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#11111B",
+    "sidebar": "#181825",
+    "card": "#1E1E2E",
+    "cardElevated": "#313244",
+    "hover": "#45475A",
+    "border": "#45475A",
+    "divider": "#313244",
+    "textPrimary": "#CDD6F4",
+    "textSecondary": "#BAC2DE",
+    "textMuted": "#9399B2",
+    "textDisabled": "#6C7086",
+    "accent": "#CBA6F7",
+    "success": "#A6E3A1",
+    "warning": "#F9E2AF",
+    "error": "#F38BA8",
+    "eco": "#A6E3A1",
+    "smart": "#89B4FA",
+    "beast": "#FAB387",
+    "buttonPrimary": "#CBA6F7",
+    "buttonPrimaryText": "#11111B"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 20,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#CBA6F7, #F5C2E7, #89B4FA"
+  }
+}

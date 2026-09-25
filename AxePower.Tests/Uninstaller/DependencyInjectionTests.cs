@@ -47,6 +47,7 @@ public class DependencyInjectionTests
             services.AddSingleton<DisplayService>();
             services.AddSingleton<DriverUpdateService>();
             services.AddSingleton<MsiAfterburnerService>();
+            services.AddSingleton<ToolsService>();
             services.AddSingleton<DebloatService>();
             services.AddSingleton<AndroidControlService>();
             services.AddSingleton<ControllerNavigationService>();
@@ -105,6 +106,7 @@ public class DependencyInjectionTests
             services.AddTransient<SystemDoctorViewModel>();
             services.AddTransient<DebloatViewModel>();
             services.AddTransient<SoftwareHubViewModel>();
+            services.AddTransient<ToolsViewModel>();
             services.AddTransient<PhoneHubViewModel>();
             services.AddTransient<LanDropViewModel>();
             services.AddTransient<TerminalViewModel>();
