@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using AxePower.App.Windows;
 using AxePower.Core.Services;
@@ -19,6 +21,10 @@ public interface IGameModePrompts
 
     /// <summary>A game is running in Game Mode; true to leave Game Mode anyway. Stays by default.</summary>
     bool ConfirmLeaveGameMode(string game);
+
+    /// <summary>10-second caution before closing apps or stopping services flagged by CloseCaution.
+    /// <paramref name="action"/> is "close" or "stop". False keeps them.</summary>
+    bool ConfirmCautionClose(string action, IReadOnlyList<string> names);
 
     /// <summary>True for "Restart now".</summary>
     bool AskRestartNow(GpuDisplayMode mode);
@@ -49,6 +55,16 @@ public sealed class WindowGameModePrompts : IGameModePrompts
         "A game is running",
         $"{game} is open, so Game Mode is holding maximum performance for it. Leave Game Mode anyway?",
         "Switch anyway", "Stay in Game Mode", CautionSeconds);
+
+    public bool ConfirmCautionClose(string action, IReadOnlyList<string> names) => Show(
+        action == "stop" ? "Stop a service Windows relies on?" : "Close apps that need care?",
+        (action == "stop"
+            ? "These services are marked caution: "
+            : "These apps are marked caution. They drive hardware or have an open window with possibly unsaved work: ")
+        + string.Join(", ", names.Take(6)) + (names.Count > 6 ? $" and {names.Count - 6} more" : "")
+        + (action == "stop" ? ". Stop them too?" : ". Close them too?")
+        + " The others you selected go ahead either way.",
+        action == "stop" ? "Stop them too" : "Close them too", "Skip these", CautionSeconds);
 
     public bool AskRestartNow(GpuDisplayMode mode) => Show(
         "Restart to apply",

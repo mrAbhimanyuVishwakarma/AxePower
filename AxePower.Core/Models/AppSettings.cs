@@ -125,6 +125,10 @@ public class AppSettings
     [JsonPropertyName("appsToClose")]
     public List<string> AppsToClose { get; set; } = new();
 
+    /// <summary>Service names ticked in Game Mode's System Services list (stopped by Optimize Services and Game Mode).</summary>
+    [JsonPropertyName("servicesToOptimize")]
+    public List<string> ServicesToOptimize { get; set; } = new();
+
     [JsonPropertyName("conservationModeEnabled")]
     public bool ConservationModeEnabled { get; set; } = false;
 
@@ -208,6 +212,7 @@ public class AppSettings
             DisplayRefreshRate = this.DisplayRefreshRate,
             TemperatureUnit = this.TemperatureUnit,
             AppsToClose = new List<string>(this.AppsToClose),
+            ServicesToOptimize = new List<string>(this.ServicesToOptimize ?? new()),
             ConservationModeEnabled = this.ConservationModeEnabled,
             RapidChargeEnabled = this.RapidChargeEnabled,
             OvernightBatteryChargingEnabled = this.OvernightBatteryChargingEnabled,
