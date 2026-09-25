@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.4-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -17,7 +17,7 @@
 
 ## 🚀 Key Features
 
-- 🎵 **Integrated Music Player & Media Hub**: Built-in high-fidelity audio engine supporting local libraries, YouTube streaming, and Spotify controller integration. Features an aesthetic Header Player matching the dashboard design and automatically follows default Windows audio output device switches.
+- 🎵 **Integrated Music Player & Media Hub**: Built-in high-fidelity audio engine supporting local libraries and YouTube Music streaming. Features an aesthetic Header Player matching the dashboard design and automatically follows default Windows audio output device switches.
 - 🖥️ **Share Screen & GameStream**: Low-latency desktop and game display sharing directly to friends in their web browser without requiring them to install third-party clients.
 - 🗑️ **Next-Gen Uninstaller Pro**: Deep leftover scanner with confidence scoring, registry backup manifests, broken uninstaller recovery, and PowerShell execution safety nets.
 - 🖥️ **Built-In Terminal (CMD & PowerShell)**: A persistent interactive shell inside the app, and the single place every command AxePower runs reports to — Software Hub installs and System Doctor diagnostics stream their live output here, with a **Stop** button that cancels the running task.
@@ -63,7 +63,7 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **Auto Switch** | 🔄 | Configure automated rules for AC (Plugged In) and DC (Battery) states and dynamic refresh rate switching. |
 | **Game Mode** | 🎮 | Multi-platform game library scanner, SteamGridDB vertical posters, GPU control companion, background app suspension, and Xbox / PS5 Controller Navigation. |
 | **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends with custom icon cards. |
-| **Music** | 🎵 | Integrated music playback, local library scanning, YouTube streaming, Spotify controller, and sleek header player. |
+| **Music** | 🎵 | Integrated music playback, local library scanning, YouTube Music streaming, and a sleek header player. |
 | **CONNECTION** | | |
 | **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
 | **🖥️ Share Screen** | 🖥️ | Low-latency display and gameplay streaming to any browser with audio. |

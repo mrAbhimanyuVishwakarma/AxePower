@@ -65,12 +65,10 @@ public class MusicSettingsTests
     {
         var s = new MusicSettings();
 
-        Assert.False(s.LyricsOnline);
+        Assert.True(s.LyricsOnline);
         Assert.False(s.Integrations.DiscordRpc);
         Assert.False(s.Integrations.LastFmEnabled);
         Assert.Null(s.Integrations.LastFmUsername);
-        Assert.False(s.Integrations.SpotifyEnabled);
-        Assert.Null(s.Integrations.SpotifyClientId);
     }
 
     [Fact]
@@ -231,9 +229,7 @@ public class MusicSettingsTests
         {
             DiscordRpc = true,
             LastFmEnabled = true,
-            LastFmUsername = "listener",
-            SpotifyEnabled = true,
-            SpotifyClientId = "abc123"
+            LastFmUsername = "listener"
         }
     };
 
@@ -255,14 +251,14 @@ public class MusicSettingsTests
     public void Providers_SurviveACloneWithoutSharingTheirList()
     {
         var original = new MusicSettings();
-        original.Providers.Enabled.Add("spotify");
-        original.Providers.ActiveMetadata = "spotify";
+        original.Providers.Enabled.Add("catalog");
+        original.Providers.ActiveMetadata = "catalog";
         original.Providers.CacheStreamsToDisk = true;
 
         var copy = original.Clone();
         copy.Providers.Enabled.Add("something-else");
 
-        Assert.Equal("spotify", copy.Providers.ActiveMetadata);
+        Assert.Equal("catalog", copy.Providers.ActiveMetadata);
         Assert.True(copy.Providers.CacheStreamsToDisk);
         Assert.DoesNotContain("something-else", original.Providers.Enabled);
     }
@@ -272,16 +268,16 @@ public class MusicSettingsTests
     {
         var original = new MusicSettings();
         original.Providers.ActiveStreaming = "youtube";
-        original.Providers.ActiveMetadata = "spotify";
-        original.Providers.Enabled.Add("spotify");
+        original.Providers.ActiveMetadata = "catalog";
+        original.Providers.Enabled.Add("catalog");
         original.Providers.StreamExpiryMinutes = 15;
 
         string json = JsonSerializer.Serialize(original, WriteOptions);
         var loaded = JsonSerializer.Deserialize<MusicSettings>(json, ReadOptions)!;
 
-        Assert.Equal("spotify", loaded.Providers.ActiveMetadata);
+        Assert.Equal("catalog", loaded.Providers.ActiveMetadata);
         Assert.Equal(15, loaded.Providers.StreamExpiryMinutes);
-        Assert.Contains("spotify", loaded.Providers.Enabled);
+        Assert.Contains("catalog", loaded.Providers.Enabled);
     }
 
     [Fact]

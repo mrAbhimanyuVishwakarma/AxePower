@@ -272,6 +272,9 @@ public partial class App : Application
         services.AddSingleton<RemoteInputService>();
         services.AddSingleton<ShareViewerHost>();
         services.AddSingleton<IShareScreenService, ShareScreenService>();
+        services.AddSingleton<ShareChatStore>();
+        services.AddSingleton<ShareAttachmentStore>();
+        services.AddSingleton<IRoomVoiceService, RoomVoiceService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IFileSystemProbe, FileSystemProbe>();
@@ -313,13 +316,13 @@ public partial class App : Application
         services.AddSingleton<StreamCache>();
         services.AddSingleton<ProviderRegistry>();
         services.AddSingleton<IStreamResolver, StreamResolver>();
-        services.AddSingleton<SpotifyAuth>();
+        services.AddSingleton<IYouTubeCaptionLyricsProvider, YouTubeCaptionLyricsProvider>();
+        services.AddSingleton<ILyricsService, LrcLibLyricsService>();
+        services.AddSingleton<IPaletteExtractor, MusicPaletteExtractor>();
         services.AddSingleton<LocalFileProvider>();
         services.AddSingleton<YouTubeProvider>();
-        services.AddSingleton<SpotifyProvider>();
         services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<LocalFileProvider>());
         services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<YouTubeProvider>());
-        services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<SpotifyProvider>());
         services.AddSingleton<DiscoveryService>();
         services.AddSingleton<MusicRemote>();
         services.AddSingleton<PortalAccessToken>();
@@ -334,6 +337,8 @@ public partial class App : Application
         services.AddSingleton<HotkeyService>();
         services.AddSingleton<MusicShortcutHandler>();
         services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
+        services.AddSingleton<LyricsViewModel>();
+        services.AddSingleton<AmbientModeViewModel>();
         services.AddTransient<MusicViewModel>();
         services.AddTransient<MusicSettingsViewModel>();
         services.AddSingleton<SourcesViewModel>();
@@ -351,6 +356,7 @@ public partial class App : Application
         services.AddTransient<UninstallerViewModel>();
         services.AddTransient<SystemOptimizerViewModel>();
         services.AddTransient<SystemDoctorViewModel>();
+        services.AddTransient<DebloatViewModel>();
         services.AddTransient<SoftwareHubViewModel>();
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
@@ -446,6 +452,9 @@ public partial class App : Application
             $"{shareDevices.GetRenderDevices().Count} output(s), {shareDevices.GetCaptureDevices().Count} mic(s); " +
             $"FFmpeg {(ffmpeg.IsAvailable ? ffmpeg.Version : "not found")}, " +
             $"media server {(shareTools.FindMediaMtx().IsAvailable ? "ready" : "not downloaded")}.");
+        Console.WriteLine(
+            $"Friends room services resolved: {sp.GetRequiredService<IShareScreenService>().GetType().Name}, " +
+            $"voice {sp.GetRequiredService<IRoomVoiceService>().GetType().Name} (devices not opened).");
 
         try
         {

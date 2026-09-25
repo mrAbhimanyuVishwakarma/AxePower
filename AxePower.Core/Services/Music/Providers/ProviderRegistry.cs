@@ -15,6 +15,7 @@ public sealed class ProviderRegistry : IDisposable
 {
     /// <summary>Always enabled: without it local files could not play.</summary>
     public const string LocalProviderId = "local";
+    public const string YouTubeProviderId = "youtube";
 
     private readonly IReadOnlyList<IMusicProvider> _providers;
     private readonly SettingsService _settings;
@@ -40,11 +41,12 @@ public sealed class ProviderRegistry : IDisposable
         string.IsNullOrEmpty(id) ? null : _providers.FirstOrDefault(p => p.Info.Id == id);
 
     public bool IsEnabled(string id) =>
-        id == LocalProviderId || Current.Enabled.Contains(id, StringComparer.OrdinalIgnoreCase);
+        id is LocalProviderId or YouTubeProviderId
+        || Current.Enabled.Contains(id, StringComparer.OrdinalIgnoreCase);
 
     public void SetEnabled(string id, bool enabled)
     {
-        if (id == LocalProviderId) return;            // the local provider is not optional
+        if (id is LocalProviderId or YouTubeProviderId) return; // the two product modes are fixed
         if (ById(id) is null) return;
 
         var settings = _settings.GetSettings();
@@ -54,6 +56,16 @@ public sealed class ProviderRegistry : IDisposable
 
         if (enabled) providers.Enabled.Add(id);
         else providers.Enabled.RemoveAll(e => string.Equals(e, id, StringComparison.OrdinalIgnoreCase));
+
+        // Local files bypass stream resolution entirely. If an old setting points the remote
+        // streaming role at the local provider, switching an online source back on must repair
+        // that choice instead of leaving every remote track routed to "This PC".
+        if (enabled && ById(id) is IStreamingProvider { SupportsLocalFiles: false })
+        {
+            var current = ById(providers.ActiveStreaming) as IStreamingProvider;
+            if (current is null || current.SupportsLocalFiles || !IsEnabled(current.Info.Id))
+                providers.ActiveStreaming = id;
+        }
 
         // A provider that was answering for a kind must hand that job back when it is switched off.
         if (!enabled)
@@ -76,7 +88,10 @@ public sealed class ProviderRegistry : IDisposable
             _ => null
         };
 
-        if (ById(id) is T chosen && IsEnabled(chosen.Info.Id) && chosen.Info.Kinds.Contains(kind))
+        if (ById(id) is T chosen
+            && IsEnabled(chosen.Info.Id)
+            && chosen.Info.Kinds.Contains(kind)
+            && CanStandIn(chosen, kind))
             return chosen;
 
         // The stored id is gone, disabled or no longer covers this kind: fall back to the first
@@ -102,6 +117,7 @@ public sealed class ProviderRegistry : IDisposable
     public void SetActive(ProviderKind kind, string id)
     {
         if (ById(id) is not { } provider || !provider.Info.Kinds.Contains(kind)) return;
+        if (!CanStandIn(provider, kind)) return;
 
         var settings = _settings.GetSettings();
         var providers = settings.Music.Providers;

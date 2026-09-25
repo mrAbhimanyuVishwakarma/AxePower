@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "cyber-neon-glass",
+  "name": "Cyber Neon (Glass)",
+  "description": "High-voltage cyberpunk aesthetic with acrylic glass blur and neon highlights.",
+  "author": "AxeDude7",
+  "base": "dark",
+  "colors": {
+    "window": "#B305050A",
+    "sidebar": "#B30B0C16",
+    "card": "#B3121422",
+    "cardElevated": "#CC1A1D2E",
+    "hover": "#CC242840",
+    "border": "#2E3452",
+    "divider": "#1E2238",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#A5B4FC",
+    "textMuted": "#6366F1",
+    "textDisabled": "#3730A3",
+    "accent": "#06B6D4",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444",
+    "eco": "#10B981",
+    "smart": "#06B6D4",
+    "beast": "#EC4899",
+    "buttonPrimary": "#06B6D4",
+    "buttonPrimaryText": "#05050A"
+  },
+  "glass": {
+    "backdrop": "acrylic",
+    "sheen": 80,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {}
+}

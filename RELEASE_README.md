@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.0-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.4-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -27,7 +27,7 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - ⚖️ **Smart Mode:** The perfect middle ground for everyday tasks like browsing and watching videos.
 - 🚀 **Beast Mode:** Gives you maximum power and sustained clocks for gaming or heavy tasks when plugged in.
 - 🎮 **Game Mode:** Automatically detects running games across any drive, suspends background bloat, locks maximum display refresh rate, and offers Controller Navigation (Gopher360).
-- 🎵 **Music Player:** In-app audio player supporting local audio libraries, YouTube streaming, Spotify controller, and a dashboard-integrated Header Player.
+- 🎵 **Music Player:** In-app audio player supporting local audio libraries, YouTube Music streaming, and a dashboard-integrated Header Player.
 - 🖥️ **Share Screen:** Browser-based low-latency desktop and gameplay streaming with zero setup for viewers.
 - 📱 **Phone Control:** All-in-one mobile suite with offline **LAN Drop** Wi-Fi file sharing and **scrcpy** Android screen mirroring.
 - 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
@@ -48,7 +48,7 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
   - **In-app preview** shows the real stream through the real pipeline, so what you see is the delay your viewer sees.
   - **Remote control**, off by default: granted per session, and the code is never part of the watch link, so passing someone the link does not pass them your keyboard.
 - 🎵 **Music — sources, discovery and a real library**:
-  - **Provider-based sources** for YouTube and Spotify, with better track matching and a way to pick a different take when the match is wrong.
+  - **Provider-based sources** for YouTube Music and local files, with better track matching and a way to pick a different take when the match is wrong.
   - **Discovery** keeps the queue going when you reach the end, adding only to the end and never touching what you queued.
   - **Media shortcuts** that work from any application — play, skip, seek and volume — every key rebindable, with conflicts reported rather than silently failing.
   - **Library index and instant search** over your local music, by title, artist or album, however large the folder.
@@ -63,7 +63,7 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 - 🎵 **Integrated Music Player & Media Hub**:
   - Full in-app audio playback engine with queue management, track progress, volume control, and background playback.
-  - **YouTube & Spotify Integration**: Stream audio directly from YouTube and manage Spotify playback right from AxePower.
+  - **YouTube Music Integration**: Stream audio directly from YouTube Music inside AxePower.
   - **Dashboard Header Player**: Sleek mini-player embedded seamlessly in the top header matching the dashboard aesthetic.
   - **Dynamic Audio Device Following**: Automatically follows default Windows output audio device transitions without requiring an app restart.
 - 🖥️ **Share Screen & GameStream**:

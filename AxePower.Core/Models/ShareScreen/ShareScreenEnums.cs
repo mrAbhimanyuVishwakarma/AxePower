@@ -58,6 +58,9 @@ public enum ShareSessionState
 {
     Idle,
 
+    /// <summary>A private AxePower room is open for voice, chat, and files without screen video.</summary>
+    RoomOpen,
+
     /// <summary>Locating FFmpeg and the media server, probing encoders.</summary>
     Preparing,
 

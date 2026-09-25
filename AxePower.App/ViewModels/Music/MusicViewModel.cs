@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using AxePower.App.Services;
 using AxePower.Core.Models.Music;
 using AxePower.Core.Services;
@@ -23,20 +24,27 @@ namespace AxePower.App.ViewModels.Music;
 public enum RightPanelTab
 {
     Queued,
-    Songs
+    Songs,
+    Lyrics
+}
+
+public enum MusicBrowseMode
+{
+    Local,
+    YouTube
 }
 
 /// <summary>
 /// The Music page view model. Hosts Now Playing, the dynamic Library section (4 columns with queue open,
-/// 6 columns with queue closed), right-side dual Queued / Songs drawer, Spotify control &amp; playlist creation.
+/// 6 columns with queue closed), right-side dual Queued / Songs drawer, and playlist creation.
 /// </summary>
 public partial class MusicViewModel : ObservableObject
 {
     private readonly TagLibTagReader _tagReader = new();
     private readonly SettingsService? _settingsService;
-    private readonly SpotifyController _spotifyController = new();
     private readonly ProviderRegistry? _providers;
     private readonly IStreamResolver? _resolver;
+    private readonly ICoverArtService? _covers;
 
     /// <summary>Cancels a search that a newer one has replaced.</summary>
     private CancellationTokenSource? _searchCts;
@@ -45,15 +53,21 @@ public partial class MusicViewModel : ObservableObject
         NowPlayingViewModel nowPlaying,
         SettingsService? settingsService = null,
         ProviderRegistry? providers = null,
-        IStreamResolver? resolver = null)
+        IStreamResolver? resolver = null,
+        LyricsViewModel? lyrics = null,
+        AmbientModeViewModel? ambient = null,
+        ICoverArtService? covers = null)
     {
         NowPlaying = nowPlaying;
         var services = (Application.Current as App)?.Services;
         _settingsService = settingsService ?? services?.GetService<SettingsService>();
         _providers = providers ?? services?.GetService<ProviderRegistry>();
         _resolver = resolver ?? services?.GetService<IStreamResolver>();
+        _covers = covers ?? services?.GetService<ICoverArtService>();
         Sources = services?.GetService<SourcesViewModel>();
         Shortcuts = services?.GetService<ShortcutsViewModel>();
+        Lyrics = lyrics ?? services?.GetService<LyricsViewModel>();
+        Ambient = ambient ?? services?.GetService<AmbientModeViewModel>();
 
         NowPlaying.PropertyChanged += (_, e) =>
         {
@@ -77,6 +91,10 @@ public partial class MusicViewModel : ObservableObject
     /// <summary>The Shortcuts list shown in Music Settings. Null only in a design-time view.</summary>
     public ShortcutsViewModel? Shortcuts { get; }
 
+    public LyricsViewModel? Lyrics { get; }
+
+    public AmbientModeViewModel? Ambient { get; }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(QueueToggleLabel), nameof(LibraryColumns))]
     private bool _isQueueOpen = true;
@@ -94,7 +112,7 @@ public partial class MusicViewModel : ObservableObject
     // ── Right Panel Tab Selector (Queued vs Songs) ─────────────────────────
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsQueueTabSelected), nameof(IsSongsTabSelected), nameof(RightPanelSubtitle))]
+    [NotifyPropertyChangedFor(nameof(IsQueueTabSelected), nameof(IsSongsTabSelected), nameof(IsLyricsTabSelected), nameof(RightPanelSubtitle))]
     private RightPanelTab _currentTab = RightPanelTab.Queued;
 
     public bool IsQueueTabSelected
@@ -109,12 +127,20 @@ public partial class MusicViewModel : ObservableObject
         set { if (value) CurrentTab = RightPanelTab.Songs; }
     }
 
+    public bool IsLyricsTabSelected
+    {
+        get => CurrentTab == RightPanelTab.Lyrics;
+        set { if (value) CurrentTab = RightPanelTab.Lyrics; }
+    }
+
     public string RightPanelSubtitle
     {
         get
         {
             if (CurrentTab == RightPanelTab.Queued)
                 return NowPlaying.QueueSummary;
+            if (CurrentTab == RightPanelTab.Lyrics)
+                return "Synchronized lyrics";
             if (SelectedLibraryItem != null)
                 return $"{SelectedLibraryItem.Title} • {SelectedLibraryItem.SongCount} track{(SelectedLibraryItem.SongCount == 1 ? "" : "s")}";
             return "Select a playlist or folder";
@@ -123,7 +149,36 @@ public partial class MusicViewModel : ObservableObject
 
     // ── Library Collections & Selected Songs ───────────────────────────────
 
+    private readonly ObservableCollection<LibraryItemViewModel> _localLibraryItems = new();
+    private readonly ObservableCollection<LibraryItemViewModel> _youtubeLibraryItems = new();
+
+    /// <summary>Only the collections for the selected source mode are exposed to the view.</summary>
     public ObservableCollection<LibraryItemViewModel> LibraryItems { get; } = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLocalMode), nameof(IsYouTubeMode), nameof(BrowseTitle),
+        nameof(BrowseEmptyMessage), nameof(LibraryItemsSummary))]
+    private MusicBrowseMode _browseMode = MusicBrowseMode.Local;
+
+    public bool IsLocalMode
+    {
+        get => BrowseMode == MusicBrowseMode.Local;
+        set { if (value) BrowseMode = MusicBrowseMode.Local; }
+    }
+
+    public bool IsYouTubeMode
+    {
+        get => BrowseMode == MusicBrowseMode.YouTube;
+        set { if (value) BrowseMode = MusicBrowseMode.YouTube; }
+    }
+
+    public string BrowseTitle => IsLocalMode ? "Local Library & Playlists" : "YouTube Music Results";
+
+    public string BrowseEmptyMessage => IsLocalMode
+        ? "No local music yet. Add a folder or create a playlist."
+        : "Search YouTube Music to see songs here.";
+
+    public bool HasLibraryItems => LibraryItems.Count > 0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RightPanelSubtitle))]
@@ -132,6 +187,29 @@ public partial class MusicViewModel : ObservableObject
     public ObservableCollection<SongItemViewModel> SelectedSongs { get; } = new();
 
     public string LibraryItemsSummary => $"{LibraryItems.Count} collection{(LibraryItems.Count == 1 ? "" : "s")}";
+
+    partial void OnBrowseModeChanged(MusicBrowseMode value) => ShowBrowseMode(value);
+
+    [RelayCommand]
+    private void ShowLocalMode() => BrowseMode = MusicBrowseMode.Local;
+
+    [RelayCommand]
+    private void ShowYouTubeMode() => BrowseMode = MusicBrowseMode.YouTube;
+
+    private void ShowBrowseMode(MusicBrowseMode mode)
+    {
+        foreach (var item in LibraryItems) item.IsSelected = false;
+        LibraryItems.Clear();
+
+        var source = mode == MusicBrowseMode.Local ? _localLibraryItems : _youtubeLibraryItems;
+        foreach (var item in source) LibraryItems.Add(item);
+
+        SelectedLibraryItem = null;
+        SelectedSongs.Clear();
+        OnPropertyChanged(nameof(HasLibraryItems));
+        OnPropertyChanged(nameof(LibraryItemsSummary));
+        OnPropertyChanged(nameof(RightPanelSubtitle));
+    }
 
     // ── Commands ────────────────────────────────────────────────────────────
 
@@ -151,11 +229,6 @@ public partial class MusicViewModel : ObservableObject
         // Switch to Songs tab in the right panel so user immediately sees the songs list
         CurrentTab = RightPanelTab.Songs;
         if (!IsQueueOpen) IsQueueOpen = true;
-
-        if (item.Title == "YouTube Music" && item.Songs.Count == 0)
-        {
-            _ = SearchYouTubeAsync("Top Trending Songs");
-        }
 
         OnPropertyChanged(nameof(RightPanelSubtitle));
     }
@@ -190,7 +263,6 @@ public partial class MusicViewModel : ObservableObject
     /// </summary>
     private async Task PlayListAsync(IReadOnlyList<SongItemViewModel> list, SongItemViewModel start)
     {
-        NowPlaying.DisableSpotifyMode();
         NowPlaying.ErrorMessage = null;
 
         var rows = list.Contains(start) ? list.ToList() : new List<SongItemViewModel> { start };
@@ -266,7 +338,7 @@ public partial class MusicViewModel : ObservableObject
     [RelayCommand]
     public void OpenCreatePlaylistDialog()
     {
-        int count = LibraryItems.Count(i => i.Path?.EndsWith(".m3u", StringComparison.OrdinalIgnoreCase) == true);
+        int count = _localLibraryItems.Count(i => i.Path?.EndsWith(".m3u", StringComparison.OrdinalIgnoreCase) == true);
         NewPlaylistName = count == 0 ? "My Playlist" : $"Playlist {count + 1}";
         IsCreatePlaylistOpen = true;
     }
@@ -305,10 +377,11 @@ public partial class MusicViewModel : ObservableObject
                 GradientBrush = CreateGradient("#0EA5E9", "#0369A1")
             };
 
-            LibraryItems.Insert(0, item);
+            _localLibraryItems.Insert(0, item);
             IsCreatePlaylistOpen = false;
+            BrowseMode = MusicBrowseMode.Local;
+            ShowBrowseMode(BrowseMode);
             SelectLibraryItem(item);
-            OnPropertyChanged(nameof(LibraryItemsSummary));
         }
         catch (Exception ex)
         {
@@ -363,12 +436,6 @@ public partial class MusicViewModel : ObservableObject
     public string SearchSourceName =>
         _providers?.Active<IMetadataProvider>(ProviderKind.Metadata)?.Info.Name ?? "no source";
 
-    [RelayCommand]
-    public Task LaunchAndMinimizeSpotifyAsync()
-    {
-        return NowPlaying.EnableSpotifyModeAsync();
-    }
-
     /// <summary>
     /// Searches whichever source is active. The command keeps its old name so the existing
     /// bindings and the search box carry on working.
@@ -376,10 +443,11 @@ public partial class MusicViewModel : ObservableObject
     [RelayCommand]
     public async Task SearchYouTubeAsync(string? query = null)
     {
-        var provider = _providers?.Active<IMetadataProvider>(ProviderKind.Metadata);
+        BrowseMode = MusicBrowseMode.YouTube;
+        var provider = _providers?.ById("youtube") as IMetadataProvider;
         if (provider == null)
         {
-            NowPlaying.ErrorMessage = "No search source is switched on. Turn one on in Music Settings.";
+            NowPlaying.ErrorMessage = "YouTube Music is unavailable.";
             return;
         }
 
@@ -397,22 +465,24 @@ public partial class MusicViewModel : ObservableObject
             if (cts.IsCancellationRequested) return;
 
             string name = provider.Info.Name;
-            var card = LibraryItems.FirstOrDefault(i => i.Title == name);
+            var card = _youtubeLibraryItems.FirstOrDefault(i => i.Id == "youtube-search");
             if (card == null)
             {
                 card = new LibraryItemViewModel
                 {
+                    Id = "youtube-search",
                     Title = name,
                     IconGlyph = GlyphFor(provider.Info.Id),
                     GradientBrush = GradientFor(provider.Info.Id)
                 };
-                LibraryItems.Insert(0, card);
+                _youtubeLibraryItems.Insert(0, card);
             }
 
             Fill(card, tracks, name);
             card.Subtitle = Summary(card.Songs.Count, name);
+            ShowBrowseMode(MusicBrowseMode.YouTube);
             SelectLibraryItem(card);
-            OnPropertyChanged(nameof(LibraryItemsSummary));
+            _ = UpdateRemoteCardCoverAsync(card, tracks.FirstOrDefault(), CancellationToken.None);
         }
         catch (OperationCanceledException)
         {
@@ -423,52 +493,12 @@ public partial class MusicViewModel : ObservableObject
         }
         finally
         {
-            if (ReferenceEquals(_searchCts, cts)) IsSearchingYouTube = false;
+            if (ReferenceEquals(_searchCts, cts))
+            {
+                _searchCts = null;
+                IsSearchingYouTube = false;
+            }
             cts.Dispose();
-        }
-    }
-
-    /// <summary>Brings the playlists of the active source in as library cards.</summary>
-    [RelayCommand]
-    public async Task ImportSourcePlaylists()
-    {
-        var provider = _providers?.Active<IMetadataProvider>(ProviderKind.Metadata);
-        if (provider == null) return;
-
-        try
-        {
-            var playlists = await provider.GetPlaylistsAsync(CancellationToken.None);
-            if (playlists.Count == 0)
-            {
-                NowPlaying.ErrorMessage = provider.Info.Name + " has no playlists to import.";
-                return;
-            }
-
-            foreach (var playlist in playlists)
-            {
-                var tracks = await provider.GetPlaylistTracksAsync(playlist.Id, 500, CancellationToken.None);
-                if (tracks.Count == 0) continue;
-
-                var card = new LibraryItemViewModel
-                {
-                    Title = playlist.Name,
-                    Subtitle = Summary(tracks.Count, provider.Info.Name),
-                    IconGlyph = GlyphFor(provider.Info.Id),
-                    GradientBrush = GradientFor(provider.Info.Id)
-                };
-                Fill(card, tracks, playlist.Name);
-
-                // Re-importing replaces the old card rather than stacking a duplicate beside it.
-                var existing = LibraryItems.FirstOrDefault(i => i.Title == card.Title);
-                if (existing != null) LibraryItems.Remove(existing);
-                LibraryItems.Insert(0, card);
-            }
-
-            OnPropertyChanged(nameof(LibraryItemsSummary));
-        }
-        catch (Exception ex)
-        {
-            NowPlaying.ErrorMessage = provider.Info.Name + " playlists could not be loaded: " + ex.Message;
         }
     }
 
@@ -491,20 +521,53 @@ public partial class MusicViewModel : ObservableObject
         }
     }
 
+    private async Task UpdateRemoteCardCoverAsync(
+        LibraryItemViewModel card,
+        Track? track,
+        CancellationToken ct)
+    {
+        if (_covers is null || track is null)
+        {
+            card.CoverImage = null;
+            return;
+        }
+
+        try
+        {
+            string? path = await _covers.GetCoverFileAsync(track, 256, ct);
+            if (ct.IsCancellationRequested || string.IsNullOrWhiteSpace(path)) return;
+            if (card.Songs.FirstOrDefault()?.Track?.Source?.Id != track.Source?.Id) return;
+
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.DecodePixelWidth = 256;
+            image.UriSource = new Uri(path, UriKind.Absolute);
+            image.EndInit();
+            image.Freeze();
+            card.CoverImage = image;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+            // The gradient tile is the deliberate fallback when remote artwork is unavailable.
+        }
+    }
+
     private static string Summary(int count, string sourceName) =>
         count + " track" + (count == 1 ? "" : "s") + " \u2022 " + sourceName;
 
     private static string GlyphFor(string providerId) => providerId switch
     {
         "youtube" => "\uE768",
-        "spotify" => "\uE8D6",
         _ => "\uE8D6"
     };
 
     private static Brush GradientFor(string providerId) => providerId switch
     {
         "youtube" => CreateGradient("#DC2626", "#7F1D1D"),
-        "spotify" => CreateGradient("#1DB954", "#0F6B31"),
         _ => CreateGradient("#6B7280", "#374151")
     };
 
@@ -539,7 +602,7 @@ public partial class MusicViewModel : ObservableObject
 
     private void InitializeLibrary()
     {
-        LibraryItems.Clear();
+        _localLibraryItems.Clear();
 
         // 1. Scan Local Music folder
         string musicFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
@@ -554,82 +617,19 @@ public partial class MusicViewModel : ObservableObject
             IsSelected = true
         };
         foreach (var s in localSongs) localItem.Songs.Add(s);
-        LibraryItems.Add(localItem);
+        _localLibraryItems.Add(localItem);
 
-        // 2. YouTube Music (In-App Search & Stream)
-        var ytItem = new LibraryItemViewModel
-        {
-            Title = "YouTube Music",
-            Subtitle = "Search & Stream Free",
-            IconGlyph = "\uE768",
-            GradientBrush = CreateGradient("#DC2626", "#7F1D1D")
-        };
-        LibraryItems.Add(ytItem);
-
-        // 2. Favorites & Starred
-        var favItem = new LibraryItemViewModel
-        {
-            Title = "Favorites",
-            Subtitle = "Starred tracks",
-            IconGlyph = "\uE734",
-            GradientBrush = CreateGradient("#EC4899", "#8B5CF6")
-        };
-        foreach (var s in localSongs.Take(5)) favItem.Songs.Add(s);
-        LibraryItems.Add(favItem);
-
-        // 3. Gaming & Beast Beats
-        var gamingItem = new LibraryItemViewModel
-        {
-            Title = "Gaming Beast",
-            Subtitle = "High energy mix",
-            IconGlyph = "\uE7FC",
-            GradientBrush = CreateGradient("#F97316", "#DC2626")
-        };
-        foreach (var s in localSongs) gamingItem.Songs.Add(s);
-        LibraryItems.Add(gamingItem);
-
-        // 4. Chill & Eco Focus
-        var chillItem = new LibraryItemViewModel
-        {
-            Title = "Chill & Focus",
-            Subtitle = "Relaxing audio",
-            IconGlyph = "\uE706",
-            GradientBrush = CreateGradient("#10B981", "#047857")
-        };
-        foreach (var s in localSongs) chillItem.Songs.Add(s);
-        LibraryItems.Add(chillItem);
-
-        // 5. AxePower Mix
-        var mixItem = new LibraryItemViewModel
-        {
-            Title = "AxePower Mix",
-            Subtitle = "Curated rotation",
-            IconGlyph = "\uE945",
-            GradientBrush = CreateGradient("#6366F1", "#4338CA")
-        };
-        foreach (var s in localSongs) mixItem.Songs.Add(s);
-        LibraryItems.Add(mixItem);
-
-        // 6. Recently Added
-        var recentItem = new LibraryItemViewModel
-        {
-            Title = "Recently Added",
-            Subtitle = $"{localSongs.Count} tracks",
-            IconGlyph = "\uE823",
-            GradientBrush = CreateGradient("#8B5CF6", "#6D28D9")
-        };
-        foreach (var s in localSongs) recentItem.Songs.Add(s);
-        LibraryItems.Add(recentItem);
-
-        // 7. Scan for any user created playlists in SelectedPlaylistPath
+        // Only real user-created playlists are shown. Empty synthetic collections are not
+        // generated; the Create Playlist command is the sole way to add a new empty playlist.
         ScanPlaylistsInDirectory(SelectedPlaylistPath);
         if (!string.Equals(SelectedPlaylistPath, musicFolder, StringComparison.OrdinalIgnoreCase))
             ScanPlaylistsInDirectory(musicFolder);
 
         // Default selection to Local Music or first item
+        BrowseMode = MusicBrowseMode.Local;
+        ShowBrowseMode(BrowseMode);
         var defaultItem = LibraryItems.FirstOrDefault(i => i.IsSelected) ?? LibraryItems.FirstOrDefault();
         if (defaultItem != null) SelectLibraryItem(defaultItem);
-        OnPropertyChanged(nameof(LibraryItemsSummary));
     }
 
     private void ScanPlaylistsInDirectory(string dir)
@@ -644,7 +644,7 @@ public partial class MusicViewModel : ObservableObject
             foreach (var pl in playlistFiles)
             {
                 string plName = Path.GetFileNameWithoutExtension(pl);
-                if (LibraryItems.Any(i => string.Equals(i.Title, plName, StringComparison.OrdinalIgnoreCase)))
+                if (_localLibraryItems.Any(i => string.Equals(i.Title, plName, StringComparison.OrdinalIgnoreCase)))
                     continue;
 
                 var item = new LibraryItemViewModel
@@ -681,7 +681,7 @@ public partial class MusicViewModel : ObservableObject
                 catch { }
 
                 item.Subtitle = $"{item.Songs.Count} track{(item.Songs.Count == 1 ? "" : "s")} • Local Playlist";
-                LibraryItems.Insert(0, item);
+                _localLibraryItems.Insert(0, item);
             }
         }
         catch { }
@@ -700,9 +700,10 @@ public partial class MusicViewModel : ObservableObject
             GradientBrush = CreateGradient("#0284C7", "#0369A1")
         };
         foreach (var s in songs) item.Songs.Add(s);
-        LibraryItems.Insert(0, item);
+        _localLibraryItems.Insert(0, item);
+        BrowseMode = MusicBrowseMode.Local;
+        ShowBrowseMode(BrowseMode);
         SelectLibraryItem(item);
-        OnPropertyChanged(nameof(LibraryItemsSummary));
         return Task.CompletedTask;
     }
 

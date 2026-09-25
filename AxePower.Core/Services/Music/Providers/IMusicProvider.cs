@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,7 +43,7 @@ public interface IStreamingProvider : IMusicProvider
 
 /// <summary>
 /// Search and browse. A metadata provider does not have to supply audio: pairing one with a
-/// streaming provider (Spotify's catalogue, YouTube's audio) is the normal arrangement.
+/// streaming provider is supported when their responsibilities differ.
 /// </summary>
 public interface IMetadataProvider : IMusicProvider
 {
@@ -68,18 +67,4 @@ public interface IDiscoveryProvider : IMusicProvider
     /// </summary>
     Task<IReadOnlyList<Track>> GetRecommendationsAsync(
         IReadOnlyList<Track> context, DiscoveryOptions options, CancellationToken ct);
-}
-
-/// <summary>A provider the user signs into.</summary>
-public interface IAuthenticatedProvider
-{
-    bool IsSignedIn { get; }
-
-    string? AccountName { get; }
-
-    event EventHandler? AuthChanged;
-
-    Task<bool> SignInAsync(CancellationToken ct);
-
-    void SignOut();
 }

@@ -1,0 +1,167 @@
+<UserControl x:Class="AxePower.App.Views.Music.AmbientModeOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:music="clr-namespace:AxePower.App.ViewModels.Music"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance music:AmbientModeViewModel, IsDesignTimeCreatable=False}"
+             Background="#F50A0E18"
+             Focusable="True"
+             AutomationProperties.Name="Ambient theater mode">
+    <Grid ClipToBounds="True">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{Binding BackgroundGlowColor}" Offset="0" />
+                <GradientStop Color="#FF070A12" Offset="0.48" />
+                <GradientStop Color="#FF020307" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <!-- Large, blurred album-colour fields. Static by design when Windows animations are disabled. -->
+        <Ellipse Width="760" Height="760" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-240,-300,0,0" Opacity="0.6" IsHitTestVisible="False">
+            <Ellipse.Fill><SolidColorBrush Color="{Binding PrimaryColor}" /></Ellipse.Fill>
+            <Ellipse.Effect><BlurEffect Radius="110" /></Ellipse.Effect>
+        </Ellipse>
+        <Ellipse Width="680" Height="680" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-180,-280" Opacity="0.48" IsHitTestVisible="False">
+            <Ellipse.Fill><SolidColorBrush Color="{Binding SecondaryColor}" /></Ellipse.Fill>
+            <Ellipse.Effect><BlurEffect Radius="120" /></Ellipse.Effect>
+        </Ellipse>
+
+        <Grid Margin="42,30,42,34">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#F2FFFFFF" Margin="0,0,10,0" />
+                    <TextBlock Text="AMBIENT MODE" FontSize="12" FontWeight="SemiBold" Foreground="#BFFFFFFF" />
+                </StackPanel>
+                <Button HorizontalAlignment="Right" Style="{StaticResource MusicIconButtonStyle}" Width="42" Height="42"
+                        Content="&#xE711;" Command="{Binding CloseCommand}" Foreground="#FFFFFFFF"
+                        ToolTip="Exit Ambient Mode (Esc or F11)" AutomationProperties.Name="Exit Ambient Mode" />
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,24,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*" MinWidth="300" />
+                    <ColumnDefinition Width="7*" MinWidth="420" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,42,0" MaxWidth="430">
+                    <Border CornerRadius="22" Width="360" Height="360" Background="#18FFFFFF" BorderBrush="#24FFFFFF" BorderThickness="1">
+                        <Border.Effect><DropShadowEffect Color="{Binding PrimaryColor}" BlurRadius="44" ShadowDepth="0" Opacity="0.7" /></Border.Effect>
+                        <Grid>
+                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="82" Foreground="#99FFFFFF"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding NowPlaying.HasCover, Converter={StaticResource InverseBoolToVis}}" />
+                            <Image Source="{Binding NowPlaying.Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Grid>
+                    </Border>
+                    <TextBlock Text="{Binding NowPlaying.Title}" FontSize="25" FontWeight="SemiBold" Foreground="#FFFFFFFF"
+                               TextAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,22,0,5" />
+                    <TextBlock Text="{Binding NowPlaying.ArtistAndAlbum}" FontSize="14" Foreground="#BFFFFFFF"
+                               TextAlignment="Center" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <Grid Grid.Column="1">
+                    <ListBox x:Name="AmbientLyricsList" ItemsSource="{Binding Lyrics.Lines}"
+                             SelectedItem="{Binding Lyrics.ActiveLine, Mode=OneWay}"
+                             SelectionChanged="AmbientLyricsList_SelectionChanged"
+                             Background="Transparent" BorderThickness="0" Padding="18,160"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                             VirtualizingPanel.IsVirtualizing="False"
+                             Visibility="{Binding Lyrics.HasSyncedLyrics, Converter={StaticResource BoolToVis}}"
+                             AutomationProperties.Name="Synchronized lyrics">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Focusable" Value="False" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,7" />
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type music:LyricLineViewModel}">
+                                <Button Command="{Binding DataContext.Lyrics.SeekToLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="0"
+                                        HorizontalContentAlignment="Left" Cursor="Hand"
+                                        AutomationProperties.Name="{Binding Text}" ToolTip="Seek to this lyric">
+                                    <TextBlock x:Name="line" Text="{Binding Text}" TextWrapping="Wrap" FontSize="25" FontWeight="SemiBold"
+                                               Foreground="#72FFFFFF" Opacity="0.72" LineHeight="34" />
+                                </Button>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                        <Setter TargetName="line" Property="Foreground" Value="#FFFFFFFF" />
+                                        <Setter TargetName="line" Property="Opacity" Value="1" />
+                                        <Setter TargetName="line" Property="FontSize" Value="31" />
+                                        <Setter TargetName="line" Property="Effect">
+                                            <Setter.Value><DropShadowEffect Color="#FFFFFFFF" BlurRadius="18" ShadowDepth="0" Opacity="0.85" /></Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="560"
+                                Visibility="{Binding Lyrics.HasSyncedLyrics, Converter={StaticResource InverseBoolToVis}}">
+                        <TextBlock Text="{Binding Lyrics.PlainLyrics}" FontSize="20" LineHeight="30" TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="#D9FFFFFF" Visibility="{Binding Lyrics.HasPlainLyrics, Converter={StaticResource BoolToVis}}" />
+                        <TextBlock Text="{Binding Lyrics.StatusMessage}" FontSize="16" TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="#A6FFFFFF" Visibility="{Binding Lyrics.HasPlainLyrics, Converter={StaticResource InverseBoolToVis}}" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <Border Grid.Row="2" Background="#16000000" BorderBrush="#24FFFFFF" BorderThickness="1" CornerRadius="18" Padding="20,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE892;" Command="{Binding NowPlaying.PreviousCommand}"
+                                IsEnabled="{Binding NowPlaying.CanPrevious}" Foreground="#FFFFFFFF" ToolTip="Previous" />
+                        <Button Style="{StaticResource MusicPlayButtonStyle}" Margin="12,0" Width="52" Height="52"
+                                Content="{Binding NowPlaying.PlayPauseGlyph}" Command="{Binding NowPlaying.PlayPauseCommand}"
+                                IsEnabled="{Binding NowPlaying.HasCurrent}" Background="#F2FFFFFF" Foreground="#FF07101E" />
+                        <Button Style="{StaticResource MusicIconButtonStyle}" Content="&#xE893;" Command="{Binding NowPlaying.NextCommand}"
+                                IsEnabled="{Binding NowPlaying.CanNext}" Foreground="#FFFFFFFF" ToolTip="Next" />
+                    </StackPanel>
+                    <Grid Grid.Column="1" Margin="28,0">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <Slider Style="{StaticResource MusicSliderStyle}" Minimum="0" Maximum="{Binding NowPlaying.SeekMaximum}"
+                                Value="{Binding NowPlaying.PositionSeconds, Mode=TwoWay}" IsEnabled="{Binding NowPlaying.HasCurrent}"
+                                AutomationProperties.Name="Seek" />
+                        <Grid Grid.Row="1" Margin="0,2,0,0">
+                            <TextBlock Text="{Binding NowPlaying.PositionText}" FontSize="11" Foreground="#A6FFFFFF" />
+                            <TextBlock Text="{Binding NowPlaying.DurationText}" FontSize="11" Foreground="#A6FFFFFF" HorizontalAlignment="Right" />
+                        </Grid>
+                    </Grid>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource MusicIconButtonStyle}" Content="{Binding NowPlaying.VolumeGlyph}"
+                                Command="{Binding NowPlaying.ToggleMuteCommand}" Foreground="#FFFFFFFF" ToolTip="Mute" />
+                        <Slider Style="{StaticResource MusicSliderStyle}" Width="120" Margin="8,0,0,0"
+                                Minimum="0" Maximum="{Binding NowPlaying.VolumeMaximum}" Value="{Binding NowPlaying.VolumePercent, Mode=TwoWay}"
+                                AutomationProperties.Name="Volume" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

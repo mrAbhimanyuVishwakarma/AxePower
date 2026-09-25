@@ -13,7 +13,7 @@ namespace AxePower.Tests.Music;
 public class CandidateRankerTests
 {
     private static Track Wanted(string title, string artist, double minutes = 3.3, string? album = null) =>
-        Track.ForProvider(new ProviderRef("spotify", "x"), title, new[] { artist },
+        Track.ForProvider(new ProviderRef("catalog", "x"), title, new[] { artist },
             TimeSpan.FromMinutes(minutes), album);
 
     private static StreamCandidate Hit(string title, string channel, double minutes) =>

@@ -59,6 +59,9 @@
         <DataTemplate DataType="{x:Type viewmodels:SoftwareHubViewModel}">
             <views:SoftwareHubView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:DebloatViewModel}">
+            <views:DebloatView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:PhoneHubViewModel}">
             <views:PhoneHubView />
         </DataTemplate>
@@ -227,11 +230,11 @@
                             <TextBlock Text="CONNECTION" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="20,10,20,3"/>
                             <Border Style="{StaticResource SidebarRailDividerStyle}"/>
 
-                            <!-- Share Screen -->
-                            <Button Style="{Binding ShareScreenActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="ShareScreen" ToolTip="Share Screen: stream a display to friends in their browser, like Discord" AutomationProperties.Name="Share Screen">
+                            <!-- Friends Hub (Screen sharing, call & chat) -->
+                            <Button Style="{Binding FriendsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Friends" ToolTip="Friends: chat, voice call, screen share &amp; play together" AutomationProperties.Name="Friends">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Share Screen" Style="{StaticResource SidebarLabelStyle}"/>
+                                    <TextBlock Text="&#xE779;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Friends" Style="{StaticResource SidebarLabelStyle}"/>
                                 </StackPanel>
                             </Button>
 
@@ -336,7 +339,7 @@
                                 </Button>
 
                                 <!-- Debloat -->
-                                <Button Style="{StaticResource SidebarSubItemButtonStyle}" Command="{Binding DebloatCommand}" ToolTip="Debloat: launch Win11Debloat by Raphire">
+                                <Button Style="{Binding DebloatActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Debloat" ToolTip="Debloat Hub: Win11Debloat &amp; WinUtil Windows tools">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="Debloat" Style="{StaticResource SidebarLabelStyle}"/>
@@ -962,7 +965,7 @@
                                         <TextBlock Text="• 60 FPS is held by dropping resolution, not frames: 1080p60 steps down to 900p60 and 720p60 when the link tightens." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
                                         <TextBlock Text="• System audio or microphone rides along with the picture, and the in-app preview shows the delay your viewer actually sees." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
                                         <TextBlock Text="• Remote control is off by default, granted per session, and its code is never part of the watch link." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                        <TextBlock Text="• Music: YouTube and Spotify sources, Discovery that keeps the queue going, media shortcuts that work from any app, and instant library search by title, artist or album." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Music: YouTube Music and local-file sources, Discovery that keeps the queue going, media shortcuts that work from any app, and instant library search by title, artist or album." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
                                         <TextBlock Text="• Phone portal: now requires the access token carried by its QR link. Older bookmarked links stop working, so rescan the QR code." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap"/>
                                     </StackPanel>
 

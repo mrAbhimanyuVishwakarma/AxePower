@@ -45,18 +45,17 @@ public class MusicRegistrationTests
         Assert.Same(registry, provider.GetRequiredService<ProviderRegistry>());
 
         var ids = registry.All.Select(p => p.Info.Id).ToList();
-        Assert.Contains("local", ids);
-        Assert.Contains("youtube", ids);
-        Assert.Contains("spotify", ids);
+        Assert.Equal(new[] { "local", "youtube" }, ids.OrderBy(id => id));
 
         // Every source has to be reachable through the registry as well as on its own, or the
         // Sources list and the resolver would disagree about what exists.
         Assert.IsType<LocalFileProvider>(registry.ById("local"));
         Assert.IsType<YouTubeProvider>(registry.ById("youtube"));
-        Assert.IsType<SpotifyProvider>(registry.ById("spotify"));
         Assert.Same(registry.ById("youtube"), provider.GetRequiredService<YouTubeProvider>());
 
         Assert.IsType<StreamResolver>(provider.GetRequiredService<IStreamResolver>());
+        Assert.IsType<LrcLibLyricsService>(provider.GetRequiredService<ILyricsService>());
+        Assert.IsType<AxePower.App.Services.MusicPaletteExtractor>(provider.GetRequiredService<IPaletteExtractor>());
 
         // Resolving these must not open or create the database: the library is opened on the
         // first read, so a cold start never pays for it.

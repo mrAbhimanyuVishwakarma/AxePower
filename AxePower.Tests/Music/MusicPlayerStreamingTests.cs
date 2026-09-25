@@ -41,7 +41,7 @@ public sealed class MusicPlayerStreamingTests : IDisposable
     }
 
     private static Track Remote(string title) =>
-        Track.ForProvider(new ProviderRef("spotify", title), title, new[] { "Artist" }, TimeSpan.FromMinutes(3));
+        Track.ForProvider(new ProviderRef("catalog", title), title, new[] { "Artist" }, TimeSpan.FromMinutes(3));
 
     [Fact]
     public async Task AStreamedTrackIsResolvedBeforeTheEngineEverSeesIt()
@@ -64,16 +64,17 @@ public sealed class MusicPlayerStreamingTests : IDisposable
     }
 
     [Fact]
-    public async Task TheNextStreamedTrackIsPreloadedOnlyOnceItHasBeenResolved()
+    public async Task TheNextStreamedTrackIsResolvedOnlyWhenPlaybackAdvancesToIt()
     {
         await _player.OpenAsync(new[] { Remote("a"), Remote("b") });
-        await WaitForAsync(() => _engine.LastNext is not null);
 
-        Assert.Equal("https://audio/b", _engine.LastNext!.Track.ResolvedStream!.Url);
+        Assert.Equal(new[] { "a" }, _resolver.Prepared);
+        Assert.Null(_engine.LastNext);
 
-        // The engine must never be handed an unresolved streamed track, because it would have
-        // nothing to open and the gapless preload would fail every time.
-        Assert.DoesNotContain(_engine.NextCalls, item => item is { } queued && !queued.Track.IsLocal && queued.Track.ResolvedStream is null);
+        await _player.NextAsync();
+
+        Assert.Equal(new[] { "a", "b" }, _resolver.Prepared);
+        Assert.Equal("https://audio/b", _engine.LastLoaded!.Track.ResolvedStream!.Url);
     }
 
     [Fact]
@@ -91,10 +92,23 @@ public sealed class MusicPlayerStreamingTests : IDisposable
 
         await _player.OpenAsync(new[] { Remote("a") });
 
-        Assert.Equal(new[] { "a", "a" }, _resolver.Prepared);
-        Assert.Equal(new[] { false, true }, _resolver.LocalCopyRequests);
+        Assert.Equal(new[] { "a", "a", "a" }, _resolver.Prepared);
+        Assert.Equal(new[] { false, false, true }, _resolver.LocalCopyRequests);
         Assert.Equal(StreamProtocol.File, _engine.LastLoaded!.Track.ResolvedStream!.Protocol);
         Assert.Null(_player.State.Error);
+    }
+
+    [Fact]
+    public async Task AnEngineSideStreamFailure_RefreshesTheCurrentUrlOnce()
+    {
+        await _player.OpenAsync(new[] { Remote("a") });
+
+        _engine.RaiseError("HTTP 403");
+        await WaitForAsync(() => _resolver.Prepared.Count == 2);
+
+        Assert.Equal(new[] { "a", "a" }, _resolver.Prepared);
+        Assert.Equal("a", _player.State.Current?.Track.Title);
+        Assert.True(_player.State.Playing);
     }
 
     [Fact]
@@ -198,6 +212,9 @@ public sealed class MusicPlayerStreamingTests : IDisposable
             });
         }
 
+        public Task<Track> RefreshAsync(Track track, bool preferLocalCopy, CancellationToken ct) =>
+            PrepareAsync(track with { ResolvedStream = null }, preferLocalCopy, ct);
+
         public Task<Track> EnsureCandidatesAsync(Track track, CancellationToken ct) =>
             Task.FromResult(track.IsLocal ? track : Candidates(track));
 
@@ -277,5 +294,8 @@ public sealed class MusicPlayerStreamingTests : IDisposable
             OutputChanged?.Invoke(this, new OutputInfo("", false, 0, 0, 0, false, null));
             DeviceLost?.Invoke(this, EventArgs.Empty);
         }
+
+        public void RaiseError(string message) =>
+            Error?.Invoke(this, new EngineError(LastLoaded?.Key ?? Guid.Empty, message, null));
     }
 }

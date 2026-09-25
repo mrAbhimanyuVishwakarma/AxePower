@@ -325,35 +325,6 @@
         </Setter>
     </Style>
 
-    <!-- Spotify Brand Button Style -->
-    <Style x:Key="SpotifyButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="#1DB954" />
-        <Setter Property="Foreground" Value="#FFFFFF" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="14,7" />
-        <Setter Property="FontSize" Value="12.5" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="#1ED760" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="#169C46" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <!-- YouTube Music Button Style -->
     <Style x:Key="YouTubeMusicButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />

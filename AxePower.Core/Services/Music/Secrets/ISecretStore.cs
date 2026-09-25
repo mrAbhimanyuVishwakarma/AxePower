@@ -1,7 +1,7 @@
 namespace AxePower.Core.Services.Music;
 
 /// <summary>
-/// Encrypted storage for credentials (Last.fm session, Spotify refresh token, LAN portal token).
+/// Encrypted storage for credentials (Last.fm session and LAN portal token).
 /// Values never go into settings.json and are never logged. Setting null removes the key.
 /// </summary>
 public interface ISecretStore

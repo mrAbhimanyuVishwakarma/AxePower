@@ -52,11 +52,13 @@ public partial class MainViewModel : ObservableObject
     public UninstallerViewModel UninstallerVm { get; }
     public SystemOptimizerViewModel OptimizerVm { get; }
     public SystemDoctorViewModel DoctorVm { get; }
+    public DebloatViewModel DebloatVm { get; }
     public SoftwareHubViewModel SoftwareHubVm { get; }
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
     public MusicViewModel? MusicVm { get; }
     public ShareScreenViewModel? ShareScreenVm { get; }
+    public ShareScreenViewModel? FriendsVm => ShareScreenVm;
 
     /// <summary>Shared Now Playing state for the title-bar player (null only in minimal test setups).</summary>
     public NowPlayingViewModel? NowPlaying { get; }
@@ -93,6 +95,7 @@ public partial class MainViewModel : ObservableObject
     public Style? UninstallerActiveStyle => GetSubItemStyleForView(UninstallerVm);
     public Style? OptimizerActiveStyle => GetSubItemStyleForView(OptimizerVm);
     public Style? DoctorActiveStyle => GetSubItemStyleForView(DoctorVm);
+    public Style? DebloatActiveStyle => GetSubItemStyleForView(DebloatVm);
     public Style? TerminalActiveStyle => GetSubItemStyleForView(TerminalVm);
     public Style? SoftwareHubActiveStyle => GetStyleForView(SoftwareHubVm);
     public Style? UpdatePcActiveStyle => GetSubItemStyleForView(SoftwareHubVm);
@@ -100,6 +103,7 @@ public partial class MainViewModel : ObservableObject
     public Style? SecondMonitorActiveStyle => _currentNavSection == "SecondMonitor" && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
     public Style? LanDropActiveStyle => GetStyleForView(PhoneHubVm);
     public Style? ShareScreenActiveStyle => ShareScreenVm != null ? GetStyleForView(ShareScreenVm) : GetStyleForView(new object());
+    public Style? FriendsActiveStyle => ShareScreenActiveStyle;
 
     public string MaintenanceChevronGlyph => IsMaintenanceExpanded ? "\uE70D" : "\uE76C";
     public string UtilitiesChevronGlyph => IsUtilitiesExpanded ? "\uE70D" : "\uE76C";
@@ -150,6 +154,7 @@ public partial class MainViewModel : ObservableObject
         UninstallerViewModel uninstallerVm,
         SystemOptimizerViewModel optimizerVm,
         SystemDoctorViewModel doctorVm,
+        DebloatViewModel debloatVm,
         SoftwareHubViewModel softwareHubVm,
         PhoneHubViewModel phoneHubVm,
         TerminalViewModel terminalVm,
@@ -193,6 +198,7 @@ public partial class MainViewModel : ObservableObject
         UninstallerVm = uninstallerVm;
         OptimizerVm = optimizerVm;
         DoctorVm = doctorVm;
+        DebloatVm = debloatVm;
         SoftwareHubVm = softwareHubVm;
         PhoneHubVm = phoneHubVm;
         TerminalVm = terminalVm;
@@ -354,12 +360,14 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(UninstallerActiveStyle));
         OnPropertyChanged(nameof(OptimizerActiveStyle));
         OnPropertyChanged(nameof(DoctorActiveStyle));
+        OnPropertyChanged(nameof(DebloatActiveStyle));
         OnPropertyChanged(nameof(TerminalActiveStyle));
         OnPropertyChanged(nameof(SoftwareHubActiveStyle));
         OnPropertyChanged(nameof(UpdatePcActiveStyle));
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
         OnPropertyChanged(nameof(LanDropActiveStyle));
         OnPropertyChanged(nameof(ShareScreenActiveStyle));
+        OnPropertyChanged(nameof(FriendsActiveStyle));
         OnPropertyChanged(nameof(ShowBatteryPill));
     }
 
@@ -389,7 +397,7 @@ public partial class MainViewModel : ObservableObject
         {
             IsMaintenanceExpanded = true;
         }
-        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities")
+        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat")
         {
             IsUtilitiesExpanded = true;
         }
@@ -409,10 +417,12 @@ public partial class MainViewModel : ObservableObject
             "Utilities"   => OptimizerVm,
             "Doctor"      => DoctorVm,
             "Maintenance" => DoctorVm,
+            "Debloat"     => DebloatVm,
             "Terminal"    => TerminalVm,
             "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
             "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
             "ShareScreen" => (object?)ShareScreenVm ?? DashboardVm,
+            "Friends"     => (object?)ShareScreenVm ?? DashboardVm,
             "PhoneControl"=> SwitchPhoneHubTab("ScreenMirror"),
             "PhoneHub"    => SwitchPhoneHubTab("ScreenMirror"),
             "SecondMonitor"=> SwitchPhoneHubTab("SecondMonitor"),
@@ -525,12 +535,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Debloat()
     {
-        _notificationService.Show("Opening Win11Debloat by Raphire...");
-        bool launched = _debloatService.LaunchDebloatUtility();
-        if (!launched)
-        {
-            _notificationService.Show("Debloat utility was cancelled or failed to start.");
-        }
+        Navigate("Debloat");
     }
 
     [RelayCommand]
@@ -763,24 +768,26 @@ public partial class MainViewModel : ObservableObject
         AllToolGuides.Add(new AxePower.App.Models.ToolInstructionItem
         {
             Id = "Debloat",
-            Title = "Debloat Utility",
+            Title = "Debloat & Windows Tools Hub",
             IconGlyph = "\uE756",
-            Subtitle = "Windows 11 Telemetry & Sponsored App Removal",
-            Credit = "Powered by Win11Debloat (Raphire)",
+            Subtitle = "Win11Debloat (Raphire) & WinUtil (Chris Titus Tech)",
+            Credit = "Powered by Win11Debloat (Raphire) & WinUtil (Chris Titus Tech)",
             CreditUrl = "https://github.com/Raphire/Win11Debloat.git",
-            Overview = "Clean, trusted utility that safely removes pre-installed sponsored Windows 11 bloatware, disables intrusive background telemetry, removes Bing search from the Start menu, and unregisters unnecessary background services.",
+            Overview = "A dedicated hub for trusted Windows debloat and optimization engines. Easily run Win11Debloat to strip telemetry and preinstalled apps, or WinUtil by Chris Titus Tech for all-in-one system tweaks and package management.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "Click 'Debloat' in the sidebar or 'Launch Tool' below.",
-                "Click 'Yes' when the Windows Administrator (UAC) prompt appears.",
-                "In the Win11Debloat interface, select 'Quick / Recommended Debloat' or customize individual toggles.",
-                "Let the optimization complete, then restart your PC to apply all privacy and performance tweaks."
+                "Click 'Debloat' in the sidebar to open the Debloat Hub page.",
+                "Choose your preferred utility: Win11Debloat by Raphire or WinUtil by Chris Titus Tech.",
+                "Hover over the info (i) icon to check author credit or click to view the source repository.",
+                "Click the Launch button to run the tool elevated in PowerShell.",
+                "Optionally click 'Create Restore Point' first as a safety checkpoint."
             },
             Tips = new System.Collections.Generic.List<string>
             {
-                "You can restore default Windows apps (like Calculator or Microsoft Store) anytime using the utility's Restore tab."
+                "Always create a System Restore point before applying deep system optimizations.",
+                "You can restore default Windows apps anytime using Win11Debloat's Restore tab."
             },
-            LaunchButtonText = "Launch Debloat Utility"
+            LaunchButtonText = "Open Debloat Hub"
         });
 
         // 6. Controller Navigation (Gopher360)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AxePower.App.ViewModels;
@@ -18,7 +18,7 @@ public class DashboardFeaturesTests
     private static readonly HashSet<string> KnownViews = new(StringComparer.Ordinal)
     {
         "Dashboard", "AutoSwitch", "GameMode", "Battery", "Music", "Settings", "Logs", "About",
-        "Uninstaller", "Optimizer", "Utilities", "Doctor", "Maintenance", "Terminal",
+        "Uninstaller", "Optimizer", "Utilities", "Doctor", "Maintenance", "Debloat", "Terminal",
         "SoftwareHub", "UpdatePc", "ShareScreen", "PhoneControl", "PhoneHub", "SecondMonitor",
         "PhoneLink"
     };

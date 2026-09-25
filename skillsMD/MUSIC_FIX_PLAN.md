@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `v1.9` · **Last updated:** 2026-09-23 · **Last commit covered:** `c4b2cb5`
+> **Branch:** `v1.9` · **Last updated:** 2026-09-25 · **Last commit covered:** `4a004bb` (plus current uncommitted Music phases 1–3)
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and
@@ -63,29 +63,18 @@ Ids are `M<n>` for Music, `P<n>` for the portal, and are never reused.
 ## Open
 
 ### M1 — No part of the Music UI has ever been rendered
-**Where:** [MusicView.xaml](../AxePower.App/Views/Music/MusicView.xaml), [DashboardViewModel.cs](../AxePower.App/ViewModels/DashboardViewModel.cs)
+**Where:** [MusicView.xaml](../AxePower.App/Views/Music/MusicView.xaml), [AmbientModeOverlay.xaml](../AxePower.App/Views/Music/AmbientModeOverlay.xaml), [DashboardViewModel.cs](../AxePower.App/ViewModels/DashboardViewModel.cs)
 **Why it matters:** This is the largest untested surface in the feature. The Music Settings
 dialog grew from one 480px panel to a 640px scrolling dialog with five sections (Sources,
 streamed audio, Discovery, Shortcuts, Control other players). None of it, nor the Discovery
-toggle added to the transport row, nor the "Play from" submenu on queue rows, nor the four new
-What's New cards, has been seen. Binding errors and layout breakage would not show up in any
+toggle added to the transport row, the synchronized Lyrics tab, the expanded Ambient overlay,
+the "Play from" submenu on queue rows, nor the four new What's New cards, has been seen. Binding errors and layout breakage would not show up in any
 test; XAML compiles fine with a misspelled binding path.
 **How to verify:** Launch the app (it relaunches elevated, so this has to be done by the owner),
-open Music → settings, scroll the whole dialog, right-click a streamed queue row, and check the
-Dashboard's What's New dropdown. Compare against `ui reference/`.
+open Music → settings, scroll the whole dialog, right-click a streamed queue row, open Lyrics,
+enter Ambient Mode with F11, and check the Dashboard's What's New dropdown. Resize the window
+and compare against `ui reference/`.
 **Found:** 2026-09-23 / `3689ff4`–`141ebca`
-
-### M2 — Spotify sign-in has never been executed
-**Where:** [SpotifyAuth.cs](../AxePower.Core/Services/Music/Providers/SpotifyAuth.cs), [SpotifyProvider.cs](../AxePower.Core/Services/Music/Providers/SpotifyProvider.cs)
-**Why it matters:** The whole PKCE flow is unproven: the loopback listener on port 8898, the
-browser hand-off, the state check, the code-for-token exchange, refresh-token rotation, and
-every API call built on them. No Client ID has ever been configured, so not one line of the
-network path has run. A wrong redirect URI or a missing scope fails only at runtime.
-**How to verify:** Register an app at developer.spotify.com with redirect URI
-`http://127.0.0.1:8898/callback`, paste the Client ID into Music Settings → Sources → Spotify,
-sign in, then search and import a playlist. Also confirm signing out and back in works, and that
-a stale refresh token is dropped rather than retried forever.
-**Found:** 2026-09-23 / `3689ff4`
 
 ### M3 — Global hotkeys have never been registered against Windows
 **Where:** [HotkeyService.cs](../AxePower.App/Services/HotkeyService.cs)
@@ -111,14 +100,25 @@ what it added at variety 0, 50 and 100. Judge whether the additions are plausibl
 **Found:** 2026-09-23 / `9708096`
 
 ### M5 — Stream expiry and re-resolution never seen with a genuinely expired URL
-**Where:** `PrepareAsync` in [StreamResolver.cs](../AxePower.Core/Services/Music/Providers/StreamResolver.cs)
+**Where:** `PrepareAsync` / `RefreshAsync` in [StreamResolver.cs](../AxePower.Core/Services/Music/Providers/StreamResolver.cs), `OnEngineErrorAsync` in [MusicPlayerService.cs](../AxePower.Core/Services/Music/MusicPlayerService.cs)
 **Why it matters:** Expiry is tested with a fake clock. A real signed YouTube URL that has aged
-past the hour may fail in a way the resolver does not recognise as expiry — for example a 403
-during decode rather than at resolve time — in which case the track is reported as unplayable
-instead of being re-resolved.
+past the hour may fail differently in production. The player now avoids resolving queued remote
+tracks early and refreshes the current candidate once when open/decode reports an error, including
+an asynchronous 403, before downloading or skipping. That recovery is covered with fakes but has
+not been observed against a genuinely expired YouTube URL.
 **How to verify:** Resolve a streamed track, leave the queue untouched for over an hour, then
 play it. It should re-resolve and play rather than error.
 **Found:** 2026-09-23 / `3689ff4`
+
+### M7 — Online lyric providers and artwork-driven Ambient colors are not live-verified
+**Where:** [LrcLibLyricsService.cs](../AxePower.Core/Services/Music/Lyrics/LrcLibLyricsService.cs), [MusicPaletteExtractor.cs](../AxePower.App/Services/MusicPaletteExtractor.cs), [AmbientModeOverlay.xaml](../AxePower.App/Views/Music/AmbientModeOverlay.xaml)
+**Why it matters:** LRCLIB and Kugou responses are tested with their real JSON shapes through fake
+HTTP handlers, and palette selection is unit tested, but provider availability, metadata match
+quality, real embedded covers, and GPU/render behavior vary outside the test suite.
+**How to verify:** Enable online lyrics, play several local and YouTube tracks with known synced
+lyrics, confirm LRCLIB success and a Kugou fallback, click lines to seek, then enter Ambient Mode
+and confirm each cover produces readable, non-black glows without animation or scrolling stalls.
+**Found:** 2026-09-25 / working tree after `4a004bb`
 
 ### P1 — The phone remote has never been opened on a phone
 **Where:** [LanDropService.cs](../AxePower.Core/Services/LanDropService.cs) (embedded portal HTML), [MusicRemote.cs](../AxePower.Core/Services/Music/Providers/MusicRemote.cs)
@@ -179,7 +179,7 @@ in what exists. Phases are from [MUSIC_PLAYER_PLAN.md §26](MUSIC_PLAYER_PLAN.md
 | 2d | Browse UI: Tracks / Albums / Artists / Genres / Folders, search, sort. **Needs a virtualising wrap panel package, which the App does not have** |
 | 2e | Playlists, M3U import/export, Liked, Recently played |
 | — | Listening stats page (top lists, time of day, day of week, 12-month calendar) — depends on 2a history, which is already recorded |
-| 3–7 | Mini player, automations, audiophile features, lyrics, tag editor, Discord, Last.fm — see the plan |
+| 3–7 | Mini player, automations, audiophile features, tag editor, Discord, Last.fm — see the plan. Synced lyrics and Ambient Mode now exist but remain under M1/M7 until live-verified. |
 
 ---
 

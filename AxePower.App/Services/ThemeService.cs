@@ -147,6 +147,26 @@ public class ThemeService
             });
 
         var dictionary = SkinResourceFactory.Build(skin.Compiled);
+
+        // Ensure popups, dropdowns, and flyouts remain opaque, high-contrast, and crisp across all skins (especially Glass)
+        bool isLight = skin.Compiled.IsLight;
+        bool isGlass = skin.Compiled.UsesAcrylic;
+        var popupBg = isLight ? "#FFFFFFFF" : (isGlass ? "#FF161820" : "#FF1E2128");
+        var popupBorder = isLight ? "#FFCBD5E1" : (isGlass ? "#33FFFFFF" : "#FF333842");
+        var controlBacking = isLight ? "#FFFFFFFF" : (isGlass ? "#E614161C" : "#FF1E2128");
+
+        var popupBgBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(popupBg));
+        popupBgBrush.Freeze();
+        dictionary["DropDownPopupBackgroundBrush"] = popupBgBrush;
+
+        var popupBorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(popupBorder));
+        popupBorderBrush.Freeze();
+        dictionary["DropDownPopupBorderBrush"] = popupBorderBrush;
+
+        var controlBackingBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(controlBacking));
+        controlBackingBrush.Freeze();
+        dictionary["DropDownControlBackingBrush"] = controlBackingBrush;
+
         var merged = Application.Current.Resources.MergedDictionaries;
         if (_appliedDictionary != null) merged.Remove(_appliedDictionary);
         merged.Add(dictionary);

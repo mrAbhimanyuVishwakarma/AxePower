@@ -93,64 +93,6 @@ public partial class NowPlayingViewModel : ObservableObject
         finally { _applying = wasApplying; }
     }
 
-    private readonly SpotifyController _spotifyController = new();
-    private System.Windows.Threading.DispatcherTimer? _spotifyTimer;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PlayerSourceBadge))]
-    private bool _isSpotifyMode;
-
-    public string PlayerSourceBadge => IsSpotifyMode ? "Spotify (Minimized)" : "Local Player";
-
-    [RelayCommand]
-    public async Task EnableSpotifyModeAsync()
-    {
-        if (IsPlaying)
-            await _player.PauseAsync();
-
-        IsSpotifyMode = true;
-        await _spotifyController.LaunchAndMinimizeSpotifyAsync();
-        await SyncSpotifyStateAsync();
-
-        if (_spotifyTimer == null)
-        {
-            _spotifyTimer = new System.Windows.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1.5)
-            };
-            _spotifyTimer.Tick += async (_, _) =>
-            {
-                if (IsSpotifyMode)
-                    await SyncSpotifyStateAsync();
-            };
-        }
-        _spotifyTimer.Start();
-    }
-
-    [RelayCommand]
-    public void DisableSpotifyMode()
-    {
-        IsSpotifyMode = false;
-        _spotifyTimer?.Stop();
-        Apply(_player.State);
-    }
-
-    public async Task SyncSpotifyStateAsync()
-    {
-        if (!IsSpotifyMode) return;
-        var info = await _spotifyController.GetSpotifyTrackInfoAsync();
-        if (info.HasValue)
-        {
-            Title = info.Value.title;
-            Artist = info.Value.artist;
-            Album = "Spotify (Minimized)";
-            IsPlaying = info.Value.isPlaying;
-            HasCurrent = true;
-            CanNext = true;
-            CanPrevious = true;
-        }
-    }
-
     /// <summary>Set by the shell so "Open Music" works from any surface.</summary>
     public Action? NavigateToMusic { get; set; }
 
@@ -161,6 +103,7 @@ public partial class NowPlayingViewModel : ObservableObject
     [ObservableProperty] private string _artist = "Open files or drop them on the Music page";
     [ObservableProperty] private string _album = string.Empty;
     [ObservableProperty] private ImageSource? _cover;
+    [ObservableProperty] private string? _coverPath;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private string _upNext = string.Empty;
 
@@ -337,38 +280,18 @@ public partial class NowPlayingViewModel : ObservableObject
     [RelayCommand]
     private async Task PlayPause()
     {
-        if (IsSpotifyMode)
-        {
-            await _spotifyController.TogglePlayPauseAsync();
-            IsPlaying = !IsPlaying;
-            return;
-        }
         await _player.TogglePlayPauseAsync();
     }
 
     [RelayCommand]
     private async Task Next()
     {
-        if (IsSpotifyMode)
-        {
-            await _spotifyController.NextTrackAsync();
-            await Task.Delay(350);
-            await SyncSpotifyStateAsync();
-            return;
-        }
         await _player.NextAsync();
     }
 
     [RelayCommand]
     private async Task Previous()
     {
-        if (IsSpotifyMode)
-        {
-            await _spotifyController.PreviousTrackAsync();
-            await Task.Delay(350);
-            await SyncSpotifyStateAsync();
-            return;
-        }
         await _player.PreviousAsync();
     }
 
@@ -495,7 +418,6 @@ public partial class NowPlayingViewModel : ObservableObject
 
     public Task OpenPathsAsync(IEnumerable<string> paths)
     {
-        if (IsSpotifyMode) DisableSpotifyMode();
         return _player.OpenPathsAsync(paths);
     }
 
@@ -507,7 +429,6 @@ public partial class NowPlayingViewModel : ObservableObject
     /// </summary>
     public Task OpenTracksAsync(IReadOnlyList<Track> tracks, int startIndex = 0)
     {
-        if (IsSpotifyMode) DisableSpotifyMode();
         return tracks.Count == 0 ? Task.CompletedTask : _player.OpenAsync(tracks, startIndex);
     }
 
@@ -530,7 +451,6 @@ public partial class NowPlayingViewModel : ObservableObject
 
     private void ApplyCore(PlayerState state)
     {
-        if (IsSpotifyMode) return;
         _state = state;
         var current = state.Current;
 
@@ -616,6 +536,7 @@ public partial class NowPlayingViewModel : ObservableObject
         if (current == null)
         {
             Cover = null;
+            CoverPath = null;
             return;
         }
 
@@ -627,7 +548,11 @@ public partial class NowPlayingViewModel : ObservableObject
             ImageSource? image = path == null ? null : LoadFrozen(path, 256);
             _dispatcher.Post(() =>
             {
-                if (!cts.IsCancellationRequested) Cover = image;
+                if (!cts.IsCancellationRequested)
+                {
+                    CoverPath = path;
+                    Cover = image;
+                }
             });
         }, cts.Token);
     }

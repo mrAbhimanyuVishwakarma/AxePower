@@ -895,14 +895,6 @@ public partial class GameModeViewModel : ObservableObject
 
         await Task.Run(() =>
         {
-            var whitelist = new[]
-            {
-                "explorer", "taskmgr", "devenv", "Code", "powershell", "cmd",
-                "conhost", "svchost", "dllhost", "sihost", "ctfmon", "taskhostw",
-                "SearchApp", "StartMenuExperienceHost", "ShellExperienceHost",
-                "TextInputHost", "ApplicationFrameHost", "RuntimeBroker", "AxePower"
-            };
-
             var processes = Process.GetProcesses();
             var uniqueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             // A titled window may hold unsaved work, which makes closing the app a caution case
@@ -912,7 +904,9 @@ public partial class GameModeViewModel : ObservableObject
             {
                 try
                 {
-                    if (Array.Exists(whitelist, w => w.Equals(p.ProcessName, StringComparison.OrdinalIgnoreCase)))
+                    // Use the centralized critical-process check from AppKillerService
+                    // so the UI never shows processes that would be protected from killing
+                    if (AppKillerService.IsCriticalProcess(p.ProcessName))
                         continue;
 
                     uniqueNames.Add(p.ProcessName);

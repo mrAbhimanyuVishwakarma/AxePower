@@ -25,6 +25,13 @@ public interface IStreamResolver
     /// </summary>
     Task<Track> PrepareAsync(Track track, bool preferLocalCopy, CancellationToken ct);
 
+    /// <summary>
+    /// Drops a remote URL that failed at open/decode time and resolves the selected candidate
+    /// again. This is the recovery path for signed URLs rejected by YouTube before their
+    /// configured lifetime has elapsed.
+    /// </summary>
+    Task<Track> RefreshAsync(Track track, bool preferLocalCopy, CancellationToken ct);
+
     /// <summary>The candidate list for a track, searching for it if that has not happened yet.</summary>
     Task<Track> EnsureCandidatesAsync(Track track, CancellationToken ct);
 
@@ -108,6 +115,25 @@ public sealed class StreamResolver : IStreamResolver
 
         throw new StreamResolutionException(
             $"None of the {attempts} source{(attempts == 1 ? "" : "s")} for '{track.Title}' could be played.", last);
+    }
+
+    public Task<Track> RefreshAsync(Track track, bool preferLocalCopy, CancellationToken ct)
+    {
+        if (track.IsLocal) return Task.FromResult(track);
+
+        // URL rejection is not evidence that the candidate itself is bad. Preserve the match
+        // and clear only its ephemeral playback URL so the provider fetches a fresh manifest.
+        var candidates = track.Candidates?
+            .Select(candidate => candidate.Id == track.SelectedCandidateId
+                ? candidate with { Stream = null, Failed = false }
+                : candidate)
+            .ToList();
+
+        return PrepareAsync(track with
+        {
+            Candidates = candidates,
+            ResolvedStream = null
+        }, preferLocalCopy, ct);
     }
 
     public async Task<Track> EnsureCandidatesAsync(Track track, CancellationToken ct)

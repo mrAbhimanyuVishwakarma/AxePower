@@ -59,12 +59,10 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
     private DateTime _lastSaveUtc;
     private CancellationTokenSource? _loadCts;
     private bool _shutDown;
+    private Guid? _streamRecoveryAttemptedKey;
 
     /// <summary>Null in tests and in builds with no streaming sources: every track is then local.</summary>
     private readonly IStreamResolver? _resolver;
-
-    /// <summary>Cancels a preload that a newer "next track" has made pointless.</summary>
-    private CancellationTokenSource? _nextCts;
 
     public MusicPlayerService(
         IAudioEngine engine,
@@ -538,6 +536,23 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         if (current == null || (error.Key != current.Key && error.Key != _loadedKey && error.Key != Guid.Empty)) return;
 
         _log.LogWarning($"[Music] Playback error: {error.Message}");
+
+        // Some signed URLs fail only after the decoder starts reading, most notably as a 403.
+        // Refresh the same candidate once before treating the track as unplayable. Keeping the
+        // guard for the duration of this load prevents a permanently bad source from looping.
+        if (_resolver is not null
+            && !current.Track.IsLocal
+            && _streamRecoveryAttemptedKey != current.Key)
+        {
+            _streamRecoveryAttemptedKey = current.Key;
+            var resumeAt = _engine.Position > TimeSpan.Zero ? _engine.Position : _position;
+            _log.LogInfo($"[Music] Refreshing the playback URL for '{current.Track.Title}'.");
+            await LoadCurrentAsync(resumeAt, play: true, countFailure: true,
+                resetStreamRecovery: false, forceStreamRefresh: true);
+            Publish();
+            return;
+        }
+
         await HandleFailureAsync(current, play: true);
         Publish();
     }
@@ -592,10 +607,17 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         }
     }
 
-    private async Task LoadCurrentAsync(TimeSpan start, bool play, bool countFailure)
+    private async Task LoadCurrentAsync(
+        TimeSpan start,
+        bool play,
+        bool countFailure,
+        bool resetStreamRecovery = true,
+        bool forceStreamRefresh = false)
     {
         var item = _queue.Current;
         if (item == null) return;
+
+        if (resetStreamRecovery) _streamRecoveryAttemptedKey = null;
 
         _loadCts?.Cancel();
         _loadCts = new CancellationTokenSource();
@@ -603,7 +625,9 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
 
         try
         {
-            item = await ResolveAsync(item, preferLocalCopy: false, ct);
+            item = forceStreamRefresh
+                ? await RefreshAsync(item, preferLocalCopy: false, ct)
+                : await ResolveAsync(item, preferLocalCopy: false, ct);
 
             try
             {
@@ -611,12 +635,22 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
             }
             catch (Exception ex) when (!item.Track.IsLocal && !ct.IsCancellationRequested)
             {
-                // A remote stream that will not open progressively is worth one more try as a
-                // downloaded file: some sources refuse ranged requests, and a slow start beats
-                // skipping the track.
-                _log.LogWarning($"[Music] Streaming '{item.Track.Title}' failed ({ex.Message}); downloading it instead.");
-                item = await ResolveAsync(item, preferLocalCopy: true, ct);
-                await _engine.LoadAsync(item, start, play, ct);
+                // The provider may reject a signed URL before its advertised expiry. Resolve
+                // the same candidate again first; only then fall back to a complete download.
+                _streamRecoveryAttemptedKey = item.Key;
+                _log.LogWarning($"[Music] Streaming '{item.Track.Title}' failed ({ex.Message}); refreshing its URL.");
+                item = await RefreshAsync(item, preferLocalCopy: false, ct);
+
+                try
+                {
+                    await _engine.LoadAsync(item, start, play, ct);
+                }
+                catch (Exception refreshedEx) when (!ct.IsCancellationRequested)
+                {
+                    _log.LogWarning($"[Music] Refreshed stream for '{item.Track.Title}' failed ({refreshedEx.Message}); downloading it instead.");
+                    item = await RefreshAsync(item, preferLocalCopy: true, ct);
+                    await _engine.LoadAsync(item, start, play, ct);
+                }
             }
 
             _loadedKey = item.Key;
@@ -681,6 +715,15 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         return item with { Track = track };
     }
 
+    private async Task<QueueItem> RefreshAsync(QueueItem item, bool preferLocalCopy, CancellationToken ct)
+    {
+        if (_resolver is null || item.Track.IsLocal) return item;
+
+        var track = await _resolver.RefreshAsync(item.Track, preferLocalCopy, ct);
+        if (_queue.Replace(item.Key, track)) _queueDirty = true;
+        return item with { Track = track };
+    }
+
     /// <summary>
     /// A track that cannot be played is skipped with a notice. After three failures in a row,
     /// playback pauses with an error instead of racing through the queue.
@@ -715,8 +758,6 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
     private async Task StopEngineAsync()
     {
         _loadCts?.Cancel();
-        _nextCts?.Cancel();
-        _nextCts = null;
         await _engine.StopAsync();
         _loadedKey = null;
         _playing = false;
@@ -731,49 +772,15 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         var next = _queue.PeekAfterEnd();
         _repeatOneKey = _queue.Repeat == RepeatMode.One ? next?.Key : null;
 
-        _nextCts?.Cancel();
-        _nextCts = null;
-
         if (_resolver is null || next is null || next.Track.IsLocal)
         {
             _engine.SetNext(next);
             return;
         }
 
-        // A streamed track has to be resolved before it can be preloaded, and that is a network
-        // call. Nothing is preloaded until it finishes, so the engine is told "no next track"
-        // first: the worst case is a gap, never a stall on the caller's thread.
+        // Signed remote URLs are deliberately resolved only after the queue advances to the
+        // track. Keeping them out of engine preloading eliminates expiry while a queue sits idle.
         _engine.SetNext(null);
-
-        var cts = new CancellationTokenSource();
-        _nextCts = cts;
-        _ = PrepareNextAsync(next, cts);
-    }
-
-    private async Task PrepareNextAsync(QueueItem next, CancellationTokenSource cts)
-    {
-        try
-        {
-            var resolved = await ResolveAsync(next, preferLocalCopy: false, cts.Token);
-
-            // Between the call starting and finishing the queue may have moved on, in which
-            // case this preload is stale and must not overwrite a newer one.
-            if (!cts.IsCancellationRequested && ReferenceEquals(_nextCts, cts))
-                _engine.SetNext(resolved);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            // Not fatal: the track is loaded normally (and reported) when its turn comes.
-            _log.LogWarning($"[Music] Could not prepare '{next.Track.DisplayName}': {ex.Message}");
-        }
-        finally
-        {
-            if (ReferenceEquals(_nextCts, cts)) _nextCts = null;
-            cts.Dispose();
-        }
     }
 
     private void ApplyMusicSettings(MusicSettings music)

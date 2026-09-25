@@ -114,9 +114,9 @@ public class MusicSettings
     [JsonPropertyName("lyricsFromFiles")]
     public bool LyricsFromFiles { get; set; } = true;
 
-    /// <summary>Online lookups are opt-in: nothing leaves the PC until this is turned on.</summary>
+    /// <summary>Catalogue lyrics are enabled by default; YouTube playback also uses video captions.</summary>
     [JsonPropertyName("lyricsOnline")]
-    public bool LyricsOnline { get; set; } = false;
+    public bool LyricsOnline { get; set; } = true;
 
     [JsonPropertyName("showTrackChangeNotification")]
     public bool ShowTrackChangeNotification { get; set; } = false;
@@ -177,7 +177,7 @@ public class MusicSettings
 
 /// <summary>
 /// Which music sources are available and which one answers each job. Provider ids are stable
-/// strings ("local", "youtube", "spotify"); an id that no longer exists is ignored on load.
+/// strings ("local", "youtube"); an id that no longer exists is ignored on load.
 /// </summary>
 public class ProviderSettings
 {
@@ -329,8 +329,8 @@ public class AutomationSettings
 }
 
 /// <summary>
-/// Online integrations. All are off by default. Credentials (Last.fm session, Spotify refresh
-/// token) are never stored here; they go through the DPAPI secret store.
+/// Online integrations. All are off by default. Credentials such as the Last.fm session key
+/// are never stored here; they go through the DPAPI secret store.
 /// </summary>
 public class IntegrationSettings
 {
@@ -344,21 +344,13 @@ public class IntegrationSettings
     [JsonPropertyName("lastFmUsername")]
     public string? LastFmUsername { get; set; }
 
-    [JsonPropertyName("spotifyEnabled")]
-    public bool SpotifyEnabled { get; set; } = false;
-
-    [JsonPropertyName("spotifyClientId")]
-    public string? SpotifyClientId { get; set; }
-
     public IntegrationSettings Clone()
     {
         return new IntegrationSettings
         {
             DiscordRpc = DiscordRpc,
             LastFmEnabled = LastFmEnabled,
-            LastFmUsername = LastFmUsername,
-            SpotifyEnabled = SpotifyEnabled,
-            SpotifyClientId = SpotifyClientId
+            LastFmUsername = LastFmUsername
         };
     }
 }

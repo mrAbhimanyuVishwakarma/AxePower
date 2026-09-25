@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using AxePower.App.Helpers;
 using AxePower.App.Services;
 using AxePower.App.ViewModels.Music;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,6 +81,20 @@ public partial class MusicView : UserControl
             return;
         }
 
+        if (e.Key == Key.F11)
+        {
+            ViewModel?.Ambient?.ToggleCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Escape && ViewModel?.Ambient?.IsOpen == true)
+        {
+            ViewModel.Ambient.CloseCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
         var np = ViewModel?.NowPlaying;
         if (np == null || Keyboard.FocusedElement is TextBoxBase) return;
 
@@ -120,10 +135,19 @@ public partial class MusicView : UserControl
             ViewModel?.NowPlaying.JumpCommand.Execute(entry);
     }
 
-    private void SongsList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private void SongsList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (SongItemAt(e.OriginalSource as DependencyObject) is { } song)
+        {
             ViewModel?.PlaySongCommand.Execute(song);
+            e.Handled = true;
+        }
+    }
+
+    private void LyricsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ListBox list)
+            LyricsScrollHelper.SmoothCenter(list, list.SelectedItem);
     }
 
     private void QueueList_PreviewKeyDown(object sender, KeyEventArgs e)

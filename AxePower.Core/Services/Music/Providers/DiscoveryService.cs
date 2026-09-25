@@ -101,6 +101,10 @@ public sealed class DiscoveryService : IDisposable
         var provider = _registry.Active<IDiscoveryProvider>(ProviderKind.Discovery);
         if (provider is null) return;
 
+        // Browse modes are intentionally isolated. Recommendations may extend a YouTube Music
+        // session, but must never inject online tracks into a local-file queue.
+        if (state.Current?.Track.Source?.Provider != provider.Info.Id) return;
+
         _lastAttemptUtc = _clock.UtcNow;
         _fetching = true;
         BusyChanged?.Invoke(this, true);

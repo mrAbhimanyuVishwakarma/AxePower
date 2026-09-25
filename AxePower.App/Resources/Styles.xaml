@@ -435,6 +435,11 @@
         </Setter>
     </Style>
 
+    <!-- Popups, Flyouts, and DropDown Menus (Opaque & high-contrast across all skins including Glass) -->
+    <SolidColorBrush x:Key="DropDownPopupBackgroundBrush" Color="#FF181A20" />
+    <SolidColorBrush x:Key="DropDownPopupBorderBrush" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="DropDownControlBackingBrush" Color="#E612141A" />
+
     <!-- Flat ComboBox Style -->
     <Style TargetType="ComboBox" x:Key="AppComboBoxStyle">
         <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />
@@ -456,14 +461,16 @@
                                       ClickMode="Press">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="30"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                                        </Grid>
+                                    <Border CornerRadius="10" Background="{DynamicResource DropDownControlBackingBrush}">
+                                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="30"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
+                                            </Grid>
+                                        </Border>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -493,10 +500,10 @@
                         </ContentPresenter>
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
                             <Grid x:Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
-                                <Border x:Name="DropDownBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}" CornerRadius="10" Margin="0,4,0,0"
+                                <Border x:Name="DropDownBorder" Background="{DynamicResource DropDownPopupBackgroundBrush}" BorderThickness="1" BorderBrush="{DynamicResource DropDownPopupBorderBrush}" CornerRadius="10" Margin="0,4,0,0"
                                         TextElement.Foreground="{DynamicResource PrimaryTextBrush}">
                                     <Border.Effect>
-                                        <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.35" Color="#000000"/>
+                                        <DropShadowEffect BlurRadius="18" ShadowDepth="5" Opacity="0.55" Color="#000000"/>
                                     </Border.Effect>
                                     <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
                                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
@@ -686,8 +693,8 @@
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Grid.IsSharedSizeScope" Value="True"/>
         <Setter Property="HasDropShadow" Value="True"/>
-        <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource DropDownPopupBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DropDownPopupBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="MinWidth" Value="160"/>

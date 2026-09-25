@@ -112,6 +112,17 @@ public sealed class DiscoveryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ALocalQueueIsNeverExtendedWithOnlineRecommendations()
+    {
+        int before = _provider.Calls;
+        _player.Publish(new[] { PlaybackQueueTests.T("local") }, index: 0, RepeatMode.Off);
+        await Settle(() => false);
+
+        Assert.Equal(before, _provider.Calls);
+        Assert.Empty(_player.Added);
+    }
+
+    [Fact]
     public async Task RepeatedStateUpdatesDoNotStartASecondSearch()
     {
         // Position ticks republish the state several times a second; each one must not become

@@ -59,19 +59,57 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         _viewerHost = viewerHost;
 
         _viewerHost.ControlHolderChanged += OnControlHolderChanged;
+        _viewerHost.ChatMessageReceived += OnChatMessageReceived;
+        _viewerHost.VoicePacketReceived += OnVoicePacketReceived;
         _pipeline.TelemetryUpdated += OnTelemetryUpdated;
         _pipeline.Failed += OnPipelineFailed;
     }
 
     // -- Start ---------------------------------------------------------------
 
-    public async Task<ShareSessionStatus> StartAsync(
-        ShareScreenSettings settings, IProgress<string>? step, CancellationToken ct)
+    public async Task<ShareSessionStatus> StartRoomAsync(ShareScreenSettings settings, CancellationToken ct)
     {
         await _transition.WaitAsync(ct);
         try
         {
+            if (Status.State is ShareSessionState.RoomOpen or ShareSessionState.Live) return Status;
+            _activeSettings = settings.Clone();
+            var room = ShareRoomFactory.Create();
+            var viewerHostName = MediaMtxServer.ResolveViewerHost(_activeSettings.ViewerHostOverride);
+            _viewerHost.Start(room, viewerHostName, _activeSettings.WebrtcPort, _activeSettings.ViewerPort);
+            Status = new ShareSessionStatus(
+                ShareSessionState.RoomOpen,
+                "Private room open",
+                room,
+                _viewerHost.ViewerUrl,
+                QualityPreset.For(_activeSettings.Quality),
+                null,
+                ShareTelemetry.Empty);
+            RaiseStatusChanged();
+            return Status;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError("[Friends] Could not open the private room", ex);
+            return Fault(ex.Message);
+        }
+        finally
+        {
+            _transition.Release();
+        }
+    }
+
+    public async Task<ShareSessionStatus> StartAsync(
+        ShareScreenSettings settings, IProgress<string>? step, CancellationToken ct)
+    {
+        await _transition.WaitAsync(ct);
+        var reuseOpenRoom = false;
+        try
+        {
             if (Status.State is ShareSessionState.Live or ShareSessionState.Starting) return Status;
+
+            reuseOpenRoom = Status.State == ShareSessionState.RoomOpen && Status.Room != null && _viewerHost.IsRunning;
+            var openRoom = reuseOpenRoom ? Status.Room : null;
 
             _activeSettings = settings.Clone();
             _overloadedSamples = 0;
@@ -82,7 +120,9 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
             var ffmpeg = await _toolProvider.EnsureFfmpegAsync(null, ct);
             if (!ffmpeg.IsAvailable)
             {
-                return Fault("FFmpeg could not be found or downloaded. Check the network connection and try again.");
+                return await EndFailedShareStartAsync(
+                    reuseOpenRoom,
+                    "FFmpeg could not be found or downloaded. Check the network connection and try again.");
             }
             _ffmpegPath = ffmpeg.Path;
 
@@ -90,7 +130,9 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
             var mediaMtx = await _toolProvider.EnsureMediaMtxAsync(null, ct);
             if (!mediaMtx.IsAvailable)
             {
-                return Fault("The media server could not be downloaded. Check the network connection and try again.");
+                return await EndFailedShareStartAsync(
+                    reuseOpenRoom,
+                    "The media server could not be downloaded. Check the network connection and try again.");
             }
 
             step?.Report("Checking hardware encoders");
@@ -98,7 +140,7 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
             var encoder = _encoderProbe.SelectBest(encoders, _activeSettings.Codec, _activeSettings.PreferredEncoder);
             if (encoder == null)
             {
-                return Fault("No usable video encoder was found on this PC.");
+                return await EndFailedShareStartAsync(reuseOpenRoom, "No usable video encoder was found on this PC.");
             }
 
             if (!encoder.IsHardware)
@@ -118,7 +160,7 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
 
             var display = ResolveDisplay(_activeSettings.DisplayIndex);
             var preset = QualityPreset.For(_activeSettings.Quality);
-            var room = ShareRoomFactory.Create();
+            var room = openRoom ?? ShareRoomFactory.Create();
 
             Publish(ShareSessionState.Starting, "Starting the media server...", room, preset, encoder);
 
@@ -130,8 +172,11 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
 
             // Our own viewer page, not the media server's: control needs a channel back, and the
             // server has none. It also means the page can carry the warning a controller sees.
-            var viewerHostName = MediaMtxServer.ResolveViewerHost(_activeSettings.ViewerHostOverride);
-            _viewerHost.Start(room, viewerHostName, _activeSettings.WebrtcPort, _activeSettings.ViewerPort);
+            if (!reuseOpenRoom)
+            {
+                var viewerHostName = MediaMtxServer.ResolveViewerHost(_activeSettings.ViewerHostOverride);
+                _viewerHost.Start(room, viewerHostName, _activeSettings.WebrtcPort, _activeSettings.ViewerPort);
+            }
             _controlTarget = display;
 
             var viewerUrl = _viewerHost.ViewerUrl;
@@ -156,15 +201,12 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         }
         catch (OperationCanceledException)
         {
-            await StopInternalAsync();
-            Publish(ShareSessionState.Idle, string.Empty);
-            return Status;
+            return await EndFailedShareStartAsync(reuseOpenRoom, string.Empty, cancelled: true);
         }
         catch (Exception ex)
         {
             _logService.LogError("[ShareScreen] Could not start sharing", ex);
-            await StopInternalAsync();
-            return Fault(ex.Message);
+            return await EndFailedShareStartAsync(reuseOpenRoom, ex.Message);
         }
         finally
         {
@@ -342,6 +384,37 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
 
     // -- Stop ----------------------------------------------------------------
 
+    public async Task StopScreenShareAsync()
+    {
+        await _transition.WaitAsync();
+        try
+        {
+            if (Status.State != ShareSessionState.Live) return;
+            _monitorCts?.Cancel();
+            _monitorCts?.Dispose();
+            _monitorCts = null;
+            _pipeline.Stop();
+            _server.Stop();
+            _viewerHost.DisableControl();
+            _controlTarget = null;
+            Status = Status with
+            {
+                State = ShareSessionState.RoomOpen,
+                Message = "Private room open",
+                Encoder = null,
+                Telemetry = ShareTelemetry.Empty,
+                Control = RemoteControlState.Disabled,
+                ControlCode = string.Empty
+            };
+            RaiseStatusChanged();
+            await Task.Delay(100);
+        }
+        finally
+        {
+            _transition.Release();
+        }
+    }
+
     public async Task StopAsync()
     {
         await _transition.WaitAsync();
@@ -372,6 +445,46 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
 
         // Give the OS a moment to release the ports before a restart tries to bind them again.
         await Task.Delay(150);
+    }
+
+    private async Task<ShareSessionStatus> EndFailedShareStartAsync(
+        bool keepRoomOpen,
+        string message,
+        bool cancelled = false)
+    {
+        if (!keepRoomOpen)
+        {
+            await StopInternalAsync();
+            if (cancelled)
+            {
+                Publish(ShareSessionState.Idle, string.Empty);
+                return Status;
+            }
+
+            return Fault(message);
+        }
+
+        _monitorCts?.Cancel();
+        _monitorCts?.Dispose();
+        _monitorCts = null;
+        _pipeline.Stop();
+        _server.Stop();
+        _viewerHost.DisableControl();
+        _controlTarget = null;
+        Status = Status with
+        {
+            State = ShareSessionState.RoomOpen,
+            Message = cancelled || string.IsNullOrWhiteSpace(message)
+                ? "Private room open"
+                : $"Private room open - screen share failed: {message}",
+            Encoder = null,
+            Telemetry = ShareTelemetry.Empty,
+            Control = RemoteControlState.Disabled,
+            ControlCode = string.Empty
+        };
+        RaiseStatusChanged();
+        await Task.Delay(100);
+        return Status;
     }
 
     // -- Status plumbing -----------------------------------------------------
@@ -435,9 +548,25 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         RaiseStatusChanged();
     }
 
+    // -- Room chat -----------------------------------------------------------
+
+    public event EventHandler<ShareChatMessage>? ChatMessageReceived;
+
+    private void OnChatMessageReceived(object? sender, ShareChatMessage msg) => ChatMessageReceived?.Invoke(this, msg);
+
+    public void SendChatMessage(ShareChatMessage message) => _viewerHost.BroadcastChatMessage(message);
+
+    public event EventHandler<byte[]>? VoicePacketReceived;
+
+    private void OnVoicePacketReceived(object? sender, byte[] packet) => VoicePacketReceived?.Invoke(this, packet);
+
+    public void SendVoicePacket(byte[] opusPacket) => _viewerHost.BroadcastVoicePacket(opusPacket);
+
     public void Dispose()
     {
         _viewerHost.ControlHolderChanged -= OnControlHolderChanged;
+        _viewerHost.ChatMessageReceived -= OnChatMessageReceived;
+        _viewerHost.VoicePacketReceived -= OnVoicePacketReceived;
         _viewerHost.Dispose();
         _pipeline.TelemetryUpdated -= OnTelemetryUpdated;
         _pipeline.Failed -= OnPipelineFailed;

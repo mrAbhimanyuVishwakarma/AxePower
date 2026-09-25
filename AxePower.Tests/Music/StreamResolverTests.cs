@@ -49,7 +49,7 @@ public sealed class StreamResolverTests : IDisposable
     }
 
     private static Track Remote(string title = "Song") =>
-        Track.ForProvider(new ProviderRef("spotify", "abc"), title, new[] { "Artist" }, TimeSpan.FromMinutes(3));
+        Track.ForProvider(new ProviderRef("catalog", "abc"), title, new[] { "Artist" }, TimeSpan.FromMinutes(3));
 
     [Fact]
     public async Task LocalTrack_IsReturnedUntouched_WithoutCallingAnyProvider()
@@ -139,6 +139,18 @@ public sealed class StreamResolverTests : IDisposable
 
         Assert.Equal(StreamProtocol.File, downloaded.ResolvedStream!.Protocol);
         Assert.Equal(2, _provider.ResolveCount);
+    }
+
+    [Fact]
+    public async Task Refresh_ReResolvesAFreshUrlWithoutBlacklistingTheCandidate()
+    {
+        var first = await _resolver.PrepareAsync(Remote(), preferLocalCopy: false, CancellationToken.None);
+
+        var refreshed = await _resolver.RefreshAsync(first, preferLocalCopy: false, CancellationToken.None);
+
+        Assert.Equal(2, _provider.ResolveCount);
+        Assert.Equal(first.SelectedCandidateId, refreshed.SelectedCandidateId);
+        Assert.False(refreshed.Candidates!.Single(c => c.Id == refreshed.SelectedCandidateId).Failed);
     }
 
     [Fact]

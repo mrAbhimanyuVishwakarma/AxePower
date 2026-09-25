@@ -20,14 +20,14 @@ public sealed class ProviderRegistryTests : IDisposable
     private readonly LogService _log = new();
     private readonly SettingsService _settings;
     private readonly FakeProvider _youtube = new("youtube", "YouTube", ProviderKind.Streaming, ProviderKind.Metadata);
-    private readonly FakeProvider _spotify = new("spotify", "Spotify", pairedStreaming: "youtube", kinds: ProviderKind.Metadata);
+    private readonly FakeProvider _catalog = new("catalog", "Test Catalog", pairedStreaming: "youtube", kinds: ProviderKind.Metadata);
     private readonly LocalFileProvider _local = new();
     private readonly ProviderRegistry _registry;
 
     public ProviderRegistryTests()
     {
         _settings = new SettingsService(_log, Path.Combine(_files.Folder, "settings"));
-        _registry = new ProviderRegistry(new IMusicProvider[] { _local, _youtube, _spotify }, _settings, _log);
+        _registry = new ProviderRegistry(new IMusicProvider[] { _local, _youtube, _catalog }, _settings, _log);
     }
 
     public void Dispose()
@@ -37,11 +37,11 @@ public sealed class ProviderRegistryTests : IDisposable
     }
 
     [Fact]
-    public void OutOfTheBox_LocalAndYouTubeAreOn_AndSpotifyIsNot()
+    public void OutOfTheBox_LocalAndYouTubeAreOn_AndOptionalCatalogIsNot()
     {
         Assert.True(_registry.IsEnabled("local"));
         Assert.True(_registry.IsEnabled("youtube"));
-        Assert.False(_registry.IsEnabled("spotify"));
+        Assert.False(_registry.IsEnabled("catalog"));
     }
 
     [Fact]
@@ -56,34 +56,32 @@ public sealed class ProviderRegistryTests : IDisposable
     [Fact]
     public void EnablingASourceIsRemembered()
     {
-        _registry.SetEnabled("spotify", true);
+        _registry.SetEnabled("catalog", true);
 
-        Assert.True(_registry.IsEnabled("spotify"));
-        Assert.Contains("spotify", _settings.GetSettings().Music.Providers.Enabled);
+        Assert.True(_registry.IsEnabled("catalog"));
+        Assert.Contains("catalog", _settings.GetSettings().Music.Providers.Enabled);
     }
 
     [Fact]
     public void ChoosingAPairedCatalogueAlsoTurnsOnTheSourceThatSuppliesItsAudio()
     {
-        // Spotify carries no audio of its own, so picking it for search must leave a working
+        // The catalog carries no audio of its own, so picking it for search must leave a working
         // audio source behind it rather than silently breaking playback.
-        _registry.SetActive(ProviderKind.Metadata, "spotify");
+        _registry.SetActive(ProviderKind.Metadata, "catalog");
 
-        Assert.Equal("spotify", _registry.ActiveId(ProviderKind.Metadata));
+        Assert.Equal("catalog", _registry.ActiveId(ProviderKind.Metadata));
         Assert.Equal("youtube", _registry.ActiveId(ProviderKind.Streaming));
         Assert.True(_registry.IsEnabled("youtube"));
     }
 
     [Fact]
-    public void SwitchingOffTheActiveSourceHandsTheJobToAnotherOne()
+    public void TheFixedYouTubeSourceCannotBeSwitchedOff()
     {
-        _registry.SetActive(ProviderKind.Metadata, "youtube");
-        _registry.SetEnabled("spotify", true);
-
         _registry.SetEnabled("youtube", false);
 
-        Assert.NotEqual("youtube", _registry.ActiveId(ProviderKind.Metadata));
-        Assert.NotEqual("youtube", _registry.ActiveId(ProviderKind.Streaming));
+        Assert.True(_registry.IsEnabled("youtube"));
+        Assert.Equal("youtube", _registry.ActiveId(ProviderKind.Metadata));
+        Assert.Equal("youtube", _registry.ActiveId(ProviderKind.Streaming));
     }
 
     [Fact]
@@ -98,21 +96,49 @@ public sealed class ProviderRegistryTests : IDisposable
     }
 
     [Fact]
-    public void ASourceIsNeverMadeActiveForAJobItCannotDo()
+    public void AStoredLocalId_IsNeverUsedForRemoteStreaming()
     {
-        _registry.SetActive(ProviderKind.Streaming, "spotify");
+        var current = _settings.GetSettings();
+        current.Music.Providers.ActiveStreaming = "local";
+        _settings.SaveSettings(current);
 
-        Assert.NotEqual("spotify", _registry.ActiveId(ProviderKind.Streaming));
+        Assert.Equal("youtube", _registry.ActiveId(ProviderKind.Streaming));
     }
 
     [Fact]
-    public void ADisabledSourceIsNotHandedAnyWork()
+    public void AStoredDisabledYouTubeSource_RemainsAvailableAsAFixedMode()
     {
-        _registry.SetEnabled("youtube", false);
+        var current = _settings.GetSettings();
+        current.Music.Providers.Enabled.Remove("youtube");
+        current.Music.Providers.ActiveStreaming = "local";
+        _settings.SaveSettings(current);
 
-        Assert.Null(_registry.Active<IStreamingProvider>(ProviderKind.Streaming) as YouTubeProvider);
+        Assert.True(_registry.IsEnabled("youtube"));
+        Assert.Equal("youtube", _registry.ActiveId(ProviderKind.Streaming));
+    }
+
+    [Fact]
+    public void ASourceIsNeverMadeActiveForAJobItCannotDo()
+    {
+        _registry.SetActive(ProviderKind.Streaming, "catalog");
+
+        Assert.NotEqual("catalog", _registry.ActiveId(ProviderKind.Streaming));
+    }
+
+    [Fact]
+    public void LocalFilesCannotBeSelectedAsTheRemoteStreamingSource()
+    {
+        _registry.SetActive(ProviderKind.Streaming, "local");
+
+        Assert.Equal("youtube", _registry.ActiveId(ProviderKind.Streaming));
+    }
+
+    [Fact]
+    public void ADisabledOptionalSourceIsNotHandedAnyWork()
+    {
+        Assert.False(_registry.IsEnabled("catalog"));
         Assert.DoesNotContain(_registry.OfKind(ProviderKind.Metadata).Where(p => _registry.IsEnabled(p.Info.Id)),
-            p => p.Info.Id == "youtube");
+            p => p.Info.Id == "catalog");
     }
 
     private sealed class FakeProvider : IStreamingProvider, IMetadataProvider
