@@ -328,6 +328,8 @@ public partial class App : Application
         services.AddSingleton<PortalAccessToken>();
         services.AddSingleton<IMusicPlayerService, MusicPlayerService>();
         services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
+        services.AddSingleton<RecentlyPlayedService>();
+        services.AddSingleton<IPlayerIntegration>(sp => sp.GetRequiredService<RecentlyPlayedService>());
         services.AddSingleton<PlayerIntegrationHost>();
 
         // AxePower Music — App
@@ -339,6 +341,7 @@ public partial class App : Application
         services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
         services.AddSingleton<LyricsViewModel>();
         services.AddSingleton<AmbientModeViewModel>();
+        services.AddSingleton<AmbientWindowService>();
         services.AddTransient<MusicViewModel>();
         services.AddTransient<MusicSettingsViewModel>();
         services.AddSingleton<SourcesViewModel>();
@@ -443,6 +446,11 @@ public partial class App : Application
         Console.WriteLine(
             $"Music library: schema v{LibraryDatabase.SchemaVersion}, " +
             $"{(System.IO.File.Exists(libraryDb.FilePath) ? "present" : "not created yet")} at {libraryDb.FilePath}.");
+        var recentlyPlayed = sp.GetRequiredService<RecentlyPlayedService>();
+        Console.WriteLine(
+            $"Music history: {recentlyPlayed.Get(streamed: false).Count} local, {recentlyPlayed.Get(streamed: true).Count} streamed; " +
+            $"Ambient screensaver {(music.AmbientAutoEnter ? $"on after {music.AmbientIdleMinutes} min" : "off")}, " +
+            $"window service {sp.GetRequiredService<AmbientWindowService>().GetType().Name} (not started).");
 
         var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
         var shareTools = sp.GetRequiredService<IShareToolProvider>();
@@ -549,6 +557,7 @@ public partial class App : Application
             Services.GetRequiredService<MusicShortcutHandler>().Start();
             Services.GetRequiredService<DiscoveryService>().Start();
             Services.GetRequiredService<MusicRemote>().Start();
+            Services.GetRequiredService<AmbientWindowService>().Start();
         }
         catch (Exception ex)
         {
@@ -567,6 +576,7 @@ public partial class App : Application
                 var player = Services.GetService<IMusicPlayerService>();
                 if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
                 Services.GetService<PlayerIntegrationHost>()?.Dispose();
+                Services.GetService<AmbientWindowService>()?.Dispose();
             }
             catch { }
 

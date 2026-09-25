@@ -35,23 +35,30 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                <!-- YouTube Music Free In-App Streaming -->
-                <Button Style="{StaticResource YouTubeMusicButtonStyle}" Command="{Binding ShowYouTubeModeCommand}" Margin="0,0,8,0"
-                        ToolTip="Switch to YouTube Music" AutomationProperties.Name="YouTube Music">
+                <!-- Source switch: the page shows either YouTube Music or the local library -->
+                <RadioButton Style="{StaticResource MusicModeButtonStyle}" GroupName="MusicSourceMode" Margin="0,0,8,0"
+                             IsChecked="{Binding IsYouTubeMode, Mode=TwoWay}"
+                             ToolTip="Search and play from YouTube Music" AutomationProperties.Name="YouTube Music">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#FF0000" Margin="0,0,6,0" VerticalAlignment="Center" />
                         <TextBlock Text="YT Music" VerticalAlignment="Center" />
                     </StackPanel>
-                </Button>
+                </RadioButton>
 
-                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding Ambient.ToggleCommand}" Margin="0,0,8,0"
-                        IsEnabled="{Binding NowPlaying.HasCurrent}" Padding="12,7"
-                        ToolTip="Open Ambient Mode (F11)" AutomationProperties.Name="Open Ambient Mode">
+                <RadioButton Style="{StaticResource MusicModeButtonStyle}" GroupName="MusicSourceMode" Margin="0,0,8,0"
+                             IsChecked="{Binding IsLocalMode, Mode=TwoWay}"
+                             ToolTip="Your music files and playlists" AutomationProperties.Name="Local Music">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE7C3;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,7,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Ambient" VerticalAlignment="Center" />
+                        <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource AccentBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Local Music" VerticalAlignment="Center" />
                     </StackPanel>
-                </Button>
+                </RadioButton>
+
+                <!-- Ambient Mode: full screen album art and lyrics -->
+                <Button Style="{StaticResource MusicIconButtonStyle}" Width="38" Height="38" Content="&#xE740;"
+                        Command="{Binding Ambient.ToggleCommand}" IsEnabled="{Binding NowPlaying.HasCurrent}" Margin="0,0,8,0"
+                        ToolTip="Ambient Mode (F11): full screen album art and lyrics" ToolTipService.ShowOnDisabled="True"
+                        AutomationProperties.Name="Open Ambient Mode" />
 
                 <!-- Music Settings Button ("*" Gear Icon) -->
                 <Button Style="{StaticResource MusicIconButtonStyle}" Width="38" Height="38" Content="&#xE713;"
@@ -80,11 +87,11 @@
 
                 <!-- ─── Pinned Player & Search (Never scrolls out of view) ─── -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,14">
-                    <!-- Now Playing: glass card controlling local files and YouTube Music -->
-                    <Border x:Name="NowPlayingCard" Style="{StaticResource MusicGlassCardStyle}" Padding="24"
+                    <!-- Now Playing: compact glass card controlling local files and YouTube Music -->
+                    <Border x:Name="NowPlayingCard" Style="{StaticResource MusicGlassCardStyle}" Padding="16"
                             DataContext="{Binding NowPlaying}" AutomationProperties.Name="Now playing">
                         <Grid>
-                            <Border CornerRadius="16" Margin="-24" IsHitTestVisible="False">
+                            <Border CornerRadius="16" Margin="-16" IsHitTestVisible="False">
                                 <Border.Background>
                                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                         <GradientStop Color="#14FFFFFF" Offset="0" />
@@ -100,12 +107,13 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Artwork -->
-                                <Border Grid.Column="0" Style="{StaticResource MusicArtFrameStyle}" Width="200" Height="200" CornerRadius="14" Margin="0,0,28,0">
+                                <Border Grid.Column="0" Style="{StaticResource MusicArtFrameStyle}" Width="112" Height="112" CornerRadius="12" Margin="0,0,20,0"
+                                        VerticalAlignment="Center">
                                     <Border.Effect>
-                                        <DropShadowEffect BlurRadius="20" ShadowDepth="6" Direction="270" Opacity="0.35" Color="#000000" />
+                                        <DropShadowEffect BlurRadius="14" ShadowDepth="4" Direction="270" Opacity="0.35" Color="#000000" />
                                     </Border.Effect>
                                     <Grid>
-                                        <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="56" Foreground="#E6FFFFFF"
+                                        <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="36" Foreground="#E6FFFFFF"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Visibility="{Binding HasCover, Converter={StaticResource InverseBoolToVis}}" />
                                         <Image Source="{Binding Cover}" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"
@@ -114,65 +122,70 @@
                                 </Border>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"
+                                    <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"
                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" />
-                                    <TextBlock Text="{Binding ArtistAndAlbum}" FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,18"
+                                    <TextBlock Text="{Binding ArtistAndAlbum}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,2,0,8"
                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding ArtistAndAlbum}" />
 
-                                    <!-- Seek -->
-                                    <Slider Style="{StaticResource MusicSliderStyle}"
-                                            Minimum="0" Maximum="{Binding SeekMaximum}" Value="{Binding PositionSeconds, Mode=TwoWay}"
-                                            SmallChange="5" LargeChange="5" IsEnabled="{Binding HasCurrent}"
-                                            helpers:MusicSeekBehavior.IsEnabled="True"
-                                            AutomationProperties.Name="Seek" AutomationProperties.HelpText="Arrow keys move 5 seconds" />
-                                    <Grid Margin="0,2,0,10">
-                                        <TextBlock Text="{Binding PositionText}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Left" />
-                                        <TextBlock Text="{Binding DurationText}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Right" />
-                                    </Grid>
-
-                                    <!-- Transport -->
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="&#xE8B1;"
-                                                      IsChecked="{Binding IsShuffle, Mode=TwoWay}"
-                                                      ToolTip="{Binding ShuffleLabel}" AutomationProperties.Name="{Binding ShuffleLabel}" />
-                                        <Button Style="{StaticResource MusicIconButtonStyle}" Width="44" Height="44" FontSize="18" Margin="18,0,0,0"
-                                                Content="&#xE892;" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanPrevious}"
-                                                ToolTip="Previous (Ctrl+Left)" AutomationProperties.Name="Previous" />
-                                        <Button Style="{StaticResource MusicPlayButtonStyle}" Width="58" Height="58" FontSize="20" Margin="16,0"
-                                                Background="{DynamicResource PrimaryTextBrush}" Foreground="{DynamicResource MusicPlayGlyphBrush}"
-                                                Content="{Binding PlayPauseGlyph}" Command="{Binding PlayPauseCommand}" IsEnabled="{Binding HasCurrent}"
-                                                ToolTip="{Binding PlayPauseLabel}" AutomationProperties.Name="{Binding PlayPauseLabel}" />
-                                        <Button Style="{StaticResource MusicIconButtonStyle}" Width="44" Height="44" FontSize="18" Margin="0,0,18,0"
-                                                Content="&#xE893;" Command="{Binding NextCommand}" IsEnabled="{Binding CanNext}"
-                                                ToolTip="Next (Ctrl+Right)" AutomationProperties.Name="Next" />
-                                        <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="{Binding RepeatGlyph}"
-                                                      IsChecked="{Binding IsRepeatOn, Mode=TwoWay}"
-                                                      ToolTip="{Binding RepeatLabel}" AutomationProperties.Name="{Binding RepeatLabel}" />
-                                        <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="&#xEC4F;" Margin="10,0,0,0"
-                                                      IsChecked="{Binding IsDiscoveryOn, Mode=TwoWay}"
-                                                      Visibility="{Binding IsDiscoveryAvailable, Converter={StaticResource BoolToVis}}"
-                                                      ToolTip="{Binding DiscoveryLabel}" AutomationProperties.Name="{Binding DiscoveryLabel}" />
-                                    </StackPanel>
-
-                                    <!-- Volume -->
-                                    <Grid Margin="0,14,0,0">
+                                    <!-- Seek, with the times either side -->
+                                    <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Style="{StaticResource MusicIconButtonStyle}" Content="{Binding VolumeGlyph}"
-                                                Command="{Binding ToggleMuteCommand}" ToolTip="Mute / unmute" AutomationProperties.Name="Mute" />
+                                        <TextBlock Grid.Column="0" Text="{Binding PositionText}" FontSize="11" MinWidth="34" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
                                         <Slider Grid.Column="1" Style="{StaticResource MusicSliderStyle}" Margin="6,0" VerticalAlignment="Center"
-                                                Minimum="0" Maximum="{Binding VolumeMaximum}" Value="{Binding VolumePercent, Mode=TwoWay}"
-                                                SmallChange="5" LargeChange="10"
-                                                AutomationProperties.Name="Volume" AutomationProperties.HelpText="Ctrl+Up and Ctrl+Down change the volume" />
-                                        <TextBlock Grid.Column="2" Text="{Binding VolumeLabel}" MinWidth="86" FontSize="11.5" TextAlignment="Right"
-                                                   Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                                Minimum="0" Maximum="{Binding SeekMaximum}" Value="{Binding PositionSeconds, Mode=TwoWay}"
+                                                SmallChange="5" LargeChange="5" IsEnabled="{Binding HasCurrent}"
+                                                helpers:MusicSeekBehavior.IsEnabled="True"
+                                                AutomationProperties.Name="Seek" AutomationProperties.HelpText="Arrow keys move 5 seconds" />
+                                        <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11" MinWidth="34" TextAlignment="Right" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
                                     </Grid>
 
-                                    <TextBlock Text="{Binding UpNext}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,10,0,0"
-                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding UpNext}" />
+                                    <!-- Transport on the left, volume on the right -->
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="&#xE8B1;"
+                                                          IsChecked="{Binding IsShuffle, Mode=TwoWay}"
+                                                          ToolTip="{Binding ShuffleLabel}" AutomationProperties.Name="{Binding ShuffleLabel}" />
+                                            <Button Style="{StaticResource MusicIconButtonStyle}" Width="36" Height="36" FontSize="15" Margin="8,0,0,0"
+                                                    Content="&#xE892;" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanPrevious}"
+                                                    ToolTip="Previous (Ctrl+Left)" AutomationProperties.Name="Previous" />
+                                            <Button Style="{StaticResource MusicPlayButtonStyle}" Width="44" Height="44" FontSize="16" Margin="8,0"
+                                                    Background="{DynamicResource PrimaryTextBrush}" Foreground="{DynamicResource MusicPlayGlyphBrush}"
+                                                    Content="{Binding PlayPauseGlyph}" Command="{Binding PlayPauseCommand}" IsEnabled="{Binding HasCurrent}"
+                                                    ToolTip="{Binding PlayPauseLabel}" AutomationProperties.Name="{Binding PlayPauseLabel}" />
+                                            <Button Style="{StaticResource MusicIconButtonStyle}" Width="36" Height="36" FontSize="15" Margin="0,0,8,0"
+                                                    Content="&#xE893;" Command="{Binding NextCommand}" IsEnabled="{Binding CanNext}"
+                                                    ToolTip="Next (Ctrl+Right)" AutomationProperties.Name="Next" />
+                                            <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="{Binding RepeatGlyph}"
+                                                          IsChecked="{Binding IsRepeatOn, Mode=TwoWay}"
+                                                          ToolTip="{Binding RepeatLabel}" AutomationProperties.Name="{Binding RepeatLabel}" />
+                                            <ToggleButton Style="{StaticResource MusicIconButtonStyle}" Content="&#xEC4F;" Margin="4,0,0,0"
+                                                          IsChecked="{Binding IsDiscoveryOn, Mode=TwoWay}"
+                                                          Visibility="{Binding IsDiscoveryAvailable, Converter={StaticResource BoolToVis}}"
+                                                          ToolTip="{Binding DiscoveryLabel}" AutomationProperties.Name="{Binding DiscoveryLabel}" />
+                                        </StackPanel>
+
+                                        <Grid Grid.Column="1" MaxWidth="220" Margin="12,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0" Style="{StaticResource MusicIconButtonStyle}" Content="{Binding VolumeGlyph}"
+                                                    Command="{Binding ToggleMuteCommand}" ToolTip="{Binding VolumeLabel}" AutomationProperties.Name="Mute" />
+                                            <Slider Grid.Column="1" Style="{StaticResource MusicSliderStyle}" Margin="4,0,0,0" VerticalAlignment="Center"
+                                                    Minimum="0" Maximum="{Binding VolumeMaximum}" Value="{Binding VolumePercent, Mode=TwoWay}"
+                                                    SmallChange="5" LargeChange="10" ToolTip="{Binding VolumeLabel}"
+                                                    AutomationProperties.Name="Volume" AutomationProperties.HelpText="Ctrl+Up and Ctrl+Down change the volume" />
+                                        </Grid>
+                                    </Grid>
                                 </StackPanel>
                             </Grid>
                         </Grid>
@@ -188,20 +201,9 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Local files and YouTube Music stay in separate browse modes. -->
-                    <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="3" Margin="0,16,0,0" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal">
-                            <RadioButton Style="{StaticResource MusicTabRadioStyle}" Content="Local Music"
-                                         IsChecked="{Binding IsLocalMode, Mode=TwoWay}" Padding="16,7" />
-                            <RadioButton Style="{StaticResource MusicTabRadioStyle}" Content="YouTube Music"
-                                         IsChecked="{Binding IsYouTubeMode, Mode=TwoWay}" Padding="16,7" />
-                        </StackPanel>
-                    </Border>
-
                     <!-- ─── YouTube Music In-App Search Bar ─── -->
                     <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
-                            BorderThickness="1" CornerRadius="12" Padding="14,8" Margin="0,12,0,0"
+                            BorderThickness="1" CornerRadius="12" Padding="14,8" Margin="0,14,0,0"
                             Visibility="{Binding IsYouTubeMode, Converter={StaticResource BoolToVis}}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -258,6 +260,8 @@
                 <!-- ─── Dedicated Scrollable Playlist Section (Player stays fixed at top) ─── -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16">
                     <StackPanel>
+                        <!-- Local library: playlists and folders. YouTube Music has no cards, only its history below. -->
+                        <StackPanel Visibility="{Binding IsLocalMode, Converter={StaticResource BoolToVis}}">
                         <!-- Section Header & Toolbar (Buttons placed below title to prevent hiding title) -->
                         <StackPanel Margin="4,0,4,12">
                             <!-- Row 1: Section Title & Summary -->
@@ -268,32 +272,13 @@
                             </StackPanel>
 
                             <!-- Row 2: Action Buttons Bar (never overlaps or clips the title) -->
-                            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center"
-                                       Visibility="{Binding IsLocalMode, Converter={StaticResource BoolToVis}}">
+                            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- Create Playlist Button -->
                                 <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding OpenCreatePlaylistDialogCommand}" Margin="0,0,8,6" Padding="14,6" Height="32"
                                         ToolTip="Create new playlist in configured music folder">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="Create Playlist" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <!-- Open files... moved here -->
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding NowPlaying.OpenFilesCommand}" Margin="0,0,8,6" Padding="12,6" Height="32"
-                                        ToolTip="Open individual audio files" AutomationProperties.Name="Open files">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Open files…" FontSize="12" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-
-                                <!-- Open folder... moved here -->
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding NowPlaying.OpenFolderCommand}" Margin="0,0,8,6" Padding="12,6" Height="32"
-                                        ToolTip="Open folder into queue" AutomationProperties.Name="Open folder">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Open folder…" FontSize="12" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
 
@@ -306,10 +291,6 @@
                                     </StackPanel>
                                 </Button>
 
-                                <!-- Rescan Library -->
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RefreshLibraryCommand}" Margin="0,0,8,6" Padding="10,6" Height="32" ToolTip="Rescan Local Music &amp; Playlists">
-                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center"/>
-                                </Button>
                             </WrapPanel>
                         </StackPanel>
 
@@ -392,6 +373,72 @@
                         <TextBlock Text="{Binding BrowseEmptyMessage}" Margin="12,28" TextAlignment="Center"
                                    FontSize="13" Foreground="{DynamicResource MutedTextBrush}"
                                    Visibility="{Binding HasLibraryItems, Converter={StaticResource InverseBoolToVis}}" />
+                        </StackPanel>
+
+                        <!-- ─── Last played: the history for the mode on show ─── -->
+                        <StackPanel Margin="4,14,4,0" AutomationProperties.Name="Last played">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock Text="Last played" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <ItemsControl ItemsSource="{Binding RecentPlays}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type music:SongItemViewModel}">
+                                        <Button Command="{Binding DataContext.PlayRecentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" Cursor="Hand" Margin="0,1"
+                                                HorizontalContentAlignment="Stretch" FocusVisualStyle="{x:Null}"
+                                                ToolTip="Play" AutomationProperties.Name="{Binding Title}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="row" CornerRadius="8" Padding="10,7" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                                                        <ContentPresenter />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                                            <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                            <Button.ContextMenu>
+                                                <ContextMenu MinWidth="180">
+                                                    <MenuItem Header="Play" Icon="&#xE768;"
+                                                              Command="{Binding PlacementTarget.Command, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}" />
+                                                    <MenuItem Header="Add to queue" Icon="&#xE710;"
+                                                              Command="{Binding PlacementTarget.Tag.QueueRecentCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}" />
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                            <Button.Tag>
+                                                <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                            </Button.Tag>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="28" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Number}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Artist}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{Binding DurationText}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="{Binding RecentPlaysEmptyMessage}" Margin="10,6" FontSize="12.5" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Visibility="{Binding HasRecentPlays, Converter={StaticResource InverseBoolToVis}}" />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
@@ -832,6 +879,39 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Ambient Mode: full screen, optionally opened like a screensaver -->
+                        <TextBlock Text="Ambient Mode" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4"/>
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,20">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="Open automatically as a screensaver" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="While music is playing and the PC is left alone, Ambient Mode fills the screen with the album art and lyrics. Moving the mouse, clicking or pressing a key closes it. Never covers a game or a full screen video."
+                                                   FontSize="11.5" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                              IsChecked="{Binding AmbientAutoEnter, Mode=TwoWay}"
+                                              AutomationProperties.Name="Open Ambient Mode automatically"/>
+                                </Grid>
+                                <Separator Background="{DynamicResource CardBorderBrush}" Margin="0,10"/>
+                                <Grid IsEnabled="{Binding AmbientAutoEnter}">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Open after being idle for" FontSize="12.5" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="120"
+                                              ItemsSource="{Binding AmbientIdleChoices}" SelectedItem="{Binding AmbientIdleMinutes, Mode=TwoWay}"
+                                              AutomationProperties.Name="Idle minutes before Ambient Mode opens">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding StringFormat={}{0} min}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Streamed audio: how it is fetched and how much is kept -->
                         <TextBlock Text="Streamed audio" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4"/>
                         <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
@@ -1011,8 +1091,5 @@
             </Border>
         </Grid>
 
-        <musicViews:AmbientModeOverlay Grid.Row="0" Grid.RowSpan="2" Panel.ZIndex="300"
-                                       DataContext="{Binding Ambient}"
-                                       Visibility="{Binding IsOpen, Converter={StaticResource BoolToVis}}" />
     </Grid>
 </UserControl>

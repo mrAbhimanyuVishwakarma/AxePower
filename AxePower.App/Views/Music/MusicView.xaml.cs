@@ -35,6 +35,8 @@ public partial class MusicView : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        ViewModel?.Activate();
+
         _drops = (Application.Current as App)?.Services?.GetService<FileDropHelper>();
         if (_drops == null) return;
         _drops.FilesDropped += OnFilesDropped;
@@ -43,6 +45,8 @@ public partial class MusicView : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        ViewModel?.Deactivate();
+
         if (_drops == null) return;
         _drops.FilesDropped -= OnFilesDropped;
         _drops.Disable();

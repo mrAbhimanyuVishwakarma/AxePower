@@ -45,6 +45,8 @@ public partial class MusicViewModel : ObservableObject
     private readonly ProviderRegistry? _providers;
     private readonly IStreamResolver? _resolver;
     private readonly ICoverArtService? _covers;
+    private readonly RecentlyPlayedService? _recent;
+    private bool _applyingAmbientSettings;
 
     /// <summary>Cancels a search that a newer one has replaced.</summary>
     private CancellationTokenSource? _searchCts;
@@ -56,7 +58,8 @@ public partial class MusicViewModel : ObservableObject
         IStreamResolver? resolver = null,
         LyricsViewModel? lyrics = null,
         AmbientModeViewModel? ambient = null,
-        ICoverArtService? covers = null)
+        ICoverArtService? covers = null,
+        RecentlyPlayedService? recent = null)
     {
         NowPlaying = nowPlaying;
         var services = (Application.Current as App)?.Services;
@@ -64,6 +67,7 @@ public partial class MusicViewModel : ObservableObject
         _providers = providers ?? services?.GetService<ProviderRegistry>();
         _resolver = resolver ?? services?.GetService<IStreamResolver>();
         _covers = covers ?? services?.GetService<ICoverArtService>();
+        _recent = recent ?? services?.GetService<RecentlyPlayedService>();
         Sources = services?.GetService<SourcesViewModel>();
         Shortcuts = services?.GetService<ShortcutsViewModel>();
         Lyrics = lyrics ?? services?.GetService<LyricsViewModel>();
@@ -80,7 +84,27 @@ public partial class MusicViewModel : ObservableObject
             ? savedPath
             : Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
 
+        var music = _settingsService?.GetSettings().Music;
+        _applyingAmbientSettings = true;
+        AmbientAutoEnter = music?.AmbientAutoEnter ?? false;
+        AmbientIdleMinutes = music?.AmbientIdleMinutes ?? 2;
+        _applyingAmbientSettings = false;
+
         InitializeLibrary();
+    }
+
+    /// <summary>The page is on screen: follow the recently played list while it is.</summary>
+    public void Activate()
+    {
+        if (_recent == null) return;
+        _recent.Changed -= OnRecentChanged;
+        _recent.Changed += OnRecentChanged;
+        LoadRecentPlays();
+    }
+
+    public void Deactivate()
+    {
+        if (_recent != null) _recent.Changed -= OnRecentChanged;
     }
 
     public NowPlayingViewModel NowPlaying { get; }
@@ -157,7 +181,7 @@ public partial class MusicViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsLocalMode), nameof(IsYouTubeMode), nameof(BrowseTitle),
-        nameof(BrowseEmptyMessage), nameof(LibraryItemsSummary))]
+        nameof(BrowseEmptyMessage), nameof(LibraryItemsSummary), nameof(RecentPlaysEmptyMessage))]
     private MusicBrowseMode _browseMode = MusicBrowseMode.Local;
 
     public bool IsLocalMode
@@ -188,7 +212,81 @@ public partial class MusicViewModel : ObservableObject
 
     public string LibraryItemsSummary => $"{LibraryItems.Count} collection{(LibraryItems.Count == 1 ? "" : "s")}";
 
-    partial void OnBrowseModeChanged(MusicBrowseMode value) => ShowBrowseMode(value);
+    partial void OnBrowseModeChanged(MusicBrowseMode value)
+    {
+        ShowBrowseMode(value);
+        LoadRecentPlays();
+    }
+
+    // ── Last played ─────────────────────────────────────────────────────────
+
+    /// <summary>Songs played most recently in the mode on show: local files, or YouTube Music.</summary>
+    public ObservableCollection<SongItemViewModel> RecentPlays { get; } = new();
+
+    public bool HasRecentPlays => RecentPlays.Count > 0;
+
+    public string RecentPlaysEmptyMessage => IsLocalMode
+        ? "Songs you play from your library will show up here."
+        : "Songs you play from YouTube Music will show up here.";
+
+    private void OnRecentChanged(object? sender, EventArgs e) =>
+        Application.Current?.Dispatcher.BeginInvoke(LoadRecentPlays);
+
+    private void LoadRecentPlays()
+    {
+        RecentPlays.Clear();
+        if (_recent != null)
+        {
+            int number = 1;
+            foreach (var play in _recent.Get(streamed: IsYouTubeMode))
+            {
+                var track = play.ToTrack();
+                RecentPlays.Add(new SongItemViewModel
+                {
+                    Number = number++,
+                    Title = play.Title,
+                    Artist = play.Artists.Count > 0 ? string.Join(", ", play.Artists) : "Unknown Artist",
+                    Album = play.Album ?? string.Empty,
+                    Duration = track.Duration,
+                    Path = play.Path,
+                    Track = track
+                });
+            }
+        }
+        OnPropertyChanged(nameof(HasRecentPlays));
+    }
+
+    /// <summary>Plays from a Last played row onward, so the rest of the history follows it.</summary>
+    [RelayCommand]
+    public Task PlayRecent(SongItemViewModel? song) =>
+        song == null ? Task.CompletedTask : PlayListAsync(RecentPlays.ToList(), song);
+
+    [RelayCommand]
+    public Task QueueRecent(SongItemViewModel? song) => QueueSong(song);
+
+    // ── Ambient Mode as a screensaver ───────────────────────────────────────
+
+    /// <summary>The idle times offered in Music Settings, in minutes.</summary>
+    public IReadOnlyList<int> AmbientIdleChoices { get; } = new[] { 1, 2, 5, 10 };
+
+    [ObservableProperty]
+    private bool _ambientAutoEnter;
+
+    [ObservableProperty]
+    private int _ambientIdleMinutes = 2;
+
+    partial void OnAmbientAutoEnterChanged(bool value) => SaveAmbientSettings();
+
+    partial void OnAmbientIdleMinutesChanged(int value) => SaveAmbientSettings();
+
+    private void SaveAmbientSettings()
+    {
+        if (_applyingAmbientSettings || _settingsService == null) return;
+        var settings = _settingsService.GetSettings();
+        settings.Music.AmbientAutoEnter = AmbientAutoEnter;
+        settings.Music.AmbientIdleMinutes = AmbientIdleMinutes;
+        _settingsService.SaveSettings(settings);
+    }
 
     [RelayCommand]
     private void ShowLocalMode() => BrowseMode = MusicBrowseMode.Local;

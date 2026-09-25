@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `v1.9` · **Last updated:** 2026-09-25 · **Last commit covered:** `4a004bb` (plus current uncommitted Music phases 1–3)
+> **Branch:** `v2.0.5` · **Last updated:** 2026-09-25 · **Last commit covered:** `7822d50` (plus the uncommitted Music page rework: compact player, header source switch, Last played, full screen Ambient)
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and
@@ -67,13 +67,20 @@ Ids are `M<n>` for Music, `P<n>` for the portal, and are never reused.
 **Why it matters:** This is the largest untested surface in the feature. The Music Settings
 dialog grew from one 480px panel to a 640px scrolling dialog with five sections (Sources,
 streamed audio, Discovery, Shortcuts, Control other players). None of it, nor the Discovery
-toggle added to the transport row, the synchronized Lyrics tab, the expanded Ambient overlay,
-the "Play from" submenu on queue rows, nor the four new What's New cards, has been seen. Binding errors and layout breakage would not show up in any
-test; XAML compiles fine with a misspelled binding path.
+toggle added to the transport row, the synchronized Lyrics tab, the "Play from" submenu on queue
+rows, nor the four new What's New cards, has been seen. The 2026-09-25 page rework is also unseen:
+the compact Now Playing card (112px art, transport and volume on one row, the "Up next" line and
+volume percentage label removed — volume shows in the tooltip), the YT Music / Local Music header
+buttons that replaced the lower tabs, the icon-only Ambient button, the Local-only Create Playlist /
+Add Folder toolbar, the Last played list, and the new Ambient Mode section in Music Settings.
+Binding errors and layout breakage would not show up in any test; XAML compiles fine with a
+misspelled binding path.
 **How to verify:** Launch the app (it relaunches elevated, so this has to be done by the owner),
 open Music → settings, scroll the whole dialog, right-click a streamed queue row, open Lyrics,
-enter Ambient Mode with F11, and check the Dashboard's What's New dropdown. Resize the window
-and compare against `ui reference/`.
+enter Ambient Mode with F11, and check the Dashboard's What's New dropdown. Switch between the YT
+Music and Local Music header buttons and check the active one is lit, the cards and toolbar vanish
+in YT Music, and the transport row does not clip at the narrowest window width (the left column's
+MinWidth is 420). Resize the window and compare against `ui reference/`.
 **Found:** 2026-09-23 / `3689ff4`–`141ebca`
 
 ### M3 — Global hotkeys have never been registered against Windows
@@ -119,6 +126,35 @@ quality, real embedded covers, and GPU/render behavior vary outside the test sui
 lyrics, confirm LRCLIB success and a Kugou fallback, click lines to seek, then enter Ambient Mode
 and confirm each cover produces readable, non-black glows without animation or scrolling stalls.
 **Found:** 2026-09-25 / working tree after `4a004bb`
+
+### M8 — Full screen Ambient window and its screensaver mode have never run
+**Where:** [AmbientWindowService.cs](../AxePower.App/Services/AmbientWindowService.cs), [AmbientModeViewModel.cs](../AxePower.App/ViewModels/Music/AmbientModeViewModel.cs)
+**Why it matters:** Ambient Mode is now its own borderless, topmost window instead of an overlay
+on the Music page. Covering the taskbar relies on maximizing a borderless window on the monitor
+AxePower is on; a wrong monitor, a visible taskbar or a window that never closes would all pass
+the build. The screensaver path (idle check every 5 s with `GetLastInputInfo`, skipped when
+`SHQueryUserNotificationState` reports a full screen game, video or presentation) has no test at
+all. Gamepad input does not reset Windows' idle time, so it may still open over a windowed game
+played with a controller.
+**How to verify:** Press F11 on the Music page on each monitor: it must cover the whole screen,
+taskbar included; Esc, F11, the close button and Space (play/pause) must work, and closing must
+return to AxePower. Turn on Music Settings → Ambient Mode → "Open automatically", pick 1 minute,
+play a song and leave the PC alone: it must open, and a small mouse move, a click or a key must
+close it without bringing AxePower forward. Repeat with a full screen game or video playing: it
+must not open.
+**Found:** 2026-09-25 / working tree after `7822d50`
+
+### M9 — Last played history is only tested with fake player states
+**Where:** [RecentlyPlayedService.cs](../AxePower.Core/Services/Music/RecentlyPlayedService.cs), `LoadRecentPlays` / `PlayRecent` in [MusicViewModel.cs](../AxePower.App/ViewModels/Music/MusicViewModel.cs)
+**Why it matters:** A song is recorded the first time its queue entry reports `Playing`. That is
+unit tested with hand-built `PlayerState`s, not the real player, so a buffering or error state that
+briefly reports playing could record songs that never played. Replaying a YouTube row rebuilds the
+track from its provider id only (no candidates), relying on the resolver to search again, which
+has not been exercised from this list.
+**How to verify:** Play a few local songs and a few YouTube songs, restart AxePower, and check
+each mode's Last played list shows its own songs newest first. Click a YouTube row and confirm it
+resolves and plays; right-click → Add to queue on a local row.
+**Found:** 2026-09-25 / working tree after `7822d50`
 
 ### P1 — The phone remote has never been opened on a phone
 **Where:** [LanDropService.cs](../AxePower.Core/Services/LanDropService.cs) (embedded portal HTML), [MusicRemote.cs](../AxePower.Core/Services/Music/Providers/MusicRemote.cs)
@@ -177,7 +213,7 @@ in what exists. Phases are from [MUSIC_PLAYER_PLAN.md §26](MUSIC_PLAYER_PLAN.md
 | 2b | Library scanner: incremental by size and mtime, cancellable, `BelowNormal`, batched transactions, live progress |
 | 2c | `LibraryWatcher`: one `FileSystemWatcher` per root, debounced, buffer overflow → rescan |
 | 2d | Browse UI: Tracks / Albums / Artists / Genres / Folders, search, sort. **Needs a virtualising wrap panel package, which the App does not have** |
-| 2e | Playlists, M3U import/export, Liked, Recently played |
+| 2e | Playlists, M3U import/export, Liked, Recently played on the library database (the Music page's Last played list is a separate 20-per-mode JSON file, see M9) |
 | — | Listening stats page (top lists, time of day, day of week, 12-month calendar) — depends on 2a history, which is already recorded |
 | 3–7 | Mini player, automations, audiophile features, tag editor, Discord, Last.fm — see the plan. Synced lyrics and Ambient Mode now exist but remain under M1/M7 until live-verified. |
 

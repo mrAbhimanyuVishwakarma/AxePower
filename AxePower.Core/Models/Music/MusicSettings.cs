@@ -95,6 +95,14 @@ public class MusicSettings
     [JsonPropertyName("dashboardPlayerExpanded")]
     public bool DashboardPlayerExpanded { get; set; } = true;
 
+    /// <summary>Opens Ambient Mode full screen, like a screensaver, after the PC sits idle while music plays.</summary>
+    [JsonPropertyName("ambientAutoEnter")]
+    public bool AmbientAutoEnter { get; set; } = false;
+
+    /// <summary>Minutes without keyboard or mouse input before <see cref="AmbientAutoEnter"/> fires.</summary>
+    [JsonPropertyName("ambientIdleMinutes")]
+    public int AmbientIdleMinutes { get; set; } = 2;
+
     [JsonPropertyName("miniPlayer")]
     public MiniPlayerSettings MiniPlayer { get; set; } = new();
 
@@ -161,6 +169,8 @@ public class MusicSettings
             ExclusiveMode = ExclusiveMode,
             ExclusiveMatchSourceRate = ExclusiveMatchSourceRate,
             DashboardPlayerExpanded = DashboardPlayerExpanded,
+            AmbientAutoEnter = AmbientAutoEnter,
+            AmbientIdleMinutes = AmbientIdleMinutes,
             MiniPlayer = (MiniPlayer ?? new MiniPlayerSettings()).Clone(),
             UniversalControllerEnabled = UniversalControllerEnabled,
             RemoteControlEnabled = RemoteControlEnabled,
