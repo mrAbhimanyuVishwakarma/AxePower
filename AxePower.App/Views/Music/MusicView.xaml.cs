@@ -22,6 +22,7 @@ public partial class MusicView : UserControl
     private int _dragFrom = -1;
     private Point _dragStart;
     private bool _dragging;
+    private bool _keepRecentSearchesClosed;
 
     public MusicView()
     {
@@ -33,9 +34,20 @@ public partial class MusicView : UserControl
 
     private MusicViewModel? ViewModel => DataContext as MusicViewModel;
 
+    private Window? _hostWindow;
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ViewModel?.Activate();
+
+        // The recent-searches list stays open until something here closes it (see below)
+        _hostWindow = Window.GetWindow(this);
+        if (_hostWindow != null)
+        {
+            _hostWindow.PreviewMouseDown += HostWindow_PreviewMouseDown;
+            _hostWindow.Deactivated += HostWindow_Deactivated;
+            _hostWindow.LocationChanged += HostWindow_Deactivated;
+        }
 
         _drops = (Application.Current as App)?.Services?.GetService<FileDropHelper>();
         if (_drops == null) return;
@@ -46,6 +58,15 @@ public partial class MusicView : UserControl
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         ViewModel?.Deactivate();
+        CloseRecentSearches();
+
+        if (_hostWindow != null)
+        {
+            _hostWindow.PreviewMouseDown -= HostWindow_PreviewMouseDown;
+            _hostWindow.Deactivated -= HostWindow_Deactivated;
+            _hostWindow.LocationChanged -= HostWindow_Deactivated;
+            _hostWindow = null;
+        }
 
         if (_drops == null) return;
         _drops.FilesDropped -= OnFilesDropped;
@@ -148,11 +169,106 @@ public partial class MusicView : UserControl
         }
     }
 
-    private void LyricsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    // ── Recent searches dropdown ────────────────────────────────────────────
+    //
+    // The popup is StaysOpen="True" and closed here instead of by WPF: a self-closing popup eats
+    // the click that dismisses it, so clicking the search box while the list was open used to
+    // close it rather than keep it. It opens on every click in the box, filters as you type, and
+    // closes on a click elsewhere, Tab away, Esc, choosing a search, or leaving the window.
+
+    private void YouTubeSearchBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
-        if (sender is ListBox list)
-            LyricsScrollHelper.SmoothCenter(list, list.SelectedItem);
+        if (ViewModel is not { } vm) return;
+        vm.IsSearchBoxFocused = true;
+        if (_keepRecentSearchesClosed)
+        {
+            _keepRecentSearchesClosed = false;
+            return;
+        }
+        vm.ShowRecentSearches();
     }
+
+    private void YouTubeSearchBox_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (ViewModel is not { } vm) return;
+        vm.IsSearchBoxFocused = false;
+
+        // Moving into the list (Down arrow) keeps it open; going anywhere else closes it
+        if (e.NewFocus is DependencyObject target && IsInsideRecentSearches(target)) return;
+        vm.IsRecentSearchesOpen = false;
+    }
+
+    /// <summary>Every click in the box shows the full history, whether or not it had the cursor.</summary>
+    private void YouTubeSearchBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) =>
+        ViewModel?.ShowRecentSearches();
+
+    private void YouTubeSearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        var vm = ViewModel;
+        if (vm == null) return;
+
+        if (e.Key == Key.Escape && vm.IsRecentSearchesOpen)
+        {
+            vm.IsRecentSearchesOpen = false;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter)
+        {
+            vm.IsRecentSearchesOpen = false;
+        }
+        else if (e.Key == Key.Down && vm.HasRecentSearches)
+        {
+            // Keep whatever filter the typing applied; only open it if it was shut
+            if (!vm.IsRecentSearchesOpen) vm.ShowRecentSearches();
+            // The popup's rows exist only once it has opened and laid out
+            Dispatcher.BeginInvoke(() =>
+                RecentSearchesList.MoveFocus(new TraversalRequest(FocusNavigationDirection.First)),
+                System.Windows.Threading.DispatcherPriority.Loaded);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Esc inside the list closes it and puts the cursor back in the search box.</summary>
+    private void RecentSearchesPopup_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || ViewModel == null) return;
+        ViewModel.IsRecentSearchesOpen = false;
+        _keepRecentSearchesClosed = true;
+        YouTubeSearchBox.Focus();
+        e.Handled = true;
+    }
+
+    /// <summary>A click anywhere but the search box or the list closes the list.</summary>
+    private void HostWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (ViewModel is not { IsRecentSearchesOpen: true }) return;
+        if (e.OriginalSource is DependencyObject source && (IsInside(source, YouTubeSearchBox) || IsInsideRecentSearches(source))) return;
+        CloseRecentSearches();
+    }
+
+    /// <summary>A StaysOpen popup would otherwise sit over other apps, or stay put while the window moves.</summary>
+    private void HostWindow_Deactivated(object? sender, EventArgs e) => CloseRecentSearches();
+
+    private void CloseRecentSearches()
+    {
+        if (ViewModel is { IsRecentSearchesOpen: true } vm) vm.IsRecentSearchesOpen = false;
+    }
+
+    private bool IsInsideRecentSearches(DependencyObject element) =>
+        RecentSearchesPopup.Child is { } child && IsInside(element, child);
+
+    private static bool IsInside(DependencyObject element, DependencyObject container)
+    {
+        for (var node = element; node != null; node = ParentOf(node))
+            if (ReferenceEquals(node, container)) return true;
+        return false;
+    }
+
+    // Text runs are not visuals, so they only have a logical parent
+    private static DependencyObject? ParentOf(DependencyObject node) =>
+        node is Visual or System.Windows.Media.Media3D.Visual3D
+            ? VisualTreeHelper.GetParent(node) ?? LogicalTreeHelper.GetParent(node)
+            : LogicalTreeHelper.GetParent(node);
 
     private void QueueList_PreviewKeyDown(object sender, KeyEventArgs e)
     {

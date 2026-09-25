@@ -32,6 +32,14 @@ LGPL components (TagLib#) are shipped as separate, unmodified DLLs (`TagLibSharp
 | HidSharp (dependency of LibreHardwareMonitorLib) | 2.6.4 | Apache-2.0 | https://software.seekye.com/hidsharp |
 | RAMSPDToolkit-NDD (dependency of LibreHardwareMonitorLib) | 1.4.2 | MPL-2.0 | https://github.com/Blacktempel/RAMSPDToolkit |
 | Mono.Posix.NETStandard (dependency of LibreHardwareMonitorLib) | 1.0.0 | MIT | https://github.com/mono/mono |
+| Microsoft.Extensions.DependencyInjection.Abstractions | 8.0.0 | MIT | https://github.com/dotnet/runtime |
+| Microsoft.Management.Infrastructure.Runtime.Win / .Unix (dependencies of Microsoft.Management.Infrastructure) | 3.0.0 | MIT | https://github.com/PowerShell/MMI |
+| Microsoft.Web.WebView2 | 1.0.3485.44 | BSD-3-Clause (Microsoft) | https://www.nuget.org/packages/Microsoft.Web.WebView2 |
+| YoutubeExplode | 6.6.2 | MIT | https://github.com/Tyrrrz/YoutubeExplode |
+| Microsoft.Data.Sqlite, Microsoft.Data.Sqlite.Core | 8.0.11 | MIT | https://github.com/dotnet/efcore |
+| SQLitePCLRaw.bundle_e_sqlite3, .core, .lib.e_sqlite3, .provider.e_sqlite3 | 2.1.6 | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw |
+| SQLite (the native e_sqlite3 library inside SQLitePCLRaw.lib.e_sqlite3) | bundled | Public domain | https://www.sqlite.org/copyright.html |
+| .NET platform packages: Microsoft.Win32.SystemEvents, System.CodeDom, System.Diagnostics.EventLog, System.IO.Ports (with its runtime.*.runtime.native.System.IO.Ports helpers), System.Management, System.Security.Cryptography.ProtectedData, System.ServiceProcess.ServiceController, System.Threading.AccessControl, System.Memory, System.Numerics.Vectors, System.ValueTuple | 4.5.0 – 10.0.10 | MIT | https://github.com/dotnet/runtime |
 
 The source code of the MPL-2.0 components is available at the source links above. AxePower does not modify them.
 
@@ -54,6 +62,8 @@ Applies to:
 - Hardcodet.NotifyIcon.Wpf: Copyright (c) Philipp Sumi
 - Microsoft.Extensions.DependencyInjection, Microsoft.Management.Infrastructure: Copyright (c) Microsoft Corporation
 - Mono.Posix.NETStandard: Copyright (c) .NET Foundation Contributors
+- Microsoft.Extensions.DependencyInjection.Abstractions, Microsoft.Management.Infrastructure.Runtime.*, Microsoft.Data.Sqlite, Microsoft.Data.Sqlite.Core, and the .NET platform packages listed above: Copyright (c) .NET Foundation and Contributors / Copyright (c) Microsoft Corporation
+- YoutubeExplode: Copyright (c) Oleksii Holub
 
 ```text
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -116,6 +126,46 @@ Opus open-source contributors. The source code for these libraries is freely ava
 at https://gitlab.xiph.org/xiph/opus/-/tags/v1.5.2, and all binaries are being
 redistributed to you under the same terms of the general Opus license dictated above.
 ```
+
+### Microsoft.Web.WebView2 (BSD-3-Clause)
+
+Reproduced from the license shipped in the Microsoft.Web.WebView2 package.
+
+```text
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * The name of Microsoft Corporation, or the names of its contributors 
+may not be used to endorse or promote products derived from this
+software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+### SQLitePCLRaw (Apache-2.0) and SQLite (public domain)
+
+SQLitePCLRaw is Copyright (c) Eric Sink and is licensed under the Apache License, Version 2.0; the
+full text of that license is reproduced below under HidSharp. The native SQLite library it bundles
+is in the public domain: https://www.sqlite.org/copyright.html
 
 ### HidSharp (Apache-2.0)
 

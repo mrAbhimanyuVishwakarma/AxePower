@@ -134,7 +134,7 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         if (dropped > 0)
             _log.LogInfo($"[Music] {dropped} saved queue entr{(dropped == 1 ? "y was" : "ies were")} skipped because the file is gone.");
 
-        var tracks = await Task.Run(() => state.Queue.Select(e => _trackReader.Read(e.Path)).ToList(), ct);
+        var tracks = await Task.Run(() => state.Queue.Select(e => e.Stream?.ToTrack() ?? _trackReader.Read(e.Path)).ToList(), ct);
 
         var items = tracks.Select(QueueItem.For).ToList();
         var originalOrder = state.Shuffle && state.OriginalOrder != null
@@ -154,7 +154,19 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
         if (_queue.Current != null)
         {
             bool resume = _settings.GetSettings().Music.ResumePlaybackOnStartup;
-            await LoadCurrentAsync(TimeSpan.FromMilliseconds(Math.Max(0, state.PositionMs)), play: resume, countFailure: true);
+            var start = TimeSpan.FromMilliseconds(Math.Max(0, state.PositionMs));
+            if (resume || _queue.Current.Track.IsLocal)
+            {
+                await LoadCurrentAsync(start, play: resume, countFailure: true);
+            }
+            else
+            {
+                // A streamed track restored paused is shown, not fetched: Play resolves it then,
+                // from this position. Resolving now would go online at every start-up and could
+                // hand Play a link that has expired while AxePower sat in the tray.
+                _position = start;
+                _duration = _queue.Current.Track.Duration;
+            }
         }
 
         Publish();
@@ -865,7 +877,12 @@ public sealed class MusicPlayerService : IMusicPlayerService, IDisposable
 
         return new PersistedPlaybackState
         {
-            Queue = items.Select(i => new PersistedQueueEntry { TrackId = i.Track.Id, Path = i.Track.Path }).ToList(),
+            Queue = items.Select(i => new PersistedQueueEntry
+            {
+                TrackId = i.Track.Id,
+                Path = i.Track.Path,
+                Stream = i.Track.IsLocal ? null : RecentPlay.From(i.Track, _lastSaveUtc)
+            }).ToList(),
             OriginalOrder = _queue.OriginalOrder?.Where(indexByKey.ContainsKey).Select(k => indexByKey[k]).ToList(),
             Index = _queue.Index,
             PositionMs = (long)_position.TotalMilliseconds,

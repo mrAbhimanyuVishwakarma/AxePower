@@ -1,0 +1,27 @@
+<Window x:Class="AxePower.App.Views.PowerTimerWarningWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Power timer warning"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
+        IsHitTestVisible="False">
+    <!-- Click-through on purpose: it only informs, and must never steal a click or a keystroke.
+         The one clickable part, the "Extend time" line, is a separate small window laid over LinkSlot. -->
+    <Border Margin="16" Padding="20,16" CornerRadius="14" MinWidth="320"
+            Background="{DynamicResource ElevatedCardBackgroundBrush}"
+            BorderBrush="{DynamicResource ErrorBrush}" BorderThickness="1.5">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="6" Direction="270" Opacity="0.45" Color="#000000" />
+        </Border.Effect>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="{DynamicResource ErrorBrush}"
+                       VerticalAlignment="Center" Margin="0,0,14,0" />
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock x:Name="MessageText" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                <!-- Reserves the space; the clickable link window is drawn exactly here -->
+                <Border x:Name="LinkSlot" HorizontalAlignment="Left" Margin="0,4,0,0" Height="18" Width="170" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

@@ -31,7 +31,11 @@ public class SkinCompilerTests : IDisposable
         {
             ["CardBorderColor"] = "Color #FFCBD5E1",
             ["CardBorderBrush"] = "Solid #FFCBD5E1",
+            ["PopupBackgroundBrush"] = "Solid #FFFFFFFF",
         },
+        // 2026-09-25: an opaque surface for dropdowns, which on glass showed the page through them
+        ["dark"] = new() { ["PopupBackgroundBrush"] = "Solid #FF1A1C23" },
+        ["glass"] = new() { ["PopupBackgroundBrush"] = "Solid #FF030405" },
     };
 
     [Theory]
@@ -53,7 +57,7 @@ public class SkinCompilerTests : IDisposable
             .ToList();
 
         Assert.True(differences.Count == 0, string.Join(Environment.NewLine, differences));
-        Assert.Equal(61, actual.Count);
+        Assert.Equal(62, actual.Count);
     }
 
     [Fact]
@@ -142,7 +146,7 @@ public class SkinCompilerTests : IDisposable
 
         var compiled = SkinCompiler.Compile(def, dark);
 
-        Assert.Equal(61, compiled.Resources.Count);
+        Assert.Equal(62, compiled.Resources.Count);
     }
 
     [Fact]

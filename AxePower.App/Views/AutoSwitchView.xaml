@@ -385,17 +385,6 @@
                     </StackPanel>
                 </Button>
                 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Grid Width="32" Height="32" Margin="0,0,16,0">
-                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
-                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Auto switch enabled" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
-                        <TextBlock Text="AxePower is monitoring your power conditions." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                    </StackPanel>
-                </StackPanel>
-                
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Style="{StaticResource SidebarButtonStyle}" Command="{Binding OpenHelpCommand}" Padding="16,8" Height="32" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">

@@ -51,6 +51,11 @@ public partial class MainWindow : Window
                 ApplyCaptionHeight();
                 PositionHeaderPlayer();
             }
+            // Picking another tool in the help window starts its guide from the top
+            else if (e.PropertyName == nameof(MainViewModel.SelectedToolHelp))
+            {
+                ToolHelpScroller.ScrollToTop();
+            }
         };
         ApplyCaptionHeight();
 
@@ -219,7 +224,10 @@ public partial class MainWindow : Window
         catch { }
     }
 
-    private void OpenApp_Click(object sender, RoutedEventArgs e)
+    private void OpenApp_Click(object sender, RoutedEventArgs e) => BringToFront();
+
+    /// <summary>Shows the window from the tray or the taskbar and puts it in front.</summary>
+    public void BringToFront()
     {
         this.Show();
         if (this.WindowState == WindowState.Minimized)

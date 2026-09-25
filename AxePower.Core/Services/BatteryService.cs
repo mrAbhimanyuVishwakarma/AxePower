@@ -233,6 +233,100 @@ public class BatteryService : IDisposable
         }
     }
 
+    internal static string HealthLabel(double health) =>
+        health >= 90 ? "Excellent" : health >= 80 ? "Good" : health >= 60 ? "Fair" : "Worn";
+
+    /// <summary>
+    /// Full-charge capacity as Windows has recorded it over time (weekly, then daily entries in
+    /// the battery report), oldest first. Null when Windows has no history for this battery.
+    /// </summary>
+    public async Task<BatteryCapacityHistory?> GetCapacityHistoryAsync()
+    {
+        string reportPath = Path.Combine(Path.GetTempPath(), $"AxePower_capacityreport_{Environment.ProcessId}.xml");
+        try
+        {
+            if (!await RunPowercfgAsync($"/batteryreport /xml /output \"{reportPath}\"") || !File.Exists(reportPath)) return null;
+            return ParseCapacityHistory(System.Xml.Linq.XDocument.Load(reportPath));
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"[Battery] Could not read capacity history: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            try { if (File.Exists(reportPath)) File.Delete(reportPath); } catch { }
+        }
+    }
+
+    /// <summary>Reads the HistoryEntry records of a powercfg battery report.</summary>
+    internal static BatteryCapacityHistory? ParseCapacityHistory(System.Xml.Linq.XDocument doc)
+    {
+        var points = new List<BatteryCapacityPoint>();
+        double design = 0;
+        foreach (var entry in doc.Descendants().Where(e => e.Name.LocalName == "HistoryEntry"))
+        {
+            if (!DateTime.TryParse((string?)entry.Attribute("EndDate"), System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var endUtc)) continue;
+            if (!double.TryParse((string?)entry.Attribute("FullChargeCapacity"), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var full) || full <= 0) continue;
+            if (double.TryParse((string?)entry.Attribute("DesignCapacity"), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var d) && d > 0) design = d;
+
+            // A replaced battery starts a new history; only the current battery's entries count
+            if ((string?)entry.Attribute("BatteryChanged") == "1") points.Clear();
+            points.Add(new BatteryCapacityPoint(endUtc, full));
+        }
+
+        points.Sort((a, b) => a.EndUtc.CompareTo(b.EndUtc));
+        return points.Count >= 2 ? new BatteryCapacityHistory(points, design) : null;
+    }
+
+    /// <summary>
+    /// Writes the full Windows battery report (HTML) into AxePower's folder and returns its path,
+    /// or null if Windows could not produce one. The report stays on this computer.
+    /// </summary>
+    public async Task<string?> CreateHtmlBatteryReportAsync()
+    {
+        try
+        {
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower");
+            Directory.CreateDirectory(folder);
+            string path = Path.Combine(folder, "battery-report.html");
+            return await RunPowercfgAsync($"/batteryreport /output \"{path}\"") && File.Exists(path) ? path : null;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"[Battery] Could not create the battery report: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static async Task<bool> RunPowercfgAsync(string arguments)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "powercfg.exe",
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        using var proc = System.Diagnostics.Process.Start(psi);
+        if (proc == null) return false;
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        try
+        {
+            await proc.WaitForExitAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            try { proc.Kill(true); } catch { }
+            return false;
+        }
+        return proc.ExitCode == 0;
+    }
+
     // Pre-seeds 25 plausible baseline points across the last 24 hours ending at the current percentage
     private static List<BatteryHistoryPoint> GenerateSeedHistory(int currentPercentage, bool isPluggedIn, DateTime now)
     {
@@ -497,7 +591,28 @@ public class BatteryService : IDisposable
                 }
             }
 
-            // 2. Query root/wmi for FullChargedCapacity
+            // 2. Design capacity from the battery's own data. It used to be invented as 102% of the
+            //    full-charge capacity, which pinned health at 98% whatever the battery's state.
+            double designCapacity = 0;
+            try
+            {
+                using var staticSearcher = new ManagementObjectSearcher(@"root\wmi", "SELECT DesignedCapacity FROM BatteryStaticData");
+                foreach (ManagementObject obj in staticSearcher.Get())
+                {
+                    if (double.TryParse(obj["DesignedCapacity"]?.ToString(), out var dc) && dc > 0)
+                    {
+                        designCapacity = dc;
+                        break;
+                    }
+                }
+            }
+            catch (ManagementException)
+            {
+                // Not every battery driver publishes static data; health then shows as not reported
+            }
+            status.DesignCapacity = designCapacity > 0 ? $"{designCapacity:N0} mWh" : "Not reported";
+
+            // Then the full-charge capacity
             double fullCapacity = 0;
             using (var searcher = new ManagementObjectSearcher("root\\wmi", "SELECT * FROM BatteryFullChargedCapacity"))
             {
@@ -507,7 +622,6 @@ public class BatteryService : IDisposable
                     {
                         fullCapacity = fcc;
                         status.FullChargeCapacity = $"{fcc:N0} mWh";
-                        status.DesignCapacity = $"{Math.Round(fcc * 1.02):N0} mWh";
                         break;
                     }
                 }
@@ -550,11 +664,16 @@ public class BatteryService : IDisposable
                         status.CurrentPowerUsage = status.IsPluggedIn ? "0.0 W (AC Power)" : "0.0 W";
                     }
 
+                    // Health is how much of the original capacity is left
+                    if (fullCapacity > 0 && designCapacity > 0)
+                    {
+                        double health = Math.Min(100.0, fullCapacity / designCapacity * 100.0);
+                        status.HealthPercentage = $"{health:F0}%";
+                        status.HealthStatus = HealthLabel(health);
+                    }
+
                     if (double.TryParse(obj["RemainingCapacity"]?.ToString(), out var remCap) && remCap > 0 && fullCapacity > 0)
                     {
-                        double health = Math.Min(100.0, (fullCapacity / (fullCapacity * 1.02)) * 100.0);
-                        status.HealthPercentage = $"{health:F0}%";
-                        status.HealthStatus = health >= 90 ? "Excellent" : (health >= 80 ? "Good" : "Fair");
                         
                         if (disRate > 0 && !status.IsPluggedIn)
                         {

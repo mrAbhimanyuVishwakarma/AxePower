@@ -614,7 +614,34 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
     {
-        // Chosen by the owner for 2.0.2, in this order. Ask which to keep before the next release.
+        // 2.0.6 additions first; the 2.0.2 list the owner chose follows in its order.
+        new()
+        {
+            Title = "Power Timer",
+            Badge = "NEW IN 2.0.6",
+            BadgeColorHex = "#F59E0B",
+            Glyph = "",
+            Description = "Shut down, restart or sleep after the time you set, from the button in the bottom-right corner of every page. Two minutes before, the countdown turns red and a warning appears on screen.",
+            TargetNavigation = "Dashboard"
+        },
+        new()
+        {
+            Title = "Ambient Mode",
+            Badge = "NEW IN 2.0.6",
+            BadgeColorHex = "#8B5CF6",
+            Glyph = "",
+            Description = "Album art and synced lyrics fill the whole screen. It can open by itself like a screensaver while music plays, and lyrics are now found for far more songs.",
+            TargetNavigation = "Music"
+        },
+        new()
+        {
+            Title = "Battery Health",
+            Badge = "NEW IN 2.0.6",
+            BadgeColorHex = "#10B981",
+            Glyph = "",
+            Description = "Real battery health from your battery's own design capacity, a chart of how its capacity has changed, and the full Windows battery report in one click.",
+            TargetNavigation = "Battery"
+        },
         new()
         {
             Title = "DLSS 5 Swapper",

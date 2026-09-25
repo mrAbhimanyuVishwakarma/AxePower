@@ -37,8 +37,9 @@
 
             <Grid Grid.Row="0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#F2FFFFFF" Margin="0,0,10,0" />
-                    <TextBlock Text="AMBIENT MODE" FontSize="12" FontWeight="SemiBold" Foreground="#BFFFFFFF" />
+                    <Path Data="{StaticResource AmbientModeIconGeometry}" Width="20" Height="20" Stretch="Uniform" Margin="0,0,10,0"
+                          Stroke="#F2FFFFFF" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                    <TextBlock Text="AMBIENT MODE" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="#BFFFFFFF" />
                 </StackPanel>
                 <Button HorizontalAlignment="Right" Style="{StaticResource MusicIconButtonStyle}" Width="42" Height="42"
                         Content="&#xE711;" Command="{Binding CloseCommand}" Foreground="#FFFFFFFF"
@@ -117,13 +118,18 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="560"
-                                Visibility="{Binding Lyrics.HasSyncedLyrics, Converter={StaticResource InverseBoolToVis}}">
-                        <TextBlock Text="{Binding Lyrics.PlainLyrics}" FontSize="20" LineHeight="30" TextWrapping="Wrap" TextAlignment="Center"
-                                   Foreground="#D9FFFFFF" Visibility="{Binding Lyrics.HasPlainLyrics, Converter={StaticResource BoolToVis}}" />
-                        <TextBlock Text="{Binding Lyrics.StatusMessage}" FontSize="16" TextWrapping="Wrap" TextAlignment="Center"
-                                   Foreground="#A6FFFFFF" Visibility="{Binding Lyrics.HasPlainLyrics, Converter={StaticResource InverseBoolToVis}}" />
-                    </StackPanel>
+                    <!-- Lyrics without timings cannot follow the song, so they scroll by hand instead of being cut off -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False"
+                                  Visibility="{Binding Lyrics.HasSyncedLyrics, Converter={StaticResource InverseBoolToVis}}">
+                        <Grid MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="560" Margin="0,24">
+                            <TextBlock Text="{Binding Lyrics.PlainLyrics}" FontSize="20" LineHeight="30" TextWrapping="Wrap" TextAlignment="Center"
+                                       Foreground="#D9FFFFFF" Visibility="{Binding Lyrics.HasPlainLyrics, Converter={StaticResource BoolToVis}}" />
+                            <TextBlock Text="{Binding Lyrics.StatusMessage}" FontSize="16" TextWrapping="Wrap" TextAlignment="Center"
+                                       Foreground="#A6FFFFFF" Margin="0,14,0,0" />
+                        </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
                 </Grid>
             </Grid>
 

@@ -116,6 +116,9 @@ public static class SkinCompiler
         Color("HoverSurfaceColor", hover);
         Surface("CardBackgroundBrush", card);
         Surface("ElevatedCardBackgroundBrush", elevated);
+        // Dropdowns and flyouts float over page content, so they must hide it: the raised-card
+        // colour made opaque by laying it on the window colour (and that on black or white).
+        Solid("PopupBackgroundBrush", Hex.Over(elevated, Hex.Over(window, isLight ? "#FFFFFFFF" : "#FF000000")));
         Solid("CardHoverBrush", hover);
         Solid("HoverBackgroundBrush", hover);
         Solid("CtaButtonBackgroundBrush", cta);
@@ -301,6 +304,21 @@ public static class Hex
         double oa = a + A * (1 - a);
         int Ch(int c) => (int)Math.Round((255 * a + c * A * (1 - a)) / oa, MidpointRounding.ToEven);
         return Format((int)Math.Round(oa * 255, MidpointRounding.ToEven), Ch(R), Ch(G), Ch(B));
+    }
+
+    /// <summary>
+    /// <paramref name="top"/> laid over <paramref name="bottom"/> (standard "over" compositing).
+    /// Over an opaque colour the result is opaque.
+    /// </summary>
+    public static string Over(string top, string bottom)
+    {
+        var (ta8, tr, tg, tb) = Parse(top);
+        var (ba8, br, bg, bb) = Parse(bottom);
+        double ta = ta8 / 255.0, ba = ba8 / 255.0;
+        double oa = ta + ba * (1 - ta);
+        if (oa <= 0) return Format(0, 0, 0, 0);
+        int Ch(int t, int b) => (int)Math.Round((t * ta + b * ba * (1 - ta)) / oa, MidpointRounding.ToEven);
+        return Format((int)Math.Round(oa * 255, MidpointRounding.ToEven), Ch(tr, br), Ch(tg, bg), Ch(tb, bb));
     }
 
     /// <summary>Scales the colour's alpha by <paramref name="alpha"/>/255 (an opaque colour takes it as is).</summary>

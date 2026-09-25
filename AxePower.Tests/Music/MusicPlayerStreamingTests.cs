@@ -53,6 +53,60 @@ public sealed class MusicPlayerStreamingTests : IDisposable
         Assert.Equal("https://audio/a", _engine.LastLoaded!.Track.ResolvedStream!.Url);
     }
 
+    /// <summary>
+    /// A streamed queue used to be saved as empty file paths and dropped as "file is gone" on
+    /// the next start, so the player always came back with nothing playing.
+    /// </summary>
+    [Fact]
+    public async Task AStreamedSession_SurvivesARestart_AndGoesOnlineOnlyWhenPlayed()
+    {
+        await _player.OpenAsync(new[] { Remote("a"), Remote("b") }, startIndex: 1, play: false);
+        await _player.SeekAsync(TimeSpan.FromSeconds(42));
+        await _player.ShutdownAsync();
+
+        var log = new LogService();
+        var resolver = new FakeResolver();
+        var engine = new RecordingEngine();
+        using var restarted = new MusicPlayerService(
+            engine, new PlaybackStateStore(new MusicStoragePaths(_files.Folder)),
+            new LooseTrackReader(new StubTagReader()),
+            new SettingsService(log, Path.Combine(_files.Folder, "settings")),
+            new NotificationService(), log, new StubClock(), new PlaybackQueue(new Random(1)), resolver);
+
+        await restarted.InitializeAsync(CancellationToken.None);
+
+        var state = restarted.State;
+        Assert.Equal(new[] { "a", "b" }, state.Queue.Select(q => q.Track.Title));
+        Assert.Equal("b", state.Current!.Track.Title);
+        Assert.Equal(new ProviderRef("catalog", "b"), state.Current.Track.Source);
+        Assert.False(state.Playing);
+        Assert.Equal(TimeSpan.FromSeconds(42), state.Position);
+        Assert.Equal(TimeSpan.FromMinutes(3), state.Duration);
+        Assert.Empty(resolver.Prepared);            // nothing fetched just by starting up
+        Assert.Null(engine.LastLoaded);
+
+        await restarted.PlayAsync();
+
+        Assert.Equal(new[] { "b" }, resolver.Prepared);
+        Assert.Contains("load:b@42000:play", engine.Calls);
+    }
+
+    [Fact]
+    public void ASessionSavedBeforeStreamsWereKept_StillLoads_WithTheStreamlessEntriesDropped()
+    {
+        var saved = new PersistedPlaybackState
+        {
+            Queue = new List<PersistedQueueEntry> { new() { Path = "" }, new() { Path = "" } },
+            Index = 0
+        };
+
+        var cleaned = saved.WithoutMissingFiles(File.Exists, out int dropped);
+
+        Assert.Equal(2, dropped);
+        Assert.Empty(cleaned.Queue);
+        Assert.Equal(-1, cleaned.Index);
+    }
+
     [Fact]
     public async Task TheResolvedStreamIsKeptOnTheQueueEntry_SoReplayingDoesNotSearchAgain()
     {

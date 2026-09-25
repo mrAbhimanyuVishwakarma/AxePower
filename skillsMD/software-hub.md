@@ -23,7 +23,7 @@ The catalog is hardcoded in `WinGetHubService.InitializeCatalog()`. Categories a
 | `PackageCategory` | Label | Examples |
 |---|---|---|
 | `Runtimes` | Runtimes & DirectX | VC++ 2015+ x64, DirectX, .NET 8 Desktop Runtime |
-| `Gaming` | Launchers & Gaming | Steam, Epic, Rockstar, Ubisoft, Battle.net, GOG, EA, WeMod, DLSS 5 Swapper, FitGirl (web link only) |
+| `Gaming` | Launchers & Gaming | Steam, Epic, Rockstar, Ubisoft, Battle.net, GOG, EA, WeMod, DLSS 5 Swapper |
 | `Monitoring` | Hardware & Tuning | MSI Afterburner, CPU-Z, GPU-Z, HWiNFO, CrystalDiskInfo |
 | `Utilities` | Tools & Productivity | Ninite, 7-Zip, OBS, Discord, VLC, Notepad++, DaVinci Resolve, Audacity, GIMP, Canva, Blender, HandBrake, PowerToys, ShareX, Peace EQ, Dolby Access, SteelSeries GG, CamStudio |
 

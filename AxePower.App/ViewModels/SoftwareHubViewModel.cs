@@ -104,7 +104,9 @@ public partial class PackageCardViewModel : ObservableObject
     [RelayCommand]
     public void OpenLinkWithWarning()
     {
-        string targetUrl = !string.IsNullOrEmpty(WebUrl) ? WebUrl : "https://fitgirl-repacks.site/";
+        // No default site: an entry without its own address has nothing to open
+        if (string.IsNullOrWhiteSpace(WebUrl)) return;
+        string targetUrl = WebUrl;
         _parent.ShowWebLinkWarning(
             $"Open {Name}",
             $"⚠️ Warning: You are about to visit {Name} ({targetUrl}) in your web browser.\n\nAlways ensure you remain on the authentic official domain ({targetUrl}) to avoid clone or phishing sites.",

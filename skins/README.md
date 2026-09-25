@@ -94,11 +94,11 @@ A brush or colour takes one hex value. A gradient takes one colour per stop, com
 unknown name is an error, so a typo is reported instead of silently ignored. The built-in skins show
 real examples.
 
-All 61 names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarBackgroundColor`
+All 62 names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarBackgroundColor`
 `TitleBarBackgroundColor` `WindowBackgroundBrush` `WindowSecondaryBackgroundBrush`
 `SidebarBackgroundBrush` `TitleBarBackgroundBrush` `CardBackgroundColor`
 `ElevatedCardBackgroundColor` `HoverSurfaceColor` `CardBackgroundBrush`
-`ElevatedCardBackgroundBrush` `CardHoverBrush` `HoverBackgroundBrush` `CtaButtonBackgroundBrush`
+`ElevatedCardBackgroundBrush` `PopupBackgroundBrush` `CardHoverBrush` `HoverBackgroundBrush` `CtaButtonBackgroundBrush`
 `CtaButtonForegroundBrush` `CardBorderColor` `DividerColor` `CardBorderBrush` `CardShadowEffect`
 `DividerBrush` `PrimaryTextBrush` `SecondaryTextBrush` `MutedTextBrush` `DisabledTextBrush`
 `PrimaryBlueBrush` `AccentBrush` `AccentHoverBrush` `AccentPressedBrush` `FocusBrush`

@@ -252,12 +252,19 @@
                         </Button.Template>
                     </Button>
 
-                    <!-- Right: Privacy Policy -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Right: Privacy Policy. Kept clear of the power timer, which sits in the window's
+                         bottom-right corner on every page (38px wide): 38 + a 12px gap. -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,50,0">
                         <Button Command="{Binding OpenPrivacyPolicyCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Privacy Policy" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding OpenTermsCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Margin="6,0,0,0" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Terms of Service" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -342,51 +349,183 @@
                     <Grid Grid.Row="0" Margin="0,0,0,18">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#3B82F6" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Privacy Policy &amp; Software Credits" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Privacy Policy &amp; Credits" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
                         <Button Command="{Binding ClosePrivacyPolicyCommand}" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" Cursor="Hand" Padding="6"/>
                     </Grid>
 
-                    <!-- Modal Body -->
+                    <!-- Modal Body: kept general on purpose. It names no project, company or product, so it
+                         stays true as open-source components and tools are added or removed. -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20">
                         <StackPanel Margin="0,0,8,0">
-                            <!-- Privacy First Section -->
-                            <TextBlock Text="1. Privacy &amp; Data Security" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
-                            <TextBlock Text="AxePower is designed with absolute privacy at its core. The application does not collect, record, track, or transmit any personal data, usage telemetry, or identifiers to external servers. All power configurations, profile automations, and hardware adjustments execute 100% locally on your machine." 
-                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,16"/>
+                            <StackPanel.Resources>
+                                <Style x:Key="PolicyHeading" TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="14" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                                    <Setter Property="Margin" Value="0,0,0,6" />
+                                </Style>
+                                <Style x:Key="PolicyText" TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="12.5" />
+                                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                    <Setter Property="LineHeight" Value="19" />
+                                    <Setter Property="Margin" Value="0,0,0,16" />
+                                </Style>
+                                <Style x:Key="PolicyBullet" TargetType="TextBlock" BasedOn="{StaticResource PolicyText}">
+                                    <Setter Property="Margin" Value="0,0,0,6" />
+                                </Style>
+                            </StackPanel.Resources>
 
-                            <!-- Credits & Acknowledgements Section -->
-                            <TextBlock Text="2. Third-Party Software &amp; Open Source Credits" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
-                            <TextBlock Text="AxePower incorporates and coordinates with incredible utilities crafted by the open-source and enthusiast community:" 
-                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                            
-                            <Border Background="#181E28" CornerRadius="10" Padding="14" Margin="0,0,0,16">
-                                <StackPanel>
-                                    <TextBlock Text="• MSI Afterburner &amp; RTSS — Hardware statistics, monitoring and overlay engine. Credit to MSI and Guru3D (Alexey Nicolaychuk)." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Win11Debloat — PowerShell debloating and telemetry optimization scripts. Credit to Raphire (https://github.com/Raphire/Win11Debloat)." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Windows Package Manager (Winget) &amp; USOClient — Software and driver update capabilities by Microsoft Corporation." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Hardcodet.Wpf.TaskbarNotification — Windows system tray integration by Philipp Sumi." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• CommunityToolkit.Mvvm — High performance MVVM architecture by the .NET Community &amp; Microsoft." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </Border>
+                            <TextBlock Text="Last updated: 25 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
 
-                            <!-- Disclaimer & Notice -->
-                            <TextBlock Text="3. Disclaimer &amp; Authorship Inquiries" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
-                            <TextBlock Text="All brand names, trademarks, and third-party software products mentioned remain the exclusive property of their respective copyright holders. AxePower functions as an independent, non-commercial power management companion." 
-                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,6"/>
-                            <TextBlock Text="If you are the author or developer of any referenced software and have questions, concerns, or would like specific items or references modified or removed, please contact us or open an issue on GitHub. We are fully committed to respecting creator rights and will promptly accommodate your request." 
-                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,16"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="1. Privacy at a glance"/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="AxePower has no accounts, no advertising, and no analytics or usage tracking. It does not collect personal data for its developers, and nothing about you or how you use the app is sent to them, sold, or shared."/>
 
-                            <!-- Support Us -->
-                            <TextBlock Text="4. Support the Project" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
-                            <TextBlock Text="If you enjoy using AxePower and would like to support development, consider giving us a star on GitHub or contributing to the codebase!" 
-                                       FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="19"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="2. What stays on your computer"/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Your settings, power profiles, themes and automations."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Music data: library folders, playlists, what you played last, recent searches and the saved queue."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Activity logs used to diagnose problems, and backups some tools make before changing your system."/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="All of this is kept in the app-data folders of your Windows user profile and never leaves your computer on its own. Deleting those folders removes it."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="3. Online features"/>
+                            <TextBlock Style="{StaticResource PolicyText}" Margin="0,0,0,8"
+                                       Text="Some features need the internet and contact third-party services directly from your computer, only when you use them:"/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Searching and streaming music, which sends your search text and the song being played."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Finding lyrics, which sends the song's title, artist and length."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Checking for AxePower updates, and updating software or drivers when you ask it to."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Links, downloads and help pages, which open in your web browser."/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="Like any website, these services also see your IP address and the request itself. Their own privacy policies and terms apply to what they receive. AxePower does not route this traffic through any server of its own."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="4. Your devices and the people you connect to"/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="Phone control, file transfer, remote playback control and screen sharing work over your local network or an address you choose to connect to. Data goes directly between those devices. Local-network access is protected by a private link you share by QR code, and nothing is shared until you start it."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="5. System access"/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="AxePower runs with administrator rights so it can change power, performance and system settings. It changes your system only when you choose an action or set up an automation. Some changes, such as removing apps, updating drivers or tuning Windows, cannot always be fully undone, so read each prompt before confirming."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="6. Open-source components and third-party tools"/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="AxePower is built with open-source libraries and can install, launch or work alongside third-party tools. Each remains the property of its authors and is used under its own license; the full license texts are in THIRD_PARTY_NOTICES.md, next to AxePower.exe. Any tool you launch through AxePower is covered by that tool's own terms and privacy policy. AxePower is an independent project and is not affiliated with, sponsored by or endorsed by any of them. All product names, logos and trademarks belong to their respective owners."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="7. For authors and rights holders"/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="If you are the author or owner of any software, content or trademark that AxePower uses or refers to, and you would like a credit added, corrected or removed, please contact us or open an issue on GitHub. We respect creators' rights and will act on such requests promptly."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="8. Changes to this policy"/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="If AxePower's handling of data changes, this policy will be updated in the same release, and the date at the top will change."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="9. Support the project"/>
+                            <TextBlock Style="{StaticResource PolicyText}" Margin="0"
+                                       Text="If you enjoy using AxePower and would like to support development, consider giving us a star on GitHub or contributing to the codebase."/>
                         </StackPanel>
                     </ScrollViewer>
 
                     <!-- Modal Footer -->
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Style="{DynamicResource PrimaryButtonStyle}" Content="Close" Command="{Binding ClosePrivacyPolicyCommand}" Padding="28,8"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Terms of Service Dialog: the same text as the website's terms.html -->
+        <Grid Background="#D0000000" Visibility="{Binding IsTermsOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="#13171F" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Width="680" MaxHeight="600" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,18">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#3B82F6" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Terms of Service" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Command="{Binding CloseTermsCommand}" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" Cursor="Hand" Padding="6"/>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20">
+                        <StackPanel Margin="0,0,8,0">
+                            <StackPanel.Resources>
+                                <Style x:Key="TermsHeading" TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="14" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                                    <Setter Property="Margin" Value="0,0,0,6" />
+                                </Style>
+                                <Style x:Key="TermsText" TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="12.5" />
+                                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                    <Setter Property="LineHeight" Value="19" />
+                                    <Setter Property="Margin" Value="0,0,0,16" />
+                                </Style>
+                            </StackPanel.Resources>
+
+                            <TextBlock Text="Last updated: 25 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="1. What these terms cover"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="These terms apply to the AxePower desktop app, the AxePower phone app and this website. By installing or using them you agree to these terms. If you do not agree, please do not use them."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="2. The license"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="AxePower is free and open-source software, distributed under the MIT License. You may use, copy, modify and share it under that license. AxePower includes open-source components that remain under their own licenses; their full texts are in THIRD_PARTY_NOTICES.md, next to AxePower.exe."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="3. Changes to your system are your responsibility"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="AxePower changes power, performance, display, driver, startup and other Windows settings, can remove apps and files, and runs with administrator rights. Some changes cannot be fully undone. Read each prompt before confirming, keep backups of anything important, and keep your device well ventilated under heavy load. You use these features at your own risk."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="4. Use it lawfully"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="Use AxePower only in ways that are legal where you live. Do not use it to access, download, copy or share content you do not have the right to, to get around the protections of any service or software, or to harm other people&#x27;s devices or networks. Only connect to devices and people you trust."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="5. Third-party services and tools"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="Some features rely on services and tools that AxePower does not own or control, such as music and lyrics sources, update and download servers, and apps AxePower can install or launch. Their own terms and privacy policies apply when you use them, they may change or stop working at any time, and AxePower is not responsible for them or their content. AxePower is an independent project and is not affiliated with, sponsored by or endorsed by any of them. All trademarks belong to their respective owners."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="6. No warranty"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="AxePower is provided “as is” and “as available”, without any warranty of any kind, express or implied, including warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not promise that it will be error-free, secure, or compatible with your hardware."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="7. Limitation of liability"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="To the fullest extent the law allows, the authors and contributors of AxePower are not liable for any loss or damage arising from its use or inability to use it, including loss of data, hardware damage, system instability, or lost profits, even if told such damage was possible."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="8. Donations and supporter perks"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="AxePower is free. Donations are voluntary gifts to support development and do not buy the software, a license, support or any feature. They are handled by the payment service you choose and are not refundable, except where the law requires otherwise. Any supporter perks offered are thank-you extras that may change or end."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="9. Your local laws"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="These terms are governed by the laws of the country or region where you live. Nothing in them takes away rights you have under your local consumer-protection or other laws that cannot be waived by agreement. If any part of these terms is found unenforceable where you live, the rest still applies."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="10. Changes and contact"/>
+
+                            <TextBlock Style="{StaticResource TermsText}" Margin="0"
+                                       Text="These terms may be updated from time to time; the date at the top shows the latest version, and continuing to use AxePower after a change means you accept it. Questions about these terms can be raised through the project&#x27;s GitHub issues."/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{DynamicResource PrimaryButtonStyle}" Content="Close" Command="{Binding CloseTermsCommand}" Padding="28,8"/>
                     </StackPanel>
                 </Grid>
             </Border>

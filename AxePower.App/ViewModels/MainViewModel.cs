@@ -579,6 +579,7 @@ public partial class MainViewModel : ObservableObject
             ? AllToolGuides.FirstOrDefault(t => t.Id.Equals(toolId, StringComparison.OrdinalIgnoreCase))
             : null;
         SelectedToolHelp = found ?? AllToolGuides.FirstOrDefault();
+        foreach (var guide in AllToolGuides) guide.IsSelected = ReferenceEquals(guide, SelectedToolHelp);
         IsToolHelpModalOpen = true;
     }
 

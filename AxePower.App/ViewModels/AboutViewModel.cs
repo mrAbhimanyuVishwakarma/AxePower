@@ -462,6 +462,16 @@ public partial class AboutViewModel : ObservableObject
         IsPrivacyPolicyOpen = false;
     }
 
+    /// <summary>The Terms of Service dialog, beside Privacy Policy in the About page's bottom bar.</summary>
+    [ObservableProperty]
+    private bool _isTermsOpen;
+
+    [RelayCommand]
+    private void OpenTerms() => IsTermsOpen = true;
+
+    [RelayCommand]
+    private void CloseTerms() => IsTermsOpen = false;
+
     [RelayCommand]
     private void UpdateDrivers()
     {

@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.4-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.6-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -35,6 +35,34 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🌡️ **True CPU & GPU Temperatures:** Reads your machine's real sensors — and keeps working on Windows 11 PCs with Memory Integrity turned on, where most monitoring tools show nothing.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v2.0.6
+
+- ⏱️ **Power timer**:
+  - Shut down, restart or sleep your PC after the time you type, or a quick 15 m / 30 m / 1 h / 2 h preset, from the button in the bottom-right corner of every page.
+  - The countdown turns **red** for the last two minutes and a warning appears on screen. Its "Extend time in AxePower" line opens the timer so you can add 10 minutes or cancel.
+  - The timer runs inside AxePower: exiting the app cancels it.
+- 🎵 **Music**:
+  - **Ambient Mode** fills the whole screen with album art and synced lyrics, and can open by itself like a **screensaver** after 1, 2, 5 or 10 idle minutes while music plays (Music Settings → Ambient Mode). It never covers a full-screen game or video.
+  - **Lyrics are found for far more songs.** The catalogue lookup had been failing on most YouTube titles; it now matches them, and lines change within about 40 ms of being sung.
+  - A **compact player**, **YT Music / Local Music** buttons in the header, **Last played** lists for each, the **last 7 YouTube searches** with their songs, and your **YouTube queue restored** after a restart.
+  - **Add Folder** picks real folders (several at once), remembers them, scans in the background, and every folder card has a small **×** to remove it (your files are never touched).
+- 🔋 **Battery**:
+  - **Health is now real.** It is read from your battery's own design capacity; before, it was always shown as 98%. Expect your number to change.
+  - A **Capacity over time** chart from the history Windows keeps, and **Open full battery report** for the complete Windows report.
+- 🧹 **Cleaner pages**:
+  - Bottom status bars removed from Battery, Phone Control, Optimizer, Doctor, Update PC and Uninstaller Pro.
+  - The help window lists tools on the left and keeps one size for every tool.
+  - Dropdowns are solid on glass skins, and the text cursor is visible in every text box on dark skins.
+- 🔐 **Privacy & legal**:
+  - A rewritten **Privacy Policy** and new **Terms of Service** in About, matching the website.
+  - Complete open-source **license notices**, now shipped with portable builds as well as the installer.
+- 🗑️ **Removed**: a Software Hub link to a site distributing cracked games, and a duplicate Settings button on the Battery page.
+- 📦 **Packaging**: ships as **`AxePower-v2.0.6-Setup.exe`**.
+
+> **Heads-up:** a YouTube Music queue saved by v2.0.4 cannot be restored once (it was saved without the details needed); from v2.0.6 on, it is kept across restarts.
 
 ---
 

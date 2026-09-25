@@ -145,18 +145,6 @@ public class WinGetHubService : IWinGetHubService
 
         _packages.Add(new SoftwarePackageItem
         {
-            Id = "fitgirl",
-            WinGetId = "",
-            Name = "FitGirl Repacks",
-            Description = "Official web resource for verified lightweight game repacks and community releases.",
-            Category = PackageCategory.Gaming,
-            Glyph = "\uE71B",
-            IsWebLinkOnly = true,
-            WebUrl = "https://fitgirl-repacks.site/"
-        });
-
-        _packages.Add(new SoftwarePackageItem
-        {
             Id = "dlss5swapper",
             WinGetId = "rakanki911.DLSS5Swapper",
             Name = "DLSS 5 Swapper",

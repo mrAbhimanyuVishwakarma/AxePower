@@ -24,8 +24,7 @@ namespace AxePower.App.ViewModels.Music;
 public enum RightPanelTab
 {
     Queued,
-    Songs,
-    Lyrics
+    Songs
 }
 
 public enum MusicBrowseMode
@@ -40,12 +39,12 @@ public enum MusicBrowseMode
 /// </summary>
 public partial class MusicViewModel : ObservableObject
 {
-    private readonly TagLibTagReader _tagReader = new();
     private readonly SettingsService? _settingsService;
     private readonly ProviderRegistry? _providers;
     private readonly IStreamResolver? _resolver;
     private readonly ICoverArtService? _covers;
     private readonly RecentlyPlayedService? _recent;
+    private readonly RecentSearchesService? _searches;
     private bool _applyingAmbientSettings;
 
     /// <summary>Cancels a search that a newer one has replaced.</summary>
@@ -59,7 +58,8 @@ public partial class MusicViewModel : ObservableObject
         LyricsViewModel? lyrics = null,
         AmbientModeViewModel? ambient = null,
         ICoverArtService? covers = null,
-        RecentlyPlayedService? recent = null)
+        RecentlyPlayedService? recent = null,
+        RecentSearchesService? searches = null)
     {
         NowPlaying = nowPlaying;
         var services = (Application.Current as App)?.Services;
@@ -68,6 +68,7 @@ public partial class MusicViewModel : ObservableObject
         _resolver = resolver ?? services?.GetService<IStreamResolver>();
         _covers = covers ?? services?.GetService<ICoverArtService>();
         _recent = recent ?? services?.GetService<RecentlyPlayedService>();
+        _searches = searches ?? services?.GetService<RecentSearchesService>();
         Sources = services?.GetService<SourcesViewModel>();
         Shortcuts = services?.GetService<ShortcutsViewModel>();
         Lyrics = lyrics ?? services?.GetService<LyricsViewModel>();
@@ -91,6 +92,7 @@ public partial class MusicViewModel : ObservableObject
         _applyingAmbientSettings = false;
 
         InitializeLibrary();
+        LoadRecentSearches();
     }
 
     /// <summary>The page is on screen: follow the recently played list while it is.</summary>
@@ -136,7 +138,7 @@ public partial class MusicViewModel : ObservableObject
     // ── Right Panel Tab Selector (Queued vs Songs) ─────────────────────────
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsQueueTabSelected), nameof(IsSongsTabSelected), nameof(IsLyricsTabSelected), nameof(RightPanelSubtitle))]
+    [NotifyPropertyChangedFor(nameof(IsQueueTabSelected), nameof(IsSongsTabSelected), nameof(RightPanelSubtitle))]
     private RightPanelTab _currentTab = RightPanelTab.Queued;
 
     public bool IsQueueTabSelected
@@ -151,22 +153,14 @@ public partial class MusicViewModel : ObservableObject
         set { if (value) CurrentTab = RightPanelTab.Songs; }
     }
 
-    public bool IsLyricsTabSelected
-    {
-        get => CurrentTab == RightPanelTab.Lyrics;
-        set { if (value) CurrentTab = RightPanelTab.Lyrics; }
-    }
-
     public string RightPanelSubtitle
     {
         get
         {
             if (CurrentTab == RightPanelTab.Queued)
                 return NowPlaying.QueueSummary;
-            if (CurrentTab == RightPanelTab.Lyrics)
-                return "Synchronized lyrics";
             if (SelectedLibraryItem != null)
-                return $"{SelectedLibraryItem.Title} • {SelectedLibraryItem.SongCount} track{(SelectedLibraryItem.SongCount == 1 ? "" : "s")}";
+                return $"{SelectedLibraryItem.Query ?? SelectedLibraryItem.Title} • {SelectedLibraryItem.SongCount} track{(SelectedLibraryItem.SongCount == 1 ? "" : "s")}";
             return "Select a playlist or folder";
         }
     }
@@ -216,6 +210,7 @@ public partial class MusicViewModel : ObservableObject
     {
         ShowBrowseMode(value);
         LoadRecentPlays();
+        if (value == MusicBrowseMode.YouTube) ShowLastSearch();
     }
 
     // ── Last played ─────────────────────────────────────────────────────────
@@ -541,6 +536,7 @@ public partial class MusicViewModel : ObservableObject
     [RelayCommand]
     public async Task SearchYouTubeAsync(string? query = null)
     {
+        IsRecentSearchesOpen = false;
         BrowseMode = MusicBrowseMode.YouTube;
         var provider = _providers?.ById("youtube") as IMetadataProvider;
         if (provider == null)
@@ -578,9 +574,16 @@ public partial class MusicViewModel : ObservableObject
 
             Fill(card, tracks, name);
             card.Subtitle = Summary(card.Songs.Count, name);
+            card.Query = q;
             ShowBrowseMode(MusicBrowseMode.YouTube);
             SelectLibraryItem(card);
             _ = UpdateRemoteCardCoverAsync(card, tracks.FirstOrDefault(), CancellationToken.None);
+
+            if (tracks.Count > 0)
+            {
+                _searches?.Add(q, tracks);
+                LoadRecentSearches();
+            }
         }
         catch (OperationCanceledException)
         {
@@ -598,6 +601,140 @@ public partial class MusicViewModel : ObservableObject
             }
             cts.Dispose();
         }
+    }
+
+    // ── Recent searches ─────────────────────────────────────────────────────
+
+    private readonly List<string> _allRecentSearches = new();
+
+    /// <summary>What the listener has typed since opening the list; null shows every search.</summary>
+    private string? _recentSearchFilter;
+
+    /// <summary>Set while the app itself writes the search box, so that does not open the list.</summary>
+    private bool _settingSearchTextQuietly;
+
+    /// <summary>The recent searches on show, newest first: all of them, or those matching what is typed.</summary>
+    public ObservableCollection<string> RecentSearches { get; } = new();
+
+    public bool HasRecentSearches => _allRecentSearches.Count > 0;
+
+    [ObservableProperty]
+    private bool _isRecentSearchesOpen;
+
+    /// <summary>Kept by the view: typing only filters the list while the box has the cursor.</summary>
+    public bool IsSearchBoxFocused { get; set; }
+
+    /// <summary>A click or focus on the search box: the whole history, whatever is in the box.</summary>
+    public void ShowRecentSearches()
+    {
+        _recentSearchFilter = null;
+        ApplyRecentSearchFilter();
+        IsRecentSearchesOpen = RecentSearches.Count > 0;
+    }
+
+    /// <summary>Typing narrows the list to searches containing the text, and closes it when none do.</summary>
+    partial void OnSearchYouTubeTextChanged(string value)
+    {
+        if (_settingSearchTextQuietly || !IsSearchBoxFocused) return;
+        _recentSearchFilter = value;
+        ApplyRecentSearchFilter();
+        IsRecentSearchesOpen = RecentSearches.Count > 0;
+    }
+
+    private void SetSearchTextQuietly(string text)
+    {
+        _settingSearchTextQuietly = true;
+        try { SearchYouTubeText = text; }
+        finally { _settingSearchTextQuietly = false; }
+    }
+
+    private void ApplyRecentSearchFilter()
+    {
+        string filter = _recentSearchFilter?.Trim() ?? string.Empty;
+        var shown = filter.Length == 0
+            ? _allRecentSearches
+            : _allRecentSearches.Where(q => q.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        if (shown.SequenceEqual(RecentSearches)) return;
+        RecentSearches.Clear();
+        foreach (string query in shown) RecentSearches.Add(query);
+    }
+
+    private void LoadRecentSearches()
+    {
+        _allRecentSearches.Clear();
+        if (_searches != null)
+            _allRecentSearches.AddRange(_searches.Get().Select(search => search.Query));
+
+        ApplyRecentSearchFilter();
+        OnPropertyChanged(nameof(HasRecentSearches));
+        if (RecentSearches.Count == 0) IsRecentSearchesOpen = false;
+    }
+
+    /// <summary>Shows a remembered search's songs as they were saved, without searching again.</summary>
+    [RelayCommand]
+    public void OpenRecentSearch(string? query)
+    {
+        IsRecentSearchesOpen = false;
+        var search = query == null ? null : _searches?.Find(query);
+        if (search == null) return;
+
+        SetSearchTextQuietly(search.Query);
+        if (!IsYouTubeMode) BrowseMode = MusicBrowseMode.YouTube;   // shows the latest search first
+        ShowSavedSearch(search);
+    }
+
+    [RelayCommand]
+    public void RemoveRecentSearch(string? query)
+    {
+        if (query == null || _searches == null) return;
+        _searches.Remove(query);
+        LoadRecentSearches();
+    }
+
+    /// <summary>
+    /// Brings back the songs from the last search when YouTube Music is shown, unless this
+    /// visit already has results on screen.
+    /// </summary>
+    private void ShowLastSearch()
+    {
+        var card = _youtubeLibraryItems.FirstOrDefault(i => i.Id == "youtube-search");
+        if (card is { Songs.Count: > 0 })
+        {
+            SelectLibraryItem(card);
+            return;
+        }
+
+        var last = _searches?.Get().FirstOrDefault();
+        if (last == null) return;
+
+        if (string.IsNullOrWhiteSpace(SearchYouTubeText)) SetSearchTextQuietly(last.Query);
+        ShowSavedSearch(last);
+    }
+
+    private void ShowSavedSearch(RecentSearch search)
+    {
+        var provider = _providers?.ById("youtube") as IMetadataProvider;
+        string name = provider?.Info.Name ?? "YouTube";
+
+        var card = _youtubeLibraryItems.FirstOrDefault(i => i.Id == "youtube-search");
+        if (card == null)
+        {
+            card = new LibraryItemViewModel
+            {
+                Id = "youtube-search",
+                Title = name,
+                IconGlyph = GlyphFor("youtube"),
+                GradientBrush = GradientFor("youtube")
+            };
+            _youtubeLibraryItems.Insert(0, card);
+            if (IsYouTubeMode) ShowBrowseMode(MusicBrowseMode.YouTube);
+        }
+
+        Fill(card, search.Results.Select(r => r.ToTrack()).ToList(), name);
+        card.Subtitle = Summary(card.Songs.Count, name);
+        card.Query = search.Query;
+        SelectLibraryItem(card);
     }
 
     private static void Fill(LibraryItemViewModel card, IReadOnlyList<Track> tracks, string fallbackAlbum)
@@ -669,21 +806,117 @@ public partial class MusicViewModel : ObservableObject
         _ => CreateGradient("#6B7280", "#374151")
     };
 
+    /// <summary>
+    /// Adds one or more folders to the library. They are saved in Music settings, come back on
+    /// every visit, and each gets a card that can be removed again.
+    /// </summary>
     [RelayCommand]
-    public async Task AddFolderToLibrary()
+    public void AddFolderToLibrary()
     {
-        var dialog = new OpenFileDialog
+        var dialog = new OpenFolderDialog
         {
-            Title = "Select any audio file in the folder to add to Library",
-            Filter = "Audio files (*.mp3;*.m4a;*.flac;*.wav;*.wma;*.aac)|*.mp3;*.m4a;*.flac;*.wav;*.wma;*.aac|All files (*.*)|*.*",
-            CheckFileExists = true
+            Title = "Add music folders to the library",
+            Multiselect = true,
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic)
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        LibraryItemViewModel? last = null;
+        foreach (string folder in dialog.FolderNames)
+        {
+            if (!Directory.Exists(folder)) continue;
+
+            // Already on show (or the Local Music folder itself): just select it
+            var existing = FolderCard(folder);
+            if (existing != null)
+            {
+                last = existing;
+                continue;
+            }
+
+            SaveLibraryFolders(folders => { if (!folders.Contains(folder, StringComparer.OrdinalIgnoreCase)) folders.Add(folder); });
+            last = AddFolderCard(folder);
+        }
+
+        if (last == null) return;
+        BrowseMode = MusicBrowseMode.Local;
+        ShowBrowseMode(BrowseMode);
+        SelectLibraryItem(last);
+    }
+
+    /// <summary>Takes a folder out of the library. Its files are not touched.</summary>
+    [RelayCommand]
+    public void RemoveFolder(LibraryItemViewModel? card)
+    {
+        if (card is not { IsRemovable: true, Path: { } folder }) return;
+
+        SaveLibraryFolders(folders => folders.RemoveAll(f => SamePath(f, folder)));
+        _localLibraryItems.Remove(card);
+        bool wasSelected = ReferenceEquals(SelectedLibraryItem, card);
+        ShowBrowseMode(BrowseMode);
+        if (wasSelected && _localLibraryItems.FirstOrDefault(i => i.Id == LocalMusicId) is { } local && IsLocalMode)
+            SelectLibraryItem(local);
+    }
+
+    private void SaveLibraryFolders(Action<List<string>> change)
+    {
+        if (_settingsService == null) return;
+        var settings = _settingsService.GetSettings();
+        change(settings.Music.LibraryFolders);
+        _settingsService.SaveSettings(settings);
+    }
+
+    private LibraryItemViewModel? FolderCard(string folder) =>
+        _localLibraryItems.FirstOrDefault(i => (i.IsRemovable && i.Path != null && SamePath(i.Path, folder))
+            || (i.Id == LocalMusicId && SamePath(folder, MyMusicFolder)));
+
+    private static bool SamePath(string a, string b) =>
+        string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(a)),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(b)), StringComparison.OrdinalIgnoreCase);
+
+    private static string MyMusicFolder => Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+
+    private const string LocalMusicId = "local-music";
+
+    /// <summary>A removable card for an added folder, listed after Local Music and filled in the background.</summary>
+    private LibraryItemViewModel AddFolderCard(string folder)
+    {
+        string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(folder));
+        var card = new LibraryItemViewModel
+        {
+            Title = string.IsNullOrEmpty(name) ? folder : name,
+            Path = folder,
+            IsRemovable = true,
+            Subtitle = Directory.Exists(folder) ? "Scanning…" : "Folder not found",
+            IconGlyph = "\uE8B7",
+            GradientBrush = CreateGradient("#0284C7", "#0369A1")
         };
 
-        if (dialog.ShowDialog() != true) return;
-        string? folder = Path.GetDirectoryName(dialog.FileName);
-        if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return;
+        int localIndex = _localLibraryItems.ToList().FindIndex(i => i.Id == LocalMusicId);
+        _localLibraryItems.Insert(localIndex + 1 + _localLibraryItems.Count(i => i.IsRemovable), card);
+        if (IsLocalMode) ShowBrowseMode(BrowseMode);
 
-        await ScanFolderAsync(folder, Path.GetFileName(folder));
+        if (Directory.Exists(folder)) _ = FillFolderCardAsync(card, folder);
+        return card;
+    }
+
+    /// <summary>Reads the folder's tags on a worker thread, then fills the card (and the Songs tab if it is showing it).</summary>
+    private async Task FillFolderCardAsync(LibraryItemViewModel card, string folder)
+    {
+        var (songs, truncated) = await Task.Run(() => LoadSongsFromDirectory(folder));
+
+        card.Songs.Clear();
+        foreach (var song in songs) card.Songs.Add(song);
+        card.Subtitle = songs.Count == 0
+            ? "No music files found"
+            : $"{songs.Count}{(truncated ? "+" : "")} track{(songs.Count == 1 ? "" : "s")}";
+
+        if (ReferenceEquals(SelectedLibraryItem, card))
+        {
+            SelectedSongs.Clear();
+            foreach (var song in songs) SelectedSongs.Add(song);
+            OnPropertyChanged(nameof(RightPanelSubtitle));
+        }
     }
 
     [RelayCommand]
@@ -702,20 +935,27 @@ public partial class MusicViewModel : ObservableObject
     {
         _localLibraryItems.Clear();
 
-        // 1. Scan Local Music folder
-        string musicFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
-        var localSongs = LoadSongsFromDirectory(musicFolder);
-
+        string musicFolder = MyMusicFolder;
         var localItem = new LibraryItemViewModel
         {
+            Id = LocalMusicId,
             Title = "Local Music",
-            Subtitle = $"{localSongs.Count} track{(localSongs.Count == 1 ? "" : "s")}",
+            Path = musicFolder,
+            Subtitle = "Scanning…",
             IconGlyph = "\uE8D6",
             GradientBrush = CreateGradient("#3B82F6", "#1D4ED8"),
             IsSelected = true
         };
-        foreach (var s in localSongs) localItem.Songs.Add(s);
         _localLibraryItems.Add(localItem);
+
+        // Folders the listener added, in the order they were added. The Local Music folder is
+        // already its own card, so it is not listed twice.
+        foreach (string folder in (_settingsService?.GetSettings().Music.LibraryFolders ?? new List<string>())
+                     .Where(f => !string.IsNullOrWhiteSpace(f) && !SamePath(f, musicFolder))
+                     .Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            AddFolderCard(folder);
+        }
 
         // Only real user-created playlists are shown. Empty synthetic collections are not
         // generated; the Create Playlist command is the sole way to add a new empty playlist.
@@ -728,6 +968,8 @@ public partial class MusicViewModel : ObservableObject
         ShowBrowseMode(BrowseMode);
         var defaultItem = LibraryItems.FirstOrDefault(i => i.IsSelected) ?? LibraryItems.FirstOrDefault();
         if (defaultItem != null) SelectLibraryItem(defaultItem);
+
+        _ = FillFolderCardAsync(localItem, musicFolder);
     }
 
     private void ScanPlaylistsInDirectory(string dir)
@@ -785,44 +1027,40 @@ public partial class MusicViewModel : ObservableObject
         catch { }
     }
 
-    private Task ScanFolderAsync(string folderPath, string folderName)
-    {
-        var songs = LoadSongsFromDirectory(folderPath);
-        if (songs.Count == 0) return Task.CompletedTask;
+    /// <summary>Most songs one card lists until the library database (M6) takes over.</summary>
+    private const int MaxSongsPerFolder = 2000;
 
-        var item = new LibraryItemViewModel
-        {
-            Title = folderName,
-            Subtitle = $"{songs.Count} tracks",
-            IconGlyph = "\uE8B7",
-            GradientBrush = CreateGradient("#0284C7", "#0369A1")
-        };
-        foreach (var s in songs) item.Songs.Add(s);
-        _localLibraryItems.Insert(0, item);
-        BrowseMode = MusicBrowseMode.Local;
-        ShowBrowseMode(BrowseMode);
-        SelectLibraryItem(item);
-        return Task.CompletedTask;
-    }
-
-    private List<SongItemViewModel> LoadSongsFromDirectory(string directory)
+    /// <summary>
+    /// Songs under a folder and all its subfolders. Runs on a worker thread. Subfolders that
+    /// cannot be opened are skipped rather than ending the scan, which used to leave a whole
+    /// folder looking empty when one protected subfolder sat inside it.
+    /// </summary>
+    private static (List<SongItemViewModel> Songs, bool Truncated) LoadSongsFromDirectory(string directory)
     {
         var songs = new List<SongItemViewModel>();
-        if (!Directory.Exists(directory)) return songs;
+        if (!Directory.Exists(directory)) return (songs, false);
 
+        var tagReader = new TagLibTagReader();
+        bool truncated = false;
         try
         {
-            var files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+            var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
+            var files = Directory.EnumerateFiles(directory, "*", options)
                 .Where(f => DecoderFactory.SupportedExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
-                .Take(200)
+                .Take(MaxSongsPerFolder + 1)
                 .ToList();
+            if (files.Count > MaxSongsPerFolder)
+            {
+                truncated = true;
+                files.RemoveAt(files.Count - 1);
+            }
 
             int number = 1;
             foreach (var file in files)
             {
                 try
                 {
-                    var tags = _tagReader.Read(file);
+                    var tags = tagReader.Read(file);
                     songs.Add(new SongItemViewModel
                     {
                         Number = number++,
@@ -848,7 +1086,7 @@ public partial class MusicViewModel : ObservableObject
         }
         catch { }
 
-        return songs;
+        return (songs, truncated);
     }
 
     private static LinearGradientBrush CreateGradient(string hexStart, string hexEnd)

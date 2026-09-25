@@ -16,14 +16,8 @@
   <link rel="shortcut icon" id="appShortcutFavicon" href="assets/AxePower_white.ico">
   <link rel="apple-touch-icon" id="appAppleIcon" href="assets/AxePower_white.ico">
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DXTX507FC9"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-DXTX507FC9');
-  </script>
+  <!-- Analytics loads only after the visitor accepts (see consent.js) -->
+  <script src="consent.js"></script>
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
@@ -153,12 +147,14 @@
 
       <!-- Privacy Architecture -->
       <div class="about-card">
-        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--mode-eco);">🔒 100% Local &amp; Privacy-First</h3>
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--mode-eco);">🔒 Privacy-First</h3>
         <p style="font-size: 14.5px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px;">
-          AxePower collects <strong>zero telemetry</strong>, tracks <strong>zero personal data</strong>, and makes <strong>zero external network calls</strong> other than checking for verified GitHub releases and your own local Wi-Fi companion sync.
+          AxePower has <strong>no accounts</strong>, <strong>no ads</strong> and <strong>no analytics or usage tracking</strong>,
+          and it never sends data about you to its developers. Your settings, profiles, music history and diagnostics stay on your computer.
         </p>
         <p style="font-size: 14.5px; color: var(--text-secondary); line-height: 1.7;">
-          Your settings, hardware diagnostics, and preferences remain solely on your hard drive.
+          A few features go online only when you use them &mdash; music search and streaming, lyrics, and update checks &mdash; and talk
+          directly to those services. The phone app talks only to your own PC. <a href="privacy.html" style="color: var(--accent-cyan);">Read the full privacy policy</a>.
         </p>
       </div>
 
@@ -215,6 +211,9 @@
           <li><a href="jobs.html" class="footer-link">Jobs</a></li>
           <li><a href="store.html" class="footer-link">Store</a></li>
           <li><a href="donate.html" class="footer-link">Donate</a></li>
+          <li><a href="privacy.html" class="footer-link">Privacy</a></li>
+          <li><a href="terms.html" class="footer-link">Terms</a></li>
+          <li><a href="#" class="footer-link" data-cookie-settings>Cookie settings</a></li>
         </ul>
       </div>
     </div>

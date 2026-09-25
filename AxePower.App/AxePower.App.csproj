@@ -12,10 +12,10 @@
     <RootNamespace>AxePower.App</RootNamespace>
     <ApplicationIcon>Resources\AxePower_white.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.0.4</Version>
-    <AssemblyVersion>2.0.4.0</AssemblyVersion>
-    <FileVersion>2.0.4.0</FileVersion>
-    <InformationalVersion>2.0.4</InformationalVersion>
+    <Version>2.0.6</Version>
+    <AssemblyVersion>2.0.6.0</AssemblyVersion>
+    <FileVersion>2.0.6.0</FileVersion>
+    <InformationalVersion>2.0.6</InformationalVersion>
     <Authors>Abhimanyu Vishwakarma</Authors>
     <Company>AxePower</Company>
     <Product>AxePower</Product>
@@ -29,6 +29,12 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="AxePower.Tests" />
+  </ItemGroup>
+
+  <!-- Third-party licenses must travel with every copy of the app, including portable builds
+       and zips, not only the installer. The in-app Privacy Policy points users to this file. -->
+  <ItemGroup>
+    <None Include="..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Skins that ship next to AxePower.exe (skins\<id>\skin.json). Only the ones listed here are

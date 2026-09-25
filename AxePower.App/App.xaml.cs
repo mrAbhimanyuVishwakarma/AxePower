@@ -299,6 +299,11 @@ public partial class App : Application
         services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
         services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
 
+        // Power timer: shut down / restart / sleep after a set time (in-process only)
+        services.AddSingleton<IPowerActions, WindowsPowerActions>();
+        services.AddSingleton<PowerTimerService>();
+        services.AddSingleton<PowerTimerViewModel>();
+
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton(new MusicStoragePaths());
@@ -330,6 +335,7 @@ public partial class App : Application
         services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
         services.AddSingleton<RecentlyPlayedService>();
         services.AddSingleton<IPlayerIntegration>(sp => sp.GetRequiredService<RecentlyPlayedService>());
+        services.AddSingleton<RecentSearchesService>();
         services.AddSingleton<PlayerIntegrationHost>();
 
         // AxePower Music — App
@@ -446,9 +452,14 @@ public partial class App : Application
         Console.WriteLine(
             $"Music library: schema v{LibraryDatabase.SchemaVersion}, " +
             $"{(System.IO.File.Exists(libraryDb.FilePath) ? "present" : "not created yet")} at {libraryDb.FilePath}.");
+        var powerTimer = sp.GetRequiredService<PowerTimerService>();
+        Console.WriteLine(
+            $"Power timer: {(powerTimer.IsRunning ? $"{powerTimer.Action} in {powerTimer.Remaining}" : "idle")}, " +
+            $"actions {sp.GetRequiredService<IPowerActions>().GetType().Name}, view model {sp.GetRequiredService<PowerTimerViewModel>().GetType().Name}.");
         var recentlyPlayed = sp.GetRequiredService<RecentlyPlayedService>();
         Console.WriteLine(
-            $"Music history: {recentlyPlayed.Get(streamed: false).Count} local, {recentlyPlayed.Get(streamed: true).Count} streamed; " +
+            $"Music history: {recentlyPlayed.Get(streamed: false).Count} local, {recentlyPlayed.Get(streamed: true).Count} streamed, " +
+            $"{sp.GetRequiredService<RecentSearchesService>().Get().Count} recent search(es); " +
             $"Ambient screensaver {(music.AmbientAutoEnter ? $"on after {music.AmbientIdleMinutes} min" : "off")}, " +
             $"window service {sp.GetRequiredService<AmbientWindowService>().GetType().Name} (not started).");
 
@@ -577,6 +588,7 @@ public partial class App : Application
                 if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
                 Services.GetService<PlayerIntegrationHost>()?.Dispose();
                 Services.GetService<AmbientWindowService>()?.Dispose();
+                Services.GetService<PowerTimerService>()?.Dispose();   // closing AxePower cancels the timer
             }
             catch { }
 
