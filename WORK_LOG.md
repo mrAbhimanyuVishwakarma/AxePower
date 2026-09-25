@@ -282,6 +282,33 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 ---
 
+## 🚀 Version 2.0.0 Release Summary
+
+1. **Share Screen — shipped for real**:
+   - Browser-based sharing of any display, hardware encoded on NVIDIA (NVENC), AMD (AMF) or Intel (QSV), with a software path only as last resort.
+   - Quality ladder holds 60 FPS by stepping resolution down (1080p60 → 900p60 → 720p60) rather than dropping frames.
+   - System audio or microphone carried alongside the picture, following the default output device.
+   - In-app preview renders through the real viewer pipeline, so the tile shows the latency a viewer actually gets.
+   - **Remote control**: off by default, granted per session, gated by a code that the watch link never carries.
+2. **Music — sources, discovery and library**:
+   - Provider-based YouTube and Spotify sources with improved track matching and alternate-take selection.
+   - Discovery extends the queue at the end only, never disturbing queued items.
+   - Global media shortcuts usable from any application, fully rebindable, with conflicts reported.
+   - SQLite library index with instant search across title, artist and album.
+3. **Secured Phone Portal**:
+   - LAN portal now requires an access token carried by its QR link; previously bookmarked links stop working by design.
+4. **Version & Packaging**:
+   - All four version properties bumped to `2.0.0` across `AxePower.App` and `AxePower.Core`; installer scripts, README, RELEASE_README and `AppWebsite/` changelog updated to match.
+   - Compiled `AxePower-v2.0.0-Setup.exe` (19.4 MB) with Inno Setup 6 LZMA solid compression.
+5. **Verification at release**:
+   - `dotnet build AxePower.sln`: 0 warnings, 0 errors.
+   - `dotnet test`: 716 passed, 1 skipped, 0 failed.
+   - `AxePower.exe --self-test`: every subsystem initialised; Share Screen reported 1 display, 1 output, 1 mic, FFmpeg 9.0.1 and media server ready.
+   - `settings.json` byte-identical before and after the run.
+   - **Not verified**: no live stream was watched end to end, and no UI was rendered — the app relaunches elevated, so both need the owner. See `SHARE_SOCIAL_PLAN.md` item SS-1.
+
+---
+
 ## 📌 Continuing Work & Next Action Items
 
 1. **Android Companion APK Release**:

@@ -23,6 +23,9 @@
 
   <ItemGroup>
     <None Update="Uninstaller\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The theme files the skins replaced: data for SkinCompilerTests, not pages to compile -->
+    <Page Remove="Fixtures\LegacyThemes\*.xaml" />
+    <None Include="Fixtures\LegacyThemes\*.xaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

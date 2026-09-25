@@ -35,4 +35,49 @@ public class MusicRegistrationTests
         Assert.Contains("Windows media controls", integrations);
         Assert.Contains("Taskbar buttons", integrations);
     }
+
+    [Fact]
+    public void RealContainer_ResolvesEverySourceAndTheResolverThatUsesThem()
+    {
+        var provider = AxePower.App.App.ConfigureServices();
+
+        var registry = provider.GetRequiredService<ProviderRegistry>();
+        Assert.Same(registry, provider.GetRequiredService<ProviderRegistry>());
+
+        var ids = registry.All.Select(p => p.Info.Id).ToList();
+        Assert.Equal(new[] { "local", "youtube" }, ids.OrderBy(id => id));
+
+        // Every source has to be reachable through the registry as well as on its own, or the
+        // Sources list and the resolver would disagree about what exists.
+        Assert.IsType<LocalFileProvider>(registry.ById("local"));
+        Assert.IsType<YouTubeProvider>(registry.ById("youtube"));
+        Assert.Same(registry.ById("youtube"), provider.GetRequiredService<YouTubeProvider>());
+
+        Assert.IsType<StreamResolver>(provider.GetRequiredService<IStreamResolver>());
+        Assert.IsType<LrcLibLyricsService>(provider.GetRequiredService<ILyricsService>());
+        Assert.IsType<AxePower.App.Services.MusicPaletteExtractor>(provider.GetRequiredService<IPaletteExtractor>());
+
+        // Resolving these must not open or create the database: the library is opened on the
+        // first read, so a cold start never pays for it.
+        Assert.NotNull(provider.GetRequiredService<LibraryDatabase>());
+        Assert.NotNull(provider.GetRequiredService<MusicLibraryRepository>());
+        Assert.Same(provider.GetRequiredService<MusicLibraryRepository>(), provider.GetRequiredService<MusicLibraryRepository>());
+        Assert.IsType<DpapiSecretStore>(provider.GetRequiredService<ISecretStore>());
+        Assert.NotNull(provider.GetRequiredService<StreamCache>());
+    }
+
+    [Fact]
+    public void ThePlayerIsGivenTheStreamResolver()
+    {
+        var provider = AxePower.App.App.ConfigureServices();
+
+        // Without this the player silently treats every track as a local file, and nothing
+        // from a streaming source would ever play.
+        var player = Assert.IsType<MusicPlayerService>(provider.GetRequiredService<IMusicPlayerService>());
+        var field = typeof(MusicPlayerService).GetField("_resolver",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+        Assert.NotNull(field);
+        Assert.NotNull(field!.GetValue(player));
+    }
 }

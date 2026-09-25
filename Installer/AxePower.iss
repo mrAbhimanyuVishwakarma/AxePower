@@ -1,5 +1,5 @@
 #define AppName "AxePower"
-#define AppVersion "1.9.0"
+#define AppVersion "2.0.4"
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
 #define AppExeName "AxePower.exe"
@@ -25,7 +25,7 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
-OutputBaseFilename=AxePower-v1.9.0-Setup
+OutputBaseFilename=AxePower-v{#AppVersion}-Setup
 SetupIconFile=..\AxePower.App\Resources\AxePower_white.ico
 Compression=lzma
 SolidCompression=yes

@@ -34,7 +34,6 @@ This document is the complete specification for adding a built-in music player t
 21. [Tag editor](#21-tag-editor)
 22. [Mix (auto-extending queue)](#22-mix-auto-extending-queue)
 23. [Open with AxePower (file arguments)](#23-open-with-axepower-file-arguments)
-24. [Spotify Connect remote (optional Phase 7)](#24-spotify-connect-remote-optional-phase-7)
 25. [Apple Music: what is and is not possible](#25-apple-music-what-is-and-is-not-possible)
 26. [Build phases with checklists](#26-build-phases-with-checklists)
 27. [Automated test plan](#27-automated-test-plan)
@@ -94,7 +93,7 @@ It also does things only AxePower can do:
 - adapts playback to the power mode
 - sleep timer that can put the PC to sleep
 - battery rules
-- controls other apps' media (Spotify app, browsers, VLC) through the universal media controller.
+- controls other apps' media (browsers, VLC, and others) through the universal media controller.
 
 **Supported formats:** MP3, AAC/M4A, ALAC, FLAC, WAV, AIFF, WMA, Ogg Vorbis, Opus.
 **Not supported:** APE, DSD (DSF/DFF), WavPack. Opening one shows "Unsupported format".
@@ -122,10 +121,10 @@ These defaults are fixed for the build. The owner may change any of them *before
 | D1 | Audio engine | **NAudio (`NAudio.Core` + `NAudio.Wasapi`) + Windows Media Foundation**, behind `IAudioEngine` | MIT license, small, no extra native DLLs. Windows 10+ decodes MP3/AAC/ALAC/FLAC/WAV/WMA itself. Supports WASAPI shared and exclusive. We own the sample pipeline, so gapless, crossfade, ReplayGain and a visualizer are straightforward. libmpv can be added later as a second `IAudioEngine` if APE/DSD are ever needed |
 | D2 | Windows Runtime access | Change the target framework to **`net8.0-windows10.0.19041.0`** with `SupportedOSPlatformVersion` **`10.0.17763.0`** | Needed for SMTC, the universal media controller and WinRT imaging. Still runs on Windows 10 1809+. Cost: `Microsoft.Windows.SDK.NET.dll` (roughly 20 MB+) ships in the publish output |
 | D3 | Sidebar placement | **"Music" button in the existing CONTROL group**, after "Battery" | The sidebar deliberately has no ScrollViewer, and `MainWindow` `MinHeight="760"` is sized to fit it. A new group header would cost more height than a single button |
-| D4 | Streaming services | **Universal media controller** (Phase 3) for all apps. **Spotify Connect remote** as optional Phase 7 using the user's own Spotify Client ID. **No Apple Music login** | Playing Spotify/Apple audio inside a third-party Windows app is not possible (DRM, no SDK). See [§24](#24-spotify-connect-remote-optional-phase-7) and [§25](#25-apple-music-what-is-and-is-not-possible) |
+| D4 | Streaming services | **YouTube Music and local files only.** The universal media controller (Phase 3) may display other apps without catalog-specific integrations. **No Apple Music login** | DRM-protected audio cannot play inside AxePower's engine. See [§25](#25-apple-music-what-is-and-is-not-possible) |
 | D5 | Library storage | **SQLite** (`Microsoft.Data.Sqlite`) at `%LOCALAPPDATA%\AxePower\Music\library.db` | Scales to large libraries and supports full-text search. `settings.json` stays small |
 | D6 | Online features | **All off by default**, with explicit opt-in labelled with what data leaves the PC | The README promises "zero telemetry" and "privacy-first" |
-| D7 | Secrets (Last.fm session, Spotify refresh token) | **DPAPI-encrypted file** (`ProtectedData`, CurrentUser scope), never `settings.json` | `SettingsService` writes plain JSON. The README's "Encrypted JSON" claim is not true of the current code |
+| D7 | Secrets (Last.fm session and LAN portal token) | **DPAPI-encrypted file** (`ProtectedData`, CurrentUser scope), never `settings.json` | `SettingsService` writes plain JSON. The README's "Encrypted JSON" claim is not true of the current code |
 
 ---
 
@@ -242,7 +241,7 @@ Legend: **P#** = the build phase that delivers it (see [§26](#26-build-phases-w
 | Tray Now Playing | Title/artist header, Play/Pause, Next, Previous, Mini player; track in the tooltip | 3 |
 | Dashboard card | Compact now playing or an "Open Music" call to action | 3 |
 | Accent from album art | Dominant colour tints the Music page and mini player only. Contrast-checked | 3 |
-| Universal media controller | Shows and controls Spotify, browsers, VLC and others through Windows sessions | 3 |
+| Universal media controller | Shows and controls browsers, VLC and other apps through Windows sessions | 3 |
 | Phone remote | Now playing, cover, controls, seek, volume, queue, library search, playlists | 3 |
 | LAN portal access token | Security fix covering all portal API routes | 3 |
 
@@ -265,13 +264,6 @@ Legend: **P#** = the build phase that delivers it (see [§26](#26-build-phases-w
 | Mix | Auto-extends the queue from the local library | 6 |
 | "Open with AxePower" | File arguments forwarded to the running instance; opt-in "Open with" registration (HKCU, removable) | 6 |
 | Track-change notification | Opt-in | 6 |
-
-### 5.7 Optional
-| Feature | Details | P |
-|---|---|---|
-| Spotify Connect remote | Log in with your own Spotify Client ID; browse playlists; control and transfer playback between Spotify devices | 7 |
-
----
 
 ## 6. Architecture
 
@@ -331,7 +323,6 @@ AxePower.Core/
     Remote/MusicRemoteApi.cs  (JSON handlers used by LanDropService)
     Mix/MixGenerator.cs (P6)
     Secrets/ISecretStore.cs, DpapiSecretStore.cs
-    Streaming/Spotify/ (P7) SpotifyAuthService.cs, SpotifyApiClient.cs, SpotifyConnectService.cs
     Common/IClock.cs, SystemClock.cs
 
 AxePower.App/
@@ -340,12 +331,11 @@ AxePower.App/
     NowPlayingViewModel.cs     SINGLETON, shared by page bar, mini player, tray, dashboard
     QueueViewModel.cs, LyricsViewModel.cs, TagEditorViewModel.cs (P6)
     MusicSettingsViewModel.cs  exposed from SettingsViewModel as a child VM
-    SpotifyViewModel.cs (P7)
   Views/Music/
     MusicView.xaml             page shell
     NowPlayingBar.xaml, QueuePanel.xaml, LyricsPanel.xaml,
     TracksList.xaml, AlbumGrid.xaml, ArtistList.xaml, GenreList.xaml, FolderTree.xaml, PlaylistsView.xaml,
-    TagEditorDialog.xaml (P6), SpotifyPanel.xaml (P7)
+    TagEditorDialog.xaml (P6)
     MusicSettingsSection.xaml  hosted inside SettingsView
     NowPlayingCard.xaml        hosted inside DashboardView
   Windows/MiniPlayerWindow.xaml(.cs)
@@ -446,7 +436,6 @@ services.AddTransient<MusicSettingsViewModel>();
 - **No tight polling.** The only periodic checks allowed:
   - position ticks while playing
   - fullscreen detection every 5 s, only while playing with game-duck on
-  - Spotify state polling (P7), only while the Spotify panel is visible or Spotify is the active source.
 
 ### 6.7 Storage layout
 ```
@@ -474,7 +463,7 @@ public enum RepeatMode { Off, All, One }
 public enum ReplayGainMode { Off, Track, Album, Auto }          // Auto = Album when playing an album/playlist in album order, else Track
 public enum GameDuckMode { Off, Duck, Pause }
 public enum SleepTimerAfterAction { Stop, SleepPc, HibernatePc }
-public enum MusicSource { None, AxePower, External, Spotify }
+public enum MusicSource { None, AxePower, External }
 
 public sealed record AudioFormatInfo(string Codec, int SampleRate, int BitsPerSample, int Channels, int BitrateKbps, bool IsLossless);
 public sealed record ReplayGainInfo(double? TrackGainDb, double? TrackPeak, double? AlbumGainDb, double? AlbumPeak);
@@ -930,8 +919,6 @@ and in `Clone()`: `Music = this.Music.Clone(),`. **This is mandatory; see §4.**
 | `Integrations.DiscordRpc` | bool | **false** | 6 |
 | `Integrations.LastFmEnabled` | bool | **false** | 6 |
 | `Integrations.LastFmUsername` | string? | null (display only; session key lives in `ISecretStore`) | 6 |
-| `Integrations.SpotifyEnabled` | bool | **false** | 7 |
-| `Integrations.SpotifyClientId` | string? | null | 7 |
 
 **Session values are *not* in settings:** volume, mute, shuffle, repeat, speed and pitch live in `playback-state.json`. Otherwise every slider drag would rewrite `settings.json` and raise `OnSettingsChanged` for every service.
 
@@ -1046,7 +1033,7 @@ Compact 360×84                                   Expanded 360×220
   - scroll wheel over the window changes volume
   - double-click the art → open AxePower on the Music page
   - hovering shows the controls; with `ReduceMotion` there are no fade animations.
-- **Source switching:** shows the AxePower player or the external session per [§17](#17-universal-media-controller) priority, with a small source label ("AxePower", "Spotify", "Chrome"…).
+- **Source switching:** shows the AxePower player or the external session per [§17](#17-universal-media-controller) priority, with a small source label ("AxePower", "Chrome", "VLC", etc.).
 - **Click-through (`ClickThrough`):** adds `WS_EX_TRANSPARENT | WS_EX_LAYERED`. It can **always** be turned off from the tray menu item "Mini player: click-through ✓" and by pressing the hotkey twice within 1 s. Document both escapes next to the setting.
 - **Limitation (shown in Settings):** "The mini player appears over borderless and windowed games, not over exclusive-fullscreen games."
 - **`MiniPlayerService`** (App) creates the window lazily, shows or hides it, and restores `ShowOnStartup`. `HotkeyService` toggles it.
@@ -1087,7 +1074,6 @@ Groups (each control only appears once its phase has shipped):
    - lyrics from LRCLIB: sends artist, title, album and duration to lrclib.net
    - Discord status: shares the current track with your Discord friends
    - Last.fm: sends every played track to your Last.fm profile
-   - Spotify (P7).
 7. **Phone remote:** enable music on the phone portal (applies while LAN Drop is running).
 
 ### 14.7 Taskbar (`TaskbarMediaIntegration`)
@@ -1179,7 +1165,7 @@ Implemented through `IAudioDeviceService` (`MMDeviceEnumerator` + `IMMNotificati
 
 `UniversalMediaService` uses `Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager` (Windows 10 1809+).
 - **Setup:** `RequestAsync()` once; subscribe to `SessionsChanged` and `CurrentSessionChanged`, and to each session's `MediaPropertiesChanged`, `PlaybackInfoChanged` and `TimelinePropertiesChanged`.
-- **`ExternalMediaSession` snapshot:** `SourceAppUserModelId`, friendly app name (map known ids such as `Spotify.exe`→"Spotify", `chrome`→"Chrome", `msedge`→"Edge"; otherwise the id), title, artist, album, thumbnail (read once per track into a temp file or bytes), position, duration, playing, can-next, can-previous, can-seek.
+- **`ExternalMediaSession` snapshot:** `SourceAppUserModelId`, friendly app name (map known ids such as `chrome`→"Chrome", `msedge`→"Edge"; otherwise the id), title, artist, album, thumbnail (read once per track into a temp file or bytes), position, duration, playing, can-next, can-previous, can-seek.
 - **Excluding AxePower's own session:**
   - ignore sessions whose `SourceAppUserModelId` contains `AxePower` (case-insensitive)
   - in Phase 3, log the actual id Windows reports for AxePower and tighten the filter to it
@@ -1193,7 +1179,7 @@ Implemented through `IAudioDeviceService` (`MMDeviceEnumerator` + `IMMNotificati
   5. nothing.
 
   Commands go to the source being displayed.
-- **Honest limits:** external apps decide what they allow. If `TryXxxAsync` returns false, show "Spotify didn't accept the command" and do not pretend it worked.
+- **Honest limits:** external apps decide what they allow. If `TryXxxAsync` returns false, name the active app in the error and do not pretend it worked.
 
 ---
 
@@ -1328,51 +1314,6 @@ All routes require the token and return `application/json; charset=utf-8`. Every
 
 ---
 
-## 24. Spotify Connect remote (optional Phase 7)
-
-### What it is and is not
-- ✅ **Is:** logging in to a real Spotify account to see what is playing, browse your playlists, and control playback on any **Spotify Connect device**: the Spotify desktop app, phone, web player, speakers, consoles. That includes starting a playlist on a device and moving playback between devices.
-- ❌ **Is not:** playing Spotify audio *through AxePower's engine*. Spotify audio is DRM-protected and only official Spotify clients can decode it. The Web Playback SDK needs Widevine DRM, which WebView2 does not support. Third-party clients such as librespot violate Spotify's terms and must not be used. Consequently AxePower's EQ, exclusive mode and crossfade cannot apply to Spotify.
-
-### Spotify developer rules (as of 2026; re-check at build time)
-- Since **Feb 2026**, a *new* Development Mode app is limited to **5 users**, and the **app owner must have Spotify Premium**. Batch-fetch, browse/new-releases and some user endpoints were removed, and search `limit` is capped at 10.
-- Extended quota (a public app for everyone) is only granted to **registered organisations with ≥ 250k monthly active users** (since May 2025).
-- July 2026: up to 25 Client IDs per developer account; the quota is shared per developer account; a `429` with `"reason": "QUOTA_EXCEEDED"` distinguishes quota from rate limits.
-- Playback-control endpoints require the **user** to have Premium.
-- **Consequence:** AxePower cannot ship one shared Client ID for all users. **Each user brings their own Client ID** (they are the owner and only user of their own dev-mode app).
-
-### User setup (shown as a step-by-step card in the Spotify panel)
-1. Have Spotify Premium.
-2. Go to `developer.spotify.com/dashboard` → Create app → name "AxePower (personal)".
-3. Redirect URI: **`http://127.0.0.1:43821/callback`** (loopback IP literal, not `localhost`). APIs: Web API.
-4. Copy the **Client ID** into AxePower → Settings → Music → Spotify → Log in.
-
-### Implementation
-- **`SpotifyAuthService`:** Authorization Code with **PKCE** (no client secret).
-  - `HttpListener` on `http://127.0.0.1:43821/callback/`, started only during login, with a 3-minute timeout
-  - verify the `state` parameter; open the system browser to the authorize URL
-  - scopes: `user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative user-library-read`
-  - store the refresh token in `ISecretStore` (`spotify.refresh`); handle refresh-token rotation (save the new one when returned)
-  - "Log out" deletes it.
-- **`SpotifyApiClient`:** `HttpClient` with bearer auth and automatic refresh on 401.
-  - honour `Retry-After` on 429; show "Spotify quota reached — try later" on `QUOTA_EXCEEDED`
-  - map 403 `PREMIUM_REQUIRED` to "Spotify Premium is required to control playback"
-  - **before implementing each endpoint, confirm it still exists for Development Mode apps in the current Web API reference.**
-- **Endpoints (verify at build time):**
-  - `GET /me/player`, `GET /me/player/devices`
-  - `PUT /me/player` (transfer)
-  - `PUT /me/player/play` (with `context_uri` / `uris`, optional `device_id`), `PUT /me/player/pause`
-  - `POST /me/player/next`, `POST /me/player/previous`
-  - `PUT /me/player/seek`, `PUT /me/player/volume`, `PUT /me/player/shuffle`, `PUT /me/player/repeat`
-  - `GET /me/playlists`, `GET /playlists/{id}/items` (or the current equivalent), `GET /me/tracks` (Liked Songs, if still available).
-- **`SpotifyConnectService`:** polls `GET /me/player` every 2 s while the Spotify panel is visible or Spotify is the active source; every 10 s otherwise while logged in; not at all when logged out.
-  - It feeds a `MusicSource.Spotify` snapshot into the same display priority as §17. When the Spotify desktop app is running, the SMTC session and this snapshot may describe the same playback: prefer the Spotify API snapshot and hide the duplicate SMTC session.
-- **UI (`SpotifyPanel`, a "Spotify" tab on the Music page, only when enabled):**
-  - device picker, now playing, controls, the user's playlists → "Play on <device>"
-  - a clear banner: "Audio plays on your Spotify device, not inside AxePower."
-
----
-
 ## 25. Apple Music: what is and is not possible
 **Not built.** Reasons:
 - **No SDK:** Apple provides **no MusicKit SDK for Windows desktop apps.**
@@ -1435,7 +1376,7 @@ Every phase ends with the verification loop in [§0](#0-how-to-use-this-document
 - [ ] Tests: `MusicRemoteApiTests` (401 without or with a wrong token, state JSON shape, cover only by current item, limits, bad actions → 400), updated `LanDropServiceTests`, display-priority tests with fakes, hotkey string parsing.
 - **Exit:**
   - the mini player never steals focus from a focused text editor or game
-  - the mini player controls the Spotify desktop app and a YouTube tab in a browser
+  - the mini player controls a YouTube Music tab in a browser
   - the phone shows live now playing and can seek and change volume
   - requests without a token get 401.
 
@@ -1464,11 +1405,6 @@ Every phase ends with the verification loop in [§0](#0-how-to-use-this-document
 - [ ] Settings → Online features group with "What is sent" lines, all off by default.
 - [ ] Tests: `LrcParserTests`, LRCLIB client with a fake `HttpMessageHandler` (hit, 404 negative cache, timeout), Last.fm signature generation + scrobble rules + offline queue, Mix selection determinism, pipe message parsing and validation, tag edit backup and undo on temp files, secret store round-trip.
 - **Exit:** every online feature makes **zero** network calls until switched on (verify with a fake handler and a manual check with a network monitor).
-
-### Phase 7 — Spotify Connect remote (optional; skip if the owner says so)
-- [ ] §24 in full, behind `Integrations.SpotifyEnabled` (off by default).
-- [ ] Tests: PKCE verifier/challenge, state mismatch rejected, token refresh + rotation, 429/`QUOTA_EXCEEDED`/`PREMIUM_REQUIRED` mapping, duplicate-session suppression.
-- **Exit:** with a Premium account and the user's own Client ID, the playlist starts on a chosen device, device transfer works, and controls work.
 
 ### Phase R — Release (see §29)
 
@@ -1505,7 +1441,6 @@ Put all tests in `AxePower.Tests/Music/`. Rules:
 | `LastFmTests` (P6) | signature; scrobble threshold; queue persistence and batching |
 | `SingleInstanceMessageTests` (P6) | byte 1 legacy; byte 2 + JSON; size and path validation |
 | `TagEditTests` (P6) | backup created; undo restores; read-only refused |
-| `SpotifyAuthTests` (P7) | PKCE; state mismatch; refresh rotation; error mapping |
 | `DependencyInjectionTests` (update) | every new service and view model resolves |
 
 ---
@@ -1541,14 +1476,13 @@ Run before each phase commit where relevant, and fully before release.
   - architecture diagram (a MUSIC subgraph)
   - publish path updated
   - Third-Party Credits: NAudio, NVorbis/NAudio.Vorbis, Concentus, TagLib#, SQLite/Microsoft.Data.Sqlite, SoundTouch.Net, DiscordRichPresence, VirtualizingWrapPanel, LRCLIB, plus "Feature set inspired by Harmonoid (no code used)"
-  - privacy line reworded to: "Zero telemetry. Optional, off-by-default integrations (Last.fm, Discord, online lyrics, Spotify) only send data when you turn them on."
+  - privacy line reworded to: "Zero telemetry. Optional, off-by-default integrations (Last.fm, Discord and online lyrics) only send data when you turn them on."
   - fix the inaccurate "SettingsService (Encrypted JSON)" wording.
 - [ ] `AboutView.xaml` credits updated to match.
 - [ ] `THIRD_PARTY_NOTICES.md` complete (license texts for LGPL components) and installed.
 - [ ] `RELEASE_README.md` and patch notes: features, the **LAN portal token change** (rescan the QR once), and known limitations:
   - no APE/DSD
   - mini player not over exclusive-fullscreen games
-  - Spotify requires your own Client ID + Premium
   - no Apple Music login.
 - [ ] `idea.txt`: move #10 to "Completed" and list precisely what shipped and what did not (streaming audio, ASIO, DSD).
 - [ ] `WORK_LOG.md`: a v1.9.0 entry, including the measured performance numbers from Phases 2 and 4.
@@ -1561,7 +1495,7 @@ Run before each phase commit where relevant, and fully before release.
 
 ## 30. Never do / out of scope
 - ❌ Copy, port or open Harmonoid source, or use its assets or branding (§2).
-- ❌ Play, capture, record or re-route audio from Spotify, Apple Music, Tidal, YouTube Music or any DRM service. Never use librespot or similar unofficial clients.
+- ❌ Play, capture, record or re-route audio from Apple Music, Tidal or any DRM service.
 - ❌ Delete, move or rename user audio files (only tag edits, with backup and undo).
 - ❌ Change the Windows master volume, other apps' volume, or default-app associations.
 - ❌ Send any data over the network unless the specific opt-in setting is on. No telemetry or analytics.
@@ -1585,5 +1519,4 @@ Run before each phase commit where relevant, and fully before release.
 | LAN token change confuses existing phone users | Patch-notes line + Phone Control UI copy: "Scan the QR again after updating" |
 | Exclusive mode blocks all other sound | Off by default; Settings explains it; honest fallback reasons |
 | Large libraries and memory | Virtualized lists, cover cache with decode size, LRU of 300 bitmaps, measure in Phase 2 |
-| Spotify changes its developer rules again | Phase 7 is optional and isolated; endpoints verified at build time; BYO Client ID |
 | Global hotkey conflicts | `RegisterHotKey` failure shown in Settings with a prompt to choose another |

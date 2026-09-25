@@ -29,7 +29,9 @@ public class ShareViewerHostTests : IDisposable
     {
         _host = new ShareViewerHost(new LogService(), _input);
         // A high port well away from the defaults, so a test never collides with a real session.
-        _host.Start(_room, "127.0.0.1", webrtcPort: 18889, preferredPort: 18990);
+        // The advertised friend address is deliberately not loopback. Requests made through
+        // loopback must still receive loopback media URLs for a reliable host-side preview.
+        _host.Start(_room, "192.0.2.55", webrtcPort: 18889, preferredPort: 18990);
     }
 
     private string Base => $"http://127.0.0.1:{_host.Port}";
@@ -45,6 +47,8 @@ public class ShareViewerHostTests : IDisposable
         var html = await response.Content.ReadAsStringAsync();
         Assert.Contains("<video", html);
         Assert.Contains(_room.PathName, html);          // the WHEP and socket URLs were substituted
+        Assert.Contains("http://127.0.0.1:18889", html);
+        Assert.DoesNotContain("http://192.0.2.55:18889", html);
         Assert.DoesNotContain("__WHEP__", html);        // no placeholder survived
         Assert.DoesNotContain("__WS__", html);
     }
@@ -111,6 +115,28 @@ public class ShareViewerHostTests : IDisposable
         {
             _host.DisableControl();
         }
+    }
+
+    [Fact]
+    public async Task ChatSocketRequiresTheSeparateViewerSecret()
+    {
+        Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/chat"));
+        Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/chat?v=wrong"));
+        Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/chat?v={_room.ViewerToken}"));
+    }
+
+    [Fact]
+    public async Task VoiceSocketRequiresTheSeparateViewerSecret()
+    {
+        Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/voice"));
+        Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/voice?v=wrong"));
+        Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/voice?v={_room.ViewerToken}"));
+    }
+
+    [Fact]
+    public void ViewingLinkKeepsTheMessageSecretInTheUrlFragment()
+    {
+        Assert.Contains($"#v={_room.ViewerToken}", _host.ViewerUrl);
     }
 
     [Fact]

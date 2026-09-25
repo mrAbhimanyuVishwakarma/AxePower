@@ -1,0 +1,54 @@
+// AxePower skin template. Copy this folder, rename it to your skin's id (for example
+// skins\ocean-night\), and change the values. Folders starting with "_" are ignored, so this one
+// never shows up in the app. Full guide: skins\README.md
+//
+// Any colour you delete falls back to the base skin (dark or light), so the smallest useful skin
+// is just an id, a name, a base and one accent colour.
+// Colours: #RGB, #RRGGBB, or #AARRGGBB when you want see-through (AA = 00 clear … FF solid).
+{
+  "schemaVersion": 1,
+  "id": "my-skin",                 // lower-case letters, digits and dashes; must be unique
+  "name": "My Skin",               // shown in Settings → Theme
+  "description": "One line about the look.",
+  "author": "Your name",
+  "base": "dark",                  // "dark" (light text) or "light" (dark text)
+
+  "colors": {
+    "window": "#090A0D",           // the app background behind everything
+    "sidebar": "#0F1117",          // left navigation panel
+    "card": "#14161C",             // regular cards
+    "cardElevated": "#1A1C23",     // raised cards, inputs, tiles inside cards
+    "hover": "#20232B",            // hovered rows and buttons
+    "border": "#2A2D35",           // card and control outlines
+    "divider": "#21232B",          // thin separator lines
+
+    "textPrimary": "#F3F4F6",      // headings and main text
+    "textSecondary": "#9CA3AF",    // descriptions
+    "textMuted": "#6B7280",        // hints, captions
+    "textDisabled": "#4B5563",     // disabled controls
+
+    "accent": "#3B82F6",           // buttons, links, focus, sliders, music accent
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444",
+
+    "eco": "#10B981",              // Eco mode colour
+    "smart": "#3B82F6",            // Smart mode colour
+    "beast": "#F97316",            // Beast mode colour
+
+    "buttonPrimary": "#FFFFFF",    // the big call-to-action button (Apply)
+    "buttonPrimaryText": "#090A0D" // its text
+  },
+
+  "glass": {
+    "backdrop": "none",            // "none" (solid) or "acrylic" (window blurs the desktop behind it;
+                                   //  give window/sidebar/card an alpha like #A6000000 so it shows)
+    "sheen": 0,                    // 0–100: top-left highlight on cards (100 = the music player's)
+    "rim": false,                  // true: lit card edge, brightest at the top-left
+    "shadow": false                // true: soft shadow under cards
+  },
+
+  // Rarely needed: pin any of the 61 theme resources by name (see README for the list).
+  "overrides": {
+  }
+}

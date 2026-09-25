@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "royal-amethyst-glass",
+  "name": "Royal Amethyst (Glass)",
+  "description": "Regal deep violet styling with acrylic blur and royal purple highlights.",
+  "author": "AxeDude7",
+  "base": "dark",
+  "colors": {
+    "window": "#B30A0711",
+    "sidebar": "#B3100B1A",
+    "card": "#B3171024",
+    "cardElevated": "#CC201733",
+    "hover": "#CC2B1E42",
+    "border": "#3A2A54",
+    "divider": "#201733",
+    "textPrimary": "#FAF5FF",
+    "textSecondary": "#D8B4FE",
+    "textMuted": "#C084FC",
+    "textDisabled": "#6B21A8",
+    "accent": "#A855F7",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444",
+    "eco": "#10B981",
+    "smart": "#A855F7",
+    "beast": "#EC4899",
+    "buttonPrimary": "#A855F7",
+    "buttonPrimaryText": "#FAF5FF"
+  },
+  "glass": {
+    "backdrop": "acrylic",
+    "sheen": 85,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {}
+}

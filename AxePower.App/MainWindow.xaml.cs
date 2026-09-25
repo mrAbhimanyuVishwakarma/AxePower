@@ -56,6 +56,8 @@ public partial class MainWindow : Window
 
         // The title-bar music player follows the window controls and the available width
         WindowControls.SizeChanged += (s, e) => PositionHeaderPlayer();
+        // A narrow window folds the sidebar to its icon rail (MainViewModel.OnWindowWidthChanged)
+        SizeChanged += (s, e) => (DataContext as MainViewModel)?.OnWindowWidthChanged(ActualWidth);
         TitleBar.SizeChanged += (s, e) => PositionHeaderPlayer();
         BatteryPill.SizeChanged += (s, e) => PositionHeaderPlayer();
         HeaderPlayerHost.SizeChanged += (s, e) => PositionHeaderPlayer();
@@ -372,7 +374,9 @@ public partial class MainWindow : Window
             {
                 UpdateTrayIcon();
                 UpdateWindowIcon();
-                if (_settingsService.GetSettings().Theme == AxePower.Core.Models.AppTheme.System)
+                // Only "System" follows Windows; a chosen skin stays as it is
+                var current = _settingsService.GetSettings();
+                if (current.Theme == AxePower.Core.Models.AppTheme.System && current.SkinId == null)
                 {
                     _themeService.ApplyTheme(AxePower.Core.Models.AppTheme.System);
                 }
@@ -402,7 +406,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var actual = _themeService.ResolveActualTheme(_settingsService.GetSettings().Theme);
+            var actual = _themeService.ActualTheme;
             var uri = new Uri(actual == AxePower.Core.Models.AppTheme.Light
                 ? "pack://application:,,,/Resources/AxePower_black.ico"
                 : "pack://application:,,,/Resources/AxePower_white.ico", UriKind.Absolute);

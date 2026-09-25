@@ -1,6 +1,7 @@
 using System;
 using System.IO.Pipes;
 using System.Linq;
+using AxePower.Core.Models.Music;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,13 +129,17 @@ public partial class App : Application
             if (TryElevateAndExit(settingsService, e.Args)) return;
 
             var themeService = Services.GetRequiredService<ThemeService>();
-            themeService.ApplyTheme(settingsService.GetSettings().Theme);
+            themeService.ApplyTheme(settingsService.GetSettings().Theme, settingsService.GetSettings().SkinId);
 
             var startupService = Services.GetRequiredService<StartupService>();
             startupService.Initialize();
 
             var batteryService = Services.GetRequiredService<BatteryService>();
             batteryService.StartHistoryCollection();
+
+            // Before the startup switch to Smart, so GPU preferences left by an interrupted
+            // Game Mode are put back by that first mode change
+            Services.GetRequiredService<GameModeGpuService>().Attach(Services.GetRequiredService<PowerPlanService>());
 
             var autoSwitchService = Services.GetRequiredService<AutoSwitchService>();
             autoSwitchService.Start();
@@ -227,6 +232,11 @@ public partial class App : Application
         services.AddSingleton<TimeoutService>();
         services.AddSingleton<AppMonitorService>();
         services.AddSingleton<GameScannerService>();
+        services.AddSingleton<GameModeGpuService>();
+        services.AddSingleton<GameModeGuard>();
+        services.AddSingleton<IGpuDisplayModeController, LenovoGpuDisplayModeService>();
+        services.AddSingleton<IGameModePrompts, WindowGameModePrompts>();
+        services.AddSingleton<AxePower.Core.Services.Skins.SkinCatalog>();
         services.AddSingleton<ThemeService>();
         services.AddSingleton<SystemServiceOptimizer>();
         services.AddSingleton<DisplayService>();
@@ -262,6 +272,9 @@ public partial class App : Application
         services.AddSingleton<RemoteInputService>();
         services.AddSingleton<ShareViewerHost>();
         services.AddSingleton<IShareScreenService, ShareScreenService>();
+        services.AddSingleton<ShareChatStore>();
+        services.AddSingleton<ShareAttachmentStore>();
+        services.AddSingleton<IRoomVoiceService, RoomVoiceService>();
 
         // Uninstaller Pro — Core Services
         services.AddSingleton<IFileSystemProbe, FileSystemProbe>();
@@ -294,6 +307,25 @@ public partial class App : Application
         services.AddSingleton<ICoverArtService, CoverArtService>();
         services.AddSingleton<IAudioEngine, NAudioEngine>();
         services.AddSingleton<PlaybackStateStore>();
+        services.AddSingleton<LibraryDatabase>();
+        services.AddSingleton<MusicLibraryRepository>();
+
+        // AxePower Music — Sources. Providers are registered here, never loaded from disk:
+        // AxePower runs elevated, so third-party code must not end up inside this process.
+        services.AddSingleton<ISecretStore, DpapiSecretStore>();
+        services.AddSingleton<StreamCache>();
+        services.AddSingleton<ProviderRegistry>();
+        services.AddSingleton<IStreamResolver, StreamResolver>();
+        services.AddSingleton<IYouTubeCaptionLyricsProvider, YouTubeCaptionLyricsProvider>();
+        services.AddSingleton<ILyricsService, LrcLibLyricsService>();
+        services.AddSingleton<IPaletteExtractor, MusicPaletteExtractor>();
+        services.AddSingleton<LocalFileProvider>();
+        services.AddSingleton<YouTubeProvider>();
+        services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<LocalFileProvider>());
+        services.AddSingleton<IMusicProvider>(sp => sp.GetRequiredService<YouTubeProvider>());
+        services.AddSingleton<DiscoveryService>();
+        services.AddSingleton<MusicRemote>();
+        services.AddSingleton<PortalAccessToken>();
         services.AddSingleton<IMusicPlayerService, MusicPlayerService>();
         services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
         services.AddSingleton<PlayerIntegrationHost>();
@@ -302,9 +334,15 @@ public partial class App : Application
         services.AddSingleton<MusicDispatcher>();
         services.AddSingleton<FileDropHelper>();
         services.AddSingleton<IPlayerIntegration, TaskbarMediaIntegration>();
+        services.AddSingleton<HotkeyService>();
+        services.AddSingleton<MusicShortcutHandler>();
         services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
+        services.AddSingleton<LyricsViewModel>();
+        services.AddSingleton<AmbientModeViewModel>();
         services.AddTransient<MusicViewModel>();
         services.AddTransient<MusicSettingsViewModel>();
+        services.AddSingleton<SourcesViewModel>();
+        services.AddSingleton<ShortcutsViewModel>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
@@ -318,6 +356,7 @@ public partial class App : Application
         services.AddTransient<UninstallerViewModel>();
         services.AddTransient<SystemOptimizerViewModel>();
         services.AddTransient<SystemDoctorViewModel>();
+        services.AddTransient<DebloatViewModel>();
         services.AddTransient<SoftwareHubViewModel>();
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
@@ -339,6 +378,29 @@ public partial class App : Application
         var current = ds.GetCurrentRefreshRate();
         var rates = ds.GetSupportedRefreshRates();
         Console.WriteLine($"DisplayService Initialized: Current {current} Hz, Supported [{string.Join(", ", rates)} Hz]");
+
+        // Reports the plans without creating them; they are created on the first mode apply
+        var powerPlans = sp.GetRequiredService<PowerPlanService>();
+        var activeMode = Task.Run(powerPlans.GetActivePowerModeAsync).GetAwaiter().GetResult();
+        Console.WriteLine(
+            $"Power plans: {string.Join(", ", powerPlans.GetPlanPresence().Select(p => $"{p.Plan.Name} {(p.Present ? "present" : "not created yet")}"))}; " +
+            $"active mode {activeMode}.");
+
+        // Skins are only read and compiled here, never applied
+        var skins = sp.GetRequiredService<AxePower.Core.Services.Skins.SkinCatalog>();
+        Console.WriteLine(
+            $"Skins: {skins.Skins.Count} ({string.Join(", ", skins.Skins.Select(k => k.Id))}); " +
+            $"{skins.Errors.Count} skipped{(skins.Errors.Count > 0 ? ": " + string.Join(" | ", skins.Errors) : "")}.");
+
+        // Read-only: asks the firmware whether a MUX exists, changes nothing
+        var gameModeSettings = sp.GetRequiredService<SettingsService>().GetSettings();
+        sp.GetRequiredService<GameModeGpuService>();
+        var displayMode = sp.GetRequiredService<IGpuDisplayModeController>();
+        bool muxSupported = Task.Run(displayMode.IsSupportedAsync).GetAwaiter().GetResult();
+        Console.WriteLine(
+            $"Game Mode GPU: dedicated GPU {(gameModeSettings.GameModeUseDedicatedGpu ? "on" : "off")}, " +
+            $"{gameModeSettings.GpuPreferenceBackups.Count} preference(s) to restore; " +
+            $"display mode switch {(muxSupported ? "supported" : "not available (non-Lenovo, no MUX, or not elevated)")}.");
         
         var discovery = sp.GetRequiredService<IApplicationDiscoveryService>();
         var apps = Task.Run(async () => await discovery.DiscoverApplicationsAsync()).GetAwaiter().GetResult();
@@ -352,6 +414,36 @@ public partial class App : Application
         var nowPlaying = sp.GetRequiredService<NowPlayingViewModel>();
         Console.WriteLine($"NowPlayingViewModel resolved: '{nowPlaying.Title}'.");
 
+        var sources = sp.GetRequiredService<ProviderRegistry>();
+        var names = sources.All.Select(p => $"{p.Info.Name}{(sources.IsEnabled(p.Info.Id) ? string.Empty : " (off)")}");
+        Console.WriteLine(
+            $"Music sources: {string.Join(", ", names)}; " +
+            $"search via {sources.ActiveId(ProviderKind.Metadata) ?? "none"}, " +
+            $"audio via {sources.ActiveId(ProviderKind.Streaming) ?? "none"}.");
+        Console.WriteLine(
+            $"Stream resolver resolved: {sp.GetRequiredService<IStreamResolver>().GetType().Name}, " +
+            $"cache {sp.GetRequiredService<StreamCache>().SizeBytes() / 1024} KB.");
+
+        var musicDiscovery = sp.GetRequiredService<AxePower.Core.Services.Music.DiscoveryService>();
+        var shortcutSettings = sp.GetRequiredService<SettingsService>().GetSettings().Music.Shortcuts;
+        Console.WriteLine(
+            $"Discovery: {(musicDiscovery.IsAvailable ? "available" : "no source")}, " +
+            $"{(musicDiscovery.IsEnabled ? "on" : "off")}; variety {sources.Current.DiscoveryVariety}%.");
+        Console.WriteLine(
+            $"Shortcuts: global {(shortcutSettings.GlobalHotkeysEnabled ? "on" : "off")}, " +
+            $"play/pause {shortcutSettings.Resolve(ShortcutAction.PlayPause)}, " +
+            $"mini player {shortcutSettings.Resolve(ShortcutAction.ToggleMiniPlayer)}.");
+        Console.WriteLine(
+            $"Phone portal: token {(sp.GetRequiredService<PortalAccessToken>().Value.Length)} chars, " +
+            $"music remote {sp.GetRequiredService<MusicRemote>().GetType().Name} ready.");
+
+        // Reported without opening it: the library is created on first use, and a self-test
+        // should not be the thing that brings it into existence.
+        var libraryDb = sp.GetRequiredService<LibraryDatabase>();
+        Console.WriteLine(
+            $"Music library: schema v{LibraryDatabase.SchemaVersion}, " +
+            $"{(System.IO.File.Exists(libraryDb.FilePath) ? "present" : "not created yet")} at {libraryDb.FilePath}.");
+
         var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
         var shareTools = sp.GetRequiredService<IShareToolProvider>();
         var ffmpeg = shareTools.FindFfmpeg();
@@ -360,6 +452,9 @@ public partial class App : Application
             $"{shareDevices.GetRenderDevices().Count} output(s), {shareDevices.GetCaptureDevices().Count} mic(s); " +
             $"FFmpeg {(ffmpeg.IsAvailable ? ffmpeg.Version : "not found")}, " +
             $"media server {(shareTools.FindMediaMtx().IsAvailable ? "ready" : "not downloaded")}.");
+        Console.WriteLine(
+            $"Friends room services resolved: {sp.GetRequiredService<IShareScreenService>().GetType().Name}, " +
+            $"voice {sp.GetRequiredService<IRoomVoiceService>().GetType().Name} (devices not opened).");
 
         try
         {
@@ -447,6 +542,13 @@ public partial class App : Application
 
             var player = Services.GetRequiredService<IMusicPlayerService>();
             await Task.Run(() => player.InitializeAsync(CancellationToken.None));
+
+            // Shortcuts and discovery both watch the player, so they start once it has its
+            // restored queue — otherwise discovery would fire on the empty startup state.
+            Services.GetRequiredService<HotkeyService>().Attach(hwnd);
+            Services.GetRequiredService<MusicShortcutHandler>().Start();
+            Services.GetRequiredService<DiscoveryService>().Start();
+            Services.GetRequiredService<MusicRemote>().Start();
         }
         catch (Exception ex)
         {

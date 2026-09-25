@@ -95,6 +95,9 @@ public partial class LanDropViewModel : ObservableObject
                 if (!string.IsNullOrEmpty(state.ServerUrl))
                 {
                     ServerUrl = state.ServerUrl;
+                    // The QR and the copy button hand out the link that actually works: the
+                    // plain address is refused by the portal without its access token.
+                    PortalUrl = string.IsNullOrEmpty(state.PortalUrl) ? state.ServerUrl : state.PortalUrl;
                 }
                 UpdateQrCode();
                 StatusMessage = IsServerRunning
@@ -158,7 +161,7 @@ public partial class LanDropViewModel : ObservableObject
         {
             try
             {
-                byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(ServerUrl, 8, 4, 0x00000000, 0x00FFFFFF);
+                byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(ShareLink, 8, 4, 0x00000000, 0x00FFFFFF);
                 using var ms = new MemoryStream(bmpBytes);
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
@@ -341,13 +344,24 @@ public partial class LanDropViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// The link with the access token, when the server has published one. Everything handed to
+    /// a phone — the QR code, the copy button, "open in browser" — uses this, because the
+    /// portal refuses a request that does not carry the token.
+    /// </summary>
+    public string ShareLink => string.IsNullOrEmpty(PortalUrl) ? ServerUrl : PortalUrl;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShareLink))]
+    private string _portalUrl = string.Empty;
+
     [RelayCommand]
     public void CopyServerUrl()
     {
         if (string.IsNullOrEmpty(ServerUrl)) return;
         try
         {
-            Clipboard.SetText(ServerUrl);
+            Clipboard.SetText(ShareLink);
             _notificationService.Show("📋 Copied Server URL to clipboard!");
         }
         catch { }
@@ -361,7 +375,7 @@ public partial class LanDropViewModel : ObservableObject
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = ServerUrl,
+                FileName = ShareLink,
                 UseShellExecute = true
             });
         }

@@ -14,3 +14,13 @@ _ReSharper*/
 ## Installer intermediate files
 Installer/Output/*.tmp
 build/
+
+## Secrets & Automation
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+
+## Discord bot credentials (advertising bot) - keep local
+discord api.txt

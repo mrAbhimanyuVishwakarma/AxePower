@@ -32,7 +32,7 @@ Auto Switch picks the power mode on its own when the power source or battery lev
 | `lowBatteryThresholdPercent` | `30` | Enter low-battery state at or below this |
 | `lowBatteryMode` | `Eco` | Mode while in low-battery state |
 | `switchDelaySeconds` | `5` | Debounce before applying |
-| `startWithLastSelectedMode` | `false` | On startup, apply `lastSelectedPowerMode` instead of evaluating the rules |
+| `startWithLastSelectedMode` | `false` | No longer read: AxePower always starts in Smart |
 | `showNotifications` | `true` | Toast when a switch happens |
 | `appRulesEnabled` | `false` | Turn on the per-app WMI watchers |
 | `appRules` | `[]` | `{ executableName, targetMode }` list |
@@ -66,7 +66,7 @@ Transitions are serialised with a `SemaphoreSlim`.
 - Rules are added from the Game Mode page (exe or `.lnk` picker; a shortcut is resolved to its target) with the default target `Beast`.
 
 ## Gotchas
-- Mode detection reads the active plan, and GameMode shares Beast's plan (see [power-modes.md](power-modes.md)). A GameMode target therefore compares as "different" and is re-applied on each transition. This is harmless, but log noise.
+- Startup applies Smart and records the current power state first, so the first evaluation does not replace Smart with a plugged-in/battery rule. The rules apply from the next plug, unplug or low-battery change.
 - If AxePower is not elevated, the WMI watchers fail to start and the service logs an error. The app rules then silently do nothing.
 - Unplugging and replugging within `SwitchDelaySeconds` cancels the first transition, which is intended.
 

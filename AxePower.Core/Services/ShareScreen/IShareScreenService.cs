@@ -35,6 +35,12 @@ public interface IShareScreenService
     /// </summary>
     Task<ShareSessionStatus> StartAsync(ShareScreenSettings settings, IProgress<string>? step, CancellationToken ct);
 
+    /// <summary>Opens the authenticated room channels without starting display capture.</summary>
+    Task<ShareSessionStatus> StartRoomAsync(ShareScreenSettings settings, CancellationToken ct);
+
+    /// <summary>Stops only display capture while keeping voice, chat, and files connected.</summary>
+    Task StopScreenShareAsync();
+
     Task StopAsync();
 
     /// <summary>
@@ -43,4 +49,16 @@ public interface IShareScreenService
     /// has to pass it on deliberately.
     /// </summary>
     string? SetRemoteControl(bool enabled);
+
+    /// <summary>Raised when a participant sends a chat message in the room.</summary>
+    event EventHandler<ShareChatMessage>? ChatMessageReceived;
+
+    /// <summary>Broadcasts a chat message to all connected participants in the room.</summary>
+    void SendChatMessage(ShareChatMessage message);
+
+    /// <summary>Raised when an authenticated participant sends one encrypted Opus voice packet.</summary>
+    event EventHandler<byte[]>? VoicePacketReceived;
+
+    /// <summary>Broadcasts one Opus voice packet to authenticated participants.</summary>
+    void SendVoicePacket(byte[] opusPacket);
 }

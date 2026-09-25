@@ -5,11 +5,36 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using AxePower.Core.Models;
+using AxePower.Core.Services.Skins;
 
 namespace AxePower.App.Services;
 
+/// <summary>
+/// Applies skins (skins\&lt;id&gt;\skin.json, see skins/README.md). A skin is compiled to the app's
+/// theme resources and merged into the application as one dictionary, replacing the last one.
+/// </summary>
 public class ThemeService
 {
+    private readonly SkinCatalog _catalog;
+    private ResourceDictionary? _appliedDictionary;
+
+    public ThemeService(SkinCatalog catalog)
+    {
+        _catalog = catalog;
+        ActiveSkin = catalog.Resolve(SkinCatalog.DefaultId);
+    }
+
+    public SkinCatalog Catalog => _catalog;
+
+    /// <summary>The skin on screen now (dark until the first apply).</summary>
+    public SkinEntry ActiveSkin { get; private set; }
+
+    /// <summary>The active skin described the way older code asks: light, glass or dark.</summary>
+    public AppTheme ActualTheme => ToAppTheme(ActiveSkin);
+
+    public static AppTheme ToAppTheme(SkinEntry skin) =>
+        skin.Compiled.IsLight ? AppTheme.Light : skin.Compiled.UsesAcrylic ? AppTheme.Glass : AppTheme.Dark;
+
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
@@ -106,35 +131,54 @@ public class ThemeService
         return actual == AppTheme.Light;
     }
 
-    public void ApplyTheme(AppTheme theme)
+    /// <summary>
+    /// Applies <paramref name="skinId"/> when given, otherwise the skin <paramref name="theme"/>
+    /// stands for (System follows Windows between light and dark).
+    /// </summary>
+    public void ApplyTheme(AppTheme theme, string? skinId = null)
     {
-        var actualTheme = ResolveActualTheme(theme);
+        var skin = skinId != null
+            ? _catalog.Resolve(skinId)
+            : _catalog.Resolve(ResolveActualTheme(theme) switch
+            {
+                AppTheme.Light => "light",
+                AppTheme.Glass => "glass",
+                _ => "dark"
+            });
 
-        string themeUri = actualTheme switch
-        {
-            AppTheme.Light => "pack://application:,,,/Resources/Themes/LightTheme.xaml",
-            AppTheme.Glass => "pack://application:,,,/Resources/Themes/GlassTheme.xaml",
-            _ => "pack://application:,,,/Resources/Themes/DarkTheme.xaml"
-        };
+        var dictionary = SkinResourceFactory.Build(skin.Compiled);
 
-        var dictionary = new ResourceDictionary { Source = new Uri(themeUri, UriKind.Absolute) };
-        
-        var existingTheme = Application.Current.Resources.MergedDictionaries
-            .FirstOrDefault(d => d.Source != null && d.Source.OriginalString.Contains("Themes/"));
+        // Ensure popups, dropdowns, and flyouts remain opaque, high-contrast, and crisp across all skins (especially Glass)
+        bool isLight = skin.Compiled.IsLight;
+        bool isGlass = skin.Compiled.UsesAcrylic;
+        var popupBg = isLight ? "#FFFFFFFF" : (isGlass ? "#FF161820" : "#FF1E2128");
+        var popupBorder = isLight ? "#FFCBD5E1" : (isGlass ? "#33FFFFFF" : "#FF333842");
+        var controlBacking = isLight ? "#FFFFFFFF" : (isGlass ? "#E614161C" : "#FF1E2128");
 
-        if (existingTheme != null)
-        {
-            Application.Current.Resources.MergedDictionaries.Remove(existingTheme);
-        }
-        Application.Current.Resources.MergedDictionaries.Add(dictionary);
+        var popupBgBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(popupBg));
+        popupBgBrush.Freeze();
+        dictionary["DropDownPopupBackgroundBrush"] = popupBgBrush;
 
-        // Apply Window effects if main window is loaded
+        var popupBorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(popupBorder));
+        popupBorderBrush.Freeze();
+        dictionary["DropDownPopupBorderBrush"] = popupBorderBrush;
+
+        var controlBackingBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(controlBacking));
+        controlBackingBrush.Freeze();
+        dictionary["DropDownControlBackingBrush"] = controlBackingBrush;
+
+        var merged = Application.Current.Resources.MergedDictionaries;
+        if (_appliedDictionary != null) merged.Remove(_appliedDictionary);
+        merged.Add(dictionary);
+        _appliedDictionary = dictionary;
+        ActiveSkin = skin;
+
         if (Application.Current.MainWindow != null)
         {
             ApplyWindowEffects(Application.Current.MainWindow, theme);
         }
 
-        ThemeChanged?.Invoke(actualTheme);
+        ThemeChanged?.Invoke(ActualTheme);
     }
 
     public void ApplyWindowEffects(Window window, AppTheme theme)
@@ -145,15 +189,15 @@ public class ThemeService
         var hwnd = new WindowInteropHelper(window).EnsureHandle();
         if (hwnd == IntPtr.Zero) return;
 
-        var actualTheme = ResolveActualTheme(theme);
+        var skin = ActiveSkin.Compiled;
 
-        // 1. Dark mode titlebar matching actual theme
-        int useImmersiveDarkMode = (actualTheme == AppTheme.Light) ? 0 : 1;
+        // 1. Dark mode titlebar matching the skin
+        int useImmersiveDarkMode = skin.IsLight ? 0 : 1;
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useImmersiveDarkMode, sizeof(int));
 
         var hwndSource = HwndSource.FromHwnd(hwnd);
 
-        if (actualTheme == AppTheme.Glass)
+        if (skin.UsesAcrylic)
         {
             // Set Window background to transparent
             window.Background = Brushes.Transparent;
@@ -176,8 +220,8 @@ public class ThemeService
             }
             else
             {
-                // Fallback for Windows 10 and early Windows 11
-                EnableAcrylicFallback(hwnd);
+                // Fallback for Windows 10 and early Windows 11, tinted with the skin's window colour
+                EnableAcrylicFallback(hwnd, skin.WindowArgb);
             }
         }
         else
@@ -200,7 +244,8 @@ public class ThemeService
             // Restore solid composition backing
             if (hwndSource?.CompositionTarget != null)
             {
-                hwndSource.CompositionTarget.BackgroundColor = (actualTheme == AppTheme.Light) ? Color.FromRgb(0xF3, 0xF4, 0xF6) : Color.FromRgb(0x09, 0x0A, 0x0D);
+                var (_, r, g, b) = Hex.Parse(skin.WindowArgb);
+                hwndSource.CompositionTarget.BackgroundColor = Color.FromRgb((byte)r, (byte)g, (byte)b);
             }
 
             // Restore window background brush from current theme
@@ -211,15 +256,19 @@ public class ThemeService
         }
     }
 
-    private static void EnableAcrylicFallback(IntPtr hwnd)
+    private static void EnableAcrylicFallback(IntPtr hwnd, string windowArgb)
     {
+        // AccentPolicy wants AABBGGRR
+        var (a, r, g, b) = Hex.Parse(windowArgb);
+        int tint = unchecked((a << 24) | (b << 16) | (g << 8) | r);
+
         try
         {
             var accent = new AccentPolicy
             {
                 AccentState = AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
                 AccentFlags = 2,
-                GradientColor = 0x55111622 // Translucent dark glass tint
+                GradientColor = tint
             };
 
             var accentSize = Marshal.SizeOf(accent);

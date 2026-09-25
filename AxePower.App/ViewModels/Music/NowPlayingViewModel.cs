@@ -42,79 +42,55 @@ public partial class NowPlayingViewModel : ObservableObject
     private double _dragSeekSeconds;
     private bool _applying;
 
-    public NowPlayingViewModel(IMusicPlayerService player, ICoverArtService covers, SettingsService settings, MusicDispatcher dispatcher)
+    /// <summary>
+    /// <paramref name="discovery"/> is optional so the view model can be built in tests and at
+    /// design time without the service that watches the player.
+    /// </summary>
+    public NowPlayingViewModel(
+        IMusicPlayerService player,
+        ICoverArtService covers,
+        SettingsService settings,
+        MusicDispatcher dispatcher,
+        DiscoveryService? discovery = null)
     {
         _player = player;
         _covers = covers;
         _settings = settings;
         _dispatcher = dispatcher;
+        _discovery = discovery;
 
         _isHeaderPlayerOpen = settings.GetSettings().Music.DashboardPlayerExpanded;
         _allowBoost = settings.GetSettings().Music.AllowVolumeBoost;
 
         _player.StateChanged += (_, state) => _dispatcher.Post(() => Apply(state));
         _player.PositionChanged += (_, position) => _dispatcher.PostPosition(position, ApplyPosition);
-        _settings.OnSettingsChanged += (_, s) => _dispatcher.Post(() => AllowBoost = s.Music.AllowVolumeBoost);
+        _settings.OnSettingsChanged += (_, s) => _dispatcher.Post(() =>
+        {
+            AllowBoost = s.Music.AllowVolumeBoost;
+            SyncDiscovery();
+        });
 
+        if (_discovery is not null)
+            _discovery.BusyChanged += (_, busy) => _dispatcher.Post(() => IsDiscoveryBusy = busy);
+
+        SyncDiscovery();
         Apply(_player.State);
     }
 
-    private readonly SpotifyController _spotifyController = new();
-    private System.Windows.Threading.DispatcherTimer? _spotifyTimer;
+    private readonly DiscoveryService? _discovery;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PlayerSourceBadge))]
-    private bool _isSpotifyMode;
-
-    public string PlayerSourceBadge => IsSpotifyMode ? "Spotify (Minimized)" : "Local Player";
-
-    [RelayCommand]
-    public async Task EnableSpotifyModeAsync()
+    /// <summary>Reads the toggle back from settings without treating it as a user change.</summary>
+    private void SyncDiscovery()
     {
-        if (IsPlaying)
-            await _player.PauseAsync();
+        if (_discovery is null) return;
 
-        IsSpotifyMode = true;
-        await _spotifyController.LaunchAndMinimizeSpotifyAsync();
-        await SyncSpotifyStateAsync();
+        bool on = _discovery.IsEnabled;
+        if (IsDiscoveryOn == on) return;
 
-        if (_spotifyTimer == null)
-        {
-            _spotifyTimer = new System.Windows.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1.5)
-            };
-            _spotifyTimer.Tick += async (_, _) =>
-            {
-                if (IsSpotifyMode)
-                    await SyncSpotifyStateAsync();
-            };
-        }
-        _spotifyTimer.Start();
-    }
-
-    [RelayCommand]
-    public void DisableSpotifyMode()
-    {
-        IsSpotifyMode = false;
-        _spotifyTimer?.Stop();
-        Apply(_player.State);
-    }
-
-    public async Task SyncSpotifyStateAsync()
-    {
-        if (!IsSpotifyMode) return;
-        var info = await _spotifyController.GetSpotifyTrackInfoAsync();
-        if (info.HasValue)
-        {
-            Title = info.Value.title;
-            Artist = info.Value.artist;
-            Album = "Spotify (Minimized)";
-            IsPlaying = info.Value.isPlaying;
-            HasCurrent = true;
-            CanNext = true;
-            CanPrevious = true;
-        }
+        bool wasApplying = _applying;
+        _applying = true;
+        try { IsDiscoveryOn = on; }
+        finally { _applying = wasApplying; }
     }
 
     /// <summary>Set by the shell so "Open Music" works from any surface.</summary>
@@ -127,6 +103,7 @@ public partial class NowPlayingViewModel : ObservableObject
     [ObservableProperty] private string _artist = "Open files or drop them on the Music page";
     [ObservableProperty] private string _album = string.Empty;
     [ObservableProperty] private ImageSource? _cover;
+    [ObservableProperty] private string? _coverPath;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private string _upNext = string.Empty;
 
@@ -303,38 +280,18 @@ public partial class NowPlayingViewModel : ObservableObject
     [RelayCommand]
     private async Task PlayPause()
     {
-        if (IsSpotifyMode)
-        {
-            await _spotifyController.TogglePlayPauseAsync();
-            IsPlaying = !IsPlaying;
-            return;
-        }
         await _player.TogglePlayPauseAsync();
     }
 
     [RelayCommand]
     private async Task Next()
     {
-        if (IsSpotifyMode)
-        {
-            await _spotifyController.NextTrackAsync();
-            await Task.Delay(350);
-            await SyncSpotifyStateAsync();
-            return;
-        }
         await _player.NextAsync();
     }
 
     [RelayCommand]
     private async Task Previous()
     {
-        if (IsSpotifyMode)
-        {
-            await _spotifyController.PreviousTrackAsync();
-            await Task.Delay(350);
-            await SyncSpotifyStateAsync();
-            return;
-        }
         await _player.PreviousAsync();
     }
 
@@ -424,15 +381,58 @@ public partial class NowPlayingViewModel : ObservableObject
     [RelayCommand]
     private void ClearQueue() => _player.ClearQueue();
 
+    // ── Discovery ────────────────────────────────────────────────
+
+    /// <summary>
+    /// Keeps the queue going by appending recommendations when it runs out. Hidden entirely
+    /// when no source can make them, rather than shown as a button that does nothing.
+    /// </summary>
+    public bool IsDiscoveryAvailable => _discovery?.IsAvailable ?? false;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DiscoveryLabel))]
+    private bool _isDiscoveryOn;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DiscoveryLabel))]
+    private bool _isDiscoveryBusy;
+
+    public string DiscoveryLabel => IsDiscoveryBusy
+        ? "Discovery: finding more music…"
+        : IsDiscoveryOn ? "Discovery: on" : "Discovery: off";
+
+    partial void OnIsDiscoveryOnChanged(bool value)
+    {
+        if (_applying) return;
+        _discovery?.SetEnabled(value);
+    }
+
+    /// <summary>Plays a queued track from a different source than the one matched for it.</summary>
+    [RelayCommand]
+    private Task SelectCandidate(StreamCandidateViewModel? candidate) =>
+        candidate == null
+            ? Task.CompletedTask
+            : _player.SelectCandidateAsync(candidate.QueueIndex, candidate.Id);
+
     public void MoveEntry(int from, int to) => _player.Move(from, to);
 
     public Task OpenPathsAsync(IEnumerable<string> paths)
     {
-        if (IsSpotifyMode) DisableSpotifyMode();
         return _player.OpenPathsAsync(paths);
     }
 
     public Task AddPathsAsync(IEnumerable<string> paths) => _player.AddPathsAsync(paths);
+
+    /// <summary>
+    /// Plays tracks that did not come from a file picker — search results and imported
+    /// playlists. Their audio is resolved by the player when each one starts.
+    /// </summary>
+    public Task OpenTracksAsync(IReadOnlyList<Track> tracks, int startIndex = 0)
+    {
+        return tracks.Count == 0 ? Task.CompletedTask : _player.OpenAsync(tracks, startIndex);
+    }
+
+    public void QueueTracks(IEnumerable<Track> tracks) => _player.AddToQueue(tracks);
 
     // ── State → view ────────────────────────────────────────────────────────
 
@@ -451,7 +451,6 @@ public partial class NowPlayingViewModel : ObservableObject
 
     private void ApplyCore(PlayerState state)
     {
-        if (IsSpotifyMode) return;
         _state = state;
         var current = state.Current;
 
@@ -537,6 +536,7 @@ public partial class NowPlayingViewModel : ObservableObject
         if (current == null)
         {
             Cover = null;
+            CoverPath = null;
             return;
         }
 
@@ -548,7 +548,11 @@ public partial class NowPlayingViewModel : ObservableObject
             ImageSource? image = path == null ? null : LoadFrozen(path, 256);
             _dispatcher.Post(() =>
             {
-                if (!cts.IsCancellationRequested) Cover = image;
+                if (!cts.IsCancellationRequested)
+                {
+                    CoverPath = path;
+                    Cover = image;
+                }
             });
         }, cts.Token);
     }

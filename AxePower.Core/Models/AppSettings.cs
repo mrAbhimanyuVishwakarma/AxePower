@@ -28,12 +28,24 @@ public class AppSettings
     [JsonPropertyName("startWithLastSelectedMode")]
     public bool StartWithLastSelectedMode { get; set; } = false;
 
+    /// <summary>Set once AxePower has created its four plans and removed every other non-stock plan on this PC.</summary>
+    [JsonPropertyName("powerPlansInitialized")]
+    public bool PowerPlansInitialized { get; set; } = false;
+
+    /// <summary>While Game Mode is on, give every known game Windows' "High performance" GPU.</summary>
+    [JsonPropertyName("gameModeUseDedicatedGpu")]
+    public bool GameModeUseDedicatedGpu { get; set; } = false;
+
+    /// <summary>
+    /// exe path → the UserGpuPreferences value it had before Game Mode changed it (null: none).
+    /// Only entries AxePower changed are listed, and they are put back when Game Mode ends.
+    /// </summary>
+    [JsonPropertyName("gpuPreferenceBackups")]
+    public Dictionary<string, string?> GpuPreferenceBackups { get; set; } = new();
+
     [JsonPropertyName("lastSelectedPowerMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PowerMode LastSelectedPowerMode { get; set; } = PowerMode.Beast;
-
-    [JsonPropertyName("fanModeOnBattery")]
-    public string FanModeOnBattery { get; set; } = "Smart";
 
     [JsonPropertyName("lowBatteryRuleEnabled")]
     public bool LowBatteryRuleEnabled { get; set; } = true;
@@ -81,6 +93,13 @@ public class AppSettings
     [JsonConverter(typeof(AppThemeJsonConverter))]
     public AppTheme Theme { get; set; } = AppTheme.System;
 
+    /// <summary>
+    /// The chosen skin's id (skins\&lt;id&gt;\skin.json). Null follows <see cref="Theme"/>: System
+    /// switches between the light and dark skins with Windows, and Dark/Light/Glass pick those.
+    /// </summary>
+    [JsonPropertyName("skinId")]
+    public string? SkinId { get; set; }
+
     [JsonPropertyName("reduceMotion")]
     public bool ReduceMotion { get; set; } = false;
 
@@ -105,6 +124,10 @@ public class AppSettings
 
     [JsonPropertyName("appsToClose")]
     public List<string> AppsToClose { get; set; } = new();
+
+    /// <summary>Service names ticked in Game Mode's System Services list (stopped by Optimize Services and Game Mode).</summary>
+    [JsonPropertyName("servicesToOptimize")]
+    public List<string> ServicesToOptimize { get; set; } = new();
 
     [JsonPropertyName("conservationModeEnabled")]
     public bool ConservationModeEnabled { get; set; } = false;
@@ -137,6 +160,11 @@ public class AppSettings
     [JsonPropertyName("sidebarUtilitiesExpanded")]
     public bool SidebarUtilitiesExpanded { get; set; } = true;
 
+    /// <summary>The user's last collapse/expand click. A narrow window collapses the sidebar on its
+    /// own; this is what it returns to when the window is wide again.</summary>
+    [JsonPropertyName("sidebarCollapsed")]
+    public bool SidebarCollapsed { get; set; } = false;
+
     /// <summary>AxePower Music preferences. A settings file without this key loads the defaults.</summary>
     [JsonPropertyName("music")]
     public MusicSettings Music { get; set; } = new();
@@ -160,7 +188,9 @@ public class AppSettings
             UnpluggedMode = this.UnpluggedMode,
             StartWithLastSelectedMode = this.StartWithLastSelectedMode,
             LastSelectedPowerMode = this.LastSelectedPowerMode,
-            FanModeOnBattery = this.FanModeOnBattery,
+            PowerPlansInitialized = this.PowerPlansInitialized,
+            GameModeUseDedicatedGpu = this.GameModeUseDedicatedGpu,
+            GpuPreferenceBackups = new Dictionary<string, string?>(this.GpuPreferenceBackups ?? new(), StringComparer.OrdinalIgnoreCase),
             LowBatteryRuleEnabled = this.LowBatteryRuleEnabled,
             LowBatteryThresholdPercent = this.LowBatteryThresholdPercent,
             LowBatteryMode = this.LowBatteryMode,
@@ -173,6 +203,7 @@ public class AppSettings
             RunAsAdministrator = this.RunAsAdministrator,
             CloseBehaviour = this.CloseBehaviour,
             Theme = this.Theme,
+            SkinId = this.SkinId,
             ReduceMotion = this.ReduceMotion,
             SuspendBackgroundAppsOnBattery = this.SuspendBackgroundAppsOnBattery,
             AppRulesEnabled = this.AppRulesEnabled,
@@ -181,6 +212,7 @@ public class AppSettings
             DisplayRefreshRate = this.DisplayRefreshRate,
             TemperatureUnit = this.TemperatureUnit,
             AppsToClose = new List<string>(this.AppsToClose),
+            ServicesToOptimize = new List<string>(this.ServicesToOptimize ?? new()),
             ConservationModeEnabled = this.ConservationModeEnabled,
             RapidChargeEnabled = this.RapidChargeEnabled,
             OvernightBatteryChargingEnabled = this.OvernightBatteryChargingEnabled,
@@ -191,6 +223,7 @@ public class AppSettings
             NotifyOnNewRelease = this.NotifyOnNewRelease,
             SidebarMaintenanceExpanded = this.SidebarMaintenanceExpanded,
             SidebarUtilitiesExpanded = this.SidebarUtilitiesExpanded,
+            SidebarCollapsed = this.SidebarCollapsed,
             // An explicit "music": null in the file must not leave callers with a null section
             Music = (this.Music ?? new MusicSettings()).Clone(),
             Uninstaller = (this.Uninstaller ?? new UninstallerSettings()).Clone(),

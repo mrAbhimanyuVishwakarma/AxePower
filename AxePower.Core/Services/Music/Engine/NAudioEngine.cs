@@ -103,7 +103,7 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
                 {
                     ct.ThrowIfCancellationRequested();
 
-                    var decoder = DecoderFactory.Open(item.Track.Path);
+                    var decoder = DecoderFactory.Open(item.Track);
                     try
                     {
                         if (startAt > TimeSpan.Zero) decoder.Seek(startAt);
@@ -564,7 +564,7 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
         IDecoder? decoder = null;
         try
         {
-            decoder = DecoderFactory.Open(item.Track.Path);
+            decoder = DecoderFactory.Open(item.Track);
             var old = _chain.SetNext(CreateSource(item.Key, decoder, TimeSpan.Zero));
             if (old != null) old.Decoder.Dispose();
             _preparedNextKey = item.Key;

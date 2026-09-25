@@ -60,6 +60,9 @@ public partial class ShareScreenSettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _toolStatus = string.Empty;
 
+    [ObservableProperty]
+    private System.Collections.ObjectModel.ObservableCollection<SavedFriend> _savedFriends = new();
+
     /// <summary>
     /// Whether the stage offers remote control at all.
     ///
@@ -144,6 +147,12 @@ public partial class ShareScreenSettingsViewModel : ObservableObject
                 Microphones.FirstOrDefault(d => d.Id == settings.MicrophoneDeviceId)
                 ?? Microphones.FirstOrDefault(d => d.IsDefault)
                 ?? Microphones.FirstOrDefault();
+
+            SavedFriends.Clear();
+            foreach (var f in settings.SavedFriends ?? Enumerable.Empty<SavedFriend>())
+            {
+                SavedFriends.Add(f);
+            }
         }
         finally
         {
@@ -190,6 +199,7 @@ public partial class ShareScreenSettingsViewModel : ObservableObject
             share.AdaptiveQuality = AdaptiveQuality;
             share.AllowRemoteControl = AllowRemoteControl;
             share.ViewerHostOverride = string.IsNullOrWhiteSpace(ViewerHostOverride) ? null : ViewerHostOverride.Trim();
+            share.SavedFriends = SavedFriends.ToList();
 
             settings.ShareScreen = share;
             _settingsService.SaveSettings(settings, notifyListeners: false);
@@ -200,6 +210,59 @@ public partial class ShareScreenSettingsViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(SourceSummary));
+    }
+
+    public void AddOrUpdateFriend(string name, string address, AxePower.Core.Models.Friends.FriendStatus status = AxePower.Core.Models.Friends.FriendStatus.Offline)
+    {
+        var cleanName = string.IsNullOrWhiteSpace(name) ? "Friend" : name.Trim();
+        var cleanAddress = address.Trim();
+
+        var existing = SavedFriends.FirstOrDefault(f =>
+            f.Name.Equals(cleanName, StringComparison.OrdinalIgnoreCase) ||
+            f.Address.Equals(cleanAddress, StringComparison.OrdinalIgnoreCase));
+
+        var id = existing?.Id ?? Guid.NewGuid().ToString("N");
+
+        if (existing != null)
+        {
+            SavedFriends.Remove(existing);
+        }
+
+        var friend = new SavedFriend
+        {
+            Id = id,
+            Name = cleanName,
+            Address = cleanAddress,
+            LastConnected = DateTime.Now,
+            Status = status,
+            Activity = status == AxePower.Core.Models.Friends.FriendStatus.InCall ? "In a call with you" : string.Empty
+        };
+        SavedFriends.Insert(0, friend);
+        Persist();
+    }
+
+    public void UpdateFriendStatus(string name, AxePower.Core.Models.Friends.FriendStatus status, string activity = "")
+    {
+        var existing = SavedFriends.FirstOrDefault(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (existing == null) return;
+        var index = SavedFriends.IndexOf(existing);
+        SavedFriends[index] = existing with { Status = status, Activity = activity };
+        Persist();
+    }
+
+    public void RemoveFriend(SavedFriend friend)
+    {
+        var match = SavedFriends.FirstOrDefault(f => f.Id == friend.Id)
+                 ?? SavedFriends.FirstOrDefault(f => f.Address.Equals(friend.Address, StringComparison.OrdinalIgnoreCase));
+        if (match != null)
+        {
+            SavedFriends.Remove(match);
+        }
+        else
+        {
+            SavedFriends.Remove(friend);
+        }
+        Persist();
     }
 
     /// <summary>The settings a session should start with, taken from the current pickers.</summary>

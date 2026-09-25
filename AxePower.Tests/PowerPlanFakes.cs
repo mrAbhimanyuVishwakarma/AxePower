@@ -31,7 +31,16 @@ internal sealed class FakePowerSchemes : IPowerSchemeApi
     public bool NativeCallTakesEffect { get; set; } = true;
     public bool PowercfgWorks { get; set; }
     public bool PowercfgReportsSuccess { get; set; }
-    public int DuplicateCalls { get; private set; }
+
+    /// <summary>Whether the hidden Ultimate Performance template can be copied, as on most desktops.</summary>
+    public bool UltimateTemplateAvailable { get; set; } = true;
+    public bool DuplicateWorks { get; set; } = true;
+
+    /// <summary>(source, destination) for every successful copy.</summary>
+    public List<(Guid Source, Guid Destination)> Duplicates { get; } = new();
+
+    /// <summary>(scheme, setting) → (ac, dc) as last written.</summary>
+    public Dictionary<(Guid Scheme, Guid Setting), (uint Ac, uint Dc)> Values { get; } = new();
 
     public Guid? GetActiveScheme() => Active;
 
@@ -46,10 +55,43 @@ internal sealed class FakePowerSchemes : IPowerSchemeApi
 
     public string? ReadFriendlyName(Guid scheme) => Names.TryGetValue(scheme, out var name) ? name : null;
 
-    public Task<bool> DuplicateSchemeAsync(Guid template)
+    public bool DuplicateScheme(Guid source, Guid destination)
     {
-        DuplicateCalls++;
-        return Task.FromResult(false);
+        bool sourceExists = Schemes.Contains(source) ||
+                            (source == PowerPlanService.UltimatePerformanceTemplateGuid && UltimateTemplateAvailable);
+        if (!DuplicateWorks || !sourceExists || Schemes.Contains(destination)) return false;
+
+        Schemes.Add(destination);
+        Names[destination] = ReadFriendlyName(source) ?? "Ultimate Performance";
+        Duplicates.Add((source, destination));
+        return true;
+    }
+
+    public List<Guid> Deleted { get; } = new();
+
+    public bool DeleteScheme(Guid scheme)
+    {
+        // Windows refuses to delete the active plan
+        if (scheme == Active || !Schemes.Remove(scheme)) return false;
+        Names.Remove(scheme);
+        Deleted.Add(scheme);
+        return true;
+    }
+
+    public bool WriteFriendlyName(Guid scheme, string name)
+    {
+        if (!Schemes.Contains(scheme)) return false;
+        Names[scheme] = name;
+        return true;
+    }
+
+    public bool WriteDescription(Guid scheme, string description) => Schemes.Contains(scheme);
+
+    public bool WriteValueIndex(Guid scheme, Guid subgroup, Guid setting, uint acValue, uint dcValue)
+    {
+        if (!Schemes.Contains(scheme)) return false;
+        Values[(scheme, setting)] = (acValue, dcValue);
+        return true;
     }
 
     public Task<bool> SetActiveSchemeWithPowercfgAsync(Guid scheme)
@@ -62,8 +104,18 @@ internal sealed class FakePowerSchemes : IPowerSchemeApi
 internal sealed class FakeRefreshRate : IRefreshRateController
 {
     public int SmartCalls { get; private set; }
+    public bool? LastUseLowest { get; private set; }
+    public List<int> FixedRates { get; } = new();
 
-    public bool SetRefreshRate(int targetFrequency) => true;
+    public bool SetRefreshRate(int targetFrequency)
+    {
+        FixedRates.Add(targetFrequency);
+        return true;
+    }
 
-    public void SetSmartRefreshRate(bool useLowest) => SmartCalls++;
+    public void SetSmartRefreshRate(bool useLowest)
+    {
+        SmartCalls++;
+        LastUseLowest = useLowest;
+    }
 }

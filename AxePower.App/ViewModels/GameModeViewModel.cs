@@ -29,6 +29,10 @@ public partial class GameModeViewModel : ObservableObject
     private readonly IMemoryOptimizerService? _memoryOptimizer;
     private readonly SystemTelemetryService? _telemetryService;
     private readonly MsiAfterburnerService? _msiAfterburnerService;
+    private readonly IGameModePrompts? _gameModePrompts;
+
+    /// <summary>Set while a list is rebuilt or bulk-selected, so each row change does not save.</summary>
+    private bool _isBulkUpdatingSelection;
 
     // --- State Properties ---
     [ObservableProperty]
@@ -49,12 +53,36 @@ public partial class GameModeViewModel : ObservableObject
     [ObservableProperty]
     private string _ramFreedText = "0 MB";
 
+    /// <summary>Set while the toggle follows a mode picked elsewhere, so it does not apply one itself.</summary>
+    private bool _followingAppliedMode;
+
     partial void OnIsManualGameModeActiveChanged(bool value)
     {
         GameModeStatusHeader = value ? "GAMEMODE IS ACTIVE" : "TURN ON GAMEMODE";
         ServicesPausedCountText = value ? "14" : "0";
         RamFreedText = value ? "2.3 GB" : "0 MB";
-        _ = ApplyGameModeStateAsync(value);
+        if (!_followingAppliedMode) _ = ApplyGameModeStateAsync(value);
+    }
+
+    /// <summary>
+    /// Picking another mode anywhere (Dashboard, tray, Auto Switch, an app rule) ends Game Mode,
+    /// so the toggle turns itself off. The mode just picked stays; Smart is not applied over it.
+    /// </summary>
+    private void OnPowerModeApplied(object? sender, PowerMode mode)
+    {
+        if (mode == PowerMode.GameMode) return;
+
+        if (!IsManualGameModeActive) return;
+
+        // A scalar property is safe to set from the thread that applied the mode
+        _followingAppliedMode = true;
+        try { IsManualGameModeActive = false; }
+        finally { _followingAppliedMode = false; }
+
+        // Detection reads the game card collection, which belongs to the UI thread
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.CheckAccess()) RefreshActiveGameDetection();
+        else dispatcher.BeginInvoke(RefreshActiveGameDetection);
     }
 
     [ObservableProperty]
@@ -188,14 +216,24 @@ public partial class GameModeViewModel : ObservableObject
         IServiceThrottlerService? throttlerService = null,
         IMemoryOptimizerService? memoryOptimizer = null,
         SystemTelemetryService? telemetryService = null,
-        MsiAfterburnerService? msiAfterburnerService = null)
+        MsiAfterburnerService? msiAfterburnerService = null,
+        IGameModePrompts? gameModePrompts = null)
     {
+        _gameModePrompts = gameModePrompts;
+
+        // Both lists show two groups, safe first and caution below; the rows arrive already sorted
+        System.Windows.Data.CollectionViewSource.GetDefaultView(RunningBackgroundApps).GroupDescriptions
+            .Add(new System.Windows.Data.PropertyGroupDescription(nameof(BackgroundAppItem.GroupName)));
+        System.Windows.Data.CollectionViewSource.GetDefaultView(AvailableServices).GroupDescriptions
+            .Add(new System.Windows.Data.PropertyGroupDescription(nameof(SystemServiceObject.GroupName)));
+
         _settingsService = settingsService;
         _notificationService = notificationService;
         _gameScannerService = gameScannerService;
         _appKillerService = appKillerService;
         _systemServiceOptimizer = systemServiceOptimizer;
         _powerPlanService = powerPlanService;
+        _powerPlanService.ModeApplied += OnPowerModeApplied;
         _controllerService = controllerService;
         _automationService = automationService;
         _throttlerService = throttlerService;
@@ -419,19 +457,80 @@ public partial class GameModeViewModel : ObservableObject
 
     partial void OnAllAppsSelectedChanged(bool value)
     {
-        foreach (var app in RunningBackgroundApps)
+        // Select all takes only the safe rows; a caution row is always ticked by hand
+        _isBulkUpdatingSelection = true;
+        try
         {
-            app.IsSelected = value;
+            foreach (var app in RunningBackgroundApps)
+                app.IsSelected = value && !app.IsCaution;
         }
+        finally { _isBulkUpdatingSelection = false; }
         AutoSave();
     }
 
     partial void OnAllServicesSelectedChanged(bool value)
     {
-        foreach (var svc in AvailableServices)
+        _isBulkUpdatingSelection = true;
+        try
         {
-            svc.IsSelected = value;
+            foreach (var svc in AvailableServices)
+                svc.IsSelected = value && !svc.IsCaution;
         }
+        finally { _isBulkUpdatingSelection = false; }
+        SaveServiceSelection();
+    }
+
+    /// <summary>Safe rows first, then caution; within each, running before closed, then A–Z.</summary>
+    private static IEnumerable<BackgroundAppItem> Ordered(IEnumerable<BackgroundAppItem> apps) =>
+        apps.OrderBy(a => a.IsCaution).ThenBy(a => a.IsKilled).ThenBy(a => a.ProcessName, StringComparer.OrdinalIgnoreCase);
+
+    private static IEnumerable<SystemServiceObject> Ordered(IEnumerable<SystemServiceObject> services) =>
+        services.OrderBy(s => s.IsCaution).ThenBy(s => !s.IsRunning).ThenBy(s => s.DisplayName, StringComparer.OrdinalIgnoreCase);
+
+    private void ReplaceApps(IEnumerable<BackgroundAppItem> apps)
+    {
+        _isBulkUpdatingSelection = true;
+        try
+        {
+            RunningBackgroundApps.Clear();
+            foreach (var app in Ordered(apps.ToList()))
+            {
+                app.PropertyChanged -= OnAppRowChanged;   // a re-sort reuses the same rows
+                app.PropertyChanged += OnAppRowChanged;
+                RunningBackgroundApps.Add(app);
+            }
+        }
+        finally { _isBulkUpdatingSelection = false; }
+    }
+
+    private void OnAppRowChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Every tick is remembered straight away
+        if (e.PropertyName == nameof(BackgroundAppItem.IsSelected) && !_isBulkUpdatingSelection) AutoSave();
+    }
+
+    private void OnServiceRowChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SystemServiceObject.IsSelected) && !_isBulkUpdatingSelection) SaveServiceSelection();
+    }
+
+    private void SaveServiceSelection()
+    {
+        var settings = _settingsService.GetSettings();
+        settings.ServicesToOptimize = AvailableServices.Where(s => s.IsSelected).Select(s => s.ServiceName).ToList();
+        _settingsService.SaveSettings(settings);
+    }
+
+    /// <summary>
+    /// Selected caution rows need a yes first. Declining keeps them and still returns the safe ones,
+    /// so the rest of the job goes ahead.
+    /// </summary>
+    private List<T> ConfirmCaution<T>(List<T> selected, Func<T, bool> isCaution, Func<T, string> name, string action)
+    {
+        var caution = selected.Where(isCaution).ToList();
+        if (caution.Count == 0 || _gameModePrompts?.ConfirmCautionClose(action, caution.Select(name).ToList()) == true)
+            return selected;
+        return selected.Where(x => !isCaution(x)).ToList();
     }
 
     private void LoadSettings()
@@ -467,22 +566,14 @@ public partial class GameModeViewModel : ObservableObject
 
         GameBoosterEnabled = settings.GameBoosterEnabled;
 
-        RunningBackgroundApps.Clear();
-        if (settings.AppsToClose != null && settings.AppsToClose.Any())
+        // The remembered selection shows until the running-process scan replaces it
+        ReplaceApps((settings.AppsToClose ?? new List<string>()).Select(app => new BackgroundAppItem
         {
-            foreach (var app in settings.AppsToClose)
-            {
-                RunningBackgroundApps.Add(new BackgroundAppItem { ProcessName = app, IsSelected = true, IsKilled = true });
-            }
-        }
-        else
-        {
-            // Seed popular background apps from reference screenshot
-            RunningBackgroundApps.Add(new BackgroundAppItem { ProcessName = "AISControlService", IsSelected = false, IsKilled = true });
-            RunningBackgroundApps.Add(new BackgroundAppItem { ProcessName = "Spotify", IsSelected = true, IsKilled = true });
-            RunningBackgroundApps.Add(new BackgroundAppItem { ProcessName = "Steam", IsSelected = true, IsKilled = true });
-            RunningBackgroundApps.Add(new BackgroundAppItem { ProcessName = "GameInputRedistService", IsSelected = false, IsKilled = true });
-        }
+            ProcessName = app,
+            IsSelected = true,
+            IsKilled = true,
+            CautionReason = CloseCaution.ForApp(app, hasOpenWindow: false)
+        }));
 
         if (_automationService != null)
         {
@@ -804,50 +895,46 @@ public partial class GameModeViewModel : ObservableObject
 
         await Task.Run(() =>
         {
-            var whitelist = new[]
-            {
-                "explorer", "taskmgr", "devenv", "Code", "powershell", "cmd",
-                "conhost", "svchost", "dllhost", "sihost", "ctfmon", "taskhostw",
-                "SearchApp", "StartMenuExperienceHost", "ShellExperienceHost",
-                "TextInputHost", "ApplicationFrameHost", "RuntimeBroker", "AxePower"
-            };
-
             var processes = Process.GetProcesses();
             var uniqueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // A titled window may hold unsaved work, which makes closing the app a caution case
+            var withWindow = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var p in processes)
             {
                 try
                 {
-                    if (Array.Exists(whitelist, w => w.Equals(p.ProcessName, StringComparison.OrdinalIgnoreCase)))
+                    // Use the centralized critical-process check from AppKillerService
+                    // so the UI never shows processes that would be protected from killing
+                    if (AppKillerService.IsCriticalProcess(p.ProcessName))
                         continue;
 
                     uniqueNames.Add(p.ProcessName);
+                    if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrWhiteSpace(p.MainWindowTitle))
+                        withWindow.Add(p.ProcessName);
                 }
                 catch { }
             }
 
             App.Current?.Dispatcher?.BeginInvoke(() =>
             {
-                RunningBackgroundApps.Clear();
-
-                foreach (var sel in currentSelected)
-                {
-                    if (!uniqueNames.Contains(sel))
+                var rows = currentSelected
+                    .Where(sel => !uniqueNames.Contains(sel))
+                    .Select(sel => new BackgroundAppItem
                     {
-                        RunningBackgroundApps.Add(new BackgroundAppItem { ProcessName = sel, IsSelected = true, IsKilled = true });
-                    }
-                }
-
-                foreach (var name in uniqueNames)
-                {
-                    RunningBackgroundApps.Add(new BackgroundAppItem
+                        ProcessName = sel,
+                        IsSelected = true,
+                        IsKilled = true,
+                        CautionReason = CloseCaution.ForApp(sel, hasOpenWindow: false)
+                    })
+                    .Concat(uniqueNames.Select(name => new BackgroundAppItem
                     {
                         ProcessName = name,
                         IsSelected = currentSelected.Contains(name),
-                        IsKilled = false
-                    });
-                }
+                        IsKilled = false,
+                        CautionReason = CloseCaution.ForApp(name, withWindow.Contains(name))
+                    }));
+                ReplaceApps(rows);
 
                 RefreshActiveGameDetection();
             });
@@ -862,11 +949,19 @@ public partial class GameModeViewModel : ObservableObject
             var services = _systemServiceOptimizer.GetOptimizableServices();
             App.Current?.Dispatcher?.BeginInvoke(() =>
             {
-                AvailableServices.Clear();
-                foreach (var s in services)
+                var remembered = new HashSet<string>(_settingsService.GetSettings().ServicesToOptimize ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+                _isBulkUpdatingSelection = true;
+                try
                 {
-                    AvailableServices.Add(s);
+                    AvailableServices.Clear();
+                    foreach (var s in Ordered(services))
+                    {
+                        s.IsSelected = remembered.Contains(s.ServiceName);
+                        s.PropertyChanged += OnServiceRowChanged;
+                        AvailableServices.Add(s);
+                    }
                 }
+                finally { _isBulkUpdatingSelection = false; }
                 RefreshActiveGameDetection();
             });
         });
@@ -887,14 +982,17 @@ public partial class GameModeViewModel : ObservableObject
     [RelayCommand]
     private void KillSelectedNow()
     {
-        var selectedApps = RunningBackgroundApps.Where(a => a.IsSelected).Select(a => a.ProcessName).ToList();
+        var toClose = ConfirmCaution(RunningBackgroundApps.Where(a => a.IsSelected).ToList(),
+            a => a.IsCaution, a => a.ProcessName, "close");
+        var selectedApps = toClose.Select(a => a.ProcessName).ToList();
         if (selectedApps.Any())
         {
             _appKillerService.KillBackgroundApps(selectedApps);
-            foreach (var app in RunningBackgroundApps.Where(a => a.IsSelected))
+            foreach (var app in toClose)
             {
                 app.IsKilled = true;
             }
+            ReplaceApps(RunningBackgroundApps.ToList());
             RefreshActiveGameDetection();
             _notificationService.Show($"✓ Terminated {selectedApps.Count} background application(s).");
         }
@@ -903,7 +1001,9 @@ public partial class GameModeViewModel : ObservableObject
     [RelayCommand]
     private void OptimizeSelectedServices()
     {
-        var selectedServices = AvailableServices.Where(s => s.IsSelected).Select(s => s.ServiceName).ToList();
+        var toStop = ConfirmCaution(AvailableServices.Where(s => s.IsSelected).ToList(),
+            s => s.IsCaution, s => s.DisplayName, "stop");
+        var selectedServices = toStop.Select(s => s.ServiceName).ToList();
         if (selectedServices.Any())
         {
             Task.Run(() =>
@@ -911,7 +1011,7 @@ public partial class GameModeViewModel : ObservableObject
                 _systemServiceOptimizer.OptimizeServices(selectedServices);
                 App.Current?.Dispatcher?.BeginInvoke(() =>
                 {
-                    foreach (var s in AvailableServices.Where(x => x.IsSelected))
+                    foreach (var s in toStop)
                     {
                         s.IsPaused = true;
                         s.IsRunning = false;
@@ -933,17 +1033,17 @@ public partial class GameModeViewModel : ObservableObject
     {
         if (isActive)
         {
-            await _powerPlanService.ApplyModeAsync(PowerMode.Beast);
+            await _powerPlanService.ApplyModeAsync(PowerMode.GameMode);
             KillSelectedNow();
             OptimizeSelectedServices();
             RefreshActiveGameDetection();
-            _notificationService.Show("⚡ Game Mode activated! Beast power mode engaged.");
+            _notificationService.Show("⚡ Game Mode activated! GameMode power plan engaged.");
         }
         else
         {
             await _powerPlanService.ApplyModeAsync(PowerMode.Smart);
             RefreshActiveGameDetection();
-            _notificationService.Show("Game Mode deactivated. Reverted to Balanced mode.");
+            _notificationService.Show("Game Mode deactivated. Back to Smart mode.");
         }
     }
 
@@ -1127,7 +1227,15 @@ public partial class BackgroundAppItem : ObservableObject
     private bool _isSelected;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
     private bool _isKilled;
 
-    public string StatusText => IsKilled ? "Killed" : "Active";
+    /// <summary>Why closing it is risky, or null when it is safe (<see cref="CloseCaution"/>).</summary>
+    public string? CautionReason { get; init; }
+
+    public bool IsCaution => CautionReason != null;
+
+    public string GroupName => IsCaution ? CloseCaution.CautionGroup : CloseCaution.SafeGroup;
+
+    public string StatusText => IsKilled ? "Closed" : "Running";
 }
