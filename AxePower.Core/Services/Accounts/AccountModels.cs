@@ -113,6 +113,12 @@ public enum AccountError
     UsernameChangeTooSoon,
     DisplayNameInvalid,
 
+    FriendNotFound,
+    CannotAddSelf,
+    YouBlockedThem,
+    RequestNotFound,
+    NotFriends,
+
     Unknown
 }
 

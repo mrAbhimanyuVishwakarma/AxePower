@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -46,7 +47,7 @@ public interface IAccountApi
 /// goes only in the <c>apikey</c> header. It is not a JWT, so it must never be sent as a bearer
 /// token; the bearer is always the user's own access token.
 /// </summary>
-public sealed class SupabaseAccountApi : IAccountApi, IDisposable
+public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
 {
     private const string ProfileColumns = "id,username,display_name,avatar_url,created_at,username_changed_at";
 
@@ -195,12 +196,14 @@ public sealed class SupabaseAccountApi : IAccountApi, IDisposable
     // -- Plumbing -------------------------------------------------------------------------------
 
     private async Task<JsonNode?> SendAsync(
-        HttpMethod method, string path, JsonNode? body, string? accessToken, CancellationToken ct, bool returnRepresentation = false)
+        HttpMethod method, string path, JsonNode? body, string? accessToken, CancellationToken ct,
+        bool returnRepresentation = false, string? prefer = null)
     {
         using var request = new HttpRequestMessage(method, path);
         request.Headers.Add("apikey", _project.PublishableKey);
         if (accessToken is not null) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        if (returnRepresentation) request.Headers.Add("Prefer", "return=representation");
+        var preferences = string.Join(",", new[] { returnRepresentation ? "return=representation" : null, prefer }.Where(p => p is not null));
+        if (preferences.Length > 0) request.Headers.Add("Prefer", preferences);
         if (body is not null) request.Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
 
         HttpResponseMessage response;
@@ -276,6 +279,20 @@ public sealed class SupabaseAccountApi : IAccountApi, IDisposable
                 return Fail(AccountError.SessionExpired, "Your session has ended. Sign in again.");
             case "23505":
                 return Fail(AccountError.UsernameTaken, "That username is taken.");
+            case "P0001" when message == "USER_NOT_FOUND":
+                return Fail(AccountError.FriendNotFound, "No one has that username.");
+            case "P0001" when message == "CANNOT_ADD_SELF":
+                return Fail(AccountError.CannotAddSelf, "That's you.");
+            case "P0001" when message == "YOU_BLOCKED_THEM":
+                return Fail(AccountError.YouBlockedThem, "You blocked this person. Unblock them first.");
+            case "P0001" when message == "TOO_MANY_REQUESTS":
+                return Fail(AccountError.RateLimited, "You have too many requests waiting. Cancel some first.");
+            case "P0001" when message == "TOO_MANY_INVITES":
+                return Fail(AccountError.RateLimited, "Too many invites in the last hour. Try again later.");
+            case "P0001" when message == "REQUEST_NOT_FOUND":
+                return Fail(AccountError.RequestNotFound, "That request is no longer there.");
+            case "42501" when message.Contains("friend_invites", StringComparison.Ordinal):
+                return Fail(AccountError.NotFriends, "You can only invite friends.");
             case "P0001" when message == "USERNAME_RESERVED":
                 return Fail(AccountError.UsernameReserved, "That username is reserved.");
             case "P0001" when message == "USERNAME_CHANGE_TOO_SOON":

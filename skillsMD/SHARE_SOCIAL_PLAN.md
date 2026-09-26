@@ -78,6 +78,24 @@ builds, unit tests, or single-process loopback checks.
     Mode and the call/share state).
   - A Supabase Realtime (Phoenix WebSocket) client for live presence, requests and invites.
   - The privacy switch.
+  > **Status 2026-09-26: built.**
+  > - `FriendsService` follows the account.
+  > - `SupabaseRealtimeFeed` (Phoenix vsn 1.0.0: heartbeat 25 s, the token pushed onto the channel,
+  >   back-off from 1 to 30 s).
+  > - Presence every 60 s and on change. The game comes from Game Mode's detection; Away after 10
+  >   idle minutes. The privacy switches (`shareActivityWithFriends`, `appearOffline`) are applied
+  >   before publishing.
+  > - Offline is published on exit. There is a self-test line.
+  >
+  > **Verified:** 34 tests, including a race found and fixed (an invite arriving during a reload was
+  > dropped). Live as a signed-out caller: the socket, join and presence/friendships subscriptions
+  > are accepted.
+  > **Not yet run live:** anything as a signed-in user: publishing presence, the invites
+  > subscription (Supabase refuses it for signed-out callers, as RLS intends; a refusal is now
+  > logged instead of dropping the channel), and the token refresh on the channel.
+  > **Known and minor:** a friend's presence arriving live during a reload can be replaced by the
+  > older fetched value until their next heartbeat (60 s).
+  > **Moved to F3:** feeding "In a call" / "Sharing screen" from the Friends page (`SetSessionActivity`).
 - **F3 - Friends UI.**
   - The account identity in the Friends footer: avatar and @username instead of the Windows name.
   - The roster from the account; Online/All/Live filters become real.

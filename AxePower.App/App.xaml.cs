@@ -17,6 +17,7 @@ using AxePower.App.ViewModels.Music;
 using AxePower.App.ViewModels.ShareScreen;
 using AxePower.Core.Services.ShareScreen;
 using AxePower.Core.Services.Accounts;
+using AxePower.Core.Services.Friends;
 using AxePower.App.Helpers;
 
 namespace AxePower.App;
@@ -178,6 +179,9 @@ public partial class App : Application
 
             // Restores a saved sign-in in the background; signed out, it does nothing and needs no network
             _ = Services.GetRequiredService<AccountService>().InitializeAsync();
+
+            // Friends follows the account: starts on sign-in, stops on sign-out, idle while signed out
+            Services.GetRequiredService<FriendsService>().Attach();
         }
         catch (Exception ex)
         {
@@ -313,10 +317,24 @@ public partial class App : Application
 
         // AxePower account (optional, Supabase): see skillsMD/ACCOUNTS_PROFILE_PLAN.md
         services.AddSingleton(SupabaseProject.AxePower);
-        services.AddSingleton<IAccountApi>(sp => new SupabaseAccountApi(sp.GetRequiredService<SupabaseProject>()));
+        services.AddSingleton(sp => new SupabaseAccountApi(sp.GetRequiredService<SupabaseProject>()));
+        services.AddSingleton<IAccountApi>(sp => sp.GetRequiredService<SupabaseAccountApi>());
+        services.AddSingleton<IFriendsApi>(sp => sp.GetRequiredService<SupabaseAccountApi>());
         services.AddSingleton(sp => new AccountSessionStore(sp.GetRequiredService<LogService>()));
         services.AddSingleton<AccountService>();
         services.AddSingleton<AccountViewModel>();
+
+        // Friends on the account (SHARE_SOCIAL_PLAN.md, F2). "Playing …" comes from Game Mode's detection.
+        services.AddSingleton(sp => new FriendsService(
+            sp.GetRequiredService<AccountService>(),
+            sp.GetRequiredService<IFriendsApi>(),
+            () => new SupabaseRealtimeFeed(sp.GetRequiredService<SupabaseProject>(), sp.GetRequiredService<LogService>()),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<LogService>(),
+            sp.GetRequiredService<SettingsService>(),
+            runningGame: async () => await sp.GetRequiredService<GameModeGuard>().FindRunningGameAsync() is { } exe
+                ? GamePosterService.GetCleanTitle(exe)
+                : null));
 
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();
@@ -498,6 +516,10 @@ public partial class App : Application
         // Read-only: decrypts the saved session to report it, never refreshes it or calls the network
         var savedAccount = sp.GetRequiredService<AccountSessionStore>().Load();
         sp.GetRequiredService<AccountService>();
+        var friendsService = sp.GetRequiredService<FriendsService>(); // not attached: no network, no presence
+        Console.WriteLine(
+            $"Friends: {(friendsService.IsActive ? "running" : "idle")}; share activity {(friendsService.ShareActivity ? "on" : "off")}, " +
+            $"appear offline {(friendsService.AppearOffline ? "on" : "off")}.");
         Console.WriteLine(
             "Account: " + (savedAccount is null ? "signed out"
                 : savedAccount.Profile is { } accountProfile ? $"@{accountProfile.Username} (saved session, not refreshed)"
@@ -618,6 +640,11 @@ public partial class App : Application
                 Services.GetService<PlayerIntegrationHost>()?.Dispose();
                 Services.GetService<AmbientWindowService>()?.Dispose();
                 Services.GetService<PowerTimerService>()?.Dispose();   // closing AxePower cancels the timer
+
+                // Friends see you leave straight away instead of when the heartbeat runs out
+                var friends = Services.GetService<FriendsService>();
+                if (friends is { IsActive: true }) Task.Run(() => friends.GoOfflineAsync(TimeSpan.FromSeconds(2))).Wait(TimeSpan.FromSeconds(3));
+                friends?.Dispose();
             }
             catch { }
 

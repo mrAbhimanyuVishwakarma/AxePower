@@ -229,6 +229,26 @@ public sealed class AccountService : IDisposable
         }
     }
 
+    /// <summary>
+    /// A valid access token for other services that call Supabase as this user (Friends). Refreshes
+    /// first when it is about to expire, or when <paramref name="forceRefresh"/> says the server
+    /// rejected it. Throws <see cref="AccountException"/> (NotSignedIn / SessionExpired / Offline).
+    /// </summary>
+    public async Task<string> GetAccessTokenAsync(bool forceRefresh = false, CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct);
+        try
+        {
+            var session = RequireSession();
+            if (forceRefresh || session.ExpiresAtUtc - _clock.UtcNow < RefreshMargin) await RefreshOrEndAsync(ct);
+            return RequireSession().AccessToken;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public Task RequestPasswordResetAsync(string email, CancellationToken ct = default) =>
         _api.RequestPasswordResetAsync(email.Trim(), ct);
 
