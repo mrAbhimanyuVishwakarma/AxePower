@@ -28,6 +28,7 @@ Written from the code on branch `v1.8` (working tree, 2026-09-22). Paths are rel
 | UTILITIES | MSI Afterburner companion | [msi-afterburner.md](msi-afterburner.md) |
 | UTILITIES | Debloat (Win11Debloat) | [debloat.md](debloat.md) |
 | FOOTER | Settings, elevation, startup, tray, themes | [settings-and-startup.md](settings-and-startup.md) |
+| FOOTER | Account (optional sign-in, Profile page, Supabase) | [account.md](account.md) |
 | FOOTER | Auto-updater (AxePower self-update) | [auto-updater.md](auto-updater.md) |
 
 ## Shared architecture (read once)

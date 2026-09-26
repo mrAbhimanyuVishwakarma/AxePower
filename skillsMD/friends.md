@@ -1,8 +1,12 @@
 # AxePower Friends
 
 Friends is AxePower's built-in private room for saved contacts, full-duplex voice, text chat,
-encrypted file transfer, and low-latency screen sharing. It is intentionally account-free: a
-"friend" is a name and a saved AxePower room link, not a cloud identity or presence record.
+encrypted file transfer, and low-latency screen sharing. Since 2.0.8 friends come from the
+optional AxePower account ([account.md](account.md)): add by @username, live presence and activity, and
+invites that pop up in the app. Calls and screens still connect directly (same Wi-Fi or Tailscale).
+The older local contacts, a name plus a saved room link, stay as **Saved rooms**, and room links work
+signed out. The account side is `FriendsService` / `FriendsHubViewModel`; see
+[SHARE_SOCIAL_PLAN.md](SHARE_SOCIAL_PLAN.md) for its phases and status.
 
 ## Product surface
 
