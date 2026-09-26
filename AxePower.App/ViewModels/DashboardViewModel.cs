@@ -620,7 +620,7 @@ public partial class DashboardViewModel : ObservableObject
             Title = "AxePower Account",
             Badge = "NEW IN 2.0.8",
             BadgeColorHex = "#06B6D4",
-            Glyph = "",
+            Glyph = "\uE77B",
             Description = "Optional sign-in with Google, Discord, Steam or email. Your name and picture sit at the bottom of the sidebar, and friends can find you by your @username.",
             TargetNavigation = "Profile"
         },
