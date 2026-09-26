@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.7-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.8-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -38,7 +38,24 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 ---
 
-## 🌟 What's New in v2.0.7
+## 🌟 What's New in v2.0.8
+
+- 👤 **AxePower Account** (optional; everything still works without one):
+  - Sign in with **Google, GitHub, Discord, Steam** or **email**. Your name and picture sit at the bottom of the sidebar.
+  - A unique **@username** and a display name. The username can change once every 30 days.
+  - Your sign-in is saved encrypted for your Windows user. Offline, AxePower keeps showing your profile.
+- 🪪 **Profile**: About is now **Profile**: your account, plus version, updates, release notes, support and the legal pages in one place. Edit your profile, sign out, or delete your account there.
+- 👥 **Friends on your account**:
+  - Add friends by **@username**, with **suggestions as you type**. Accept or decline requests.
+  - See who is **online, away or offline**, and what they're doing: "Playing Valorant", "In a call", "Sharing screen".
+  - **Invite** a friend to a call or to watch your screen: they get a pop-up with **Join** on any page. Calls still connect directly (same Wi-Fi or Tailscale).
+  - Your old contacts stay as **Saved rooms**. The name under the friends list is gone (the sidebar shows who you are), and the settings gear moved to the top.
+- 🔒 **Privacy controls** in Settings → Friends: hide what you're doing, appear offline, choose whether people can find you by name, and manage blocked people. Blocking ends a friendship, and the other person isn't told.
+- 📜 **Privacy Policy and Terms** now describe what an optional account stores, who can see it, and how to delete it.
+- 🧹 **Fixes**: the Game Mode card's name no longer disappears in small windows, a muted microphone shows a crossed-out mic (it showed a magnifier), and primary buttons have readable text in the Light skin.
+- 📦 **Packaging**: ships as **`AxePower-v2.0.8-Setup.exe`**.
+
+## What's New in v2.0.7
 
 - 🧰 **Tools**: the sidebar's MSI Afterburner entry is now **Tools**, a page with MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo. Each card opens the app, or installs it through WinGet straight from its publisher, and shows whether it is running. AxePower never bundles these apps.
 - 🎨 **30 new skins**: Midnight Sakura, Synthwave Sunset, Molten Lava, Deep Ocean, Matrix Terminal, Paper & Ink, Mint Latte, Aurora Glass, Frosted Rose Glass (the first light glass skin), High Contrast, and twenty more across classic editor palettes and gaming looks. Every one passes a text-contrast check.

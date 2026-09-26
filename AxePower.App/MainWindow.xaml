@@ -957,7 +957,104 @@
                         <!-- Left: Scrollable Feed of Patch Note Posts -->
                         <ScrollViewer x:Name="PatchNotesScrollViewer" Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,28,16,28">
                             <StackPanel>
-                                <!-- ═══ POST: V2.0.7 (SEPTEMBER 25, 2026 - LATEST) ═══ -->
+                                <!-- ═══ POST: V2.0.8 (SEPTEMBER 26, 2026 - LATEST) ═══ -->
+                                <StackPanel Margin="0,0,0,32">
+                                    <StackPanel Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6" VerticalAlignment="Center">
+                                            <TextBlock Text="UPDATE / PATCH NOTES" Foreground="#66C0F4" FontSize="11" FontWeight="Bold" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                            <TextBlock Text="POSTED Sat, September 26, 2026" Foreground="#8F98A0" FontSize="11" Margin="10,0,0,0" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                        </StackPanel>
+                                        <TextBlock Text="AxePower v2.0.8 - Accounts, Friends &amp; a Profile Page" Foreground="#FFFFFF" FontSize="22" FontWeight="Normal" TextWrapping="Wrap" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="An optional AxePower account, and Friends built on it: see who is online and what they are playing, and invite them to a call or to watch your screen." Foreground="#C6D4DF" FontSize="13" LineHeight="20" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <TextBlock Text="Highlights" Foreground="#E1E7EE" FontSize="13.5" FontWeight="Bold" Margin="0,4,0,8"/>
+                                    <StackPanel Margin="12,0,0,16">
+                                        <TextBlock Text="• AxePower Account: optional sign-in with Google, GitHub, Discord, Steam or email. Your name and picture sit at the bottom of the sidebar." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Profile: About is now Profile, with your account plus version, updates, release notes and support in one place." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Friends: add people by @username with suggestions as you type, accept requests, and see who is online and what they are playing." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Invites: invite a friend to a call or to watch your screen. They get a pop-up with Join on any page." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Privacy: hide what you are doing, appear offline, choose whether people can find you by name, and manage blocked people in Settings, Friends." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Fixes: the Game Mode card keeps its name in small windows, a muted microphone shows a crossed-out mic, and buttons are readable in the Light skin." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    </StackPanel>
+
+                                    <!-- Reaction Bar -->
+                                    <Border Background="#161F29" BorderBrush="#263442" BorderThickness="1" CornerRadius="4" Padding="8,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Command="{Binding AboutVm.RateUpPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="rb1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="👍" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedLikesCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasLikes, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Rate Up" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="rb1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Background="#2B3948" BorderThickness="0" Padding="10,6" Margin="6,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="db1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="👎" FontSize="12" Foreground="#8F98A0" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="db1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Command="{Binding AboutVm.DiscussPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Margin="10,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="cb1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="💬" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedCommentsCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasComments, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Discuss" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="cb1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Command="{Binding AboutVm.SharePatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="14,6" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="sb1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#C6D4DF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="Share" Foreground="#C6D4DF" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="sb1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <Border Height="1" Background="#2A3848" Margin="0,0,0,32"/>
+
+                                <!-- ═══ POST: V2.0.7 (SEPTEMBER 25, 2026) ═══ -->
                                 <StackPanel Margin="0,0,0,32">
                                     <StackPanel Margin="0,0,0,14">
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6" VerticalAlignment="Center">

@@ -1,5 +1,5 @@
 #define AppName "AxePower"
-#define AppVersion "2.0.7"
+#define AppVersion "2.0.8"
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
 #define AppExeName "AxePower.exe"
