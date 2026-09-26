@@ -126,7 +126,7 @@ It answers only yes or no.
 |---|---|
 | Project | `kjnqsgdlcytpooueymdt` (`https://kjnqsgdlcytpooueymdt.supabase.co`) |
 | Publishable key | in the code (`SupabaseProject.AxePower`). Public by design: it only reaches what RLS allows. **The secret key must never be in the repo or the apps.** |
-| Providers | Email (confirmation on), Google, Discord. **GitHub: still to set up.** Steam is through the function. |
+| Providers | Email (confirmation on), Google, Discord, GitHub (on since 2026-09-26). Steam is through the function. |
 | URL Configuration | Site URL `https://axepower.vercel.app`; Redirect URLs must include `http://127.0.0.1:53682/auth/callback` |
 | Function secrets | `STEAM_WEB_API_KEY` (added by the owner in the dashboard). `SUPABASE_URL` and the keys are provided by Supabase. |
 | Functions | `delete-account` (verify_jwt on), `steam-login` (verify_jwt off) |
@@ -167,17 +167,15 @@ It answers only yes or no.
 
 ## Known gaps
 
-1. **GitHub** has a button, but the provider isn't switched on in Supabase yet, so clicking it shows an
-   error page. Finish the setup, or hide the button until then.
-2. **Account emails** go through Supabase's built-in sender, which is rate-limited (a few an hour) and
+1. **Account emails** go through Supabase's built-in sender, which is rate-limited (a few an hour) and
    meant for testing. Production needs SMTP on a domain we control.
-3. **The password policy** is enforced by the app only (8+ characters). Set the same minimum in
+2. **The password policy** is enforced by the app only (8+ characters). Set the same minimum in
    Supabase → Authentication → Email so the server enforces it too.
-4. **Not yet run live:**
+3. **Not yet run live:**
    - account deletion as a real user
    - a Steam sign-in (the `.invalid` placeholder email in particular)
-   - GitHub
-5. **Apple** sign-in is missing; it is needed before any iOS release.
-6. **The tests write to the real log:** they use the real `LogService`, so
+   - GitHub (the provider is on and redirects to GitHub; nobody has signed in through it yet)
+4. **Apple** sign-in is missing; it is needed before any iOS release.
+5. **The tests write to the real log:** they use the real `LogService`, so
    `%APPDATA%\AxePower\AxePower.log` gets test lines under the name `@mrabhimanyu`. Harmless, but
    confusing when reading the log.
