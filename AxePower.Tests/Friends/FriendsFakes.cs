@@ -36,6 +36,11 @@ internal sealed class FakeFriendsApi : IFriendsApi
     public List<string> PresenceAskedFor { get; } = new();
     public string? LastRequestedUsername { get; private set; }
     public Action OnSendRequest { get; set; } = () => { };
+    public List<ProfileSuggestion> SearchResults { get; } = new();
+    public List<string> Searches { get; } = new();
+
+    public Task<IReadOnlyList<ProfileSuggestion>> SearchProfilesAsync(string accessToken, string query, CancellationToken ct)
+    { lock (Calls) Searches.Add(query); return Task.FromResult<IReadOnlyList<ProfileSuggestion>>(SearchResults.ToList()); }
     public FriendRequestResult RequestResult { get; set; } = FriendRequestResult.Requested;
 
     public Task<IReadOnlyList<Friend>> ListFriendsAsync(string accessToken, CancellationToken ct)

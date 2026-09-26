@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using AxePower.Core.Services;
@@ -45,6 +46,41 @@ public sealed class FriendItem
         PresenceStatus.Away => "#F0B232",
         _ => "#80848E"
     };
+}
+
+/// <summary>A person suggested while typing in "Add a friend", with the one action that fits.</summary>
+public sealed partial class SuggestionItem : ObservableObject
+{
+    public SuggestionItem(ProfileSuggestion person)
+    {
+        Person = person;
+        _state = person.State;
+    }
+
+    public ProfileSuggestion Person { get; }
+    public string UserId => Person.UserId;
+    public string Username => Person.Username;
+    public string DisplayName => string.IsNullOrWhiteSpace(Person.DisplayName) ? Person.Username : Person.DisplayName;
+    public string Handle => "@" + Person.Username;
+    public string? AvatarUrl => Person.AvatarUrl;
+    public bool HasAvatar => !string.IsNullOrEmpty(AvatarUrl);
+    public string Initials => DisplayName.Length > 0 ? DisplayName[..1].ToUpperInvariant() : "?";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ActionText), nameof(CanAct))]
+    private SuggestionState _state;
+
+    /// <summary>Add, Accept (they asked you), Requested, Friends, or Blocked (you blocked them).</summary>
+    public string ActionText => State switch
+    {
+        SuggestionState.None => "Add",
+        SuggestionState.Incoming => "Accept",
+        SuggestionState.Outgoing => "Requested",
+        SuggestionState.Friend => "Friends",
+        _ => "Blocked"
+    };
+
+    public bool CanAct => State is SuggestionState.None or SuggestionState.Incoming;
 }
 
 /// <summary>
@@ -147,6 +183,91 @@ public partial class FriendsHubViewModel : ObservableObject
     // -- Adding friends ---------------------------------------------------------------------------
 
     [ObservableProperty] private string _addUsername = string.Empty;
+
+    /// <summary>People matching what is typed (2+ characters), refreshed a moment after typing stops.</summary>
+    public ObservableCollection<SuggestionItem> Suggestions { get; } = new();
+
+    public bool HasSuggestions => Suggestions.Count > 0;
+
+    [ObservableProperty] private bool _showsNoMatches;
+
+    /// <summary>How long to wait after a keystroke before searching. Shortened in tests.</summary>
+    public TimeSpan SearchDelay { get; set; } = TimeSpan.FromMilliseconds(250);
+
+    private CancellationTokenSource? _searchRun;
+
+    partial void OnAddUsernameChanged(string value)
+    {
+        _searchRun?.Cancel();
+        var query = (value ?? string.Empty).Trim().TrimStart('@');
+        if (query.Length < 2 || !IsSignedIn)
+        {
+            ShowSuggestions(Array.Empty<ProfileSuggestion>(), searched: false);
+            return;
+        }
+
+        var cts = _searchRun = new CancellationTokenSource();
+        _ = SearchAsync(query, cts.Token);
+    }
+
+    private async Task SearchAsync(string query, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(SearchDelay, ct);
+            var found = await _friends.SearchAsync(query, ct);
+            if (!ct.IsCancellationRequested) OnUi(() => ShowSuggestions(found, searched: true));
+        }
+        catch (OperationCanceledException) { }
+        catch (AccountException ex)
+        {
+            _log.LogInfo($"[Friends] Search failed ({ex.Error}).");
+        }
+    }
+
+    private void ShowSuggestions(IReadOnlyList<ProfileSuggestion> found, bool searched)
+    {
+        Suggestions.Clear();
+        foreach (var person in found) Suggestions.Add(new SuggestionItem(person));
+        ShowsNoMatches = searched && found.Count == 0;
+        OnPropertyChanged(nameof(HasSuggestions));
+    }
+
+    /// <summary>The row's button: Add sends a request, Accept accepts theirs.</summary>
+    [RelayCommand]
+    private async Task ActOnSuggestionAsync(SuggestionItem? item)
+    {
+        if (item is null || !item.CanAct || IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            if (item.State == SuggestionState.Incoming
+                && _friends.Friends.FirstOrDefault(f => f.UserId == item.UserId && f.State == FriendState.Incoming) is { } request)
+            {
+                await _friends.RespondAsync(request, accept: true);
+                item.State = SuggestionState.Friend;
+                SetAddStatus($"You and {item.Handle} are now friends.", error: false);
+            }
+            else
+            {
+                var result = await _friends.SendRequestAsync(item.Username);
+                item.State = result is FriendRequestResult.Accepted or FriendRequestResult.AlreadyFriends
+                    ? SuggestionState.Friend
+                    : SuggestionState.Outgoing;
+                SetAddStatus(result == FriendRequestResult.Accepted
+                    ? $"You and {item.Handle} are now friends."
+                    : $"Request sent to {item.Handle}.", error: false);
+            }
+        }
+        catch (AccountException ex)
+        {
+            SetAddStatus(ex.Message, error: true);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
     [ObservableProperty] private string _addStatus = string.Empty;
     [ObservableProperty] private bool _addStatusIsError;
     [ObservableProperty] private bool _isBusy;

@@ -19,6 +19,10 @@ internal sealed class FakeAccountApi : IAccountApi
     public Func<string, string, string?, AccountProfile> CreateProfile { get; set; } = (u, _, _) => Profile(u);
     public Func<string, string?, string?, AccountProfile> UpdateProfile { get; set; } = (_, _, _) => Profile();
     public Func<string, bool> Available { get; set; } = _ => true;
+    public Func<bool, AccountProfile> SetDiscoverable { get; set; } = d => Profile() with { Discoverable = d };
+
+    public Task<AccountProfile> SetDiscoverableAsync(string accessToken, string userId, bool discoverable, CancellationToken ct)
+    { Calls.Add("SetDiscoverable"); return Task.FromResult(SetDiscoverable(discoverable)); }
     public Action Delete { get; set; } = () => { };
     public Func<AccountProvider, string, string, AuthSession> Exchange { get; set; } = (_, _, _) => throw new InvalidOperationException("Exchange not set");
 

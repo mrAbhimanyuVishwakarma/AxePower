@@ -122,5 +122,10 @@ builds, unit tests, or single-process loopback checks.
   > suite (1040 passed, 1 skipped).
   > **Not yet seen:** the invite pop-up and the Settings privacy section in the real window (not rendered).
   > **Not yet run:** anything between two accounts (F4).
+- **Search suggestions** (owner request, 2026-09-26):
+  - Typing in "Add a friend" suggests people by @username or display name. Each row has Add / Accept,
+    or reads Requested / Friends / Blocked.
+  - "Let people find me by name" opts out. Declining a request still deletes it, so it can be sent again.
+  - Migration `friend_search`: 48 database checks. 8 app tests; off-screen render.
 - **F4 - Live test** with a second account on a second PC or Windows user: request, accept, presence,
   invite, join, and the call/screen over the same Wi-Fi and over Tailscale.

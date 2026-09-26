@@ -300,6 +300,23 @@ public sealed class AccountService : IDisposable
         }
     }
 
+    /// <summary>"Let people find me by name": whether this profile appears in others' search suggestions.</summary>
+    public async Task SetDiscoverableAsync(bool discoverable, CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct);
+        try
+        {
+            var session = RequireSession();
+            if (State.Profile?.Discoverable == discoverable) return;
+            var profile = await WithTokenAsync(token => _api.SetDiscoverableAsync(token, session.UserId, discoverable, ct), ct);
+            SetProfile(profile);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     /// <summary>Signs this PC out. Always succeeds locally, even offline.</summary>
     public async Task SignOutAsync(CancellationToken ct = default)
     {

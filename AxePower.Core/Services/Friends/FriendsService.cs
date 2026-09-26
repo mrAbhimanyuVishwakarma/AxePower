@@ -128,6 +128,20 @@ public sealed class FriendsService : IDisposable
         _ = PublishPresenceSafeAsync(force: true);
     }
 
+    /// <summary>Whether others can find you by name; follows your profile (true until signed in).</summary>
+    public bool Discoverable => _account.State.Profile?.Discoverable ?? true;
+
+    public Task SetDiscoverableAsync(bool discoverable, CancellationToken ct = default) =>
+        _account.SetDiscoverableAsync(discoverable, ct);
+
+    /// <summary>People matching what was typed in "Add a friend". Empty below 2 characters.</summary>
+    public async Task<IReadOnlyList<ProfileSuggestion>> SearchAsync(string query, CancellationToken ct = default)
+    {
+        var text = (query ?? string.Empty).Trim().TrimStart('@');
+        if (text.Length < 2 || _userId is null) return Array.Empty<ProfileSuggestion>();
+        return await CallAsync(t => _api.SearchProfilesAsync(t, text, ct), ct);
+    }
+
     /// <summary>Set by the Friends page: in a call or sharing the screen (null when neither).</summary>
     public void SetSessionActivity(ActivityKind? kind)
     {

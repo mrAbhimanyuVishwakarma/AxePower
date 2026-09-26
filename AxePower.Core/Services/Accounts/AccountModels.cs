@@ -41,7 +41,8 @@ public sealed record AccountProfile(
     string DisplayName,
     string? AvatarUrl,
     DateTime CreatedAtUtc,
-    DateTime? UsernameChangedAtUtc);
+    DateTime? UsernameChangedAtUtc,
+    bool Discoverable = true);
 
 /// <summary>What the UI shows. Immutable; <see cref="AccountService.StateChanged"/> hands out a new one.</summary>
 public sealed record AccountState(

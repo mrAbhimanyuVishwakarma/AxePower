@@ -91,10 +91,40 @@ await as(B, async () => {
   check('after unblock B can request A', (await val(`select public.send_friend_request('mrabhimanyu') r`)).r === 'REQUESTED');
 });
 
+// Name search (suggestions while typing)
+const D = '44444444-4444-4444-4444-444444444444', E = '55555555-5555-5555-5555-555555555555';
+await db.exec(`insert into auth.users values ('${D}'),('${E}');
+  insert into public.profiles (id, username, display_name) values
+    ('${D}','abhi_v','Abhi Vee'),('${E}','abhixv','Hidden One');
+  update public.profiles set discoverable = false where id = '${E}';`);
+await as(A, async () => {
+  const names = async (q) => (await db.query(`select username from public.search_profiles($1)`, [q])).rows.map(r => r.username);
+  check('search: "abhi" finds @abhi_v, not the hidden user', JSON.stringify(await names('abhi')) === JSON.stringify(['abhi_v']));
+  check('search: "_" is literal ("abhi_" does not match abhixv)', !(await names('abhi_')).includes('abhixv'));
+  check('search: display name prefix ("abhi vee")', (await names('Abhi Vee')).includes('abhi_v'));
+  check('search: hidden user found by exact @username', (await names('@abhixv')).includes('abhixv'));
+  check('search: 1 character returns nothing', (await names('a')).length === 0);
+  check('search: never returns yourself', !(await names('mrabh')).includes('mrabhimanyu'));
+  check('search: marks a request they sent you as incoming', (await db.query(`select state from public.search_profiles('player')`)).rows[0]?.state === 'incoming');
+});
+await as(D, async () => await db.query(`select public.block_user('${A}')`));
+await as(A, async () => {
+  const rows = (await db.query(`select username from public.search_profiles('abhi')`)).rows;
+  check('search: someone who blocked you is left out', !rows.some(r => r.username === 'abhi_v'));
+});
+await as(D, async () => {
+  const row = (await db.query(`select state from public.search_profiles('mrabh')`)).rows[0];
+  check('search: someone you blocked shows as blocked', row?.state === 'blocked');
+});
+await as(E, async () => {
+  check('search: you can hide yourself (update own discoverable)', (await err(`update public.profiles set discoverable = true where id = '${E}'`)) === null);
+});
+
 // Anonymous callers and account deletion
 await db.exec('set role anon');
 check('anon cannot send requests', (await err(`select public.send_friend_request('mrabhimanyu')`)) !== null);
 check('anon cannot read presence', (await err(`select * from public.presence`)) !== null);
+check('anon cannot search', (await err(`select * from public.search_profiles('abhi')`)) !== null);
 await db.exec('reset role');
 await db.exec(`delete from auth.users where id='${A}'`);
 check('deleting A removes everything of A', (await val(`select (select count(*) from public.friendships) + (select count(*) from public.presence) + (select count(*) from public.friend_invites where from_user='${A}') n`)).n == 0);

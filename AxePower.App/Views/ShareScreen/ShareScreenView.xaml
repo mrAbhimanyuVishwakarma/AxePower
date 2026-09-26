@@ -745,7 +745,7 @@
                     </Grid>
                     <!-- Add by @username (account friends) -->
                     <StackPanel Visibility="{Binding AccountFriends.IsSignedIn, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
-                        <TextBlock Text="Add a friend by @username" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,5"/>
+                        <TextBlock Text="Add a friend: type a name or @username" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,5"/>
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <TextBox Text="{Binding AccountFriends.AddUsername, UpdateSourceTrigger=PropertyChanged}" Background="{DynamicResource WindowBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}"
@@ -759,6 +759,42 @@
                                 <TextBlock Text="Send request"/>
                             </Button>
                         </Grid>
+                        <!-- Suggestions while typing -->
+                        <Border Margin="0,6,0,0" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="4"
+                                Visibility="{Binding AccountFriends.HasSuggestions, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                            <ItemsControl ItemsSource="{Binding AccountFriends.Suggestions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="4,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FriendAvatar}" Margin="0,0,10,0">
+                                                <ContentControl.LayoutTransform>
+                                                    <ScaleTransform ScaleX="0.84" ScaleY="0.84"/>
+                                                </ContentControl.LayoutTransform>
+                                            </ContentControl>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Handle}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Style="{StaticResource PrimaryButtonStyle}" Padding="14,5" FontSize="11.5" VerticalAlignment="Center"
+                                                    Command="{Binding DataContext.AccountFriends.ActOnSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                    Visibility="{Binding CanAct, Converter={StaticResource BoolToVis}}" AutomationProperties.Name="{Binding ActionText}">
+                                                <TextBlock Text="{Binding ActionText}"/>
+                                            </Button>
+                                            <TextBlock Grid.Column="2" Text="{Binding ActionText}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" Margin="0,0,6,0"
+                                                       Visibility="{Binding CanAct, Converter={StaticResource InverseBoolToVis}}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                        <TextBlock Text="No one found by that name. You can still send a request to an exact @username." Foreground="{DynamicResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" Margin="2,6,0,0"
+                                   Visibility="{Binding AccountFriends.ShowsNoMatches, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"/>
                         <TextBlock Text="{Binding AccountFriends.AddStatus}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">

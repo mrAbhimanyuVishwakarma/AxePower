@@ -78,5 +78,24 @@ public sealed record FriendInvite(
 
 public sealed record BlockedUser(string UserId, string Username, string DisplayName);
 
+/// <summary>How a person found by name relates to you.</summary>
+public enum SuggestionState
+{
+    None,
+    Friend,
+
+    /// <summary>They asked you.</summary>
+    Incoming,
+
+    /// <summary>You asked them.</summary>
+    Outgoing,
+
+    /// <summary>You blocked them. (People who blocked you never appear.)</summary>
+    Blocked
+}
+
+/// <summary>A person matching what was typed in "Add a friend".</summary>
+public sealed record ProfileSuggestion(string UserId, string Username, string DisplayName, string? AvatarUrl, SuggestionState State);
+
 /// <summary>My own presence as published: already filtered by the privacy switches.</summary>
 public sealed record MyPresence(PresenceStatus Status, ActivityKind? Kind, string? Activity);

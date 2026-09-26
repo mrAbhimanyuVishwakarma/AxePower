@@ -35,6 +35,9 @@ public interface IAccountApi
     Task<AccountProfile> UpdateProfileAsync(string accessToken, string userId, string? displayName, string? username, CancellationToken ct);
     Task<bool> IsUsernameAvailableAsync(string username, CancellationToken ct);
 
+    /// <summary>Whether others can find this profile by name in "Add a friend" suggestions.</summary>
+    Task<AccountProfile> SetDiscoverableAsync(string accessToken, string userId, bool discoverable, CancellationToken ct);
+
     /// <summary>Deletes the caller's account through the <c>delete-account</c> Edge Function.</summary>
     Task DeleteAccountAsync(string accessToken, CancellationToken ct);
 }
@@ -49,7 +52,7 @@ public interface IAccountApi
 /// </summary>
 public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
 {
-    private const string ProfileColumns = "id,username,display_name,avatar_url,created_at,username_changed_at";
+    private const string ProfileColumns = "id,username,display_name,avatar_url,created_at,username_changed_at,discoverable";
 
     private readonly SupabaseProject _project;
     private readonly HttpClient _http;
@@ -181,6 +184,14 @@ public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
         var json = await SendAsync(
             HttpMethod.Patch, $"rest/v1/profiles?id=eq.{Uri.EscapeDataString(userId)}&select={ProfileColumns}",
             body, accessToken, ct, returnRepresentation: true);
+        return SingleProfile(json);
+    }
+
+    public async Task<AccountProfile> SetDiscoverableAsync(string accessToken, string userId, bool discoverable, CancellationToken ct)
+    {
+        var json = await SendAsync(
+            HttpMethod.Patch, $"rest/v1/profiles?id=eq.{Uri.EscapeDataString(userId)}&select={ProfileColumns}",
+            new JsonObject { ["discoverable"] = discoverable }, accessToken, ct, returnRepresentation: true);
         return SingleProfile(json);
     }
 
@@ -347,7 +358,8 @@ public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
         DisplayName: Str(row, "display_name") ?? string.Empty,
         AvatarUrl: Str(row, "avatar_url"),
         CreatedAtUtc: Date(row, "created_at") ?? DateTime.MinValue,
-        UsernameChangedAtUtc: Date(row, "username_changed_at"));
+        UsernameChangedAtUtc: Date(row, "username_changed_at"),
+        Discoverable: row["discoverable"] is not JsonValue d || d.GetValueKind() != JsonValueKind.False);
 
     private static string? Str(JsonNode node, string name) =>
         node[name] is JsonValue v && v.GetValueKind() == JsonValueKind.String ? v.GetValue<string>() : null;

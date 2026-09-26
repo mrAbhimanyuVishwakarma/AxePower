@@ -232,6 +232,24 @@ public partial class ShareScreenSettingsViewModel : ObservableObject
         set { if (_friends is not null) _friends.AppearOffline = value; OnPropertyChanged(); }
     }
 
+    /// <summary>"Let people find me by name": appear in others' Add-a-friend suggestions.</summary>
+    public bool FindableByName
+    {
+        get => _friends?.Discoverable ?? true;
+        set
+        {
+            if (_friends is not { IsActive: true }) { BlockedStatus = "Sign in to change this."; OnPropertyChanged(); return; }
+            _ = SetFindableAsync(value);
+        }
+    }
+
+    private async System.Threading.Tasks.Task SetFindableAsync(bool value)
+    {
+        try { await _friends!.SetDiscoverableAsync(value); }
+        catch (AxePower.Core.Services.Accounts.AccountException ex) { BlockedStatus = ex.Message; }
+        OnPropertyChanged(nameof(FindableByName));
+    }
+
     public ObservableCollection<AxePower.Core.Services.Friends.BlockedUser> BlockedPeople { get; } = new();
 
     [ObservableProperty] private string _blockedStatus = string.Empty;

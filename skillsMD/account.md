@@ -101,6 +101,15 @@ The function is deployed with **verify_jwt off** (`[functions.steam-login]` in
 `username_available(name)` is callable signed out, for the live "available" check while signing up.
 It answers only yes or no.
 
+**Finding people:**
+- `search_profiles(query)` (signed in only) powers the suggestions in "Add a friend". It returns up to
+  8 people whose @username or display name starts with what was typed (2+ characters, `_` taken
+  literally). Each comes with its state: `none`, `incoming`, `outgoing`, `friend` or `blocked` (you
+  blocked them). People who blocked you never appear.
+- `profiles.discoverable` ("Let people find me by name" in Settings → Friends) hides you from
+  suggestions. An exact @username still finds you.
+- Declined requests disappear from the sender's list, and they can ask again (the owner's choice).
+
 ## UI
 
 - **Sidebar** (bottom, replacing About): avatar (provider picture, otherwise initials), display name,

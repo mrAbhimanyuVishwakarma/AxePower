@@ -17,6 +17,9 @@ namespace AxePower.Core.Services.Accounts;
 public interface IFriendsApi
 {
     Task<IReadOnlyList<Friend>> ListFriendsAsync(string accessToken, CancellationToken ct);
+
+    /// <summary>Up to 8 people whose @username or display name starts with <paramref name="query"/> (2+ characters).</summary>
+    Task<IReadOnlyList<ProfileSuggestion>> SearchProfilesAsync(string accessToken, string query, CancellationToken ct);
     Task<FriendRequestResult> SendFriendRequestAsync(string accessToken, string username, CancellationToken ct);
     Task RespondToRequestAsync(string accessToken, string friendshipId, bool accept, CancellationToken ct);
     Task RemoveFriendAsync(string accessToken, string userId, CancellationToken ct);
@@ -55,6 +58,24 @@ public sealed partial class SupabaseAccountApi : IFriendsApi
             },
             SinceUtc: Date(row, "since") ?? DateTime.MinValue,
             Presence: FriendPresence.Offline)).ToList();
+    }
+
+    public async Task<IReadOnlyList<ProfileSuggestion>> SearchProfilesAsync(string accessToken, string query, CancellationToken ct)
+    {
+        var json = await SendAsync(HttpMethod.Post, "rest/v1/rpc/search_profiles", new JsonObject { ["query"] = query }, accessToken, ct);
+        return (json as JsonArray)?.OfType<JsonObject>().Select(row => new ProfileSuggestion(
+            UserId: Str(row, "user_id") ?? string.Empty,
+            Username: Str(row, "username") ?? string.Empty,
+            DisplayName: Str(row, "display_name") ?? string.Empty,
+            AvatarUrl: Str(row, "avatar_url"),
+            State: Str(row, "state") switch
+            {
+                "friend" => SuggestionState.Friend,
+                "incoming" => SuggestionState.Incoming,
+                "outgoing" => SuggestionState.Outgoing,
+                "blocked" => SuggestionState.Blocked,
+                _ => SuggestionState.None
+            })).ToList() ?? new List<ProfileSuggestion>();
     }
 
     public async Task<FriendRequestResult> SendFriendRequestAsync(string accessToken, string username, CancellationToken ct)
