@@ -285,7 +285,7 @@
 
                                 <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,16,0,8"/>
 
-                                <Button Style="{StaticResource ProfileRowButton}" Command="{Binding OpenPatchNotesModalCommand}" Tag="&#xE8A5;"
+                                <Button Style="{StaticResource ProfileRowButton}" Command="{Binding OpenPatchNotesModalCommand}" Tag="&#xE789;"
                                         Content="Release notes" ToolTip="What changed in each version"/>
                                 <Button Style="{StaticResource ProfileRowButton}" Command="{Binding VisitWebsiteCommand}" Tag="&#xE774;"
                                         Content="Visit website" ToolTip="Features, guides and downloads"/>
@@ -321,7 +321,7 @@
                                     </Button>
                                     <Button Command="{Binding OpenTermsCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Margin="6,0,0,0" Cursor="Hand">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&#xF0E3;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                             <TextBlock Text="Terms of Service" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>

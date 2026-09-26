@@ -221,7 +221,8 @@ public sealed class AccountService : IDisposable
         {
             foreach (var key in new[] { "full_name", "name", "preferred_username", "user_name" })
             {
-                if (_metadata.TryGetValue(key, out var value) && UsernameRules.NormalizeDisplayName(value) is { Length: > 0 } name)
+                if (_metadata.TryGetValue(key, out var value)
+                    && UsernameRules.NormalizeDisplayName(UsernameRules.StripHidden(value)) is { Length: > 0 } name)
                     return name.Length <= UsernameRules.DisplayNameMaxLength ? name : name[..UsernameRules.DisplayNameMaxLength].Trim();
             }
             return string.Empty;
@@ -416,11 +417,7 @@ public sealed class AccountService : IDisposable
     {
         foreach (var key in new[] { "avatar_url", "picture" })
         {
-            if (_metadata.TryGetValue(key, out var url)
-                && url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) && url.Length <= 1024)
-            {
-                return url;
-            }
+            if (_metadata.TryGetValue(key, out var url) && UsernameRules.IsAllowedAvatarUrl(url)) return url;
         }
 
         return null;

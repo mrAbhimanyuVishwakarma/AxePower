@@ -178,7 +178,7 @@ public sealed class AccountServiceTests : IDisposable
     [Fact]
     public async Task SignIn_UsesTheProviderPicture_ForANewProfile()
     {
-        var metadata = new Dictionary<string, string> { ["username"] = "mrabhimanyu", ["picture"] = "https://img/me.png" };
+        var metadata = new Dictionary<string, string> { ["username"] = "mrabhimanyu", ["picture"] = "https://lh3.googleusercontent.com/a/me=s96-c" };
         _api.SignIn = () => Session(metadata: metadata);
         _api.GetProfile = (_, _) => null;
         string? avatar = null;
@@ -186,7 +186,7 @@ public sealed class AccountServiceTests : IDisposable
 
         await _service.SignInWithPasswordAsync("me@example.com", "pw123456");
 
-        Assert.Equal("https://img/me.png", avatar);
+        Assert.Equal("https://lh3.googleusercontent.com/a/me=s96-c", avatar);
     }
 
     [Fact]

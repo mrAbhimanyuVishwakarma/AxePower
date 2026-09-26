@@ -49,5 +49,25 @@ public static class UsernameRules
     public static bool IsValidDisplayName(string? displayName) =>
         displayName is not null
         && displayName.Length is >= 1 and <= DisplayNameMaxLength
-        && displayName == displayName.Trim();
+        && displayName == displayName.Trim()
+        && !HiddenCharacters.IsMatch(displayName);
+
+    /// <summary>Control and invisible/bidirectional formatting characters, which can make one name look like another.</summary>
+    private static readonly Regex HiddenCharacters = new(
+        @"[\u0001-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    /// <summary>Removes the characters <see cref="IsValidDisplayName"/> rejects (for names taken from a provider).</summary>
+    public static string StripHidden(string? value) => HiddenCharacters.Replace(value ?? string.Empty, string.Empty);
+
+    /// <summary>
+    /// Avatars may only come from the sign-in providers' picture servers; the database enforces the
+    /// same list (profiles_avatar_url_provider), because friends' apps load each other's avatars.
+    /// </summary>
+    public static bool IsAllowedAvatarUrl(string? url) =>
+        url is not null && url.Length <= 1024 && AvatarHosts.IsMatch(url);
+
+    private static readonly Regex AvatarHosts = new(
+        @"^https://(([a-z0-9-]+\.)*(googleusercontent\.com|githubusercontent\.com|discordapp\.com|steamstatic\.com)|steamcdn-a\.akamaihd\.net)/",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
 }
