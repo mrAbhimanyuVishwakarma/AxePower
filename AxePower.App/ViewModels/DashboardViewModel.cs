@@ -614,7 +614,16 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
     {
-        // 2.0.7 additions first, then 2.0.6; the 2.0.2 list the owner chose follows in its order.
+        // 2.0.8 first (owner's pick: AxePower Account only), then 2.0.7, 2.0.6, and the 2.0.2 list in its order.
+        new()
+        {
+            Title = "AxePower Account",
+            Badge = "NEW IN 2.0.8",
+            BadgeColorHex = "#06B6D4",
+            Glyph = "",
+            Description = "Optional sign-in with Google, Discord, Steam or email. Your name and picture sit at the bottom of the sidebar, and friends can find you by your @username.",
+            TargetNavigation = "Profile"
+        },
         new()
         {
             Title = "Tools",

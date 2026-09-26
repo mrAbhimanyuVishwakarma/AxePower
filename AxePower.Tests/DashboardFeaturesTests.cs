@@ -17,7 +17,7 @@ public class DashboardFeaturesTests
     /// </summary>
     private static readonly HashSet<string> KnownViews = new(StringComparer.Ordinal)
     {
-        "Dashboard", "AutoSwitch", "GameMode", "Battery", "Music", "Settings", "Logs", "About",
+        "Dashboard", "AutoSwitch", "GameMode", "Battery", "Music", "Settings", "Logs", "About", "Profile",
         "Uninstaller", "Optimizer", "Utilities", "Doctor", "Maintenance", "Debloat", "Terminal",
         "SoftwareHub", "UpdatePc", "ShareScreen", "PhoneControl", "PhoneHub", "SecondMonitor",
         "PhoneLink", "Tools"
@@ -59,7 +59,7 @@ public class DashboardFeaturesTests
         // The Dashboard selects the first entry on load, so ordering decides what is shown.
         // The owner picks this list each release; change it only when they do.
         Assert.Equal(
-            new[] { "Tools", "30 New Skins", "New Settings", "Power Timer", "Ambient Mode", "Battery Health", "DLSS 5 Swapper", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller Pro", "Terminal" },
+            new[] { "AxePower Account", "Tools", "30 New Skins", "New Settings", "Power Timer", "Ambient Mode", "Battery Health", "DLSS 5 Swapper", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller Pro", "Terminal" },
             Features().Select(f => f.Title));
     }
 
