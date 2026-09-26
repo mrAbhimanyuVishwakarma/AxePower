@@ -614,70 +614,7 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
     {
-        // 2.0.8 first (owner's pick: AxePower Account only), then 2.0.7, 2.0.6, and the 2.0.2 list in its order.
-        new()
-        {
-            Title = "AxePower Account",
-            Badge = "NEW IN 2.0.8",
-            BadgeColorHex = "#06B6D4",
-            Glyph = "\uE77B",
-            Description = "Optional sign-in with Google, Discord, Steam or email. Your name and picture sit at the bottom of the sidebar, and friends can find you by your @username.",
-            TargetNavigation = "Profile"
-        },
-        new()
-        {
-            Title = "Tools",
-            Badge = "NEW IN 2.0.7",
-            BadgeColorHex = "#3B82F6",
-            Glyph = "\uEC7A",
-            Description = "MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo on one page. Open the ones you have, or install the rest straight from each publisher.",
-            TargetNavigation = "Tools"
-        },
-        new()
-        {
-            Title = "30 New Skins",
-            Badge = "NEW IN 2.0.7",
-            BadgeColorHex = "#EC4899",
-            Glyph = "\uE790",
-            Description = "From Midnight Sakura and Synthwave Sunset to Matrix Terminal, High Contrast and the first light glass skin. Pick one in Settings, Appearance & Display.",
-            TargetNavigation = "Settings"
-        },
-        new()
-        {
-            Title = "New Settings",
-            Badge = "NEW IN 2.0.7",
-            BadgeColorHex = "#8B5CF6",
-            Glyph = "\uE713",
-            Description = "Settings now has a category list like Friends, one page per category, and Taskbar preferences to choose what the tray menu shows.",
-            TargetNavigation = "Settings"
-        },
-        new()
-        {
-            Title = "Power Timer",
-            Badge = "NEW IN 2.0.6",
-            BadgeColorHex = "#F59E0B",
-            Glyph = "\uE916",
-            Description = "Shut down, restart or sleep after the time you set, from the button in the bottom-right corner of every page. Two minutes before, the countdown turns red and a warning appears on screen.",
-            TargetNavigation = "Dashboard"
-        },
-        new()
-        {
-            Title = "Ambient Mode",
-            Badge = "NEW IN 2.0.6",
-            BadgeColorHex = "#8B5CF6",
-            Glyph = "\uE8D6",
-            Description = "Album art and synced lyrics fill the whole screen. It can open by itself like a screensaver while music plays, and lyrics are now found for far more songs.",
-            TargetNavigation = "Music"
-        },
-        new()
-        {
-            Title = "Battery Health",
-            Badge = "NEW IN 2.0.6",
-            BadgeColorHex = "#10B981",
-            Glyph = "\uE83F",
-            Description = "Real battery health from your battery's own design capacity, a chart of how its capacity has changed, and the full Windows battery report in one click.",
-            TargetNavigation = "Battery"
-        },
+        // Only the seven the owner chose (2026-09-26), in their order; newer entries were removed on request.
         new()
         {
             Title = "DLSS 5 Swapper",
@@ -740,7 +677,7 @@ public partial class DashboardViewModel : ObservableObject
             Glyph = "\uE756",
             Description = "A real CMD and PowerShell inside AxePower, where Software Hub installs and System Doctor repairs stream their output, with a Stop button.",
             TargetNavigation = "Terminal"
-        },
+        }
     };
 }
 

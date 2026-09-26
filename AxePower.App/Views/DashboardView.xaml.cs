@@ -100,6 +100,22 @@ public partial class DashboardView : UserControl
     }
 
     /// <summary>Cursor position in the window's own units, so dragging tracks 1:1 at any DPI.</summary>
+    /// <summary>
+    /// The Game Mode card sits in one third of the mode area, which a narrow window squeezes to
+    /// about 105 px, too little for icon, title and switch on one line. When it is narrow the icon
+    /// steps aside and the switch moves under the title, next to On/Off, so "Game Mode" keeps the
+    /// card's full width.
+    /// </summary>
+    private void GameModeCard_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        bool narrow = e.NewSize.Width < 200;
+        GameModeIcon.Visibility = narrow ? Visibility.Collapsed : Visibility.Visible;
+        Grid.SetColumnSpan(GameModeTitle, narrow ? 2 : 1);
+        Grid.SetRow(GameModeSwitch, narrow ? 1 : 0);
+        Grid.SetRowSpan(GameModeSwitch, narrow ? 1 : 2);
+        GameModeSwitch.HorizontalAlignment = narrow ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
+    }
+
     private static Point GetCursorPositionInDips(Window window)
     {
         GetCursorPos(out var point);
