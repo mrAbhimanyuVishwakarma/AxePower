@@ -36,15 +36,22 @@ public sealed class AccountService : IDisposable
     private readonly LogService _log;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
+    /// <summary>How long to wait for the browser before giving up on a sign-in.</summary>
+    private static readonly TimeSpan BrowserTimeout = TimeSpan.FromMinutes(5);
+
+    private readonly Func<IOAuthLoopback> _startLoopback;
+
     private StoredAccountSession? _session;
     private IReadOnlyDictionary<string, string> _metadata = new Dictionary<string, string>();
 
-    public AccountService(IAccountApi api, AccountSessionStore store, IClock clock, LogService log)
+    public AccountService(
+        IAccountApi api, AccountSessionStore store, IClock clock, LogService log, Func<IOAuthLoopback>? startLoopback = null)
     {
         _api = api;
         _store = store;
         _clock = clock;
         _log = log;
+        _startLoopback = startLoopback ?? OAuthLoopback.Start;
     }
 
     public AccountState State { get; private set; } = AccountState.SignedOut;
@@ -143,6 +150,81 @@ public sealed class AccountService : IDisposable
         finally
         {
             _gate.Release();
+        }
+    }
+
+    /// <summary>
+    /// One-click sign-in: opens the provider's page in the browser, waits for the browser to come
+    /// back to AxePower, then trades the returned code for a session. With PKCE, the code is useless
+    /// to anyone without the verifier, which never leaves this process.
+    /// </summary>
+    /// <param name="openBrowser">Opens a URL in the user's browser.</param>
+    public async Task SignInWithProviderAsync(AccountProvider provider, Action<Uri> openBrowser, CancellationToken ct = default)
+    {
+        using var loopback = _startLoopback();
+        var verifier = Pkce.CreateVerifier();
+        openBrowser(_api.BuildSignInUrl(provider, loopback.RedirectUri, Pkce.Challenge(verifier)));
+
+        IReadOnlyDictionary<string, string> reply;
+        using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct))
+        {
+            timeout.CancelAfter(BrowserTimeout);
+            try
+            {
+                reply = await loopback.WaitForCallbackAsync(timeout.Token);
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                throw new AccountException(AccountError.Unknown, "Sign-in timed out. Try again when you're ready.");
+            }
+        }
+
+        if (reply.TryGetValue("error_description", out var why) || reply.TryGetValue("error", out why))
+        {
+            _log.LogInfo($"[Account] {provider} sign-in was not completed ({(reply.TryGetValue("error", out var e) ? e : "error")}).");
+            throw new AccountException(AccountError.Unknown,
+                string.IsNullOrWhiteSpace(why) ? $"{provider} sign-in didn't finish." : $"{provider} sign-in didn't finish: {why}");
+        }
+
+        if (!reply.TryGetValue("code", out var code) || code.Length == 0)
+            throw new AccountException(AccountError.Unknown, $"{provider} sign-in came back without a code. Try again.");
+
+        await _gate.WaitAsync(ct);
+        try
+        {
+            await FinishSignInAsync(await _api.ExchangeCodeAsync(provider, code, verifier, ct), ct);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>A username to offer after a one-click sign-in, made from the provider's name. May be empty.</summary>
+    public string SuggestedUsername
+    {
+        get
+        {
+            foreach (var key in new[] { "preferred_username", "user_name", "name", "full_name" })
+            {
+                if (_metadata.TryGetValue(key, out var value) && UsernameRules.Suggest(value) is { Length: > 0 } suggestion)
+                    return suggestion;
+            }
+            return string.Empty;
+        }
+    }
+
+    /// <summary>A display name to offer after a one-click sign-in. May be empty.</summary>
+    public string SuggestedDisplayName
+    {
+        get
+        {
+            foreach (var key in new[] { "full_name", "name", "preferred_username", "user_name" })
+            {
+                if (_metadata.TryGetValue(key, out var value) && UsernameRules.NormalizeDisplayName(value) is { Length: > 0 } name)
+                    return name.Length <= UsernameRules.DisplayNameMaxLength ? name : name[..UsernameRules.DisplayNameMaxLength].Trim();
+            }
+            return string.Empty;
         }
     }
 
@@ -374,7 +456,7 @@ public sealed class AccountService : IDisposable
     {
         var session = RequireSession();
         var status = session.Profile is null ? AccountStatus.NeedsProfile : AccountStatus.SignedIn;
-        return new AccountState(status, session.UserId, session.Email, session.Profile, isOffline);
+        return new AccountState(status, session.UserId, session.Email, session.Profile, isOffline, session.Provider);
     }
 
     private void EndSession()

@@ -18,7 +18,7 @@ uses the same accounts to decide which phone may reach which PC.
 | When | **Real login now**, not a local-only profile first. |
 | Required? | **Optional.** Everything works signed out, as today. Signing in adds Remote Play from anywhere and, later, sync. |
 | Backend | **Supabase** (hosted auth + Postgres). One project for desktop and mobile. |
-| Sign-in methods | **Email + password, Google, Discord, Steam.** Apple skipped for now (owner, 2026-09-26). |
+| Sign-in methods | **Email + password, Google, GitHub, Discord, Steam** (GitHub added by the owner on 2026-09-26). Apple skipped for now. Shown as an **icon row** above the email form. |
 | Names | **Unique username + display name**, like Steam/Discord. `@mrabhimanyu` is unique and used to find you. The display name is what the sidebar shows. |
 | Sidebar | **Profile replaces About at the bottom.** Avatar + display name; the 72 px rail shows just the avatar. |
 | About content | **Moves into a card on the Profile page**: version, Check for updates, release notes, license, support, Privacy Policy and Terms. |
@@ -131,7 +131,19 @@ page on the website.
 Sign up (email, password, username, display name), verification email, sign in, forgot/reset
 password, and a live "username available" check.
 
-### A4 — Google and Discord
+### A4 — Google, GitHub and Discord
+> **Status 2026-09-26: built.** It uses an icon row in the dialog, as the owner picked. `OAuthLoopback`
+> listens on 127.0.0.1:53682 only. The browser is opened through Explorer, so it runs un-elevated.
+> Supabase PKCE is exchanged at `/auth/v1/token?grant_type=pkce`. After the first sign-in, the
+> username step is prefilled from the provider's name.
+> **Owner tasks:**
+> - add `http://127.0.0.1:53682/auth/callback` to Supabase → Authentication → URL Configuration →
+>   Redirect URLs (without it, Supabase sends the browser to the Site URL instead)
+> - create the GitHub OAuth app and enable GitHub in Supabase
+>
+> **Verified:** tests (PKCE against Python's hashlib, the real loopback on its port, the flow with a fake
+> provider, cancel and denial), off-screen renders, and Google/Discord `/authorize` redirecting live.
+> **Not yet run:** a real browser sign-in with any of the three.
 - OAuth with **PKCE in the system browser**, redirecting to a loopback address the app listens on.
   Tokens never pass through an embedded webview.
 - AxePower runs elevated, so the browser must be **started un-elevated** (through the shell,
@@ -140,6 +152,16 @@ password, and a live "username available" check.
 - First social sign-in → a "Choose a username" step, suggesting one from the provider's name.
 
 ### A5 — Steam (the risky one)
+> **Status 2026-09-26: built and deployed.**
+> - Migration `steam_login`: `steam_accounts` and `steam_login_codes`, both service-only.
+> - Function `steam-login`, with verify_jwt off. The app gets a one-time code, redeemed with the PKCE
+>   verifier, so tokens never appear in a URL.
+> - Accounts use a placeholder email `steam-<id>@steam.axepower.invalid`, which the UI hides.
+>
+> **Verified live:** the start step redirects to Steam, a foreign redirect is refused, a forged Steam
+> reply is rejected (Steam won't confirm it), a made-up code is refused, and the apps can't read the tables.
+> **Not yet run:** a real Steam login, meaning user creation with the `.invalid` email, generateLink and
+> verifyOtp. If Supabase rejects the placeholder email, this is where it will show (in the function logs).
 - Steam is **OpenID 2.0**, not OAuth/OIDC. Supabase has no Steam provider, and its new *custom
   OIDC providers* feature cannot use Steam either.
 - Plan: an Edge Function `steam-login` does the following.

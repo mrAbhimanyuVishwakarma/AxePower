@@ -15,6 +15,15 @@ public sealed record SupabaseProject(Uri Url, string PublishableKey)
         "sb_publishable__WFKuy8jF5iwSMH0dgTikw_Hv864_Pp");
 }
 
+/// <summary>The one-click sign-ins. Email and password is separate.</summary>
+public enum AccountProvider
+{
+    Google,
+    GitHub,
+    Discord,
+    Steam
+}
+
 public enum AccountStatus
 {
     SignedOut,
@@ -40,7 +49,8 @@ public sealed record AccountState(
     string? UserId,
     string? Email,
     AccountProfile? Profile,
-    bool IsOffline)
+    bool IsOffline,
+    string? Provider = null)
 {
     public static AccountState SignedOut { get; } = new(AccountStatus.SignedOut, null, null, null, false);
 

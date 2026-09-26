@@ -24,6 +24,26 @@ public static class UsernameRules
     public static bool IsValid(string? username) =>
         username is not null && Pattern.IsMatch(username) && !username.Contains("..");
 
+    /// <summary>
+    /// A valid username made from a provider's name ("Abhi Manyu" → "abhi_manyu"), or empty when
+    /// nothing usable is left. Only a suggestion: availability is still checked as usual.
+    /// </summary>
+    public static string Suggest(string? name)
+    {
+        var chars = new System.Text.StringBuilder();
+        foreach (var c in Normalize(name))
+        {
+            if (c is >= 'a' and <= 'z' or >= '0' and <= '9' or '_' or '.') chars.Append(c);
+            else if (c is ' ' or '-') chars.Append('_');
+        }
+
+        var candidate = chars.ToString();
+        while (candidate.Contains("..")) candidate = candidate.Replace("..", ".");
+        candidate = candidate.Trim('.');
+        if (candidate.Length > MaxLength) candidate = candidate[..MaxLength].TrimEnd('.');
+        return IsValid(candidate) ? candidate : string.Empty;
+    }
+
     public static string NormalizeDisplayName(string? input) => (input ?? string.Empty).Trim();
 
     public static bool IsValidDisplayName(string? displayName) =>

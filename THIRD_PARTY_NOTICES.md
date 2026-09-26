@@ -43,6 +43,12 @@ LGPL components (TagLib#) are shipped as separate, unmodified DLLs (`TagLibSharp
 
 The source code of the MPL-2.0 components is available at the source links above. AxePower does not modify them.
 
+### Brand icons (account sign-in)
+
+| Component | Version | License | Source | How it is used |
+|---|---|---|---|---|
+| Simple Icons (Google, GitHub, Discord and Steam logos) | 16.32.0 | CC0-1.0 | https://github.com/simple-icons/simple-icons | The SVG path data of four icons is embedded in the sign-in dialog. The logos themselves are trademarks of Google, GitHub, Discord and Valve, shown only to label their sign-in buttons. |
+
 ### Adapted source code (Uninstaller Pro)
 
 | Component | License | Source | How it is used |

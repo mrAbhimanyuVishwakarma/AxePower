@@ -20,6 +20,13 @@ internal sealed class FakeAccountApi : IAccountApi
     public Func<string, string?, string?, AccountProfile> UpdateProfile { get; set; } = (_, _, _) => Profile();
     public Func<string, bool> Available { get; set; } = _ => true;
     public Action Delete { get; set; } = () => { };
+    public Func<AccountProvider, string, string, AuthSession> Exchange { get; set; } = (_, _, _) => throw new InvalidOperationException("Exchange not set");
+
+    public Uri BuildSignInUrl(AccountProvider provider, Uri redirect, string codeChallenge)
+    { Calls.Add("BuildSignInUrl"); return new Uri($"https://auth.example/{provider}?redirect={Uri.EscapeDataString(redirect.ToString())}&challenge={codeChallenge}"); }
+
+    public Task<AuthSession> ExchangeCodeAsync(AccountProvider provider, string code, string codeVerifier, CancellationToken ct)
+    { Calls.Add("Exchange"); return Task.FromResult(Exchange(provider, code, codeVerifier)); }
 
     public Task<AuthSession?> SignUpAsync(string email, string password, IReadOnlyDictionary<string, string> metadata, CancellationToken ct)
     { Calls.Add("SignUp"); return Task.FromResult(SignUp(metadata)); }

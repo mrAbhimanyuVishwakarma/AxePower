@@ -20,6 +20,12 @@ public interface IAccountApi
 
     Task<AuthSession> SignInWithPasswordAsync(string email, string password, CancellationToken ct);
     Task<AuthSession> RefreshAsync(string refreshToken, CancellationToken ct);
+
+    /// <summary>The page that starts a browser sign-in with <paramref name="provider"/>, returning to <paramref name="redirect"/>.</summary>
+    Uri BuildSignInUrl(AccountProvider provider, Uri redirect, string codeChallenge);
+
+    /// <summary>Trades the code the browser brought back, plus the PKCE verifier, for a session.</summary>
+    Task<AuthSession> ExchangeCodeAsync(AccountProvider provider, string code, string codeVerifier, CancellationToken ct);
     Task RequestPasswordResetAsync(string email, CancellationToken ct);
     Task SignOutAsync(string accessToken, CancellationToken ct);
 
@@ -100,6 +106,39 @@ public sealed class SupabaseAccountApi : IAccountApi, IDisposable
             throw new AccountException(AccountError.SessionExpired, "Your session has ended. Sign in again.", ex);
         }
     }
+
+    public Uri BuildSignInUrl(AccountProvider provider, Uri redirect, string codeChallenge)
+    {
+        var redirectTo = Uri.EscapeDataString(redirect.ToString());
+        var challenge = Uri.EscapeDataString(codeChallenge);
+
+        // Steam is OpenID 2.0, which Supabase Auth does not speak; our steam-login function does.
+        var path = provider == AccountProvider.Steam
+            ? $"functions/v1/steam-login?redirect={redirectTo}&challenge={challenge}"
+            : $"auth/v1/authorize?provider={ProviderId(provider)}&redirect_to={redirectTo}" +
+              $"&code_challenge={challenge}&code_challenge_method=s256";
+
+        return new Uri(_project.Url, path);
+    }
+
+    public async Task<AuthSession> ExchangeCodeAsync(AccountProvider provider, string code, string codeVerifier, CancellationToken ct)
+    {
+        var json = provider == AccountProvider.Steam
+            ? await SendAsync(HttpMethod.Post, "functions/v1/steam-login",
+                new JsonObject { ["action"] = "exchange", ["code"] = code, ["verifier"] = codeVerifier }, null, ct)
+            : await SendAsync(HttpMethod.Post, "auth/v1/token?grant_type=pkce",
+                new JsonObject { ["auth_code"] = code, ["code_verifier"] = codeVerifier }, null, ct);
+        return ParseSession(json);
+    }
+
+    internal static string ProviderId(AccountProvider provider) => provider switch
+    {
+        AccountProvider.Google => "google",
+        AccountProvider.GitHub => "github",
+        AccountProvider.Discord => "discord",
+        AccountProvider.Steam => "steam",
+        _ => throw new ArgumentOutOfRangeException(nameof(provider))
+    };
 
     public Task RequestPasswordResetAsync(string email, CancellationToken ct) =>
         SendAsync(HttpMethod.Post, "auth/v1/recover", new JsonObject { ["email"] = email }, null, ct);

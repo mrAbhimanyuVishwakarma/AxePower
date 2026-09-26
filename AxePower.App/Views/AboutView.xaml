@@ -194,9 +194,9 @@
 
                                 <!-- Signed in (or waiting for a username) -->
                                 <StackPanel Visibility="{Binding Account.HasAccount, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="Email" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="{Binding Account.SignedInWith}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding Account.AccountEmail}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,3,0,0"
-                                               TextTrimming="CharacterEllipsis"/>
+                                               TextTrimming="CharacterEllipsis" Visibility="{Binding Account.HasEmail, Converter={StaticResource BoolToVis}}"/>
 
                                     <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,14"/>
 

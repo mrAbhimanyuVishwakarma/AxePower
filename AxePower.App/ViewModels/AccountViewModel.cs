@@ -58,7 +58,19 @@ public partial class AccountViewModel : ObservableObject
 
     public string DisplayName => State.Profile?.DisplayName ?? (NeedsProfile ? "Almost there" : "Not signed in");
     public string Handle => State.Profile is { } p ? "@" + p.Username : string.Empty;
-    public string AccountEmail => State.Email ?? string.Empty;
+    /// <summary>The email to show; Steam accounts have only a placeholder address, so none.</summary>
+    public string AccountEmail => IsSteamAccount ? string.Empty : State.Email ?? string.Empty;
+    public bool HasEmail => AccountEmail.Length > 0;
+    public bool IsSteamAccount => string.Equals(State.Provider, "steam", StringComparison.OrdinalIgnoreCase);
+
+    public string SignedInWith => State.Provider?.ToLowerInvariant() switch
+    {
+        "google" => "Signed in with Google",
+        "github" => "Signed in with GitHub",
+        "discord" => "Signed in with Discord",
+        "steam" => "Signed in with Steam",
+        _ => "Signed in with email"
+    };
     public string Initials => string.IsNullOrEmpty(State.Initials) ? "?" : State.Initials;
     public string? AvatarUrl => State.Profile?.AvatarUrl;
     public bool HasAvatar => !string.IsNullOrEmpty(AvatarUrl);
@@ -87,7 +99,7 @@ public partial class AccountViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DialogTitle), nameof(DialogSubtitle), nameof(IsSignInMode), nameof(IsSignUpMode),
         nameof(IsForgotMode), nameof(IsCheckEmailMode), nameof(IsChooseUsernameMode), nameof(IsEditMode),
-        nameof(IsConfirmDeleteMode), nameof(ShowsUsernameField), nameof(ShowsPasswordField))]
+        nameof(IsConfirmDeleteMode), nameof(ShowsUsernameField), nameof(ShowsPasswordField), nameof(ShowsProviderButtons))]
     private AccountDialogMode _mode;
 
     [ObservableProperty] private string _email = string.Empty;
@@ -110,6 +122,21 @@ public partial class AccountViewModel : ObservableObject
     private string _usernameHint = string.Empty;
 
     [ObservableProperty] private bool _isUsernameHintGood;
+
+    /// <summary>A one-click sign-in is waiting for the browser to come back.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotWaitingForBrowser))]
+    private bool _isWaitingForBrowser;
+
+    [ObservableProperty] private string _waitingMessage = string.Empty;
+
+    public bool IsNotWaitingForBrowser => !IsWaitingForBrowser;
+    public bool ShowsProviderButtons => Mode is AccountDialogMode.SignIn or AccountDialogMode.SignUp;
+
+    private CancellationTokenSource? _browserSignIn;
+
+    /// <summary>Opens a URL in the user's browser. Replaced in tests.</summary>
+    public Action<Uri> OpenBrowser { get; set; } = OpenInUserBrowser;
 
     /// <summary>Set from the view's PasswordBox; a PasswordBox cannot be bound.</summary>
     public string Password { get; set; } = string.Empty;
@@ -175,6 +202,7 @@ public partial class AccountViewModel : ObservableObject
     [RelayCommand]
     private void CloseDialog()
     {
+        if (IsWaitingForBrowser) { _browserSignIn?.Cancel(); return; }
         if (!IsBusy) Close();
     }
 
@@ -259,6 +287,44 @@ public partial class AccountViewModel : ObservableObject
         await _account.DeleteAccountAsync();
         Close();
     });
+
+    /// <summary>Google, GitHub, Discord or Steam: finish in the browser, then come back here.</summary>
+    [RelayCommand]
+    private Task SignInWith(string providerName) => RunAsync(async () =>
+    {
+        if (!Enum.TryParse<AccountProvider>(providerName, ignoreCase: true, out var provider)) return;
+
+        using var cts = _browserSignIn = new CancellationTokenSource();
+        WaitingMessage = $"Finish signing in with {provider} in your browser, then come back here.";
+        IsWaitingForBrowser = true;
+        try
+        {
+            await _account.SignInWithProviderAsync(provider, OpenBrowser, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // the user pressed Cancel
+        }
+        finally
+        {
+            IsWaitingForBrowser = false;
+            _browserSignIn = null;
+        }
+
+        if (NeedsProfile)
+        {
+            Open(AccountDialogMode.ChooseUsername);
+            Username = _account.SuggestedUsername;
+            NewDisplayName = _account.SuggestedDisplayName;
+        }
+        else
+        {
+            Close();
+        }
+    });
+
+    [RelayCommand]
+    private void CancelBrowserSignIn() => _browserSignIn?.Cancel();
 
     [RelayCommand]
     private Task SignOut() => RunAsync(() => _account.SignOutAsync());
@@ -372,6 +438,19 @@ public partial class AccountViewModel : ObservableObject
     private void Refresh()
     {
         OnPropertyChanged(string.Empty); // every state-derived property at once
+    }
+
+    /// <summary>
+    /// Opens the page through Explorer rather than directly. AxePower usually runs elevated, and a
+    /// browser started straight from it would run elevated too, without the user's profile or saved
+    /// sign-ins; Explorer hands the URL to the browser in the user's normal session.
+    /// </summary>
+    private static void OpenInUserBrowser(Uri url)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{url.AbsoluteUri}\"")
+        {
+            UseShellExecute = false
+        });
     }
 
     private static void OnUi(Action action)
