@@ -14,6 +14,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <conv:InverseBooleanConverter x:Key="InverseBool"/>
 
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Width" Value="34"/>
@@ -125,6 +126,25 @@
             <Setter Property="Padding" Value="9,6"/>
             <Setter Property="FontSize" Value="11"/>
         </Style>
+        <Style x:Key="RosterSectionHeader" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="4,4,0,6"/>
+        </Style>
+
+        <!-- A friend's round avatar: their provider picture, otherwise their initial -->
+        <DataTemplate x:Key="FriendAvatar">
+            <Grid Width="38" Height="38">
+                <Ellipse Fill="{DynamicResource HoverBackgroundBrush}"/>
+                <TextBlock Text="{Binding Initials}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Ellipse Visibility="{Binding HasAvatar, Converter={StaticResource BoolToVis}}">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="{Binding AvatarUrl}" Stretch="UniformToFill"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>
@@ -134,7 +154,8 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Collapsible Friends roster. The app's permanent navigation remains in MainWindow. -->
+        <!-- Collapsible Friends roster. The app's permanent navigation remains in MainWindow.
+             Who you are is shown once, by the sidebar's profile item, so the roster has no footer. -->
         <Border Grid.Column="0" Width="268" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0"
                 Visibility="{Binding IsFriendsPanelOpen, Converter={StaticResource BoolToVis}}">
             <Grid>
@@ -143,13 +164,15 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <Grid Margin="16,15,10,12">
                     <TextBlock Text="Friends" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Style="{StaticResource IconButton}" Command="{Binding OpenJoinModalCommand}" ToolTip="Add a friend or join a room">
+                        <Button Style="{StaticResource IconButton}" Command="{Binding OpenSettingsCommand}" ToolTip="Friends settings" AutomationProperties.Name="Friends settings">
+                            <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                        </Button>
+                        <Button Style="{StaticResource IconButton}" Command="{Binding OpenJoinModalCommand}" ToolTip="Add a friend or join a room" AutomationProperties.Name="Add a friend or join a room">
                             <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                         </Button>
                         <Button Style="{StaticResource IconButton}" Command="{Binding ToggleFriendsPanelCommand}" ToolTip="Collapse friends list">
@@ -207,69 +230,177 @@
                 </Grid>
 
                 <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="10,4,10,8">
-                    <ItemsControl ItemsSource="{Binding FilteredFriends}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="9" Margin="0,0,0,6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid Margin="0,0,9,0">
-                                            <Border Width="38" Height="38" CornerRadius="19" Background="{DynamicResource HoverBackgroundBrush}">
-                                                <TextBlock Text="{Binding Initials}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <Ellipse Width="10" Height="10" Fill="{Binding StatusBadgeColor}" Stroke="{DynamicResource CardBackgroundBrush}" StrokeThickness="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
-                                        </Grid>
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Text="{Binding StatusDisplay}" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button Style="{StaticResource FriendActionButton}" ToolTip="Call or join"
-                                                    Command="{Binding DataContext.CallFriendCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
-                                                <TextBlock Text="&#xE717;" FontFamily="Segoe MDL2 Assets"/>
-                                            </Button>
-                                            <Button Style="{StaticResource FriendActionButton}" ToolTip="Watch screen"
-                                                    Command="{Binding DataContext.WatchFriendStreamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
-                                                <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets"/>
-                                            </Button>
-                                            <Button Style="{StaticResource FriendActionButton}" ToolTip="Message"
-                                                    Command="{Binding DataContext.MessageFriendCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
-                                                <TextBlock Text="&#xE8BD;" FontFamily="Segoe MDL2 Assets"/>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                    <StackPanel>
 
-                <Border Grid.Row="4" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="14,11">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Border Width="34" Height="34" CornerRadius="17" Background="{DynamicResource HoverBackgroundBrush}" Margin="0,0,9,0">
-                            <TextBlock Text="{Binding UserProfile.Initials}" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding UserProfile.GamerTag}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" FontWeight="SemiBold"/>
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Online" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5"/>
+                        <!-- Signed out: rooms by link still work; friends need an account -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,2,0,10"
+                                Visibility="{Binding AccountFriends.IsSignedOut, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                            <StackPanel>
+                                <TextBlock Text="Add friends by @username" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="SemiBold"/>
+                                <TextBlock Text="Sign in to see when friends are online and send them invites. Room links work without an account."
+                                           Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,4,0,10" LineHeight="16"/>
+                                <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding AccountFriends.Account.OpenSignInCommand}" Padding="0,8" FontSize="12.5">
+                                    <TextBlock Text="Sign in"/>
+                                </Button>
                             </StackPanel>
+                        </Border>
+
+                        <!-- Requests -->
+                        <StackPanel Visibility="{Binding AccountFriends.HasRequests, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" Margin="0,0,0,6">
+                            <TextBlock Text="{Binding AccountFriends.RequestsHeader}" Style="{StaticResource RosterSectionHeader}"/>
+                            <ItemsControl ItemsSource="{Binding AccountFriends.Incoming}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="9" Margin="0,0,0,6" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FriendAvatar}" Margin="0,0,9,0"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="wants to be friends" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource FriendActionButton}" ToolTip="Accept" AutomationProperties.Name="Accept"
+                                                            Command="{Binding DataContext.AccountFriends.AcceptCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                        <TextBlock Text="&#xE8FB;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource SuccessBrush}"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource FriendActionButton}" ToolTip="Decline" AutomationProperties.Name="Decline"
+                                                            Command="{Binding DataContext.AccountFriends.DeclineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                        <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding AccountFriends.Outgoing}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="9" Margin="0,0,0,6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FriendAvatar}" Margin="0,0,9,0"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="Request sent" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="2" Style="{StaticResource FriendActionButton}" ToolTip="Cancel request" AutomationProperties.Name="Cancel request"
+                                                        Command="{Binding DataContext.AccountFriends.RemoveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
-                        <Button Grid.Column="2" Style="{StaticResource IconButton}" Command="{Binding OpenSettingsCommand}" ToolTip="Friends settings">
-                            <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="15"/>
-                        </Button>
-                    </Grid>
-                </Border>
+
+                        <!-- Friends on the account -->
+                        <TextBlock Text="FRIENDS" Style="{StaticResource RosterSectionHeader}"
+                                   Visibility="{Binding AccountFriends.IsSignedIn, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"/>
+                        <TextBlock Text="No friends yet. Use + to add someone by @username." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="4,2,4,10"
+                                   Visibility="{Binding AccountFriends.ShowsNoFriendsHint, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"/>
+                        <TextBlock Text="{Binding AccountFriends.NoneInFilterText}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="4,2,4,10"
+                                   Visibility="{Binding AccountFriends.ShowsNoneInFilterHint, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"/>
+                        <ItemsControl ItemsSource="{Binding AccountFriends.FilteredFriends}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="9" Margin="0,0,0,6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid Margin="0,0,9,0">
+                                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FriendAvatar}"/>
+                                                <Ellipse Width="11" Height="11" Fill="{Binding StatusColor}" Stroke="{DynamicResource CardBackgroundBrush}" StrokeThickness="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                            </Grid>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Handle}"/>
+                                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Style="{StaticResource FriendActionButton}" ToolTip="Invite to a call" AutomationProperties.Name="Invite to a call"
+                                                        Command="{Binding DataContext.AccountFriends.InviteToCallCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <TextBlock Text="&#xE717;" FontFamily="Segoe MDL2 Assets"/>
+                                                </Button>
+                                                <Button Style="{StaticResource FriendActionButton}" ToolTip="Invite to watch your screen" AutomationProperties.Name="Invite to watch your screen"
+                                                        Command="{Binding DataContext.AccountFriends.InviteToWatchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets"/>
+                                                </Button>
+                                                <Button Style="{StaticResource FriendActionButton}" ToolTip="More" AutomationProperties.Name="More"
+                                                        Tag="{Binding DataContext.AccountFriends, RelativeSource={RelativeSource AncestorType=UserControl}}" Click="OpenFriendMenu_Click">
+                                                    <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets"/>
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu>
+                                                            <MenuItem Header="Remove friend"
+                                                                      Command="{Binding PlacementTarget.Tag.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                                            <MenuItem Header="Block"
+                                                                      Command="{Binding PlacementTarget.Tag.BlockCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"/>
+                                                        </ContextMenu>
+                                                    </Button.ContextMenu>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Saved rooms: the older local contacts (a name and a room link), kept so nothing breaks -->
+                        <TextBlock Text="SAVED ROOMS" Style="{StaticResource RosterSectionHeader}" Margin="4,10,0,6"
+                                   Visibility="{Binding HasSavedRooms, Converter={StaticResource BoolToVis}}"/>
+                        <ItemsControl ItemsSource="{Binding FilteredFriends}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="8" Padding="9" Margin="0,0,0,6" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid Margin="0,0,9,0">
+                                                <Border Width="38" Height="38" CornerRadius="19" Background="{DynamicResource HoverBackgroundBrush}">
+                                                    <TextBlock Text="{Binding Initials}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <Ellipse Width="10" Height="10" Fill="{Binding StatusBadgeColor}" Stroke="{DynamicResource CardBackgroundBrush}" StrokeThickness="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                            </Grid>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding StatusDisplay}" Foreground="{DynamicResource MutedTextBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Style="{StaticResource FriendActionButton}" ToolTip="Call or join"
+                                                        Command="{Binding DataContext.CallFriendCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <TextBlock Text="&#xE717;" FontFamily="Segoe MDL2 Assets"/>
+                                                </Button>
+                                                <Button Style="{StaticResource FriendActionButton}" ToolTip="Watch screen"
+                                                        Command="{Binding DataContext.WatchFriendStreamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets"/>
+                                                </Button>
+                                                <Button Style="{StaticResource FriendActionButton}" ToolTip="Message"
+                                                        Command="{Binding DataContext.MessageFriendCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <TextBlock Text="&#xE8BD;" FontFamily="Segoe MDL2 Assets"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Border>
 
@@ -607,11 +738,47 @@
             <Border Width="430" Background="{DynamicResource PopupBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="22" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
                     <Grid Margin="0,0,0,16">
-                        <TextBlock Text="Call or add a friend" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Add a friend or join a room" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="Bold"/>
                         <Button Style="{StaticResource IconButton}" HorizontalAlignment="Right" Command="{Binding CloseJoinModalCommand}">
                             <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"/>
                         </Button>
                     </Grid>
+                    <!-- Add by @username (account friends) -->
+                    <StackPanel Visibility="{Binding AccountFriends.IsSignedIn, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                        <TextBlock Text="Add a friend by @username" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,5"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding AccountFriends.AddUsername, UpdateSourceTrigger=PropertyChanged}" Background="{DynamicResource WindowBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="10,8" AutomationProperties.Name="Friend's username">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Return" Command="{Binding AccountFriends.SendRequestCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Grid.Column="1" Command="{Binding AccountFriends.SendRequestCommand}" Style="{StaticResource PrimaryButtonStyle}" Padding="14,7" FontSize="12" Margin="8,0,0,0"
+                                    IsEnabled="{Binding AccountFriends.IsBusy, Converter={StaticResource InverseBool}}">
+                                <TextBlock Text="Send request"/>
+                            </Button>
+                        </Grid>
+                        <TextBlock Text="{Binding AccountFriends.AddStatus}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AccountFriends.AddStatusIsError}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Grid Margin="0,14,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Height="1" Background="{DynamicResource DividerBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="or join a room with its link" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="10,0"/>
+                            <Border Grid.Column="2" Height="1" Background="{DynamicResource DividerBrush}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+
                     <TextBlock Text="Friend name" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,5"/>
                     <TextBox Text="{Binding FriendNameInput, UpdateSourceTrigger=PropertyChanged}" Background="{DynamicResource WindowBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="10,8" Margin="0,0,0,12"/>
                     <TextBlock Text="Private room link or trusted LAN/VPN address" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11" Margin="0,0,0,5"/>
@@ -621,7 +788,7 @@
                         <Button Grid.Column="1" Content="Paste" Command="{Binding PasteJoinAddressCommand}" Style="{StaticResource SecondaryButtonStyle}" Padding="12,7" FontSize="12" Margin="8,0,0,0"/>
                     </Grid>
                     <TextBlock Text="{Binding JoinStatusMessage}" Foreground="{DynamicResource ErrorBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                    <CheckBox IsChecked="{Binding RememberFriend}" Content="Remember in my Friends list" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,12,0,0"/>
+                    <CheckBox IsChecked="{Binding RememberFriend}" Content="Remember in Saved rooms" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,12,0,0"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
                         <Button Content="Cancel" Command="{Binding CloseJoinModalCommand}" Style="{StaticResource SecondaryButtonStyle}" Padding="15,8" FontSize="12" Margin="0,0,8,0"/>
                         <Button Content="Connect" Command="{Binding ConnectToRoomCommand}" Style="{StaticResource PrimaryButtonStyle}" Padding="18,8" FontSize="12"/>

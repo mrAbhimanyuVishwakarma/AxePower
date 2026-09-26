@@ -34,6 +34,17 @@ public partial class ShareScreenView : UserControl
         Unloaded += OnUnloaded;
     }
 
+    /// <summary>The "⋯" on a friend opens its Remove / Block menu on a left click too.</summary>
+    private void OpenFriendMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { ContextMenu: { } menu } button)
+        {
+            menu.PlacementTarget = button;
+            menu.DataContext = button.DataContext;
+            menu.IsOpen = true;
+        }
+    }
+
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (_viewModel != null) _viewModel.PropertyChanged -= OnViewModelPropertyChanged;

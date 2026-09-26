@@ -404,6 +404,7 @@ public partial class App : Application
         services.AddTransient<LanDropViewModel>();
         services.AddTransient<TerminalViewModel>();
         services.AddSingleton<ShareScreenSettingsViewModel>();   // shared by the stage and the Settings page
+        services.AddSingleton<FriendsHubViewModel>();
         services.AddSingleton<ShareScreenViewModel>();   // singleton: a live stream must survive page switches
 
         // Views

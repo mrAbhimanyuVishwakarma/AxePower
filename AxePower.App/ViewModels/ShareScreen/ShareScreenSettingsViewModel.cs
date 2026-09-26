@@ -91,12 +91,16 @@ public partial class ShareScreenSettingsViewModel : ObservableObject
         }
     }
 
+    private readonly AxePower.Core.Services.Friends.FriendsService? _friends;
+
     public ShareScreenSettingsViewModel(
         IShareDeviceProvider deviceProvider,
         IShareToolProvider toolProvider,
         SettingsService settingsService,
-        LogService logService)
+        LogService logService,
+        AxePower.Core.Services.Friends.FriendsService? friends = null)
     {
+        _friends = friends;
         _deviceProvider = deviceProvider;
         _toolProvider = toolProvider;
         _settingsService = settingsService;
@@ -210,6 +214,59 @@ public partial class ShareScreenSettingsViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(SourceSummary));
+    }
+
+    // -- Account friends: privacy and blocked people ----------------------------------------------
+
+    /// <summary>Friends may see "Playing …", "In a call" and "Sharing screen".</summary>
+    public bool ShowActivityToFriends
+    {
+        get => _friends?.ShareActivity ?? _settingsService.GetSettings().ShareScreen.ShareActivityWithFriends;
+        set { if (_friends is not null) _friends.ShareActivity = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>Friends see you as offline, whatever you're doing.</summary>
+    public bool AppearOfflineToFriends
+    {
+        get => _friends?.AppearOffline ?? _settingsService.GetSettings().ShareScreen.AppearOffline;
+        set { if (_friends is not null) _friends.AppearOffline = value; OnPropertyChanged(); }
+    }
+
+    public ObservableCollection<AxePower.Core.Services.Friends.BlockedUser> BlockedPeople { get; } = new();
+
+    [ObservableProperty] private string _blockedStatus = string.Empty;
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private async System.Threading.Tasks.Task LoadBlockedAsync()
+    {
+        if (_friends is not { IsActive: true }) { BlockedStatus = "Sign in to see the people you've blocked."; return; }
+        try
+        {
+            var blocked = await _friends.ListBlockedAsync();
+            BlockedPeople.Clear();
+            foreach (var person in blocked) BlockedPeople.Add(person);
+            BlockedStatus = blocked.Count == 0 ? "You haven't blocked anyone." : string.Empty;
+        }
+        catch (AxePower.Core.Services.Accounts.AccountException ex)
+        {
+            BlockedStatus = ex.Message;
+        }
+    }
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private async System.Threading.Tasks.Task UnblockAsync(AxePower.Core.Services.Friends.BlockedUser? person)
+    {
+        if (person is null || _friends is null) return;
+        try
+        {
+            await _friends.UnblockAsync(person.UserId);
+            BlockedPeople.Remove(person);
+            if (BlockedPeople.Count == 0) BlockedStatus = "You haven't blocked anyone.";
+        }
+        catch (AxePower.Core.Services.Accounts.AccountException ex)
+        {
+            BlockedStatus = ex.Message;
+        }
     }
 
     public void AddOrUpdateFriend(string name, string address, AxePower.Core.Models.Friends.FriendStatus status = AxePower.Core.Models.Friends.FriendStatus.Offline)

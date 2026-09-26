@@ -904,6 +904,37 @@
                 </Grid>
             </Border>
 
+            <!-- A friend's invite (call or watch): pops up on any page, bottom right -->
+            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="999"
+                    DataContext="{Binding ShareScreenVm.AccountFriends}" WindowChrome.IsHitTestVisibleInChrome="True"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,72" Width="340"
+                    Background="{DynamicResource PopupBackgroundBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
+                    CornerRadius="14" Padding="16,14" Effect="{DynamicResource CardShadowEffect}"
+                    Visibility="{Binding IsInvitePopupOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"
+                    AutomationProperties.Name="Friend invite">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="42" Height="42" Margin="0,0,12,0" VerticalAlignment="Top">
+                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.2"/>
+                        <TextBlock Text="{Binding InviteFromInitials}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding InviteTitle}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding InviteSubtitle}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,2,0,12"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding DeclineInviteCommand}" Padding="16,7" FontSize="12.5" Margin="0,0,8,0" Content="Decline"/>
+                            <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding JoinInviteCommand}" Padding="22,7" FontSize="12.5">
+                                <TextBlock Text="Join"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- Account dialog (sign in, sign up, username, edit, delete): over the whole window -->
             <views:AccountDialogView Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="1001"
                                      DataContext="{Binding AccountVm}" WindowChrome.IsHitTestVisibleInChrome="True"

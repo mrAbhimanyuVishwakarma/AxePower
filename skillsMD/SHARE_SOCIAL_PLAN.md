@@ -96,11 +96,31 @@ builds, unit tests, or single-process loopback checks.
   > **Known and minor:** a friend's presence arriving live during a reload can be replaced by the
   > older fetched value until their next heartbeat (60 s).
   > **Moved to F3:** feeding "In a call" / "Sharing screen" from the Friends page (`SetSessionActivity`).
+  > **First live run (owner's app, 13:32-13:40 on 2026-09-26):** it started signed in as @mrabhimanyu
+  > and ran for 7 minutes with no presence-publish failure and no Realtime refusal or disconnect
+  > logged. Every failure path logs, so this points to both working as a signed-in user. It is not yet
+  > confirmed by reading the `presence` row.
 - **F3 - Friends UI.**
   - The account identity in the Friends footer: avatar and @username instead of the Windows name.
   - The roster from the account; Online/All/Live filters become real.
   - Add by @username; incoming and outgoing requests; block/remove.
   - An invite pop-up with Join; the "Saved rooms" section.
   - Signed out: "Sign in to add friends" while room codes keep working.
+  > **Status 2026-09-26: built.**
+  > - `FriendsHubViewModel` on the Friends page; the roster header is ⚙ + ‹ and there is no footer.
+  > - Sections: a sign-in card (signed out), Requests (accept/decline, cancel), Friends (status dot,
+  >   "Playing …", invite to call, invite to watch, ⋯ Remove/Block with a confirmation), and Saved rooms
+  >   (the old contacts, unchanged).
+  > - "+" dialog: add by @username above the room-link form.
+  > - Invites: a pop-up on every page, bottom right, with Join/Decline. Join opens Friends and connects;
+  >   it isn't saved as a room. A watch invite needs the screen shared first.
+  > - Room and chat names use the account's display name when signed in. Call/share state feeds presence.
+  > - Settings → Friends: Privacy (show activity, appear offline) and Blocked people (Show/Unblock).
+  >
+  > **Verified:** 21 page tests (lists, filters, requests, block confirmation, the invite pop-up and join,
+  > invites, presence mapping, the view loading with no footer); off-screen render in Glass; the full
+  > suite (1040 passed, 1 skipped).
+  > **Not yet seen:** the invite pop-up and the Settings privacy section in the real window (not rendered).
+  > **Not yet run:** anything between two accounts (F4).
 - **F4 - Live test** with a second account on a second PC or Windows user: request, accept, presence,
   invite, join, and the call/screen over the same Wi-Fi and over Tailscale.

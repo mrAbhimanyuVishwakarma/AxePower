@@ -15,7 +15,7 @@ namespace AxePower.Tests.Friends;
 
 public class FriendsHubTests
 {
-    private class FakeShareService : IShareScreenService
+    internal class FakeShareService : IShareScreenService
     {
         public ShareSessionStatus Status => ShareSessionStatus.Idle;
         public event EventHandler<ShareSessionStatus>? StatusChanged { add { } remove { } }
@@ -31,14 +31,14 @@ public class FriendsHubTests
         public void SendVoicePacket(byte[] opusPacket) { }
     }
 
-    private class FakeDeviceProvider : IShareDeviceProvider
+    internal class FakeDeviceProvider : IShareDeviceProvider
     {
         public IReadOnlyList<CaptureDisplay> GetDisplays() => Array.Empty<CaptureDisplay>();
         public IReadOnlyList<ShareAudioDevice> GetRenderDevices() => Array.Empty<ShareAudioDevice>();
         public IReadOnlyList<ShareAudioDevice> GetCaptureDevices() => Array.Empty<ShareAudioDevice>();
     }
 
-    private class FakeToolProvider : IShareToolProvider
+    internal class FakeToolProvider : IShareToolProvider
     {
         public ShareToolStatus FindFfmpeg() => ShareToolStatus.Missing("ffmpeg");
         public ShareToolStatus FindMediaMtx() => ShareToolStatus.Missing("mediamtx");

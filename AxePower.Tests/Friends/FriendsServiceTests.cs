@@ -289,60 +289,6 @@ public sealed class FriendsServiceTests : IDisposable
     {
         public DateTime UtcNow => Now;
     }
-
-    private sealed class FakeFeed : IRealtimeFeed
-    {
-        public event EventHandler<RealtimeChange>? Changed;
-        public event EventHandler<bool>? ConnectionChanged;
-        public bool Started { get; private set; }
-        public bool Disposed { get; private set; }
-        public string? UserId { get; private set; }
-
-        public void Start(string userId, Func<CancellationToken, Task<string>> accessToken) { Started = true; UserId = userId; }
-        public void Push(RealtimeChange change) => Changed?.Invoke(this, change);
-        public void Connect(bool on) => ConnectionChanged?.Invoke(this, on);
-        public void Dispose() => Disposed = true;
-    }
-
-    private sealed class FakeFriendsApi : IFriendsApi
-    {
-        public List<string> Calls { get; } = new();
-        public IReadOnlyList<Friend> FriendsList { get; set; } = Array.Empty<Friend>();
-        public Dictionary<string, FriendPresence> Presence { get; } = new();
-        public List<MyPresence> Published { get; } = new();
-        public List<string> PresenceAskedFor { get; } = new();
-        public string? LastRequestedUsername { get; private set; }
-        public Action OnSendRequest { get; set; } = () => { };
-
-        public Task<IReadOnlyList<Friend>> ListFriendsAsync(string accessToken, CancellationToken ct)
-        { lock (Calls) Calls.Add("ListFriends"); return Task.FromResult(FriendsList); }
-
-        public Task<FriendRequestResult> SendFriendRequestAsync(string accessToken, string username, CancellationToken ct)
-        { lock (Calls) Calls.Add("SendRequest"); OnSendRequest(); LastRequestedUsername = username; return Task.FromResult(FriendRequestResult.Requested); }
-
-        public Task RespondToRequestAsync(string accessToken, string friendshipId, bool accept, CancellationToken ct) => Task.CompletedTask;
-        public Task RemoveFriendAsync(string accessToken, string userId, CancellationToken ct) => Task.CompletedTask;
-        public Task BlockAsync(string accessToken, string userId, CancellationToken ct) => Task.CompletedTask;
-        public Task UnblockAsync(string accessToken, string userId, CancellationToken ct) => Task.CompletedTask;
-        public Task<IReadOnlyList<BlockedUser>> ListBlockedAsync(string accessToken, CancellationToken ct) => Task.FromResult<IReadOnlyList<BlockedUser>>(Array.Empty<BlockedUser>());
-
-        public Task<IReadOnlyDictionary<string, FriendPresence>> GetPresenceAsync(string accessToken, IReadOnlyCollection<string> userIds, CancellationToken ct)
-        {
-            lock (Calls) { PresenceAskedFor.Clear(); PresenceAskedFor.AddRange(userIds); }
-            return Task.FromResult<IReadOnlyDictionary<string, FriendPresence>>(Presence.Where(p => userIds.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value));
-        }
-
-        public Task PublishPresenceAsync(string accessToken, string userId, MyPresence presence, CancellationToken ct)
-        { lock (Calls) Published.Add(presence); return Task.CompletedTask; }
-
-        public Task<FriendInvite> SendInviteAsync(string accessToken, string toUserId, InviteKind kind, string roomLink, CancellationToken ct) =>
-            Task.FromResult(new FriendInvite("i", Me, toUserId, kind, roomLink, Now, Now.AddMinutes(10)));
-
-        public Task<IReadOnlyList<FriendInvite>> ListIncomingInvitesAsync(string accessToken, string userId, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<FriendInvite>>(Array.Empty<FriendInvite>());
-
-        public Task DismissInviteAsync(string accessToken, string inviteId, CancellationToken ct) => Task.CompletedTask;
-    }
 }
 
 /// <summary>The Friends wire formats: Realtime frames and the REST calls.</summary>
