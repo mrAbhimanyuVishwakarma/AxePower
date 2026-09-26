@@ -147,6 +147,29 @@ public class FriendsHubTests
     }
 
     [Fact]
+    public void TheMutedMicrophone_IsASlashedMic_NotTheSearchGlyph()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "AxePower_FriendsTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var log = new LogService();
+            var settingsVm = new ShareScreenSettingsViewModel(
+                new FakeDeviceProvider(), new FakeToolProvider(), new SettingsService(log, tempDir), log);
+            var vm = new ShareScreenViewModel(
+                new FakeShareService(), settingsVm, new NotificationService(), log, new ShareChatStore(Path.Combine(tempDir, "Chat"), log));
+
+            Assert.Equal("", vm.MicGlyph);   // microphone
+            vm.IsMicMuted = true;
+            Assert.Equal("", vm.MicGlyph);   // slashed microphone; E721 would be the search magnifier
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, true); } catch { }
+        }
+    }
+
+    [Fact]
     public void FriendsViewModel_Commands_Message_And_Remove()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), "AxePower_FriendsTest_" + Guid.NewGuid().ToString("N"));

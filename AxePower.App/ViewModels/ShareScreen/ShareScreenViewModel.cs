@@ -295,7 +295,8 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     /// <summary>Speaker or muted-speaker, matching what the stream currently carries.</summary>
     public string AudioGlyph => IsDeafened ? "\uE74F" : "\uE767";
 
-    public string MicGlyph => IsMicMuted ? "\uE721" : "\uE720";
+    /// <summary>Microphone (E720), or the slashed microphone (F781) when muted. E721 is the search magnifier.</summary>
+    public string MicGlyph => IsMicMuted ? "\uF781" : "\uE720";
 
     public string AudioTooltip => IsDeafened ? "Hear the call" : "Deafen call audio";
 
