@@ -11,271 +11,326 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
         <converters:InverseBooleanConverter x:Key="InverseBool" />
+
+        <!-- A row in the AxePower card: accent icon (Tag), label (Content), chevron -->
+        <Style x:Key="ProfileRowButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="row" Background="Transparent" CornerRadius="8" Padding="6,5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid Width="32" Height="32" Margin="0,0,12,0">
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                    <TextBlock Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock Grid.Column="1" Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center" Margin="8,0,2,0"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="row" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
-        <!-- Main Content Area -->
+        <!-- Main Content Area: the Profile page (it replaced About in 2.0.8). Account bindings go through
+             Account (AccountViewModel); everything about the app stays on AboutViewModel itself. -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="69"/>
             </Grid.RowDefinitions>
 
             <!-- Page Title Header -->
             <StackPanel Grid.Row="0" Margin="40,24,40,16">
-                <TextBlock Text="About AxePower" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Learn more about AxePower and what drives us." FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0"/>
+                <TextBlock Text="Profile" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Your AxePower account, and everything about the app." FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0"/>
             </StackPanel>
 
-            <!-- Scrollable Content Grid -->
             <ScrollViewer Grid.Row="1" Margin="40,0,40,16" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <Grid Margin="0,0,12,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.35*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,12,40">
 
-                    <!-- LEFT COLUMN -->
-                    <StackPanel Grid.Column="0">
-                        <!-- Hero Card -->
-                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
+                    <!-- ═══ Hero ═══ -->
+                    <Border CornerRadius="18" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                            Background="{DynamicResource ElevatedCardBackgroundBrush}" Effect="{DynamicResource CardShadowEffect}">
+                        <Grid>
+                            <!-- The skin's accent as a glow from the left, so the banner suits every skin -->
+                            <Border CornerRadius="17" Background="{DynamicResource AccentBrush}" Opacity="0.30" IsHitTestVisible="False">
+                                <Border.OpacityMask>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.6">
+                                        <GradientStop Color="#FF000000" Offset="0"/>
+                                        <GradientStop Color="#40000000" Offset="0.45"/>
+                                        <GradientStop Color="#00000000" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.OpacityMask>
+                            </Border>
+
+                            <Grid Margin="28,26">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Avatar: the provider picture, otherwise initials on the accent -->
+                                <Grid Grid.Column="0" Width="92" Height="92" Margin="0,0,24,0" VerticalAlignment="Center">
+                                    <Ellipse Fill="{DynamicResource WindowBackgroundBrush}"/>
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.22"/>
+                                    <TextBlock Text="{Binding Account.Initials}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Ellipse Visibility="{Binding Account.HasAvatar, Converter={StaticResource BoolToVis}}">
+                                        <Ellipse.Fill>
+                                            <ImageBrush ImageSource="{Binding Account.AvatarUrl}" Stretch="UniformToFill"/>
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <Ellipse Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
+                                </Grid>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Account.DisplayName}" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Account.Handle}" FontSize="14.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,3,0,0"
+                                               Visibility="{Binding Account.IsSignedIn, Converter={StaticResource BoolToVis}}"/>
+
+                                    <!-- Signed in: member since · this PC · online -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0"
+                                                Visibility="{Binding Account.HasAccount, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding Account.MemberSince}" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="  ·  " FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"
+                                                   Visibility="{Binding Account.IsSignedIn, Converter={StaticResource BoolToVis}}"/>
+                                        <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                        <TextBlock Text="{Binding Account.MachineName}" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="  ·  " FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                        <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Account.IsOffline}" Value="True">
+                                                            <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Text="{Binding Account.StatusLine}" FontSize="12.5" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Signed out -->
+                                    <TextBlock Text="Accounts are optional. Sign in to get a profile that AxePower Mobile and Remote Play will use."
+                                               FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,8,0,0" MaxWidth="520" HorizontalAlignment="Left"
+                                               Visibility="{Binding Account.IsSignedOut, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="Pick a @username to finish setting up your profile."
+                                               FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                               Visibility="{Binding Account.NeedsProfile, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+
+                                <!-- Actions -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                                    <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding Account.OpenEditProfileCommand}" Padding="18,9"
+                                            Visibility="{Binding Account.IsSignedIn, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Edit profile" FontSize="13" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding Account.OpenChooseUsernameCommand}"
+                                            Padding="20,10" FontSize="13.5" Visibility="{Binding Account.NeedsProfile, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Choose username"/>
+                                    </Button>
+                                    <Button Style="{DynamicResource SecondaryButtonStyle}" Content="Create account" Command="{Binding Account.OpenSignUpCommand}"
+                                            Padding="18,9" FontSize="13" Margin="0,0,10,0" Visibility="{Binding Account.IsSignedOut, Converter={StaticResource BoolToVis}}"/>
+                                    <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding Account.OpenSignInCommand}"
+                                            Padding="24,10" FontSize="13.5" Visibility="{Binding Account.IsSignedOut, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Sign in"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- ═══ Account | AxePower ═══ -->
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ACCOUNT -->
+                        <Border Grid.Column="0" Style="{StaticResource CardElevatedStyle}" VerticalAlignment="Top">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                    <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Account" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Signed out -->
+                                <StackPanel Visibility="{Binding Account.IsSignedOut, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="No account on this PC." FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="AxePower works fully without one. With an account you get a @username, and later your phone and other PCs can find this one."
+                                               FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,6,0,16" LineHeight="19"/>
+                                    <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding Account.OpenSignInCommand}"
+                                            Padding="0,10" FontSize="13.5" HorizontalAlignment="Stretch">
+                                        <TextBlock Text="Sign in"/>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Signed in (or waiting for a username) -->
+                                <StackPanel Visibility="{Binding Account.HasAccount, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="Email" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="{Binding Account.AccountEmail}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,3,0,0"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,14"/>
+
+                                    <StackPanel Visibility="{Binding Account.IsSignedIn, Converter={StaticResource BoolToVis}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Username" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBlock Text="{Binding Account.Handle}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,3,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Display name" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBlock Text="{Binding Account.DisplayName}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,3,0,0"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="{Binding Account.UsernameLockNote}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,14"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding Account.SignOutCommand}" Padding="18,8">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xF3B1;" FontFamily="Segoe MDL2 Assets" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Sign out" FontSize="13" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding Account.OpenDeleteCommand}" Margin="14,0,0,0" VerticalAlignment="Center" Cursor="Hand"
+                                                Visibility="{Binding Account.IsSignedIn, Converter={StaticResource BoolToVis}}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <TextBlock x:Name="t" Text="Delete account" FontSize="12.5" Foreground="{DynamicResource ErrorBrush}" FontWeight="SemiBold"/>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="t" Property="TextDecorations" Value="Underline"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- AXEPOWER: what the About page used to show -->
+                        <Border Grid.Column="2" Style="{StaticResource CardElevatedStyle}" VerticalAlignment="Top">
                             <StackPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-
-                                    <!-- Main Icon -->
-                                    <Border Grid.Column="0" Width="80" Height="80" CornerRadius="40" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,20,0" VerticalAlignment="Top">
-                                        <Image Source="{DynamicResource AppIconImage}" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <Border Grid.Column="0" Width="52" Height="52" CornerRadius="26" Background="{DynamicResource CardBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Margin="0,0,14,0">
+                                        <Image Source="{DynamicResource AppIconImage}" Width="30" Height="30" RenderOptions.BitmapScalingMode="HighQuality"/>
                                     </Border>
-
-                                    <!-- Product Info -->
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="AxePower" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-
-                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="Version " Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Version}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
-                                        </StackPanel>
-
-                                        <TextBlock Text="AxePower intelligently optimizes your system's power usage to deliver the perfect balance between performance, battery life, and cooling—automatically." 
-                                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" LineHeight="19"/>
+                                        <TextBlock Text="AxePower" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="{Binding ReleaseVersionWithDate}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,2,0,0"/>
                                     </StackPanel>
+                                    <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding CheckForUpdatesCommand}" Cursor="Hand"
+                                            IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="chkBorder" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="14,7">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding CheckButtonText}" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="chkBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
+                                                        <Setter TargetName="chkBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
                                 </Grid>
 
-                                <!-- Developer Section -->
-                                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,20,0,16"/>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <!-- A soft circle of the skin's accent, so the badge suits every theme -->
-                                    <Grid Width="36" Height="36" Margin="0,0,14,0" VerticalAlignment="Center">
-                                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
-                                        <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Grid>
+                                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,16,0,8"/>
 
-                                    <StackPanel VerticalAlignment="Center">
-                                        <Button Command="{Binding OpenDeveloperCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left" Cursor="Hand">
-                                            <Button.Template>
-                                                <ControlTemplate TargetType="Button">
-                                                    <TextBlock Text="Developed by Abhimanyu Vishwakarma" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                                </ControlTemplate>
-                                            </Button.Template>
-                                        </Button>
-                                        <TextBlock Text="Built with performance and efficiency in mind." FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
+                                <Button Style="{StaticResource ProfileRowButton}" Command="{Binding OpenPatchNotesModalCommand}" Tag="&#xE8A5;"
+                                        Content="Release notes" ToolTip="What changed in each version"/>
+                                <Button Style="{StaticResource ProfileRowButton}" Command="{Binding VisitWebsiteCommand}" Tag="&#xE774;"
+                                        Content="Visit website" ToolTip="Features, guides and downloads"/>
+                                <Button Style="{StaticResource ProfileRowButton}" Command="{Binding ContactSupportCommand}" Tag="&#xE715;"
+                                        Content="Contact support" ToolTip="We're here to help"/>
+                                <Button Style="{StaticResource ProfileRowButton}" Command="{Binding OpenDeveloperCommand}" Tag="&#xE77B;"
+                                        Content="Developed by Abhimanyu Vishwakarma" ToolTip="Built with performance and efficiency in mind"/>
 
-                        <!-- Support Card -->
-                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,16,0,0">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16" VerticalAlignment="Center">
-                                    <TextBlock Text="&#xE7F6;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Support" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Visit Website -->
-                                <Button Command="{Binding VisitWebsiteCommand}" Background="Transparent" BorderThickness="0" Padding="0,6" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="itemBorder" Background="Transparent" CornerRadius="8" Padding="6,6">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <!-- A soft circle of the skin's accent, so the badge suits every theme -->
-                                                    <Grid Grid.Column="0" Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
-                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Grid>
-                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                        <TextBlock Text="Visit website" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                                        <TextBlock Text="Explore features, guides, and more." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
-                                                    </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                                </Grid>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="itemBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-
-                                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,6,0,6"/>
-
-                                <!-- Contact Support -->
-                                <Button Command="{Binding ContactSupportCommand}" Background="Transparent" BorderThickness="0" Padding="0,6" Cursor="Hand" HorizontalContentAlignment="Stretch">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="itemBorder" Background="Transparent" CornerRadius="8" Padding="6,6">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <!-- A soft circle of the skin's accent, so the badge suits every theme -->
-                                                    <Grid Grid.Column="0" Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
-                                                        <TextBlock Text="&#xE715;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Grid>
-                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                        <TextBlock Text="Contact support" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                                        <TextBlock Text="We're here to help." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
-                                                    </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                                </Grid>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="itemBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-
-                    <!-- RIGHT COLUMN -->
-                    <StackPanel Grid.Column="2">
-                        <!-- Release Notes Card -->
-                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,14">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="Release notes" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <Button Command="{Binding OpenPatchNotesModalCommand}" Content="View all" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="#3B82F6" FontSize="12.5" FontWeight="Medium" Cursor="Hand"/>
-                                </Grid>
-
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding ReleaseVersionWithDate}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                                    <Border Background="#063E23" BorderBrush="#059669" BorderThickness="1" CornerRadius="8" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock Text="Latest" Foreground="#34D399" FontSize="10.5" FontWeight="SemiBold"/>
-                                    </Border>
-                                </StackPanel>
-
-                                <StackPanel Margin="0,0,0,18">
-                                    <TextBlock Text="• Fixed taskbar menu with full-width Steam styling" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Added Creative &amp; Media software catalog" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Fixed package install buttons and state bindings" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
-                                    <TextBlock Text="• Wireless Second Monitor &amp; phone integration" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                </StackPanel>
-
-                                <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenPatchNotesModalCommand}" Padding="0,10" HorizontalAlignment="Stretch">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="View release notes" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- License Card -->
-                        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="24,18" Margin="0,16,0,0">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14" VerticalAlignment="Center">
-                                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="License" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                </StackPanel>
+                                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,8,0,14"/>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-
-                                    <!-- Licensed To Column -->
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="Licensed to" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="{Binding LicenseUser}" FontSize="13" FontWeight="SemiBold" Foreground="#60A5FA" Margin="0,3,0,0" ToolTip="{Binding LicenseUser}"/>
+                                        <TextBlock Text="{Binding LicenseUser}" FontSize="13" FontWeight="SemiBold" Foreground="#60A5FA" Margin="0,3,0,0" ToolTip="{Binding LicenseUser}"
+                                                   TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
-
-                                    <!-- License Type Column -->
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="License type" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
                                         <TextBlock Text="{Binding LicenseType}" FontSize="13" FontWeight="SemiBold" Foreground="#34D399" Margin="0,3,0,0"/>
                                     </StackPanel>
                                 </Grid>
+
+                                <StackPanel Orientation="Horizontal" Margin="-8,14,0,0">
+                                    <Button Command="{Binding OpenPrivacyPolicyCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Privacy Policy" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding OpenTermsCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Margin="6,0,0,0" Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Terms of Service" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
-                    </StackPanel>
-                </Grid>
+                    </Grid>
+                </StackPanel>
             </ScrollViewer>
-
-            <!-- Bottom Status & Updates Bar -->
-            <Border Grid.Row="2" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
-                <Grid Margin="32,0" VerticalAlignment="Center">
-                    <!-- Left: Check for Updates Button -->
-                    <Button HorizontalAlignment="Left" VerticalAlignment="Center" Command="{Binding CheckForUpdatesCommand}" Cursor="Hand" IsEnabled="{Binding IsCheckingForUpdate, Converter={StaticResource InverseBool}}">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="chkBorder" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="18" Padding="20,8">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding CheckButtonText}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="chkBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                                        <Setter TargetName="chkBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
-
-                    <!-- Right: Privacy Policy. Kept clear of the power timer, which sits in the window's
-                         bottom-right corner on every page (38px wide): 38 + a 12px gap. -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,50,0">
-                        <Button Command="{Binding OpenPrivacyPolicyCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Privacy Policy" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Command="{Binding OpenTermsCommand}" Background="Transparent" BorderThickness="0" Padding="8,4" Margin="6,0,0,0" Cursor="Hand">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Terms of Service" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
         </Grid>
 
         <!-- Update Available & Download Modal Dialog -->

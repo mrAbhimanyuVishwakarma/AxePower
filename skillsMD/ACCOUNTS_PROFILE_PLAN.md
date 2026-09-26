@@ -113,6 +113,17 @@ uses the same accounts to decide which phone may reach which PC.
   with no network call and no writes.
 
 ### A3 — Email + password
+> **Status 2026-09-26: built together with A6** (the owner chose to do both at once, and to hide the
+> social buttons until they work). The glass dialog (`AccountDialogView`) covers sign in, sign up,
+> forgot password, check your inbox, choose username, edit profile and delete (type DELETE). It has a
+> live username check as you type, and Enter/Esc work.
+> **Verified:**
+> - view-model tests over a fake Supabase, and the views load in every form
+> - off-screen renders in Glass, Dark and Light
+> - the full suite: 961 passed, 1 skipped
+>
+> **Not yet run:** a real sign-up with the owner's email, the confirmation link, a first sign-in (the
+> profile created from the sign-up), and seeing it in the real window.
 **Owner task first:** in Supabase, open **Authentication → URL Configuration** and set **Site URL**. Otherwise
 the confirmation link in the sign-up email lands on `http://localhost:3000`. The account still gets
 confirmed, but the user sees an error page. Point it at a simple "Email confirmed, return to AxePower"
@@ -140,6 +151,15 @@ password, and a live "username available" check.
 - If A5 turns out to need the service-role key in a way we are not comfortable with, stop and ask.
 
 ### A6 — Desktop UI
+> **Status 2026-09-26: built with A3.**
+> - The sidebar's About item is now Profile (avatar, name, @username, online dot; "Sign in" when signed out).
+> - The About page is now the Profile page: hero, Account card, and an AxePower card holding everything
+>   About had. Its modals are unchanged.
+> - The "Profile" nav key opens the sign-in dialog when signed out; "About" still works as an alias.
+>
+> **Not done yet:** the Friends GamerTag → @username link. **Not yet seen:** the sidebar item and the
+> 72 px rail (they were not in the off-screen renders), and whether the taller item (52 px) still fits
+> the sidebar without a scrollbar on a 760 px window.
 - **Sidebar (bottom):** avatar + display name + `@username`. Signed out, it shows a generic avatar
   and "Sign in". Clicking opens Profile.
 - **Profile page:**

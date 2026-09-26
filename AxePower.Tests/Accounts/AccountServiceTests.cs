@@ -20,7 +20,7 @@ public sealed class AccountServiceTests : IDisposable
     private static readonly DateTime Now = new(2026, 9, 26, 12, 0, 0, DateTimeKind.Utc);
 
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "AxePowerAccountTests", Guid.NewGuid().ToString("N"));
-    private readonly FakeApi _api = new();
+    private readonly FakeAccountApi _api = new();
     private readonly AccountSessionStore _store;
     private readonly AccountService _service;
 
@@ -321,50 +321,5 @@ public sealed class AccountServiceTests : IDisposable
     private sealed class FixedClock : IClock
     {
         public DateTime UtcNow => Now;
-    }
-
-    private sealed class FakeApi : IAccountApi
-    {
-        public List<string> Calls { get; } = new();
-
-        public Func<IReadOnlyDictionary<string, string>, AuthSession?> SignUp { get; set; } = _ => null;
-        public Func<AuthSession> SignIn { get; set; } = () => throw new InvalidOperationException("SignIn not set");
-        public Func<string, AuthSession> Refresh { get; set; } = _ => throw new InvalidOperationException("Refresh not set");
-        public Action SignOut { get; set; } = () => { };
-        public Func<string, string, AccountProfile?> GetProfile { get; set; } = (_, _) => null;
-        public Func<string, string, string?, AccountProfile> CreateProfile { get; set; } = (u, _, _) => Profile(u);
-        public Func<string, string?, string?, AccountProfile> UpdateProfile { get; set; } = (_, _, _) => Profile();
-        public Func<string, bool> Available { get; set; } = _ => true;
-        public Action Delete { get; set; } = () => { };
-
-        public Task<AuthSession?> SignUpAsync(string email, string password, IReadOnlyDictionary<string, string> metadata, CancellationToken ct)
-        { Calls.Add("SignUp"); return Task.FromResult(SignUp(metadata)); }
-
-        public Task<AuthSession> SignInWithPasswordAsync(string email, string password, CancellationToken ct)
-        { Calls.Add("SignIn"); return Task.FromResult(SignIn()); }
-
-        public Task<AuthSession> RefreshAsync(string refreshToken, CancellationToken ct)
-        { Calls.Add("Refresh"); return Task.FromResult(Refresh(refreshToken)); }
-
-        public Task RequestPasswordResetAsync(string email, CancellationToken ct)
-        { Calls.Add("Reset"); return Task.CompletedTask; }
-
-        public Task SignOutAsync(string accessToken, CancellationToken ct)
-        { Calls.Add("SignOut"); SignOut(); return Task.CompletedTask; }
-
-        public Task<AccountProfile?> GetProfileAsync(string accessToken, string userId, CancellationToken ct)
-        { Calls.Add("GetProfile"); return Task.FromResult(GetProfile(accessToken, userId)); }
-
-        public Task<AccountProfile> CreateProfileAsync(string accessToken, string userId, string username, string displayName, string? avatarUrl, CancellationToken ct)
-        { Calls.Add("CreateProfile"); return Task.FromResult(CreateProfile(username, displayName, avatarUrl)); }
-
-        public Task<AccountProfile> UpdateProfileAsync(string accessToken, string userId, string? displayName, string? username, CancellationToken ct)
-        { Calls.Add("UpdateProfile"); return Task.FromResult(UpdateProfile(accessToken, displayName, username)); }
-
-        public Task<bool> IsUsernameAvailableAsync(string username, CancellationToken ct)
-        { Calls.Add("Available"); return Task.FromResult(Available(username)); }
-
-        public Task DeleteAccountAsync(string accessToken, CancellationToken ct)
-        { Calls.Add("Delete"); Delete(); return Task.CompletedTask; }
     }
 }

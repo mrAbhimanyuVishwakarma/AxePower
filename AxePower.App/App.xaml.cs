@@ -316,6 +316,7 @@ public partial class App : Application
         services.AddSingleton<IAccountApi>(sp => new SupabaseAccountApi(sp.GetRequiredService<SupabaseProject>()));
         services.AddSingleton(sp => new AccountSessionStore(sp.GetRequiredService<LogService>()));
         services.AddSingleton<AccountService>();
+        services.AddSingleton<AccountViewModel>();
 
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();

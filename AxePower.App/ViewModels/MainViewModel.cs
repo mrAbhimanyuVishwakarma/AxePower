@@ -49,6 +49,9 @@ public partial class MainViewModel : ObservableObject
     public SettingsViewModel SettingsVm { get; }
     public LogsViewModel LogsVm { get; }
     public AboutViewModel AboutVm { get; }
+
+    /// <summary>The optional AxePower account: sidebar item and the sign-in dialog over the window.</summary>
+    public AccountViewModel? AccountVm { get; }
     public UninstallerViewModel UninstallerVm { get; }
     public SystemOptimizerViewModel OptimizerVm { get; }
     public SystemDoctorViewModel DoctorVm { get; }
@@ -172,9 +175,11 @@ public partial class MainViewModel : ObservableObject
         MusicViewModel? musicVm = null,
         NowPlayingViewModel? nowPlaying = null,
         ShareScreenViewModel? shareScreenVm = null,
-        ToolsViewModel? toolsVm = null)
+        ToolsViewModel? toolsVm = null,
+        AccountViewModel? accountVm = null)
     {
         ToolsVm = toolsVm;
+        AccountVm = accountVm;
         MusicVm = musicVm;
         ShareScreenVm = shareScreenVm;
         if (ShareScreenVm != null) ShareScreenVm.NavigateTo = target => Navigate(target);
@@ -416,7 +421,8 @@ public partial class MainViewModel : ObservableObject
             "Music"       => (object?)MusicVm ?? DashboardVm,
             "Settings"    => ShowSettingsSection(arg1),
             "Logs"        => LogsVm,
-            "About"       => AboutVm,
+            "About"       => AboutVm,   // older links; the page is Profile now
+            "Profile"     => AboutVm,
             "Uninstaller" => UninstallerVm,
             "Optimizer"   => OptimizerVm,
             "Utilities"   => OptimizerVm,
@@ -440,6 +446,9 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
         OnPropertyChanged(nameof(SecondMonitorActiveStyle));
+
+        // The sidebar's "Sign in" item: land on Profile with the sign-in dialog already open.
+        if (baseKey == "Profile" && AccountVm is { IsSignedOut: true, IsDialogOpen: false }) AccountVm.OpenSignIn();
     }
 
     /// <summary>

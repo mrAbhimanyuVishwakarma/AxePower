@@ -346,12 +346,12 @@
                             </StackPanel>
                     </StackPanel>
 
-                    <!-- Bottom Fixed Navigation (Settings & About) -->
+                    <!-- Bottom Fixed Navigation (Settings & Profile) -->
                     <StackPanel Grid.Row="2" Margin="0,0,0,10" WindowChrome.IsHitTestVisibleInChrome="True">
                         <!-- Divider -->
                         <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="20,0,20,6" Opacity="0.4"/>
 
-                        <!-- Settings (Above About) -->
+                        <!-- Settings (above Profile) -->
                         <Button Style="{Binding SettingsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings" ToolTip="Settings" AutomationProperties.Name="Settings">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
@@ -359,11 +359,57 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- About (Bottom of the list) -->
-                        <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="About" ToolTip="About AxePower and updates" AutomationProperties.Name="About">
+                        <!-- Profile (bottom of the list; replaced About in 2.0.8): avatar, name and @username.
+                             Signed out it reads "Sign in"; the rail shows only the avatar. -->
+                        <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Profile"
+                                Height="52" ToolTip="{Binding AccountVm.SidebarTitle}" AutomationProperties.Name="Profile">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="About" Style="{StaticResource SidebarLabelStyle}"/>
+                                <Grid Width="30" Height="30" VerticalAlignment="Center">
+                                    <Grid.Style>
+                                        <Style TargetType="Grid">
+                                            <Setter Property="Margin" Value="-7,0,11,0"/>
+                                            <Style.Triggers>
+                                                <!-- Rail: centre the 30 px avatar on the 72 px rail's centre line -->
+                                                <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                    <Setter Property="Margin" Value="-7,0,0,0"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.22"/>
+                                    <TextBlock Text="{Binding AccountVm.Initials}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="{Binding AccountVm.HasAccount, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="{Binding AccountVm.IsSignedOut, Converter={StaticResource BoolToVis}}"/>
+                                    <Ellipse Visibility="{Binding AccountVm.HasAvatar, Converter={StaticResource BoolToVis}}">
+                                        <Ellipse.Fill>
+                                            <ImageBrush ImageSource="{Binding AccountVm.AvatarUrl}" Stretch="UniformToFill"/>
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <!-- Online dot: green when signed in and reachable -->
+                                    <Ellipse Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-1,-1"
+                                             Stroke="{DynamicResource SidebarBackgroundBrush}" StrokeThickness="2"
+                                             Visibility="{Binding AccountVm.IsSignedIn, Converter={StaticResource BoolToVis}}">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding AccountVm.IsOffline}" Value="True">
+                                                        <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                </Grid>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding AccountVm.SidebarTitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="13.5"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                    <TextBlock Text="{Binding AccountVm.SidebarSubtitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="11.5" FontWeight="Normal"
+                                               Foreground="{DynamicResource MutedTextBrush}" TextTrimming="CharacterEllipsis" MaxWidth="150" Margin="0,1,0,0"/>
+                                </StackPanel>
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -857,6 +903,11 @@
                     </Button>
                 </Grid>
             </Border>
+
+            <!-- Account dialog (sign in, sign up, username, edit, delete): over the whole window -->
+            <views:AccountDialogView Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="1001"
+                                     DataContext="{Binding AccountVm}" WindowChrome.IsHitTestVisibleInChrome="True"
+                                     Visibility="{Binding IsDialogOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"/>
 
             <!-- ─── Steam-Style Patch Notes Modal Dialog (Image 1) ────────────── -->
             <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Background="#C80A0E17" Panel.ZIndex="1000"
