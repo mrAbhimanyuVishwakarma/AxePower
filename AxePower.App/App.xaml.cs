@@ -16,6 +16,7 @@ using AxePower.App.ViewModels;
 using AxePower.App.ViewModels.Music;
 using AxePower.App.ViewModels.ShareScreen;
 using AxePower.Core.Services.ShareScreen;
+using AxePower.Core.Services.Accounts;
 using AxePower.App.Helpers;
 
 namespace AxePower.App;
@@ -174,6 +175,9 @@ public partial class App : Application
             // AxePower Music: media controls need the window handle; restoring the last session
             // (reading tags) runs in the background and never blocks the UI
             _ = InitializeMusicAsync(new WindowInteropHelper(mainWindow).EnsureHandle());
+
+            // Restores a saved sign-in in the background; signed out, it does nothing and needs no network
+            _ = Services.GetRequiredService<AccountService>().InitializeAsync();
         }
         catch (Exception ex)
         {
@@ -306,6 +310,12 @@ public partial class App : Application
         services.AddSingleton<IPowerActions, WindowsPowerActions>();
         services.AddSingleton<PowerTimerService>();
         services.AddSingleton<PowerTimerViewModel>();
+
+        // AxePower account (optional, Supabase): see skillsMD/ACCOUNTS_PROFILE_PLAN.md
+        services.AddSingleton(SupabaseProject.AxePower);
+        services.AddSingleton<IAccountApi>(sp => new SupabaseAccountApi(sp.GetRequiredService<SupabaseProject>()));
+        services.AddSingleton(sp => new AccountSessionStore(sp.GetRequiredService<LogService>()));
+        services.AddSingleton<AccountService>();
 
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();
@@ -483,6 +493,15 @@ public partial class App : Application
         Console.WriteLine(
             $"Friends room services resolved: {sp.GetRequiredService<IShareScreenService>().GetType().Name}, " +
             $"voice {sp.GetRequiredService<IRoomVoiceService>().GetType().Name} (devices not opened).");
+
+        // Read-only: decrypts the saved session to report it, never refreshes it or calls the network
+        var savedAccount = sp.GetRequiredService<AccountSessionStore>().Load();
+        sp.GetRequiredService<AccountService>();
+        Console.WriteLine(
+            "Account: " + (savedAccount is null ? "signed out"
+                : savedAccount.Profile is { } accountProfile ? $"@{accountProfile.Username} (saved session, not refreshed)"
+                : "signed in, no username yet (saved session)") +
+            $"; backend {sp.GetRequiredService<SupabaseProject>().Url.Host}.");
 
         try
         {

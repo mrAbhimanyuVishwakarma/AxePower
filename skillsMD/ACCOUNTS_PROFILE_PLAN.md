@@ -87,6 +87,20 @@ uses the same accounts to decide which phone may reach which PC.
   Required by Google Play and the App Store for the mobile app.
 
 ### A2 — Desktop account core
+> **Status 2026-09-26: built.** `AxePower.Core/Services/Accounts/`: a small own REST client (owner chose
+> it over the Supabase.Gotrue SDK), a DPAPI session store, and `AccountService`. The session is
+> restored at start-up, a self-test line was added, and the `delete-account` Edge Function is deployed.
+> **Verified:**
+> - 72 account tests against a stub network and a fake API
+> - the full suite: 944 passed, 1 skipped
+> - settings.json byte-identical
+> - self-test: "signed out", with no folder created
+> - live calls with the real client: username checks, a wrong sign-in → "Wrong email or password", a
+>   bad refresh token → session ended (this one was fixed after the live run showed `validation_failed`),
+>   and the function refusing callers without a valid sign-in
+>
+> **Not yet run live:** a successful sign-in, refresh, profile creation, and an actual account
+> deletion. All of these need a real account, which comes in A3.
 - `AccountService` in Core on `Supabase.Gotrue` (the maintained supabase-csharp monorepo; the old
   gotrue-csharp repo is archived).
 - The session (refresh token) is stored **DPAPI-encrypted in its own file** under
@@ -99,6 +113,10 @@ uses the same accounts to decide which phone may reach which PC.
   with no network call and no writes.
 
 ### A3 — Email + password
+**Owner task first:** in Supabase, open **Authentication → URL Configuration** and set **Site URL**. Otherwise
+the confirmation link in the sign-up email lands on `http://localhost:3000`. The account still gets
+confirmed, but the user sees an error page. Point it at a simple "Email confirmed, return to AxePower"
+page on the website.
 Sign up (email, password, username, display name), verification email, sign in, forgot/reset
 password, and a live "username available" check.
 
