@@ -158,9 +158,16 @@ public sealed class FriendsPageTests : IDisposable
         SeedPeople();
         await SignInAsync();
 
-        await _hub.AcceptCommand.ExecuteAsync(_hub.Incoming[0]);
-        await _hub.RemoveCommand.ExecuteAsync(_hub.Outgoing[0]);
-        await _hub.BlockCommand.ExecuteAsync(_hub.Friends[0]);
+        // Taken first: each action reloads, and the page rebuilds its lists on the UI thread.
+        var incoming = _hub.Incoming[0];
+        var outgoing = _hub.Outgoing[0];
+        var friend = _hub.Friends[0];
+
+        await _hub.AcceptCommand.ExecuteAsync(incoming);
+        Flush();
+        await _hub.RemoveCommand.ExecuteAsync(outgoing);
+        Flush();
+        await _hub.BlockCommand.ExecuteAsync(friend);
 
         Assert.Contains("Respond:f-u-4:True", _api.Calls);
         Assert.Contains("Remove:u-5", _api.Calls);
@@ -174,7 +181,8 @@ public sealed class FriendsPageTests : IDisposable
         await SignInAsync();
         _hub.ConfirmBlock = _ => false;
 
-        await _hub.BlockCommand.ExecuteAsync(_hub.Friends[0]);
+        var friend = _hub.Friends[0];
+        await _hub.BlockCommand.ExecuteAsync(friend);
 
         Assert.DoesNotContain(_api.Calls, c => c.StartsWith("Block:"));
     }
@@ -215,7 +223,8 @@ public sealed class FriendsPageTests : IDisposable
         await SignInAsync();
         _hub.GetRoomLink = _ => Task.FromResult<string?>(null); // the page says: share first
 
-        await _hub.InviteToWatchCommand.ExecuteAsync(_hub.Friends[0]);
+        var friend = _hub.Friends[0];
+        await _hub.InviteToWatchCommand.ExecuteAsync(friend);
 
         Assert.DoesNotContain(_api.Calls, c => c.StartsWith("Invite:"));
     }
@@ -227,7 +236,8 @@ public sealed class FriendsPageTests : IDisposable
         await SignInAsync();
         _hub.GetRoomLink = _ => Task.FromResult<string?>("http://192.168.1.10:8890/room#v=x");
 
-        await _hub.InviteToCallCommand.ExecuteAsync(_hub.Friends[0]);
+        var friend = _hub.Friends[0];
+        await _hub.InviteToCallCommand.ExecuteAsync(friend);
 
         Assert.Contains("Invite:u-2:Call:http://192.168.1.10:8890/room#v=x", _api.Calls);
     }

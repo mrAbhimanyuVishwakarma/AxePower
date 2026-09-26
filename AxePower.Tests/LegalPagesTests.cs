@@ -60,6 +60,41 @@ public class LegalPagesTests(WpfApplicationFixture wpf)
         }
     }
 
+    /// <summary>Accounts exist since 2.0.8 (optional). No page may still promise there are none.</summary>
+    [Fact]
+    public void NothingClaimsThereAreNoAccounts_AndThePolicyDescribesThem() =>
+        wpf.Invoke(() =>
+        {
+            var app = string.Join("\n", Texts(new AboutView()));
+            var noAccounts = new Regex(@"\bno accounts\b", RegexOptions.IgnoreCase);
+            Assert.DoesNotMatch(noAccounts, app);
+            Assert.Contains("Your AxePower account (optional)", app);
+            Assert.Contains("Supabase", app);
+            Assert.Contains("Your account and friends", app);
+
+            foreach (var page in Directory.GetFiles(WebsiteFolder(), "*.html"))
+            {
+                Assert.DoesNotMatch(noAccounts, File.ReadAllText(page));
+            }
+            var privacy = File.ReadAllText(Path.Combine(WebsiteFolder(), "privacy.html"));
+            Assert.Contains("Your AxePower account (optional)", privacy);
+            Assert.Contains("Supabase", privacy);
+        });
+
+    /// <summary>The app's policy and terms are the website's; their "Last updated" dates must match.</summary>
+    [Fact]
+    public void TheAppAndWebsitePolicies_ShareTheSameDate() =>
+        wpf.Invoke(() =>
+        {
+            var dateText = new Regex(@"Last updated: (\d{1,2} \w+ \d{4})");
+            var appDates = Texts(new AboutView()).Select(t => dateText.Match(t)).Where(m => m.Success).Select(m => m.Groups[1].Value).Distinct().ToList();
+            var siteDates = new[] { "privacy.html", "terms.html" }
+                .Select(f => dateText.Match(File.ReadAllText(Path.Combine(WebsiteFolder(), f))).Groups[1].Value).Distinct().ToList();
+
+            Assert.Single(appDates);
+            Assert.Equal(appDates, siteDates);
+        });
+
     private static System.Collections.Generic.IEnumerable<string> Texts(System.Windows.DependencyObject root)
     {
         foreach (var child in System.Windows.LogicalTreeHelper.GetChildren(root).OfType<System.Windows.DependencyObject>())

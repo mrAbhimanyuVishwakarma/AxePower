@@ -415,8 +415,9 @@
                         <Button Command="{Binding ClosePrivacyPolicyCommand}" Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15" Cursor="Hand" Padding="6"/>
                     </Grid>
 
-                    <!-- Modal Body: kept general on purpose. It names no project, company or product, so it
-                         stays true as open-source components and tools are added or removed. -->
+                    <!-- Modal Body: the same policy as the website's privacy.html. Open-source components and
+                         tools stay unnamed (THIRD_PARTY_NOTICES.md lists them); the services that hold account
+                         data are named, because people need to know who has it. -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20">
                         <StackPanel Margin="0,0,8,0">
                             <StackPanel.Resources>
@@ -438,16 +439,17 @@
                                 </Style>
                             </StackPanel.Resources>
 
-                            <TextBlock Text="Last updated: 25 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
+                            <TextBlock Text="Last updated: 26 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="1. Privacy at a glance"/>
                             <TextBlock Style="{StaticResource PolicyText}"
-                                       Text="AxePower has no accounts, no advertising, and no analytics or usage tracking. It does not collect personal data for its developers, and nothing about you or how you use the app is sent to them, sold, or shared."/>
+                                       Text="AxePower has no advertising and no analytics or usage tracking. Accounts are optional: everything works without one. Without an account, nothing about you or how you use the app is sent to its developers. With one, only what section 4 lists is stored, and none of it is sold or shared for advertising."/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="2. What stays on your computer"/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Your settings, power profiles, themes and automations."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Music data: library folders, playlists, what you played last, recent searches and the saved queue."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Activity logs used to diagnose problems, and backups some tools make before changing your system."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• If you sign in: your sign-in, encrypted so only your Windows user can read it."/>
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="All of this is kept in the app-data folders of your Windows user profile and never leaves your computer on its own. Deleting those folders removes it."/>
 
@@ -461,27 +463,41 @@
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="Like any website, these services also see your IP address and the request itself. Their own privacy policies and terms apply to what they receive. AxePower does not route this traffic through any server of its own."/>
 
-                            <TextBlock Style="{StaticResource PolicyHeading}" Text="4. Your devices and the people you connect to"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="4. Your AxePower account (optional)"/>
+                            <TextBlock Style="{StaticResource PolicyText}" Margin="0,0,0,8"
+                                       Text="If you create an account, these are stored by Supabase, the service that runs AxePower accounts:"/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• How you sign in: your email address, or the Google, Discord, GitHub or Steam account you use (its ID, name and email if it has one). Passwords are kept only as a secure hash."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Your profile: @username, display name, the link to your profile picture from that service, and when you joined."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Friends: your friends and friend requests, the people you blocked, and invites you send, which expire after 10 minutes."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• While AxePower is open and you're signed in: whether you're online or away and, unless you turn it off, what you're doing (the game you're playing, in a call, sharing your screen)."/>
+                            <TextBlock Style="{StaticResource PolicyText}" Margin="0,10,0,8"
+                                       Text="Who can see it: anyone signed in to AxePower can see your @username, display name and picture, so friends can find you. Your friends list, status, activity and invites are visible only to you and the friends involved. Settings → Friends lets you hide your activity or appear offline."/>
+                            <TextBlock Style="{StaticResource PolicyText}" Margin="0,0,0,8"
+                                       Text="When you sign in with Google, Discord, GitHub or Steam, that service's own privacy policy covers the sign-in. For Steam, AxePower also looks up your public Steam name and picture."/>
                             <TextBlock Style="{StaticResource PolicyText}"
-                                       Text="Phone control, file transfer, remote playback control and screen sharing work over your local network or an address you choose to connect to. Data goes directly between those devices. Local-network access is protected by a private link you share by QR code, and nothing is shared until you start it."/>
+                                       Text="Deleting your account on the Profile page removes your account, profile, friends, status and invites. The services involved may keep short-lived technical logs under their own policies."/>
 
-                            <TextBlock Style="{StaticResource PolicyHeading}" Text="5. System access"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="5. Your devices and the people you connect to"/>
+                            <TextBlock Style="{StaticResource PolicyText}"
+                                       Text="Phone control, file transfer, remote playback control, calls and screen sharing work over your local network or an address you choose to connect to. Data goes directly between those devices, not through AxePower's servers. Local-network access is protected by a private link you share by QR code, and nothing is shared until you start it. When you invite a friend through your account, the invite carries your room's link to that friend only."/>
+
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="6. System access"/>
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="AxePower runs with administrator rights so it can change power, performance and system settings. It changes your system only when you choose an action or set up an automation. Some changes, such as removing apps, updating drivers or tuning Windows, cannot always be fully undone, so read each prompt before confirming."/>
 
-                            <TextBlock Style="{StaticResource PolicyHeading}" Text="6. Open-source components and third-party tools"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="7. Open-source components and third-party tools"/>
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="AxePower is built with open-source libraries and can install, launch or work alongside third-party tools. Each remains the property of its authors and is used under its own license; the full license texts are in THIRD_PARTY_NOTICES.md, next to AxePower.exe. Any tool you launch through AxePower is covered by that tool's own terms and privacy policy. AxePower is an independent project and is not affiliated with, sponsored by or endorsed by any of them. All product names, logos and trademarks belong to their respective owners."/>
 
-                            <TextBlock Style="{StaticResource PolicyHeading}" Text="7. For authors and rights holders"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="8. For authors and rights holders"/>
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="If you are the author or owner of any software, content or trademark that AxePower uses or refers to, and you would like a credit added, corrected or removed, please contact us or open an issue on GitHub. We respect creators' rights and will act on such requests promptly."/>
 
-                            <TextBlock Style="{StaticResource PolicyHeading}" Text="8. Changes to this policy"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="9. Changes to this policy"/>
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="If AxePower's handling of data changes, this policy will be updated in the same release, and the date at the top will change."/>
 
-                            <TextBlock Style="{StaticResource PolicyHeading}" Text="9. Support the project"/>
+                            <TextBlock Style="{StaticResource PolicyHeading}" Text="10. Support the project"/>
                             <TextBlock Style="{StaticResource PolicyText}" Margin="0"
                                        Text="If you enjoy using AxePower and would like to support development, consider giving us a star on GitHub or contributing to the codebase."/>
                         </StackPanel>
@@ -531,7 +547,7 @@
                                 </Style>
                             </StackPanel.Resources>
 
-                            <TextBlock Text="Last updated: 25 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
+                            <TextBlock Text="Last updated: 26 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
 
                             <TextBlock Style="{StaticResource TermsHeading}" Text="1. What these terms cover"/>
 
@@ -553,32 +569,37 @@
                             <TextBlock Style="{StaticResource TermsText}"
                                        Text="Use AxePower only in ways that are legal where you live. Do not use it to access, download, copy or share content you do not have the right to, to get around the protections of any service or software, or to harm other people&#x27;s devices or networks. Only connect to devices and people you trust."/>
 
-                            <TextBlock Style="{StaticResource TermsHeading}" Text="5. Third-party services and tools"/>
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="5. Your account and friends"/>
 
                             <TextBlock Style="{StaticResource TermsText}"
-                                       Text="Some features rely on services and tools that AxePower does not own or control, such as music and lyrics sources, update and download servers, and apps AxePower can install or launch. Their own terms and privacy policies apply when you use them, they may change or stop working at any time, and AxePower is not responsible for them or their content. AxePower is an independent project and is not affiliated with, sponsored by or endorsed by any of them. All trademarks belong to their respective owners."/>
+                                       Text="An account is optional. If you create one, keep your sign-in safe and use one account per person. Choose a username and display name that don&#x27;t pretend to be someone else and aren&#x27;t offensive. Usernames or accounts used to impersonate, harass or spam people may be removed. Only invite and connect with people you trust, and never give remote control to someone you don&#x27;t. Accounts depend on online services that can be unavailable; AxePower&#x27;s other features keep working without them. You can delete your account at any time on the Profile page."/>
 
-                            <TextBlock Style="{StaticResource TermsHeading}" Text="6. No warranty"/>
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="6. Third-party services and tools"/>
+
+                            <TextBlock Style="{StaticResource TermsText}"
+                                       Text="Some features rely on services and tools that AxePower does not own or control, such as music and lyrics sources, update and download servers, the services behind AxePower accounts and sign-in, and apps AxePower can install or launch. Their own terms and privacy policies apply when you use them, they may change or stop working at any time, and AxePower is not responsible for them or their content. AxePower is an independent project and is not affiliated with, sponsored by or endorsed by any of them. All trademarks belong to their respective owners."/>
+
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="7. No warranty"/>
 
                             <TextBlock Style="{StaticResource TermsText}"
                                        Text="AxePower is provided “as is” and “as available”, without any warranty of any kind, express or implied, including warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not promise that it will be error-free, secure, or compatible with your hardware."/>
 
-                            <TextBlock Style="{StaticResource TermsHeading}" Text="7. Limitation of liability"/>
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="8. Limitation of liability"/>
 
                             <TextBlock Style="{StaticResource TermsText}"
                                        Text="To the fullest extent the law allows, the authors and contributors of AxePower are not liable for any loss or damage arising from its use or inability to use it, including loss of data, hardware damage, system instability, or lost profits, even if told such damage was possible."/>
 
-                            <TextBlock Style="{StaticResource TermsHeading}" Text="8. Donations and supporter perks"/>
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="9. Donations and supporter perks"/>
 
                             <TextBlock Style="{StaticResource TermsText}"
                                        Text="AxePower is free. Donations are voluntary gifts to support development and do not buy the software, a license, support or any feature. They are handled by the payment service you choose and are not refundable, except where the law requires otherwise. Any supporter perks offered are thank-you extras that may change or end."/>
 
-                            <TextBlock Style="{StaticResource TermsHeading}" Text="9. Your local laws"/>
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="10. Your local laws"/>
 
                             <TextBlock Style="{StaticResource TermsText}"
                                        Text="These terms are governed by the laws of the country or region where you live. Nothing in them takes away rights you have under your local consumer-protection or other laws that cannot be waived by agreement. If any part of these terms is found unenforceable where you live, the rest still applies."/>
 
-                            <TextBlock Style="{StaticResource TermsHeading}" Text="10. Changes and contact"/>
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="11. Changes and contact"/>
 
                             <TextBlock Style="{StaticResource TermsText}" Margin="0"
                                        Text="These terms may be updated from time to time; the date at the top shows the latest version, and continuing to use AxePower after a change means you accept it. Questions about these terms can be raised through the project&#x27;s GitHub issues."/>

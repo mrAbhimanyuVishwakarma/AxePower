@@ -196,6 +196,14 @@ password, and a live "username available" check.
   name.
 
 ### A7 — Privacy Policy, Terms, What's New
+> **Status 2026-09-26: policy and terms done** in the app (Profile → Privacy Policy / Terms) and on the
+> website (privacy.html, terms.html, about.html), dated 26 September 2026.
+> - Privacy gets "Your AxePower account (optional)": what is stored and by whom (Supabase, the sign-in
+>   services), who sees what, deletion, and a note on children's accounts.
+> - Terms get "Your account and friends".
+> - Tests now fail if any page says "no accounts", or if the app's and website's dates differ.
+> **Still to do:** the owner picks the What's New entries for 2.0.8; the SMTP sender for account emails
+> (decided at release).
 - Privacy Policy: replace "AxePower has no accounts" with "accounts are optional". Say what an
   account stores (email, username, display name, avatar, linked provider IDs), that Supabase
   processes it, how to delete it, and that signed-out use sends nothing, as before.
