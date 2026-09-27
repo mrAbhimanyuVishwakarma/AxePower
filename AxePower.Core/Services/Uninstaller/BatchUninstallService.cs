@@ -101,7 +101,7 @@ public sealed class BatchUninstallService : IBatchUninstallService
             Report(progress, applications, 0, UninstallPhase.CreatingRestorePoint, "Creating System Restore Point...");
             session.SystemRestorePointCreated =
                 await _systemRestore.TryCreateRestorePointAsync(
-                    $"AxePower Uninstaller Pro — {applications.Count} apps").ConfigureAwait(false);
+                    $"AxePower Uninstaller — {applications.Count} apps").ConfigureAwait(false);
         }
 
         for (int i = 0; i < applications.Count; i++)

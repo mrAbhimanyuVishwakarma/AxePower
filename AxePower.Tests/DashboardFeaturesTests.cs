@@ -59,7 +59,7 @@ public class DashboardFeaturesTests
         // The Dashboard selects the first entry on load, so ordering decides what is shown.
         // The owner picks this list each release; change it only when they do.
         Assert.Equal(
-            new[] { "DLSS 5 Swapper", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller Pro", "Terminal" },
+            new[] { "DLSS 5 Swapper", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller", "Terminal" },
             Features().Select(f => f.Title));
     }
 

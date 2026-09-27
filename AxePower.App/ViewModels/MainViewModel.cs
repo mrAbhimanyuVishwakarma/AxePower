@@ -730,11 +730,11 @@ public partial class MainViewModel : ObservableObject
             LaunchButtonText = "Launch MSI Afterburner"
         });
 
-        // 3. Uninstaller Pro
+        // 3. Uninstaller
         AllToolGuides.Add(new AxePower.App.Models.ToolInstructionItem
         {
             Id = "Uninstaller",
-            Title = "Uninstaller Pro",
+            Title = "Uninstaller",
             IconGlyph = "\uE74D",
             Subtitle = "Deep Application Removal & Verified Leftover Cleaner",
             Credit = "Built into AxePower Pro",
@@ -742,7 +742,7 @@ public partial class MainViewModel : ObservableObject
             Overview = "Removes desktop programs, MSI packages and Store apps with their own uninstallers, checks that each one is really gone, and then offers only the leftovers it can tie to that app.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "Click 'Uninstaller Pro' from the left sidebar.",
+                "Click 'Uninstaller' from the left sidebar.",
                 "Browse or search the installed apps; the Broken filter lists entries whose uninstaller is missing.",
                 "Select one or more apps, or open one in the details panel.",
                 "Click 'Uninstall', check the list of commands that will run, and confirm. Each app is verified afterwards.",
@@ -753,7 +753,7 @@ public partial class MainViewModel : ObservableObject
                 "System components, AxePower itself and folders other apps still use are protected and can't be selected.",
                 "Registry keys are exported to .reg backups before deletion and files go to the Recycle Bin; restore registry backups from History."
             },
-            LaunchButtonText = "Open Uninstaller Pro"
+            LaunchButtonText = "Open Uninstaller"
         });
 
         // 4. Update PC

@@ -662,7 +662,7 @@ public partial class DashboardViewModel : ObservableObject
         },
         new()
         {
-            Title = "Uninstaller Pro",
+            Title = "Uninstaller",
             Badge = "DEEP CLEAN",
             BadgeColorHex = "#EF4444",
             Glyph = "\uE74D",

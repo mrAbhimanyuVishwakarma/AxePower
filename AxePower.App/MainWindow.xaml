@@ -320,11 +320,11 @@
                                     </StackPanel>
                                 </Button>
 
-                                <!-- Uninstaller Pro -->
-                                <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller Pro: remove applications and clean verified leftovers">
+                                <!-- Uninstaller -->
+                                <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller: remove applications and clean verified leftovers">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Uninstaller Pro" Style="{StaticResource SidebarLabelStyle}"/>
+                                        <TextBlock Text="Uninstaller" Style="{StaticResource SidebarLabelStyle}"/>
                                     </StackPanel>
                                 </Button>
 

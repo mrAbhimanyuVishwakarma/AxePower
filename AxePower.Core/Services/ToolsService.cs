@@ -28,6 +28,10 @@ public class ToolsService
 {
     public const string Monitoring = "Monitoring";
     public const string HardwareInfo = "Hardware info";
+    public const string Cleanup = "Cleanup";
+
+    /// <summary>The page's group order. The page fills two columns in this order, each group going to the shorter one.</summary>
+    public static IReadOnlyList<string> GroupOrder { get; } = new[] { Monitoring, Cleanup, HardwareInfo };
 
     private static string ProgramFiles => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
     private static string ProgramFilesX86 => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
@@ -55,6 +59,16 @@ public class ToolsService
             new[] { "DiskInfo64.exe", "DiskInfo32.exe", "DiskInfo.exe" },
             new[] { Path.Combine(ProgramFiles, "CrystalDiskInfo", "DiskInfo64.exe"), Path.Combine(ProgramFilesX86, "CrystalDiskInfo", "DiskInfo64.exe") },
             "CrystalDiskInfo"),
+        new ToolDefinition("revo", "Revo Uninstaller", "The classic free uninstaller: removes apps and sweeps the leftovers they leave behind.",
+            Cleanup, "RevoUninstaller.RevoUninstaller", "https://www.revouninstaller.com/products/revo-uninstaller-free/",
+            new[] { "RevoUnin.exe" },
+            new[] { Path.Combine(ProgramFiles, "VS Revo Group", "Revo Uninstaller", "RevoUnin.exe"), Path.Combine(ProgramFilesX86, "VS Revo Group", "Revo Uninstaller", "RevoUnin.exe") },
+            "Revo Uninstaller"),
+        new ToolDefinition("wiztree", "WizTree", "Shows what is filling your drives in seconds, biggest folders and files first.",
+            Cleanup, "AntibodySoftware.WizTree", "https://diskanalyzer.com/",
+            new[] { "WizTree64.exe", "WizTree.exe" },
+            new[] { Path.Combine(ProgramFiles, "WizTree", "WizTree64.exe"), Path.Combine(ProgramFilesX86, "WizTree", "WizTree.exe") },
+            "WizTree"),
     };
 
     public static ToolDefinition Get(string id) => Tools.First(t => t.Id == id);

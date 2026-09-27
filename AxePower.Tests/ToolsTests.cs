@@ -17,16 +17,42 @@ public class ToolsTests
     }
 
     [Fact]
-    public void Catalog_IsTheFourAgreedApps_EachFromItsPublisher()
+    public void Catalog_IsTheAgreedApps_EachFromItsPublisher()
     {
-        Assert.Equal(new[] { "MSI Afterburner", "CPU-Z", "GPU-Z", "CrystalDiskInfo" }, ToolsService.Tools.Select(t => t.Name));
-        Assert.Equal(new[] { "Guru3D.Afterburner", "CPUID.CPU-Z", "TechPowerUp.GPU-Z", "CrystalDewWorld.CrystalDiskInfo" }, ToolsService.Tools.Select(t => t.WinGetId));
+        Assert.Equal(new[] { "MSI Afterburner", "CPU-Z", "GPU-Z", "CrystalDiskInfo", "Revo Uninstaller", "WizTree" }, ToolsService.Tools.Select(t => t.Name));
+        Assert.Equal(new[] { "Guru3D.Afterburner", "CPUID.CPU-Z", "TechPowerUp.GPU-Z", "CrystalDewWorld.CrystalDiskInfo", "RevoUninstaller.RevoUninstaller", "AntibodySoftware.WizTree" }, ToolsService.Tools.Select(t => t.WinGetId));
         Assert.All(ToolsService.Tools, t =>
         {
             Assert.StartsWith("https://", t.WebUrl);
             Assert.NotEmpty(t.ExeNames);
             Assert.All(t.ExeNames, e => Assert.EndsWith(".exe", e, StringComparison.OrdinalIgnoreCase));
         });
+    }
+
+    [Fact]
+    public void EveryApp_ShipsItsOwnIcon()
+    {
+        using var stream = typeof(ToolsViewModel).Assembly.GetManifestResourceStream("AxePower.g.resources");
+        Assert.NotNull(stream);
+        using var reader = new System.Resources.ResourceReader(stream!);
+        var names = reader.Cast<System.Collections.DictionaryEntry>().Select(e => (string)e.Key).ToHashSet();
+        Assert.All(ToolsService.Tools, t => Assert.Contains($"resources/icons/tool_{t.Id}.png", names));
+    }
+
+    [Fact]
+    public void TimerCard_OpensTheTimerPanel()
+    {
+        using var service = new PowerTimerService(new NoPowerActions(), () => DateTime.UtcNow, log: null, startClock: false);
+        using var timer = new PowerTimerViewModel(service);
+        var page = new ToolsViewModel(new FakeTools(), timer: timer);
+
+        page.TimerCard.OpenCommand.Execute(null);
+        Assert.True(timer.IsFlyoutOpen);
+    }
+
+    private sealed class NoPowerActions : IPowerActions
+    {
+        public void Run(PowerTimerAction action) { }
     }
 
     [Theory]
@@ -60,10 +86,21 @@ public class ToolsTests
     }
 
     [Fact]
-    public void Page_GroupsMonitoringApartFromHardwareInfo()
+    public void Page_GroupsAppsByUse_ThenTimerAndRoutines()
     {
         var page = new ToolsViewModel(new FakeTools());
-        Assert.Equal(new[] { "Monitoring", "Hardware info" }, page.Groups.Select(g => g.Title));
+        Assert.Equal(new[] { "Monitoring", "Cleanup", "Hardware info", "Timer & Routines" }, page.Groups.Select(g => g.Title));
         Assert.Equal(new[] { "MSI Afterburner" }, page.Groups[0].Cards.Select(c => c.Name));
+        Assert.Equal(new[] { "Revo Uninstaller", "WizTree" }, page.Groups[1].Cards.Select(c => c.Name));
+        Assert.Equal(new object[] { page.TimerCard, page.RoutinesCard }, page.Groups[3].Items);
+    }
+
+    [Fact]
+    public void Page_BalancesItsTwoColumns_WithNoGaps()
+    {
+        var page = new ToolsViewModel(new FakeTools());
+        Assert.Equal(new[] { "Monitoring", "Hardware info" }, page.LeftColumn.Select(g => g.Title));
+        Assert.Equal(new[] { "Cleanup", "Timer & Routines" }, page.RightColumn.Select(g => g.Title));
+        Assert.Equal(page.LeftColumn.Sum(g => g.Items.Count), page.RightColumn.Sum(g => g.Items.Count));
     }
 }

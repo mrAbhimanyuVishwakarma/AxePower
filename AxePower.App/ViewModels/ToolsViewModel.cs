@@ -25,19 +25,44 @@ public partial class ToolsViewModel : ObservableObject
     private readonly MsiAfterburnerService? _afterburner;
     private readonly NotificationService? _notifications;
 
+    public const string TimerAndRoutines = "Timer & Routines";
+
+    /// <summary>Every group in page order: the app groups, then AxePower's own Timer &amp; Routines.</summary>
     public IReadOnlyList<ToolGroup> Groups { get; }
 
-    public ToolsViewModel(ToolsService tools, IWinGetHubService? winget = null, MsiAfterburnerService? afterburner = null, NotificationService? notifications = null)
+    /// <summary>The page's two columns. Each group goes, in order, to whichever column has fewer cards so far.</summary>
+    public IReadOnlyList<ToolGroup> LeftColumn { get; }
+    public IReadOnlyList<ToolGroup> RightColumn { get; }
+
+    public TimerCard TimerCard { get; }
+    public RoutinesCard RoutinesCard { get; } = new();
+
+    public ToolsViewModel(ToolsService tools, IWinGetHubService? winget = null, MsiAfterburnerService? afterburner = null, NotificationService? notifications = null,
+        PowerTimerViewModel? timer = null)
     {
         _tools = tools;
         _winget = winget;
         _afterburner = afterburner;
         _notifications = notifications;
+        TimerCard = new TimerCard(timer);
 
-        Groups = ToolsService.Tools
+        var groups = ToolsService.Tools
             .GroupBy(t => t.Group)
-            .Select(g => new ToolGroup(g.Key, g.Select(t => new ToolCard(t, this)).ToList()))
+            .OrderBy(g => ToolsService.GroupOrder.ToList().IndexOf(g.Key) is var i && i < 0 ? int.MaxValue : i)
+            .Select(g => new ToolGroup(g.Key, g.Select(t => (object)new ToolCard(t, this)).ToList()))
             .ToList();
+        groups.Add(new ToolGroup(TimerAndRoutines, new object[] { TimerCard, RoutinesCard }));
+        Groups = groups;
+
+        var left = new List<ToolGroup>();
+        var right = new List<ToolGroup>();
+        foreach (var group in Groups)
+        {
+            var shorter = left.Sum(g => g.Items.Count) <= right.Sum(g => g.Items.Count) ? left : right;
+            shorter.Add(group);
+        }
+        LeftColumn = left;
+        RightColumn = right;
     }
 
     public IEnumerable<ToolCard> Cards => Groups.SelectMany(g => g.Cards);
@@ -99,7 +124,31 @@ public partial class ToolsViewModel : ObservableObject
     }
 }
 
-public sealed record ToolGroup(string Title, IReadOnlyList<ToolCard> Cards);
+/// <summary>A titled stack of cards: app cards, or AxePower's own Timer and Routines cards.</summary>
+public sealed record ToolGroup(string Title, IReadOnlyList<object> Items)
+{
+    public IEnumerable<ToolCard> Cards => Items.OfType<ToolCard>();
+}
+
+/// <summary>The power timer's card: its live status, and a button that opens its panel.</summary>
+public sealed partial class TimerCard
+{
+    public TimerCard(PowerTimerViewModel? timer) => Timer = timer;
+
+    public PowerTimerViewModel? Timer { get; }
+
+    /// <summary>Opens the timer's panel in the bottom-right corner, where it is set and cancelled.</summary>
+    [RelayCommand]
+    private void Open()
+    {
+        if (Timer != null) Timer.IsFlyoutOpen = true;
+    }
+}
+
+/// <summary>If-then routines. Not built yet (skillsMD/ROUTINES_PLAN.md); the card says so.</summary>
+public sealed class RoutinesCard
+{
+}
 
 /// <summary>One app on the Tools page.</summary>
 public partial class ToolCard : ObservableObject
@@ -110,7 +159,12 @@ public partial class ToolCard : ObservableObject
     {
         Definition = definition;
         _owner = owner;
+        _bundledIcon = BundledIcon.Load(definition.Id);
+        _icon = _bundledIcon;
     }
+
+    /// <summary>The app's own icon, shipped with AxePower so it shows before the app is installed.</summary>
+    private readonly ImageSource? _bundledIcon;
 
     public ToolDefinition Definition { get; }
     public string Name => Definition.Name;
@@ -145,7 +199,7 @@ public partial class ToolCard : ObservableObject
         if (exe != ExePath)
         {
             ExePath = exe;
-            Icon = exe != null ? ExeIcon.Load(exe) : null;
+            Icon = _bundledIcon ?? (exe != null ? ExeIcon.Load(exe) : null);
         }
         RefreshRunning();
     }
@@ -210,7 +264,26 @@ public partial class ToolCard : ObservableObject
     }
 }
 
-/// <summary>The icon inside an app's program file, so each card shows the app's own icon.</summary>
+/// <summary>Resources/icons/tool_{id}.png: each app's icon, taken from its publisher's own program file.</summary>
+internal static class BundledIcon
+{
+    public static ImageSource? Load(string toolId)
+    {
+        try
+        {
+            var image = new BitmapImage(new Uri($"pack://application:,,,/AxePower;component/Resources/icons/tool_{toolId}.png", UriKind.Absolute));
+            image.Freeze();
+            return image;
+        }
+        catch
+        {
+            // No icon shipped for this app, or no WPF application to read resources from
+            return null;
+        }
+    }
+}
+
+/// <summary>The icon inside an app's program file, for an app AxePower ships no icon for.</summary>
 internal static class ExeIcon
 {
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]

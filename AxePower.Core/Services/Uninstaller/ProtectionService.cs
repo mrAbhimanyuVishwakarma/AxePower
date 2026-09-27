@@ -38,7 +38,7 @@ public sealed partial class ProtectionService : IProtectionService
     public string? GetProtectionReason(InstalledApplication application)
     {
         if (application.DisplayName.Contains("AxePower", StringComparison.OrdinalIgnoreCase))
-            return "AxePower cannot be removed from inside Uninstaller Pro. " +
+            return "AxePower cannot be removed from inside Uninstaller. " +
                    "Use the AxePower installer or Windows Settings to remove it.";
 
         if (IsStorePackage(application) && !application.CanUninstall)

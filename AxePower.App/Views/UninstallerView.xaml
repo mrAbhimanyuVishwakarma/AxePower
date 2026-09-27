@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:UninstallerViewModel, IsDesignTimeCreatable=False}"
              Background="Transparent"
-             AutomationProperties.Name="Uninstaller Pro">
+             AutomationProperties.Name="Uninstaller">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -166,7 +166,7 @@
 
         <!-- ─── Header ─────────────────────────────────────────────────────── -->
         <StackPanel Grid.Row="0" Margin="40,24,40,16">
-            <TextBlock Text="🗑️ Uninstaller Pro" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock Text="🗑️ Uninstaller" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
             <TextBlock Text="Remove applications, verify they are gone, and clean their leftovers safely." FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0"/>
         </StackPanel>
 
@@ -235,8 +235,8 @@
 
                 <Button Style="{DynamicResource SecondaryButtonStyle}"
                         Command="{Binding ToggleSettingsCommand}"
-                        ToolTip="Uninstaller Pro settings"
-                        AutomationProperties.Name="Open Uninstaller Pro settings"
+                        ToolTip="Uninstaller settings"
+                        AutomationProperties.Name="Open Uninstaller settings"
                         Padding="16,8" FontSize="13" MinWidth="90" Margin="0,0,8,8">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
