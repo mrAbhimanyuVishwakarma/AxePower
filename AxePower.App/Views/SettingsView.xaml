@@ -12,31 +12,141 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converters:NullToVisibilityConverter x:Key="NotNullToVis" Invert="True" />
         <converters:EnumToBooleanConverter x:Key="EnumToBool" />
+        <converters:StringEqualsToVisibilityConverter x:Key="CategoryVis" />
     </UserControl.Resources>
 
-    <!-- Main Content Area: Single Full-Height ScrollViewer (No redundant empty bottom bar) -->
-    <ScrollViewer Margin="36,24,36,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel HorizontalAlignment="Stretch" MaxWidth="1140">
-            <!-- Header -->
-            <StackPanel Margin="4,0,0,24">
-                <TextBlock Text="Settings" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="26" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                <TextBlock Text="Customize performance defaults, appearance, startup options, notifications and music preferences."
-                           Foreground="{DynamicResource SecondaryTextBrush}" FontSize="13.5"/>
-            </StackPanel>
+    <!-- Settings: a collapsible category list (like the Friends list) beside the selected
+         category's settings. Each category is one of the cards below, shown on its own. -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-            <!-- 2-Column Responsive Card Grid -->
+        <!-- ─── Category list ─── -->
+        <Border Grid.Column="0">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Width" Value="220"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsCategoryListCollapsed}" Value="True">
+                            <Setter Property="Width" Value="64"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="340"/>
-                    <ColumnDefinition Width="20"/>
-                    <ColumnDefinition Width="*" MinWidth="340"/>
-                </Grid.ColumnDefinitions>
+                <!-- The panel's fill and divider fade in from the top, so the panel grows out of the
+                     page instead of starting with a hard edge under the window's title bar -->
+                <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}"
+                        BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0" IsHitTestVisible="False">
+                    <Border.OpacityMask>
+                        <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="0,120">
+                            <GradientStop Color="Transparent" Offset="0"/>
+                            <GradientStop Color="#80000000" Offset="0.45"/>
+                            <GradientStop Color="Black" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.OpacityMask>
+                </Border>
+                <DockPanel>
+                    <!-- Title and the collapse button -->
+                    <Grid DockPanel.Dock="Top" Margin="12,20,10,12">
+                        <TextBlock Text="Settings" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="18" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Margin="8,0,0,0"
+                                   Visibility="{Binding IsCategoryListCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                        <Button HorizontalAlignment="Right" Width="32" Height="32" Cursor="Hand" Command="{Binding ToggleCategoryListCommand}"
+                                AutomationProperties.Name="Collapse or expand the settings list">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="ToolTip" Value="Collapse the list"/>
+                                    <Setter Property="Content" Value="&#xE76B;"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bg" Background="Transparent" CornerRadius="8">
+                                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                                        <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCategoryListCollapsed}" Value="True">
+                                            <Setter Property="ToolTip" Value="Expand the list"/>
+                                            <Setter Property="Content" Value="&#xE76C;"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
 
-                <!-- ══════════════ LEFT COLUMN ══════════════ -->
-                <StackPanel Grid.Column="0">
+                    <!-- Categories -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False" Padding="10,0">
+                        <ItemsControl ItemsSource="{Binding Categories}" Focusable="False" AutomationProperties.Name="Settings categories">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding Id}" Cursor="Hand" Margin="0,0,0,4"
+                                            HorizontalContentAlignment="Stretch" ToolTip="{Binding Title}" AutomationProperties.Name="{Binding Title}">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="row" CornerRadius="8" Padding="11,7" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock x:Name="glyph" Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="20"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="title" Text="{Binding Title}" FontSize="12.5" Margin="12,0,0,0"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                                   Visibility="{Binding DataContext.IsCategoryListCollapsed, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBoolToVis}}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                        <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                                        <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+                                                    </Trigger>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                        <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                        <Setter TargetName="title" Property="FontWeight" Value="SemiBold"/>
+                                                        <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <!-- ─── The selected category: one card, as a single column of rows ─── -->
+        <ScrollViewer x:Name="CategoryScroller" Grid.Column="1" Margin="36,24,36,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel HorizontalAlignment="Stretch" MaxWidth="880">
+                <!-- A touch smaller than the rest of the app: settings are rows to scan, not a dashboard -->
+                <StackPanel.LayoutTransform>
+                    <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
+                </StackPanel.LayoutTransform>
+
 
                     <!-- CARD 1: Appearance & Display -->
-                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                    <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Appearance}" Margin="0" Padding="22">
                         <StackPanel>
                             <!-- Card Header -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
@@ -122,7 +232,7 @@
                                             ToolTip="Open Windows Touchpad Settings" Margin="0,0,10,0" Padding="8,4" Height="28">
                                         <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     </Button>
-                                    <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsTouchpadEnabled, Mode=TwoWay}" VerticalAlignment="Center"
+                                    <CheckBox Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding IsTouchpadEnabled, Mode=TwoWay}" IsEnabled="{Binding IsTouchpadAvailable}" ToolTipService.ShowOnDisabled="True" VerticalAlignment="Center"
                                               AutomationProperties.Name="Touchpad"/>
                                 </StackPanel>
                             </Grid>
@@ -130,7 +240,7 @@
                     </Border>
 
                     <!-- CARD 2: Game Mode (dedicated GPU and display mode) -->
-                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                    <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=GameMode}" Margin="0" Padding="22">
                         <StackPanel>
                             <!-- Card Header -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
@@ -190,7 +300,7 @@
                     </Border>
 
                     <!-- CARD 3: Notifications & Alerts -->
-                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                    <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Notifications}" Margin="0" Padding="22">
                         <StackPanel>
                             <!-- Card Header -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
@@ -248,13 +358,9 @@
                             </Grid>
                         </StackPanel>
                     </Border>
-                </StackPanel>
-
-                <!-- ══════════════ RIGHT COLUMN ══════════════ -->
-                <StackPanel Grid.Column="2">
 
                     <!-- CARD 1: Startup & System -->
-                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                    <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Startup}" Margin="0" Padding="22">
                         <StackPanel>
                             <!-- Card Header -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
@@ -335,274 +441,404 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- CARD: Share Screen -->
-                    <Border x:Name="ShareScreenCard" Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22"
-                            DataContext="{Binding ShareScreen}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                    <!-- CARD: Taskbar preferences (which items the tray menu shows) -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Padding="22" Margin="0"
+                            Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Taskbar}">
                         <StackPanel>
                             <!-- Card Header -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A7C5CE6" Margin="0,0,14,0">
-                                    <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#7C5CE6"
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A3B82F6" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE75B;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource PrimaryBlueBrush}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Share Screen" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                    <TextBlock Text="What gets streamed to your friends, and how." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                    <TextBlock Text="Taskbar preferences" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Choose what appears when you right-click AxePower's icon in the taskbar." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- Display -->
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Display" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Which monitor your friends see." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
-                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                          ItemsSource="{Binding Displays}" SelectedItem="{Binding SelectedDisplay}"
-                                          DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Display"/>
-                            </Grid>
+                            <ItemsControl ItemsSource="{Binding TrayMenuOptions}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <!-- Group heading, like the separators in the menu -->
+                                            <TextBlock Text="{Binding GroupHeader}" FontSize="11" FontWeight="SemiBold" Margin="0,14,0,6"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       Visibility="{Binding GroupHeader, Converter={StaticResource NotNullToVis}}"/>
+                                            <Grid Margin="0,0,0,10" ToolTipService.ShowOnDisabled="True">
+                                                <!-- Settings and Exit are locked on: dimmed, with the reason on hover -->
+                                                <Grid.Style>
+                                                    <Style TargetType="Grid">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsPermanent}" Value="True">
+                                                                <Setter Property="Opacity" Value="0.55"/>
+                                                                <Setter Property="ToolTip" Value="Always shown, so AxePower can always be reached and closed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                                          IsChecked="{Binding IsShown, Mode=TwoWay}" IsEnabled="{Binding CanChange}"
+                                                          AutomationProperties.Name="{Binding Title, StringFormat=Show {0} in the taskbar menu}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Quality -->
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Quality" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Every rung targets 60 FPS; a struggling link costs resolution, not smoothness." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
-                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                          ItemsSource="{Binding QualityPresets}" SelectedItem="{Binding SelectedQuality}"
-                                          DisplayMemberPath="DisplayName" AutomationProperties.Name="Quality"/>
-                            </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Audio source -->
-                            <StackPanel Margin="0,0,0,14">
-                                <TextBlock Text="Audio" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                <TextBlock Text="System audio sends whatever the chosen output is playing — your game, your music, a call." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,10"/>
-                                <StackPanel Orientation="Horizontal">
-                                    <RadioButton Content="System audio" GroupName="ShareAudioModeSettings" Margin="0,0,18,0" FontSize="12.5"
-                                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                                 IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=SystemAudio, Mode=TwoWay}"/>
-                                    <RadioButton Content="Microphone" GroupName="ShareAudioModeSettings" Margin="0,0,18,0" FontSize="12.5"
-                                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                                 IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=Microphone, Mode=TwoWay}"/>
-                                    <RadioButton Content="None" GroupName="ShareAudioModeSettings" FontSize="12.5"
-                                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                                 IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=None, Mode=TwoWay}"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <!-- Output device -->
-                            <Grid Margin="0,0,0,14" Visibility="{Binding ShowSystemAudioPicker, Converter={StaticResource BoolToVis}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Output device" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="The speakers or headphones whose sound gets shared." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
-                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                          ItemsSource="{Binding SystemAudioDevices}" SelectedItem="{Binding SelectedSystemAudioDevice}"
-                                          DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Output device"/>
-                            </Grid>
-
-                            <!-- Microphone -->
-                            <Grid Margin="0,0,0,14" Visibility="{Binding ShowMicrophonePicker, Converter={StaticResource BoolToVis}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Microphone" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Your friends hear you, but not the game." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
-                                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                          ItemsSource="{Binding Microphones}" SelectedItem="{Binding SelectedMicrophone}"
-                                          DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Microphone"/>
-                            </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Hide cursor -->
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Hide the mouse pointer" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Leave this off for games so your friends can follow what you are doing." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding HideCursor}" VerticalAlignment="Center"
-                                          AutomationProperties.Name="Hide the mouse pointer"/>
-                            </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Adaptive quality -->
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Adapt automatically" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Drop a rung when the encoder cannot keep up, instead of letting the picture stutter." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AdaptiveQuality}" VerticalAlignment="Center"
-                                          AutomationProperties.Name="Adapt automatically"/>
-                            </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Remote control -->
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Allow remote control" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Adds a control button to the Share Screen page. Nothing is granted by this switch on its own." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowRemoteControl}" VerticalAlignment="Center"
-                                          AutomationProperties.Name="Allow remote control"/>
-                            </Grid>
-
-                            <Border Background="#22DA373C" BorderBrush="#66DA373C" BorderThickness="1" CornerRadius="8"
-                                    Padding="12,10" Margin="0,0,0,14"
-                                    Visibility="{Binding AllowRemoteControl, Converter={StaticResource BoolToVis}}">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                        <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#E8646A" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="What remote control gives away" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" LineHeight="17">
-                                        <Run Text="A viewer with control has your mouse and keyboard. They can open your files, read your email, install software, and act as you on anything you are signed in to. You will see it happen, but you are not asked to approve each action."/>
-                                        <LineBreak/>
-                                        <Run Text="Control is off every time a session starts, has to be switched on by hand, and needs a code that the viewing link does not contain. Stopping the share, or closing AxePower, cuts it off."/>
-                                        <LineBreak/>
-                                        <Run Text="Only ever turn it on for someone you would hand your unlocked laptop to."/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Viewer address -->
-                            <StackPanel Margin="0,0,0,14">
-                                <TextBlock Text="Viewer address" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                <TextBlock Text="Leave this empty to use this PC's network address. Set it to a Tailscale or public address when your friends are not on your network." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,8"/>
-                                <TextBox Text="{Binding ViewerHostOverride, UpdateSourceTrigger=LostFocus}" Height="30" Padding="9,0" VerticalContentAlignment="Center"
-                                         Background="{DynamicResource CardBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}"
-                                         BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" FontSize="12.5"
-                                         AutomationProperties.Name="Viewer address"/>
-                            </StackPanel>
-
-                            <!-- Tools -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding ToolStatus}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5"
-                                           TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,14,0"/>
-                                <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RefreshDevicesCommand}"
-                                        Padding="12,5" Height="28" ToolTip="Re-read the displays and audio devices on this PC">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Refresh" FontSize="11.5" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
+                            <TextBlock Text="Settings and Exit AxePower are always shown, so AxePower can always be reached and closed."
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,6,0,0"/>
                         </StackPanel>
+                    </Border>
+
+                    <!-- CARD: Share Screen -->
+                    <Border Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=ShareScreen}">
+                        <Border x:Name="ShareScreenCard" Style="{DynamicResource CardElevatedStyle}" Margin="0" Padding="22"
+                                DataContext="{Binding ShareScreen}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                            <StackPanel>
+                                <!-- Card Header -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                    <Border Width="38" Height="38" CornerRadius="10" Background="#1A7C5CE6" Margin="0,0,14,0">
+                                        <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#7C5CE6"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Friends" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                        <TextBlock Text="What gets streamed to your friends, and how." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+    
+                                <!-- Account friends: what they see, and who is blocked -->
+                                <TextBlock Text="PRIVACY" Foreground="{DynamicResource MutedTextBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Show friends what I'm doing" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="&quot;Playing …&quot;, &quot;In a call&quot; and &quot;Sharing screen&quot;. Off: friends see only Online or Away." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ShowActivityToFriends}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Show friends what I'm doing"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Appear offline" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Friends see you as offline. You can still see them and send invites." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AppearOfflineToFriends}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Appear offline"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Let people find me by name" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Appear in suggestions when others type your name. Off: only your exact @username finds you." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding FindableByName}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Let people find me by name"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Blocked people" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="They can't send you requests or invites, and don't know they're blocked." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding LoadBlockedCommand}" Padding="14,6" FontSize="12" Content="Show" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock Text="{Binding BlockedStatus}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,0,0,6"/>
+                                <ItemsControl ItemsSource="{Binding BlockedPeople}" Margin="0,0,0,8">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5"/>
+                                                    <TextBlock Text="{Binding Username, StringFormat=' @{0}'}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Style="{DynamicResource SecondaryButtonStyle}" Padding="12,4" FontSize="11.5" Content="Unblock"
+                                                        Command="{Binding DataContext.UnblockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,4,0,14"/>
+
+                                <!-- Display -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Display" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Which monitor your friends see." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                              ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                              ItemsSource="{Binding Displays}" SelectedItem="{Binding SelectedDisplay}"
+                                              DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Display"/>
+                                </Grid>
+    
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+    
+                                <!-- Quality -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Quality" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Every rung targets 60 FPS; a struggling link costs resolution, not smoothness." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                              ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                              ItemsSource="{Binding QualityPresets}" SelectedItem="{Binding SelectedQuality}"
+                                              DisplayMemberPath="DisplayName" AutomationProperties.Name="Quality"/>
+                                </Grid>
+    
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+    
+                                <!-- Audio source -->
+                                <StackPanel Margin="0,0,0,14">
+                                    <TextBlock Text="Audio" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="System audio sends whatever the chosen output is playing — your game, your music, a call." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,10"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton Content="System audio" GroupName="ShareAudioModeSettings" Margin="0,0,18,0" FontSize="12.5"
+                                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                                     IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=SystemAudio, Mode=TwoWay}"/>
+                                        <RadioButton Content="Microphone" GroupName="ShareAudioModeSettings" Margin="0,0,18,0" FontSize="12.5"
+                                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                                     IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=Microphone, Mode=TwoWay}"/>
+                                        <RadioButton Content="None" GroupName="ShareAudioModeSettings" FontSize="12.5"
+                                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                                     IsChecked="{Binding AudioMode, Converter={StaticResource EnumToBool}, ConverterParameter=None, Mode=TwoWay}"/>
+                                    </StackPanel>
+                                </StackPanel>
+    
+                                <!-- Output device -->
+                                <Grid Margin="0,0,0,14" Visibility="{Binding ShowSystemAudioPicker, Converter={StaticResource BoolToVis}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Output device" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="The speakers or headphones whose sound gets shared." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                              ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                              ItemsSource="{Binding SystemAudioDevices}" SelectedItem="{Binding SelectedSystemAudioDevice}"
+                                              DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Output device"/>
+                                </Grid>
+    
+                                <!-- Microphone -->
+                                <Grid Margin="0,0,0,14" Visibility="{Binding ShowMicrophonePicker, Converter={StaticResource BoolToVis}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Microphone" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Your friends hear you, but not the game." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <ComboBox Grid.Column="1" Style="{DynamicResource AppComboBoxStyle}" MinWidth="210" MaxWidth="240" VerticalAlignment="Center"
+                                              ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                              ItemsSource="{Binding Microphones}" SelectedItem="{Binding SelectedMicrophone}"
+                                              DisplayMemberPath="DisplayLabel" AutomationProperties.Name="Microphone"/>
+                                </Grid>
+    
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+    
+                                <!-- Hide cursor -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Hide the mouse pointer" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Leave this off for games so your friends can follow what you are doing." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding HideCursor}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Hide the mouse pointer"/>
+                                </Grid>
+    
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+    
+                                <!-- Adaptive quality -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Adapt automatically" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Drop a rung when the encoder cannot keep up, instead of letting the picture stutter." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AdaptiveQuality}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Adapt automatically"/>
+                                </Grid>
+    
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+    
+                                <!-- Remote control -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Allow remote control" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Adds a control button to the Friends page. Nothing is granted by this switch on its own." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowRemoteControl}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Allow remote control"/>
+                                </Grid>
+    
+                                <Border Background="#22DA373C" BorderBrush="#66DA373C" BorderThickness="1" CornerRadius="8"
+                                        Padding="12,10" Margin="0,0,0,14"
+                                        Visibility="{Binding AllowRemoteControl, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#E8646A" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="What remote control gives away" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" LineHeight="17">
+                                            <Run Text="A viewer with control has your mouse and keyboard. They can open your files, read your email, install software, and act as you on anything you are signed in to. You will see it happen, but you are not asked to approve each action."/>
+                                            <LineBreak/>
+                                            <Run Text="Control is off every time a session starts, has to be switched on by hand, and needs a code that the viewing link does not contain. Stopping the share, or closing AxePower, cuts it off."/>
+                                            <LineBreak/>
+                                            <Run Text="Only ever turn it on for someone you would hand your unlocked laptop to."/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+    
+                                <!-- Viewer address -->
+                                <StackPanel Margin="0,0,0,14">
+                                    <TextBlock Text="Viewer address" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Leave this empty to use this PC's network address. Set it to a Tailscale or public address when your friends are not on your network." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,8"/>
+                                    <TextBox Text="{Binding ViewerHostOverride, UpdateSourceTrigger=LostFocus}" Height="30" Padding="9,0" VerticalContentAlignment="Center"
+                                             Background="{DynamicResource CardBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}"
+                                             BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" FontSize="12.5"
+                                             AutomationProperties.Name="Viewer address"/>
+                                </StackPanel>
+    
+                                <!-- Tools -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding ToolStatus}" Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5"
+                                               TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                    <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RefreshDevicesCommand}"
+                                            Padding="12,5" Height="28" ToolTip="Re-read the displays and audio devices on this PC">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Refresh" FontSize="11.5" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </Border>
 
                     <!-- CARD 2: Music & Playlists -->
-                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22"
-                            DataContext="{Binding Music}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
-                        <StackPanel>
-                            <!-- Card Header -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-                                <Border Width="38" Height="38" CornerRadius="10" Background="#1A10B981" Margin="0,0,14,0">
-                                    <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#10B981"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Music &amp; Playlists" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                    <TextBlock Text="Folder storage and native playback preferences." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <!-- Playlist & Music Storage Folder -->
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Music &amp; playlist storage path" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="{Binding DisplayPlaylistFolder}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"
-                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayPlaylistFolder}" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding BrowsePlaylistFolderCommand}"
-                                        Padding="12,5" Height="28" ToolTip="Choose folder for music and created playlists">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Browse…" FontSize="11.5" VerticalAlignment="Center"/>
+                    <Border Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Music}">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0" Padding="22"
+                                DataContext="{Binding Music}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                            <StackPanel>
+                                <!-- Card Header -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                    <Border Width="38" Height="38" CornerRadius="10" Background="#1A10B981" Margin="0,0,14,0">
+                                        <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#10B981"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Music &amp; Playlists" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                        <TextBlock Text="Folder storage and native playback preferences." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
                                     </StackPanel>
-                                </Button>
-                            </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Allow Volume Boost -->
-                            <Grid Margin="0,0,0,14">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Allow volume boost up to 200%" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="Hardware limiter prevents distortion; Windows volume is unchanged." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowVolumeBoost}" VerticalAlignment="Center"
-                                          AutomationProperties.Name="Allow volume boost up to 200%"/>
-                            </Grid>
-
-                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
-
-                            <!-- Resume Playback on Startup -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
-                                    <TextBlock Text="Resume playback on startup" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
-                                    <TextBlock Text="When off, your last queue and position restore in a paused state." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                </StackPanel>
-                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ResumePlaybackOnStartup}" VerticalAlignment="Center"
-                                          AutomationProperties.Name="Resume playback on startup"/>
-                            </Grid>
-                        </StackPanel>
+    
+                                <!-- Playlist & Music Storage Folder -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Music &amp; playlist storage path" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding DisplayPlaylistFolder}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11.5"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayPlaylistFolder}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding BrowsePlaylistFolderCommand}"
+                                            Padding="12,5" Height="28" ToolTip="Choose folder for music and created playlists">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Browse…" FontSize="11.5" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+    
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+    
+                                <!-- Allow Volume Boost -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Allow volume boost up to 200%" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Hardware limiter prevents distortion; Windows volume is unchanged." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AllowVolumeBoost}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Allow volume boost up to 200%"/>
+                                </Grid>
+    
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+    
+                                <!-- Resume Playback on Startup -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Resume playback on startup" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="When off, your last queue and position restore in a paused state." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding ResumePlaybackOnStartup}" VerticalAlignment="Center"
+                                              AutomationProperties.Name="Resume playback on startup"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </Border>
 
                     <!-- CARD 3: Updates & Version (Integrated Check Button) -->
-                    <Border Style="{DynamicResource CardElevatedStyle}" Margin="0,0,0,18" Padding="22">
+                    <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Updates}" Margin="0" Padding="22">
                         <StackPanel>
                             <!-- Card Header -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
@@ -672,8 +908,7 @@
                             </Grid>
                         </StackPanel>
                     </Border>
-                </StackPanel>
-            </Grid>
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

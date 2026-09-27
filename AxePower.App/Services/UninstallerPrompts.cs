@@ -42,7 +42,7 @@ public interface IUninstallerPrompts
 /// <summary>Message-box prompts, matching the rest of AxePower.</summary>
 public sealed class MessageBoxUninstallerPrompts : IUninstallerPrompts
 {
-    private const string Title = "Uninstaller Pro";
+    private const string Title = "Uninstaller";
 
     public bool ConfirmBatch(IReadOnlyList<(InstalledApplication App, UninstallPlan Plan)> plans,
         IReadOnlyList<(InstalledApplication App, string Reason)> skipped, bool restorePoint, bool dryRun)

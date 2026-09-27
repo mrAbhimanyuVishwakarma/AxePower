@@ -15,7 +15,7 @@ namespace AxePower.Tests.Friends;
 
 public class FriendsHubTests
 {
-    private class FakeShareService : IShareScreenService
+    internal class FakeShareService : IShareScreenService
     {
         public ShareSessionStatus Status => ShareSessionStatus.Idle;
         public event EventHandler<ShareSessionStatus>? StatusChanged { add { } remove { } }
@@ -31,14 +31,14 @@ public class FriendsHubTests
         public void SendVoicePacket(byte[] opusPacket) { }
     }
 
-    private class FakeDeviceProvider : IShareDeviceProvider
+    internal class FakeDeviceProvider : IShareDeviceProvider
     {
         public IReadOnlyList<CaptureDisplay> GetDisplays() => Array.Empty<CaptureDisplay>();
         public IReadOnlyList<ShareAudioDevice> GetRenderDevices() => Array.Empty<ShareAudioDevice>();
         public IReadOnlyList<ShareAudioDevice> GetCaptureDevices() => Array.Empty<ShareAudioDevice>();
     }
 
-    private class FakeToolProvider : IShareToolProvider
+    internal class FakeToolProvider : IShareToolProvider
     {
         public ShareToolStatus FindFfmpeg() => ShareToolStatus.Missing("ffmpeg");
         public ShareToolStatus FindMediaMtx() => ShareToolStatus.Missing("mediamtx");
@@ -139,6 +139,29 @@ public class FriendsHubTests
 
             vm.FriendSearchText = string.Empty;
             Assert.Equal(3, vm.FilteredFriends.Count());
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, true); } catch { }
+        }
+    }
+
+    [Fact]
+    public void TheMutedMicrophone_IsASlashedMic_NotTheSearchGlyph()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "AxePower_FriendsTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var log = new LogService();
+            var settingsVm = new ShareScreenSettingsViewModel(
+                new FakeDeviceProvider(), new FakeToolProvider(), new SettingsService(log, tempDir), log);
+            var vm = new ShareScreenViewModel(
+                new FakeShareService(), settingsVm, new NotificationService(), log, new ShareChatStore(Path.Combine(tempDir, "Chat"), log));
+
+            Assert.Equal("", vm.MicGlyph);   // microphone
+            vm.IsMicMuted = true;
+            Assert.Equal("", vm.MicGlyph);   // slashed microphone; E721 would be the search magnifier
         }
         finally
         {

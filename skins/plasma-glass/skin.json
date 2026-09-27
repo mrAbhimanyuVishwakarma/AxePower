@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "plasma-glass",
+  "name": "Plasma Glass",
+  "description": "Charged glass: electric blue with the brightest sheen and rim.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#A6020616",
+    "sidebar": "#33020616",
+    "card": "#5905091F",
+    "cardElevated": "#6B070C28",
+    "hover": "#7A0F1A40",
+    "border": "#664D8BFF",
+    "divider": "#1F5B8CFF",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#DBE7FF",
+    "textMuted": "#8FA6D6",
+    "textDisabled": "#56688F",
+    "accent": "#4D8BFF",
+    "success": "#34D399",
+    "warning": "#FBBF24",
+    "error": "#F87171",
+    "eco": "#34D399",
+    "smart": "#4D8BFF",
+    "beast": "#FB923C",
+    "buttonPrimary": "#2563EB",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": {
+    "backdrop": "acrylic",
+    "sheen": 100,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "WindowSecondaryBackgroundColor": "#33020616",
+    "WindowSecondaryBackgroundBrush": "#33020616",
+    "MusicTrackBrush": "#40FFFFFF",
+    "MusicPlaceholderArtBrush": "#4D8BFF, #00E5FF, #7C3AED"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "neon-tokyo",
+  "name": "Neon Tokyo",
+  "description": "A city at night: deep indigo with soft neon blue.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#16161E",
+    "sidebar": "#1A1B26",
+    "card": "#1F2335",
+    "cardElevated": "#292E42",
+    "hover": "#2F3549",
+    "border": "#3B4261",
+    "divider": "#292E42",
+    "textPrimary": "#C0CAF5",
+    "textSecondary": "#A9B1D6",
+    "textMuted": "#787C99",
+    "textDisabled": "#565F89",
+    "accent": "#7AA2F7",
+    "success": "#9ECE6A",
+    "warning": "#E0AF68",
+    "error": "#F7768E",
+    "eco": "#9ECE6A",
+    "smart": "#7DCFFF",
+    "beast": "#FF9E64",
+    "buttonPrimary": "#7AA2F7",
+    "buttonPrimaryText": "#16161E"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 25,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#7AA2F7, #BB9AF7, #7DCFFF"
+  }
+}

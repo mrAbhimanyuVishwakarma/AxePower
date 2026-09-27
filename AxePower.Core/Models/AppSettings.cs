@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using AxePower.Core.Models.Music;
 using AxePower.Core.Models.Uninstaller;
+using AxePower.Core.Models.Routines;
 using AxePower.Core.Models.ShareScreen;
 
 namespace AxePower.Core.Models;
@@ -144,6 +146,14 @@ public class AppSettings
     [JsonPropertyName("touchpadEnabled")]
     public bool TouchpadEnabled { get; set; } = true;
 
+    /// <summary>Settings page: the category list is folded to its icon rail.</summary>
+    [JsonPropertyName("settingsCategoriesCollapsed")]
+    public bool SettingsCategoriesCollapsed { get; set; } = false;
+
+    /// <summary>Tray menu items the user hid in Settings → Taskbar preferences (by id).</summary>
+    [JsonPropertyName("hiddenTrayMenuItems")]
+    public List<string> HiddenTrayMenuItems { get; set; } = new();
+
     [JsonPropertyName("autoCheckUpdates")]
     public bool AutoCheckUpdates { get; set; } = true;
 
@@ -176,6 +186,10 @@ public class AppSettings
     /// <summary>Share Screen preferences. A settings file without this key loads the defaults.</summary>
     [JsonPropertyName("shareScreen")]
     public ShareScreenSettings ShareScreen { get; set; } = new();
+
+    /// <summary>If-then routines (skillsMD/ROUTINES_PLAN.md). A settings file without this key has none.</summary>
+    [JsonPropertyName("routines")]
+    public List<Routine> Routines { get; set; } = new();
 
     public AppSettings Clone()
     {
@@ -218,6 +232,8 @@ public class AppSettings
             OvernightBatteryChargingEnabled = this.OvernightBatteryChargingEnabled,
             FnLockEnabled = this.FnLockEnabled,
             TouchpadEnabled = this.TouchpadEnabled,
+            SettingsCategoriesCollapsed = this.SettingsCategoriesCollapsed,
+            HiddenTrayMenuItems = new List<string>(this.HiddenTrayMenuItems ?? new List<string>()),
             AutoCheckUpdates = this.AutoCheckUpdates,
             AutoDownloadUpdates = this.AutoDownloadUpdates,
             NotifyOnNewRelease = this.NotifyOnNewRelease,
@@ -227,7 +243,8 @@ public class AppSettings
             // An explicit "music": null in the file must not leave callers with a null section
             Music = (this.Music ?? new MusicSettings()).Clone(),
             Uninstaller = (this.Uninstaller ?? new UninstallerSettings()).Clone(),
-            ShareScreen = (this.ShareScreen ?? new ShareScreenSettings()).Clone()
+            ShareScreen = (this.ShareScreen ?? new ShareScreenSettings()).Clone(),
+            Routines = (this.Routines ?? new()).Select(r => r.Clone()).ToList()
         };
     }
 }

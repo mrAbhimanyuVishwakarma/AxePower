@@ -24,3 +24,6 @@ __pycache__/
 
 ## Discord bot credentials (advertising bot) - keep local
 discord api.txt
+
+# Third-party installers are not ours to redistribute
+Ninite Installer.exe

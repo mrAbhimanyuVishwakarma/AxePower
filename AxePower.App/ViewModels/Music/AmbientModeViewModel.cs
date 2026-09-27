@@ -40,6 +40,13 @@ public partial class AmbientModeViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _isOpen;
 
+    /// <summary>
+    /// True when idle time opened it rather than the listener. It then behaves like a
+    /// screensaver: any mouse movement, click or key closes it.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutoOpened;
+
     [ObservableProperty]
     private Color _primaryColor;
 
@@ -52,7 +59,17 @@ public partial class AmbientModeViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Toggle()
     {
-        if (_nowPlaying.HasCurrent) IsOpen = !IsOpen;
+        if (!_nowPlaying.HasCurrent) return;
+        IsAutoOpened = false;
+        IsOpen = !IsOpen;
+    }
+
+    /// <summary>Opens it the way a screensaver would. Does nothing when it is already open.</summary>
+    public void OpenAsScreensaver()
+    {
+        if (IsOpen || !_nowPlaying.HasCurrent) return;
+        IsAutoOpened = true;
+        IsOpen = true;
     }
 
     [RelayCommand]

@@ -34,6 +34,9 @@ public class MusicRegistrationTests
         var integrations = provider.GetServices<IPlayerIntegration>().Select(i => i.Name).ToList();
         Assert.Contains("Windows media controls", integrations);
         Assert.Contains("Taskbar buttons", integrations);
+        Assert.Contains("Recently played", integrations);
+        Assert.Same(provider.GetRequiredService<RecentlyPlayedService>(),
+            provider.GetServices<IPlayerIntegration>().OfType<RecentlyPlayedService>().Single());
     }
 
     [Fact]

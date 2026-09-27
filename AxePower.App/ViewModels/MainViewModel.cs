@@ -49,6 +49,9 @@ public partial class MainViewModel : ObservableObject
     public SettingsViewModel SettingsVm { get; }
     public LogsViewModel LogsVm { get; }
     public AboutViewModel AboutVm { get; }
+
+    /// <summary>The optional AxePower account: sidebar item and the sign-in dialog over the window.</summary>
+    public AccountViewModel? AccountVm { get; }
     public UninstallerViewModel UninstallerVm { get; }
     public SystemOptimizerViewModel OptimizerVm { get; }
     public SystemDoctorViewModel DoctorVm { get; }
@@ -56,6 +59,8 @@ public partial class MainViewModel : ObservableObject
     public SoftwareHubViewModel SoftwareHubVm { get; }
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
+    public ToolsViewModel? ToolsVm { get; }
+    public RoutinesViewModel? RoutinesVm { get; }
     public MusicViewModel? MusicVm { get; }
     public ShareScreenViewModel? ShareScreenVm { get; }
     public ShareScreenViewModel? FriendsVm => ShareScreenVm;
@@ -97,6 +102,7 @@ public partial class MainViewModel : ObservableObject
     public Style? DoctorActiveStyle => GetSubItemStyleForView(DoctorVm);
     public Style? DebloatActiveStyle => GetSubItemStyleForView(DebloatVm);
     public Style? TerminalActiveStyle => GetSubItemStyleForView(TerminalVm);
+    public Style? ToolsActiveStyle => GetSubItemStyleForView((object?)ToolsVm ?? new object());
     public Style? SoftwareHubActiveStyle => GetStyleForView(SoftwareHubVm);
     public Style? UpdatePcActiveStyle => GetSubItemStyleForView(SoftwareHubVm);
     public Style? PhoneHubActiveStyle => (_currentNavSection is "PhoneHub" or "PhoneControl") && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
@@ -169,8 +175,16 @@ public partial class MainViewModel : ObservableObject
         AutoSwitchViewModel? autoSwitchVm = null,
         MusicViewModel? musicVm = null,
         NowPlayingViewModel? nowPlaying = null,
-        ShareScreenViewModel? shareScreenVm = null)
+        ShareScreenViewModel? shareScreenVm = null,
+        ToolsViewModel? toolsVm = null,
+        AccountViewModel? accountVm = null,
+        RoutinesViewModel? routinesVm = null)
     {
+        ToolsVm = toolsVm;
+        if (ToolsVm != null) ToolsVm.NavigateTo = target => Navigate(target);
+        RoutinesVm = routinesVm;
+        if (RoutinesVm != null) RoutinesVm.NavigateTo = target => Navigate(target);
+        AccountVm = accountVm;
         MusicVm = musicVm;
         ShareScreenVm = shareScreenVm;
         if (ShareScreenVm != null) ShareScreenVm.NavigateTo = target => Navigate(target);
@@ -362,6 +376,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(DoctorActiveStyle));
         OnPropertyChanged(nameof(DebloatActiveStyle));
         OnPropertyChanged(nameof(TerminalActiveStyle));
+        OnPropertyChanged(nameof(ToolsActiveStyle));
         OnPropertyChanged(nameof(SoftwareHubActiveStyle));
         OnPropertyChanged(nameof(UpdatePcActiveStyle));
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
@@ -397,7 +412,7 @@ public partial class MainViewModel : ObservableObject
         {
             IsMaintenanceExpanded = true;
         }
-        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat")
+        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat" or "Tools" or "Routines")
         {
             IsUtilitiesExpanded = true;
         }
@@ -411,7 +426,8 @@ public partial class MainViewModel : ObservableObject
             "Music"       => (object?)MusicVm ?? DashboardVm,
             "Settings"    => ShowSettingsSection(arg1),
             "Logs"        => LogsVm,
-            "About"       => AboutVm,
+            "About"       => AboutVm,   // older links; the page is Profile now
+            "Profile"     => AboutVm,
             "Uninstaller" => UninstallerVm,
             "Optimizer"   => OptimizerVm,
             "Utilities"   => OptimizerVm,
@@ -419,6 +435,8 @@ public partial class MainViewModel : ObservableObject
             "Maintenance" => DoctorVm,
             "Debloat"     => DebloatVm,
             "Terminal"    => TerminalVm,
+            "Tools"       => (object?)ToolsVm ?? DashboardVm,
+            "Routines"    => (object?)RoutinesVm ?? DashboardVm,
             "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
             "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
             "ShareScreen" => (object?)ShareScreenVm ?? DashboardVm,
@@ -434,6 +452,9 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(PhoneHubActiveStyle));
         OnPropertyChanged(nameof(SecondMonitorActiveStyle));
+
+        // The sidebar's "Sign in" item: land on Profile with the sign-in dialog already open.
+        if (baseKey == "Profile" && AccountVm is { IsSignedOut: true, IsDialogOpen: false }) AccountVm.OpenSignIn();
     }
 
     /// <summary>
@@ -579,6 +600,7 @@ public partial class MainViewModel : ObservableObject
             ? AllToolGuides.FirstOrDefault(t => t.Id.Equals(toolId, StringComparison.OrdinalIgnoreCase))
             : null;
         SelectedToolHelp = found ?? AllToolGuides.FirstOrDefault();
+        foreach (var guide in AllToolGuides) guide.IsSelected = ReferenceEquals(guide, SelectedToolHelp);
         IsToolHelpModalOpen = true;
     }
 
@@ -701,7 +723,7 @@ public partial class MainViewModel : ObservableObject
             Overview = "The industry-standard graphics card utility for real-time in-game telemetry, FPS counter overlay, GPU temperature tracking, and customizable cooling fan curves.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "Click 'MSI Afterburner' in the sidebar or 'Launch Tool' below.",
+                "Open Tools in the sidebar and click Open on MSI Afterburner, or use 'Launch Tool' below.",
                 "AxePower launches Afterburner in the background (minimized) with hardware monitoring enabled.",
                 "Open Afterburner Settings > Monitoring tab to choose which metrics (FPS, GPU Temp, VRAM Usage, CPU Clock) display in the on-screen display (OSD).",
                 "Launch your game — the real-time overlay will display your thermal and performance metrics."
@@ -714,11 +736,11 @@ public partial class MainViewModel : ObservableObject
             LaunchButtonText = "Launch MSI Afterburner"
         });
 
-        // 3. Uninstaller Pro
+        // 3. Uninstaller
         AllToolGuides.Add(new AxePower.App.Models.ToolInstructionItem
         {
             Id = "Uninstaller",
-            Title = "Uninstaller Pro",
+            Title = "Uninstaller",
             IconGlyph = "\uE74D",
             Subtitle = "Deep Application Removal & Verified Leftover Cleaner",
             Credit = "Built into AxePower Pro",
@@ -726,7 +748,7 @@ public partial class MainViewModel : ObservableObject
             Overview = "Removes desktop programs, MSI packages and Store apps with their own uninstallers, checks that each one is really gone, and then offers only the leftovers it can tie to that app.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "Click 'Uninstaller Pro' from the left sidebar.",
+                "Click 'Uninstaller' from the left sidebar.",
                 "Browse or search the installed apps; the Broken filter lists entries whose uninstaller is missing.",
                 "Select one or more apps, or open one in the details panel.",
                 "Click 'Uninstall', check the list of commands that will run, and confirm. Each app is verified afterwards.",
@@ -737,7 +759,7 @@ public partial class MainViewModel : ObservableObject
                 "System components, AxePower itself and folders other apps still use are protected and can't be selected.",
                 "Registry keys are exported to .reg backups before deletion and files go to the Recycle Bin; restore registry backups from History."
             },
-            LaunchButtonText = "Open Uninstaller Pro"
+            LaunchButtonText = "Open Uninstaller"
         });
 
         // 4. Update PC

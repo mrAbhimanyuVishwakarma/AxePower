@@ -317,7 +317,94 @@
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentBrush}" />
-                            <Setter Property="Foreground" Value="#FFFFFF" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Ambient Mode icon: a headset with a boom mic, drawn as strokes (1920-unit canvas) so it
+         takes the colour of whatever draws it and follows every skin -->
+    <PathGeometry x:Key="AmbientModeIconGeometry"
+                  Figures="M 1478,900 A 548,548 0 0 0 380,900 L 380,1170 C 380,1198 403,1221 431,1221 C 452,1320 530,1392 622,1392 C 688,1392 741,1339 741,1273 L 741,980 C 741,914 688,861 622,861 C 571,861 526,880 490,912 A 440,440 0 0 1 1368,912 C 1332,880 1287,861 1236,861 C 1170,861 1117,914 1117,980 L 1117,1273 C 1117,1339 1170,1392 1236,1392 C 1328,1392 1406,1325 1427,1226 C 1455,1226 1478,1203 1478,1175 M 1490,1075 C 1530,1120 1552,1170 1552,1228 C 1552,1410 1350,1535 1087,1540 M 1047,1580 L 910,1580 C 888,1580 872,1562 872,1542 C 872,1522 888,1504 910,1504 L 1047,1504 C 1068,1504 1087,1521 1087,1540" />
+
+    <!-- Same look and states as MusicIconButtonStyle, but draws the vector icon given in Tag -->
+    <Style x:Key="MusicPathIconButtonStyle" TargetType="ButtonBase">
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Grid>
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="17" />
+                        <Border x:Name="focus" CornerRadius="17" BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" Visibility="Collapsed" />
+                        <!-- Stretch scales the drawing, not the line, so the stroke stays 1.6px at any size -->
+                        <Path Width="19" Height="19" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
+                              Data="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                              Stroke="{TemplateBinding Foreground}" StrokeThickness="1.6"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bg" Property="Opacity" Value="0.7" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="focus" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.35" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Header source switch (Local Music / YT Music): looks like a button, stays lit while its mode is shown -->
+    <Style x:Key="MusicModeButtonStyle" TargetType="RadioButton">
+        <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="12,7" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid>
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" />
+                        <Border x:Name="tint" Background="{DynamicResource AccentBrush}" CornerRadius="8" Opacity="0" IsHitTestVisible="False" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            <Setter TargetName="bg" Property="BorderThickness" Value="1.5" />
+                            <Setter TargetName="tint" Property="Opacity" Value="0.2" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bg" Property="Opacity" Value="0.8" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

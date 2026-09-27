@@ -78,14 +78,23 @@
     </Style>
 
     <!-- Primary Button -->
+    <!-- Every text box: the typing cursor takes the skin's text colour. WPF's default caret is
+         black, which vanishes on dark skins. Only the caret is set, so each box keeps its look. -->
+    <Style TargetType="TextBox">
+        <Setter Property="CaretBrush" Value="{DynamicResource PrimaryTextBrush}" />
+    </Style>
+    <Style TargetType="PasswordBox">
+        <Setter Property="CaretBrush" Value="{DynamicResource PrimaryTextBrush}" />
+    </Style>
+
     <Style TargetType="Button" x:Key="PrimaryButtonStyle">
         <Style.Resources>
             <Style TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#FFFFFF" />
+                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
             </Style>
         </Style.Resources>
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-        <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="32,12" />
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
@@ -530,13 +539,8 @@
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="ContentTemplate">
-            <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" Foreground="{Binding Path=(TextElement.Foreground), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" />
-                </DataTemplate>
-            </Setter.Value>
-        </Setter>
+        <!-- No ContentTemplate here: one would override DisplayMemberPath and show the item's
+             type name (e.g. "ThemeChoice { ... }"). The TextBlock style above sets the colour. -->
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
@@ -550,7 +554,7 @@
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
-                            <Setter Property="Foreground" Value="#FFFFFF" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -558,7 +562,7 @@
                                 <Condition Property="IsHighlighted" Value="True" />
                             </MultiTrigger.Conditions>
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentHoverBrush}" />
-                            <Setter Property="Foreground" Value="#FFFFFF" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
                         </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -21,6 +21,8 @@ public sealed class MusicStoragePaths
     public string Root { get; }
     public string PlaybackStateFile => Path.Combine(Root, "playback-state.json");
     public string CoversDirectory => Path.Combine(Root, "covers");
+    public string RecentlyPlayedFile => Path.Combine(Root, "recently-played.json");
+    public string RecentSearchesFile => Path.Combine(Root, "recent-searches.json");
 
     /// <summary>Audio downloaded from a streaming source. Safe to delete: it is only a cache.</summary>
     public string StreamCacheDirectory => Path.Combine(Root, "stream-cache");

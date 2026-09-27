@@ -56,6 +56,12 @@
         <DataTemplate DataType="{x:Type viewmodels:TerminalViewModel}">
             <views:TerminalView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:ToolsViewModel}">
+            <views:ToolsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:RoutinesViewModel}">
+            <views:RoutinesView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:SoftwareHubViewModel}">
             <views:SoftwareHubView />
         </DataTemplate>
@@ -309,24 +315,19 @@
 
                             <!-- Utilities Sub-items -->
                             <StackPanel Visibility="{Binding ShowUtilitiesItems, Converter={StaticResource BoolToVis}}">
-                                <!-- MSI Afterburner -->
-                                <Button Style="{StaticResource SidebarSubItemButtonStyle}" Command="{Binding OpenMsiAfterburnerCommand}" ToolTip="MSI Afterburner: open it with hardware monitoring">
+                                <!-- Tools: MSI Afterburner, CPU-Z, GPU-Z, CrystalDiskInfo -->
+                                <Button Style="{Binding ToolsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Tools" ToolTip="Tools: MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo" AutomationProperties.Name="Tools">
                                     <StackPanel Orientation="Horizontal">
-                                        <Rectangle Width="16" Height="16" Margin="0,0,12,0" VerticalAlignment="Center"
-                                                   Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
-                                            <Rectangle.OpacityMask>
-                                                <ImageBrush ImageSource="/Resources/icons/MSI Afterburner.png" Stretch="Uniform"/>
-                                            </Rectangle.OpacityMask>
-                                        </Rectangle>
-                                        <TextBlock Text="MSI Afterburner" Style="{StaticResource SidebarLabelStyle}"/>
+                                        <TextBlock Text="&#xEC7A;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Tools" Style="{StaticResource SidebarLabelStyle}"/>
                                     </StackPanel>
                                 </Button>
 
-                                <!-- Uninstaller Pro -->
-                                <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller Pro: remove applications and clean verified leftovers">
+                                <!-- Uninstaller -->
+                                <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller: remove applications and clean verified leftovers">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Uninstaller Pro" Style="{StaticResource SidebarLabelStyle}"/>
+                                        <TextBlock Text="Uninstaller" Style="{StaticResource SidebarLabelStyle}"/>
                                     </StackPanel>
                                 </Button>
 
@@ -348,12 +349,12 @@
                             </StackPanel>
                     </StackPanel>
 
-                    <!-- Bottom Fixed Navigation (Settings & About) -->
+                    <!-- Bottom Fixed Navigation (Settings & Profile) -->
                     <StackPanel Grid.Row="2" Margin="0,0,0,10" WindowChrome.IsHitTestVisibleInChrome="True">
                         <!-- Divider -->
                         <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="20,0,20,6" Opacity="0.4"/>
 
-                        <!-- Settings (Above About) -->
+                        <!-- Settings (above Profile) -->
                         <Button Style="{Binding SettingsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings" ToolTip="Settings" AutomationProperties.Name="Settings">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
@@ -361,11 +362,57 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- About (Bottom of the list) -->
-                        <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="About" ToolTip="About AxePower and updates" AutomationProperties.Name="About">
+                        <!-- Profile (bottom of the list; replaced About in 2.0.8): avatar, name and @username.
+                             Signed out it reads "Sign in"; the rail shows only the avatar. -->
+                        <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Profile"
+                                Height="52" ToolTip="{Binding AccountVm.SidebarTitle}" AutomationProperties.Name="Profile">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="About" Style="{StaticResource SidebarLabelStyle}"/>
+                                <Grid Width="30" Height="30" VerticalAlignment="Center">
+                                    <Grid.Style>
+                                        <Style TargetType="Grid">
+                                            <Setter Property="Margin" Value="-7,0,11,0"/>
+                                            <Style.Triggers>
+                                                <!-- Rail: centre the 30 px avatar on the 72 px rail's centre line -->
+                                                <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                    <Setter Property="Margin" Value="-7,0,0,0"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
+                                    <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.22"/>
+                                    <TextBlock Text="{Binding AccountVm.Initials}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="{Binding AccountVm.HasAccount, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="{Binding AccountVm.IsSignedOut, Converter={StaticResource BoolToVis}}"/>
+                                    <Ellipse Visibility="{Binding AccountVm.HasAvatar, Converter={StaticResource BoolToVis}}">
+                                        <Ellipse.Fill>
+                                            <ImageBrush ImageSource="{Binding AccountVm.AvatarUrl}" Stretch="UniformToFill"/>
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <!-- Online dot: green when signed in and reachable -->
+                                    <Ellipse Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-1,-1"
+                                             Stroke="{DynamicResource SidebarBackgroundBrush}" StrokeThickness="2"
+                                             Visibility="{Binding AccountVm.IsSignedIn, Converter={StaticResource BoolToVis}}">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding AccountVm.IsOffline}" Value="True">
+                                                        <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                </Grid>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding AccountVm.SidebarTitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="13.5"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                    <TextBlock Text="{Binding AccountVm.SidebarSubtitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="11.5" FontWeight="Normal"
+                                               Foreground="{DynamicResource MutedTextBrush}" TextTrimming="CharacterEllipsis" MaxWidth="150" Margin="0,1,0,0"/>
+                                </StackPanel>
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -544,6 +591,11 @@
                                      WindowChrome.IsHitTestVisibleInChrome="True"
                                      Visibility="{Binding DataContext.ShowHeaderPlayer, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" />
 
+            <!-- Power timer: bottom-right on every page. On the Dashboard it lines up with the right end
+                 of the Display / CPU / GPU strip (69px tall, 32px side margin). -->
+            <views:PowerTimerControl Grid.Row="1" Grid.Column="1" Margin="0,0,32,15"
+                                     WindowChrome.IsHitTestVisibleInChrome="True" />
+
             <!-- Notification Snackbar -->
             <Border Grid.Row="1" Grid.Column="1" 
                     VerticalAlignment="Bottom" HorizontalAlignment="Center"
@@ -565,12 +617,14 @@
                 </Border>
 
                 <!-- Centered Modal Card -->
-                <Border Width="760" MaxHeight="640" Margin="24"
+                <!-- Fixed size for every tool: stretches up to 960x660 and is centred, so a short or long
+                     guide never resizes the window; smaller windows shrink it instead of clipping it -->
+                <Border MaxWidth="960" MaxHeight="660" Margin="24"
                         Background="{DynamicResource ElevatedCardBackgroundBrush}"
                         BorderBrush="{DynamicResource CardBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="20"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.7" Direction="270" ShadowDepth="12"/>
                     </Border.Effect>
@@ -579,9 +633,9 @@
                         <Grid.RowDefinitions>
                             <!-- Header -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Tool Selector Tabs -->
-                            <RowDefinition Height="Auto"/>
-                            <!-- Body (Scrollable instructions) -->
+                            <!-- (was the horizontal tool strip; the tools are now a list on the right) -->
+                            <RowDefinition Height="0"/>
+                            <!-- Body: tool list on the left, guide on the right -->
                             <RowDefinition Height="*"/>
                             <!-- Footer actions -->
                             <RowDefinition Height="Auto"/>
@@ -642,54 +696,14 @@
                             </Grid>
                         </Border>
 
-                        <!-- Tool Selector Tabs (Horizontal Scrolling) -->
-                        <Border Grid.Row="1" Background="{DynamicResource WindowSecondaryBackgroundBrush}" Padding="12,10" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PanningMode="HorizontalOnly" HorizontalAlignment="Stretch" Focusable="False">
-                                <ItemsControl ItemsSource="{Binding AllToolGuides}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Button Command="{Binding DataContext.OpenToolHelpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding Id}"
-                                                    Margin="0,0,8,0" Padding="12,6" Cursor="Hand" Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <Border x:Name="TabBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                            <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"
-                                                                                       Visibility="{Binding ImageIconSource, Converter={StaticResource NullToVis}}"/>
-                                                                            <Image Source="{Binding ImageIconSource, TargetNullValue={x:Null}}" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
-                                                                                   Visibility="{Binding ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
-                                                                            <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
-                                                                        </StackPanel>
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="#1AFFFFFF"/>
-                                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </Border>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="230"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
                         <!-- Scrollable Guide Content -->
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24,18">
+                        <ScrollViewer x:Name="ToolHelpScroller" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24,18">
                             <StackPanel>
                                 <!-- Overview Card -->
                                 <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,16">
@@ -741,6 +755,66 @@
                                 </ItemsControl>
                             </StackPanel>
                         </ScrollViewer>
+
+                        <!-- Tool list: every guide, one per row, the open one highlighted -->
+                        <Border Grid.Column="0" Background="{DynamicResource WindowSecondaryBackgroundBrush}"
+                                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="TOOLS" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MutedTextBrush}" Margin="18,16,0,8"/>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False" Padding="10,0,10,12">
+                                    <ItemsControl ItemsSource="{Binding AllToolGuides}" Focusable="False" AutomationProperties.Name="Tools">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.OpenToolHelpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding Id}" Cursor="Hand" Margin="0,0,0,4"
+                                                        HorizontalContentAlignment="Stretch" FocusVisualStyle="{x:Null}"
+                                                        AutomationProperties.Name="{Binding Title}" ToolTip="{Binding Title}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="row" CornerRadius="8" Padding="10,8" BorderThickness="1"
+                                                                    Background="Transparent" BorderBrush="Transparent">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="22"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock x:Name="glyph" Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                                               Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"
+                                                                               Visibility="{Binding ImageIconSource, Converter={StaticResource NullToVis}}"/>
+                                                                    <Image Source="{Binding ImageIconSource, TargetNullValue={x:Null}}" Width="14" Height="14" HorizontalAlignment="Left"
+                                                                           VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
+                                                                           Visibility="{Binding ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
+                                                                    <TextBlock x:Name="title" Grid.Column="1" Text="{Binding Title}" FontSize="12.5"
+                                                                               Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                                    <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                                                    <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+                                                                </Trigger>
+                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                    <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                                    <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                                    <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                                    <Setter TargetName="title" Property="FontWeight" Value="SemiBold"/>
+                                                                    <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                                </DataTrigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+                        </Grid>
 
                         <!-- Footer Bar -->
                         <Border Grid.Row="3" Padding="24,14" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
@@ -833,6 +907,42 @@
                 </Grid>
             </Border>
 
+            <!-- A friend's invite (call or watch): pops up on any page, bottom right -->
+            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="999"
+                    DataContext="{Binding ShareScreenVm.AccountFriends}" WindowChrome.IsHitTestVisibleInChrome="True"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,72" Width="340"
+                    Background="{DynamicResource PopupBackgroundBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
+                    CornerRadius="14" Padding="16,14" Effect="{DynamicResource CardShadowEffect}"
+                    Visibility="{Binding IsInvitePopupOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"
+                    AutomationProperties.Name="Friend invite">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="42" Height="42" Margin="0,0,12,0" VerticalAlignment="Top">
+                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.2"/>
+                        <TextBlock Text="{Binding InviteFromInitials}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding InviteTitle}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding InviteSubtitle}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,2,0,12"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding DeclineInviteCommand}" Padding="16,7" FontSize="12.5" Margin="0,0,8,0" Content="Decline"/>
+                            <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding JoinInviteCommand}" Padding="22,7" FontSize="12.5">
+                                <TextBlock Text="Join"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Account dialog (sign in, sign up, username, edit, delete): over the whole window -->
+            <views:AccountDialogView Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="1001"
+                                     DataContext="{Binding AccountVm}" WindowChrome.IsHitTestVisibleInChrome="True"
+                                     Visibility="{Binding IsDialogOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"/>
+
             <!-- ─── Steam-Style Patch Notes Modal Dialog (Image 1) ────────────── -->
             <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Background="#C80A0E17" Panel.ZIndex="1000"
                   Visibility="{Binding AboutVm.IsSteamPatchNotesModalOpen, Converter={StaticResource BoolToVis}}">
@@ -850,7 +960,324 @@
                         <!-- Left: Scrollable Feed of Patch Note Posts -->
                         <ScrollViewer x:Name="PatchNotesScrollViewer" Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,28,16,28">
                             <StackPanel>
-                                <!-- ═══ POST: V2.0.2 (SEPTEMBER 24, 2026 - LATEST) ═══ -->
+                                <!-- ═══ POST: V2.0.9 (SEPTEMBER 27, 2026 - LATEST) ═══ -->
+                                <StackPanel Margin="0,0,0,32">
+                                    <StackPanel Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6" VerticalAlignment="Center">
+                                            <TextBlock Text="UPDATE / PATCH NOTES" Foreground="#66C0F4" FontSize="11" FontWeight="Bold" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                            <TextBlock Text="POSTED Sun, September 27, 2026" Foreground="#8F98A0" FontSize="11" Margin="10,0,0,0" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                        </StackPanel>
+                                        <TextBlock Text="AxePower v2.0.9 - Routines &amp; Expanded Tools" Foreground="#FFFFFF" FontSize="22" FontWeight="Normal" TextWrapping="Wrap" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="Automate everyday PC tasks with If-Then routines, and reach more trusted maintenance tools from one place." Foreground="#C6D4DF" FontSize="13" LineHeight="20" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <TextBlock Text="Highlights" Foreground="#E1E7EE" FontSize="13.5" FontWeight="Bold" Margin="0,4,0,8"/>
+                                    <StackPanel Margin="12,0,0,0">
+                                        <TextBlock Text="&#x2022; Routines: combine time, app, power, and battery conditions, then change power mode, manage apps, start a power timer, or show a notification." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="&#x2022; Undo: a routine can restore what it changed when its conditions stop; the newest routine wins when rules overlap." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="&#x2022; Timer &amp; Routines: live status and the complete routine editor are available from Tools." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="&#x2022; Tools: Revo Uninstaller and WizTree join the existing utilities, and every card uses the app's real icon." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="&#x2022; Polish: cleaner tray menus and more consistent controls and status areas across every skin." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Border Height="1" Background="#2A3848" Margin="0,0,0,32"/>
+
+                                <!-- ═══ POST: V2.0.8 (SEPTEMBER 26, 2026) ═══ -->
+                                <StackPanel Margin="0,0,0,32">
+                                    <StackPanel Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6" VerticalAlignment="Center">
+                                            <TextBlock Text="UPDATE / PATCH NOTES" Foreground="#66C0F4" FontSize="11" FontWeight="Bold" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                            <TextBlock Text="POSTED Sat, September 26, 2026" Foreground="#8F98A0" FontSize="11" Margin="10,0,0,0" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                        </StackPanel>
+                                        <TextBlock Text="AxePower v2.0.8 - Accounts, Friends &amp; a Profile Page" Foreground="#FFFFFF" FontSize="22" FontWeight="Normal" TextWrapping="Wrap" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="An optional AxePower account, and Friends built on it: see who is online and what they are playing, and invite them to a call or to watch your screen." Foreground="#C6D4DF" FontSize="13" LineHeight="20" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <TextBlock Text="Highlights" Foreground="#E1E7EE" FontSize="13.5" FontWeight="Bold" Margin="0,4,0,8"/>
+                                    <StackPanel Margin="12,0,0,16">
+                                        <TextBlock Text="• AxePower Account: optional sign-in with Google, GitHub, Discord, Steam or email. Your name and picture sit at the bottom of the sidebar." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Profile: About is now Profile, with your account plus version, updates, release notes and support in one place." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Friends: add people by @username with suggestions as you type, accept requests, and see who is online and what they are playing." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Invites: invite a friend to a call or to watch your screen. They get a pop-up with Join on any page." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Privacy: hide what you are doing, appear offline, choose whether people can find you by name, and manage blocked people in Settings, Friends." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Fixes: the Game Mode card keeps its name in small windows, a muted microphone shows a crossed-out mic, and buttons are readable in the Light skin." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    </StackPanel>
+
+                                    <!-- Reaction Bar -->
+                                    <Border Background="#161F29" BorderBrush="#263442" BorderThickness="1" CornerRadius="4" Padding="8,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Command="{Binding AboutVm.RateUpPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="rb1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="👍" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedLikesCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasLikes, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Rate Up" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="rb1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Background="#2B3948" BorderThickness="0" Padding="10,6" Margin="6,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="db1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="👎" FontSize="12" Foreground="#8F98A0" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="db1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Command="{Binding AboutVm.DiscussPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Margin="10,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="cb1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="💬" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedCommentsCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasComments, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Discuss" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="cb1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Command="{Binding AboutVm.SharePatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="14,6" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="sb1_v208" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#C6D4DF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="Share" Foreground="#C6D4DF" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="sb1_v208" Property="Background" Value="#384A5E"/></Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <Border Height="1" Background="#2A3848" Margin="0,0,0,32"/>
+
+                                <!-- ═══ POST: V2.0.7 (SEPTEMBER 25, 2026) ═══ -->
+                                <StackPanel Margin="0,0,0,32">
+                                    <StackPanel Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6" VerticalAlignment="Center">
+                                            <TextBlock Text="UPDATE / PATCH NOTES" Foreground="#66C0F4" FontSize="11" FontWeight="Bold" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                            <TextBlock Text="POSTED Fri, September 25, 2026" Foreground="#8F98A0" FontSize="11" Margin="10,0,0,0" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                        </StackPanel>
+                                        <TextBlock Text="AxePower v2.0.7 - Tools, 30 New Skins &amp; a New Settings Page" Foreground="#FFFFFF" FontSize="22" FontWeight="Normal" TextWrapping="Wrap" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="A Tools page for the apps gamers actually use, thirty new skins, a Settings page you can find things in, and battery details that match what your battery reports." Foreground="#C6D4DF" FontSize="13" LineHeight="20" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <TextBlock Text="Highlights" Foreground="#E1E7EE" FontSize="13.5" FontWeight="Bold" Margin="0,4,0,8"/>
+                                    <StackPanel Margin="12,0,0,16">
+                                        <TextBlock Text="• Tools: MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo on one page in the sidebar. Open what you have, install the rest from each publisher, and see what is running." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• 30 new skins, including Midnight Sakura, Synthwave Sunset, Deep Ocean, Matrix Terminal, Paper &amp; Ink, High Contrast and Frosted Rose Glass, the first light glass skin." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Settings: a category list you can fold into icons, one category per page, a little more compact, and Taskbar preferences to choose what the tray menu shows." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Battery: the real charge state (plugged in but not charging now says so), the battery's own temperature in °C or °F, its real serial number and manufacture date." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Touchpad: the switch in Settings now really turns the touchpad off and on, and follows Windows&#x27; own setting." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Friends: the whole page follows your skin, including glass skins. Its settings are now called Friends." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Fixes: skin names in the Theme list, the mouse wheel no longer flicks through themes, About icons and Check for updates follow every skin, and tray menu modes keep their colours." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    </StackPanel>
+
+                                    <!-- Reaction Bar -->
+                                    <Border Background="#161F29" BorderBrush="#263442" BorderThickness="1" CornerRadius="4" Padding="8,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Command="{Binding AboutVm.RateUpPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="rb1_v207" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="👍" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedLikesCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasLikes, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Rate Up" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="rb1_v207" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Background="#2B3948" BorderThickness="0" Padding="10,6" Margin="6,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="db1_v207" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="👎" FontSize="12" Foreground="#8F98A0" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="db1_v207" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Command="{Binding AboutVm.DiscussPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Margin="10,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="cb1_v207" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="💬" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedCommentsCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasComments, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Discuss" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="cb1_v207" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Command="{Binding AboutVm.SharePatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="14,6" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="sb1_v207" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#C6D4DF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="Share" Foreground="#C6D4DF" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="sb1_v207" Property="Background" Value="#384A5E"/></Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <Border Height="1" Background="#2A3848" Margin="0,0,0,32"/>
+
+                                <!-- ═══ POST: V2.0.6 (SEPTEMBER 25, 2026) ═══ -->
+                                <StackPanel Margin="0,0,0,32">
+                                    <StackPanel Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6" VerticalAlignment="Center">
+                                            <TextBlock Text="UPDATE / PATCH NOTES" Foreground="#66C0F4" FontSize="11" FontWeight="Bold" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                            <TextBlock Text="POSTED Fri, September 25, 2026" Foreground="#8F98A0" FontSize="11" Margin="10,0,0,0" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                        </StackPanel>
+                                        <TextBlock Text="AxePower v2.0.6 - Power Timer, Ambient Mode &amp; Real Battery Health" Foreground="#FFFFFF" FontSize="22" FontWeight="Normal" TextWrapping="Wrap" FontFamily="Segoe UI, Segoe UI Variable, Arial"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="A timer to shut down, restart or sleep your PC, full-screen Ambient Mode with lyrics that actually show up, an honest battery health reading, and a lot of tidying." Foreground="#C6D4DF" FontSize="13" LineHeight="20" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <TextBlock Text="Highlights" Foreground="#E1E7EE" FontSize="13.5" FontWeight="Bold" Margin="0,4,0,8"/>
+                                    <StackPanel Margin="12,0,0,16">
+                                        <TextBlock Text="• Power timer: shut down, restart or sleep after the time you type, from the button in the bottom-right corner of every page. The countdown turns red two minutes before, with an on-screen warning you can click to add time." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Ambient Mode: album art and synced lyrics fill the whole screen, and it can open by itself like a screensaver after 1, 2, 5 or 10 idle minutes while music plays. New headset icon, matched to every skin." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Lyrics: found for far more songs (the catalogue lookup had been failing on most YouTube titles), and lines now change within about 40 ms of being sung." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Music: a compact player, YT Music and Local Music switches in the header, Last played lists for each, the last 7 YouTube searches with their songs, and your YouTube queue restored after a restart." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Library folders: Add Folder now picks real folders (several at once), remembers them, scans in the background, and each card has a small × to remove it." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Battery: health now comes from your battery&#x27;s real design capacity (it had been fixed at 98%), with a chart of capacity over time and the full Windows battery report in one click." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Cleaner pages: the bottom status bars are gone from Battery, Phone Control, Optimizer, Doctor, Update PC and Uninstaller Pro, and the help window lists tools on the left at a fixed size." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="• Privacy &amp; legal: a rewritten Privacy Policy and new Terms of Service in About, complete open-source license notices, and a visible text cursor in every text box on dark skins." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    </StackPanel>
+
+                                    <!-- Reaction Bar -->
+                                    <Border Background="#161F29" BorderBrush="#263442" BorderThickness="1" CornerRadius="4" Padding="8,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Command="{Binding AboutVm.RateUpPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="rb1_v206" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="👍" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedLikesCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasLikes, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Rate Up" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="rb1_v206" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Background="#2B3948" BorderThickness="0" Padding="10,6" Margin="6,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="db1_v206" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <TextBlock Text="👎" FontSize="12" Foreground="#8F98A0" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="db1_v206" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                                <Button Command="{Binding AboutVm.DiscussPatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="12,6" Margin="10,0,0,0" Cursor="Hand">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="cb1_v206" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="💬" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding AboutVm.FormattedCommentsCount}" Foreground="#66C0F4" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Visibility="{Binding AboutVm.HasComments, Converter={StaticResource BoolToVis}}"/>
+                                                                    <TextBlock Text="Discuss" Foreground="#C6D4DF" FontSize="12" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="cb1_v206" Property="Background" Value="#384A5E"/></Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Command="{Binding AboutVm.SharePatchNotesCommand}" Background="#2B3948" BorderThickness="0" Padding="14,6" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="sb1_v206" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <TextBlock Text="&#xE72D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#C6D4DF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="Share" Foreground="#C6D4DF" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="sb1_v206" Property="Background" Value="#384A5E"/></Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <Border Height="1" Background="#2A3848" Margin="0,0,0,32"/>
+                                <!-- ═══ POST: V2.0.2 (SEPTEMBER 24, 2026) ═══ -->
                                 <StackPanel Margin="0,0,0,32">
                                     <StackPanel Margin="0,0,0,14">
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6" VerticalAlignment="Center">
@@ -2062,7 +2489,7 @@
                             ToolTipText="AxePower"
                             TrayMouseDoubleClick="AppTrayIcon_TrayMouseDoubleClick">
                 <tb:TaskbarIcon.ContextMenu>
-                    <ContextMenu MinWidth="255" Background="Transparent" BorderThickness="0">
+                    <ContextMenu MinWidth="255" Background="Transparent" BorderThickness="0" Opened="TrayMenu_Opened">
                         <ContextMenu.Template>
                             <ControlTemplate TargetType="ContextMenu">
                                 <Border Background="{DynamicResource TrayMenuBackgroundBrush}" 
@@ -2089,18 +2516,21 @@
                                             <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="0" Margin="0,0" Padding="12,0">
                                                 <Grid VerticalAlignment="Center">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="24"/>
+                                                        <ColumnDefinition Width="Auto"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock x:Name="IconText" Grid.Column="0" Text="{TemplateBinding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                                    <TextBlock x:Name="HeaderText" Grid.Column="1" Text="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" FontSize="12.5" FontFamily="Segoe UI Variable Text, Segoe UI, Arial" FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,8,0"/>
+                                                    <!-- Only the power modes have an icon, in the mode's colour; their text is plain like the rest -->
+                                                    <TextBlock x:Name="IconText" Grid.Column="0" Width="24" Text="{TemplateBinding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                                    <TextBlock x:Name="HeaderText" Grid.Column="1" Text="{TemplateBinding Header}" Foreground="{DynamicResource TrayMenuForegroundBrush}" FontSize="12.5" FontFamily="Segoe UI Variable Text, Segoe UI, Arial" FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,8,0"/>
                                                 </Grid>
                                             </Border>
                                             <ControlTemplate.Triggers>
+                                                <Trigger Property="Icon" Value="{x:Null}">
+                                                    <Setter TargetName="IconText" Property="Visibility" Value="Collapsed"/>
+                                                </Trigger>
                                                 <Trigger Property="IsHighlighted" Value="True">
                                                     <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource TrayMenuHoverBackgroundBrush}"/>
                                                     <Setter TargetName="HeaderText" Property="Foreground" Value="{DynamicResource TrayMenuHoverForegroundBrush}"/>
-                                                    <Setter TargetName="IconText" Property="Foreground" Value="{DynamicResource TrayMenuHoverForegroundBrush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed" Value="True">
                                                     <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource TrayMenuSeparatorBrush}"/>
@@ -2110,7 +2540,9 @@
                                     </Setter.Value>
                                 </Setter>
                             </Style>
-                            <Style TargetType="Separator">
+                            <!-- Menus look separators up by this key, not by type: without it WPF's own
+                                 style applies and indents the line past the icon column -->
+                            <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
                                 <Setter Property="OverridesDefaultStyle" Value="True"/>
                                 <Setter Property="SnapsToDevicePixels" Value="True"/>
                                 <Setter Property="Height" Value="1"/>
@@ -2125,32 +2557,33 @@
                             </Style>
                         </ContextMenu.Resources>
 
-                        <!-- Group 1: Modes -->
-                        <MenuItem Header="Eco" Icon="&#xE706;" Foreground="{DynamicResource EcoBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Eco"/>
-                        <MenuItem Header="Smart" Icon="&#xE72C;" Foreground="{DynamicResource SmartBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Smart"/>
-                        <MenuItem Header="Beast" Icon="&#xE7FC;" Foreground="{DynamicResource BeastBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Beast"/>
-                        <MenuItem Header="Game Mode" Icon="&#xE7FC;" Foreground="{DynamicResource AccentBrush}" Command="{Binding ApplyPowerModeCommand}" CommandParameter="GameMode"/>
+                        <!-- Group 1: Modes. The only items with an icon, in a fixed colour per mode (the same in
+                             every skin); their text is plain like the rest of the menu -->
+                        <MenuItem x:Name="TrayItem_Eco" Header="Eco" Icon="&#xE706;" Foreground="#1FA855" Tag="ModeColour" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Eco"/>
+                        <MenuItem x:Name="TrayItem_Smart" Header="Smart" Icon="&#xE72C;" Foreground="#3B82F6" Tag="ModeColour" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Smart"/>
+                        <MenuItem x:Name="TrayItem_Beast" Header="Beast" Icon="&#xE7FC;" Foreground="#EF4444" Tag="ModeColour" Command="{Binding ApplyPowerModeCommand}" CommandParameter="Beast"/>
+                        <MenuItem x:Name="TrayItem_GameMode" Header="Game Mode" Icon="&#xE7FC;" Foreground="#A855F7" Tag="ModeColour" Command="{Binding ApplyPowerModeCommand}" CommandParameter="GameMode"/>
 
-                        <Separator/>
+                        <Separator x:Name="TraySeparator1"/>
 
                         <!-- Group 2: Core Views -->
-                        <MenuItem Header="Dashboard" Icon="&#xE80F;" Tag="Dashboard" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem Header="Battery" Icon="&#xEBB5;" Tag="Battery" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem Header="Phone Control" Icon="&#xE8EA;" Tag="PhoneControl" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem Header="Second Monitor" Icon="&#xE7F4;" Click="TraySecondMonitor_Click"/>
+                        <MenuItem x:Name="TrayItem_Dashboard" Header="Dashboard" Tag="Dashboard" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Battery" Header="Battery" Tag="Battery" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_PhoneControl" Header="Phone Control" Tag="PhoneControl" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_SecondMonitor" Header="Second Monitor" Click="TraySecondMonitor_Click"/>
 
-                        <Separator/>
+                        <Separator x:Name="TraySeparator2"/>
 
                         <!-- Group 3: Maintenance & Tools -->
-                        <MenuItem Header="Maintenance" Icon="&#xE909;" Tag="Maintenance" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem Header="Utilities" Icon="&#xE90F;" Tag="Utilities" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem Header="Update PC" Icon="&#xE896;" Tag="UpdatePc" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Maintenance" Header="Maintenance" Tag="Maintenance" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Utilities" Header="Utilities" Tag="Utilities" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_UpdatePc" Header="Update PC" Tag="UpdatePc" Click="OpenAppAndNavigate_Click"/>
 
-                        <Separator/>
+                        <Separator x:Name="TraySeparator3"/>
 
                         <!-- Group 4: Settings & Exit -->
-                        <MenuItem Header="Settings" Icon="&#xE713;" Tag="Settings" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem Header="Exit AxePower" Icon="&#xE711;" Click="ExitApp_Click"/>
+                        <MenuItem x:Name="TrayItem_Settings" Header="Settings" Tag="Settings" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Exit" Header="Exit AxePower" Click="ExitApp_Click"/>
                     </ContextMenu>
                 </tb:TaskbarIcon.ContextMenu>
             </tb:TaskbarIcon>

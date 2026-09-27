@@ -100,7 +100,7 @@ public partial class NowPlayingViewModel : ObservableObject
 
     [ObservableProperty] private bool _hasCurrent;
     [ObservableProperty] private string _title = "Nothing playing";
-    [ObservableProperty] private string _artist = "Open files or drop them on the Music page";
+    [ObservableProperty] private string _artist = "Pick a song, or drop files on the Music page";
     [ObservableProperty] private string _album = string.Empty;
     [ObservableProperty] private ImageSource? _cover;
     [ObservableProperty] private string? _coverPath;
@@ -482,7 +482,7 @@ public partial class NowPlayingViewModel : ObservableObject
         else
         {
             Title = "Nothing playing";
-            Artist = "Open files or drop them on the Music page";
+            Artist = "Pick a song, or drop files on the Music page";
             Album = string.Empty;
         }
 

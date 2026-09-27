@@ -24,10 +24,12 @@ Written from the code on branch `v1.8` (working tree, 2026-09-22). Paths are rel
 | MAINTENANCE | Terminal (shell + shared output bus) | [terminal.md](terminal.md) |
 | UTILITIES | Update PC (drivers, BIOS, Windows Update Shield) | [update-pc.md](update-pc.md) |
 | UTILITIES | Software Hub (winget app catalog) | [software-hub.md](software-hub.md) |
-| UTILITIES | Uninstaller Pro | [uninstaller.md](uninstaller.md) |
+| UTILITIES | Uninstaller | [uninstaller.md](uninstaller.md) |
+| UTILITIES | Tools → Timer & Routines: if-then routines plan | [ROUTINES_PLAN.md](ROUTINES_PLAN.md) |
 | UTILITIES | MSI Afterburner companion | [msi-afterburner.md](msi-afterburner.md) |
 | UTILITIES | Debloat (Win11Debloat) | [debloat.md](debloat.md) |
 | FOOTER | Settings, elevation, startup, tray, themes | [settings-and-startup.md](settings-and-startup.md) |
+| FOOTER | Account (optional sign-in, Profile page, Supabase) | [account.md](account.md) |
 | FOOTER | Auto-updater (AxePower self-update) | [auto-updater.md](auto-updater.md) |
 
 ## Shared architecture (read once)

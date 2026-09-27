@@ -70,10 +70,22 @@ public partial class BatteryViewModel : ObservableObject
     private string _temperature = "--";
 
     [ObservableProperty]
+    private string _temperatureStatus = "--";
+
+    [ObservableProperty]
+    private string _temperatureDescription = string.Empty;
+
+    [ObservableProperty]
     private string _currentPowerUsage = "--";
 
     [ObservableProperty]
-    private string _deviceChemistry = "Lithium-Ion";
+    private string _powerFlowLabel = "--";
+
+    [ObservableProperty]
+    private string _powerFlowDescription = string.Empty;
+
+    [ObservableProperty]
+    private string _deviceChemistry = "--";
 
     [ObservableProperty]
     private string _designCapacity = "--";
@@ -199,6 +211,125 @@ public partial class BatteryViewModel : ObservableObject
         _timer.Start();
 
         _ = RefreshStatusAsync();
+        _ = LoadCapacityHistoryAsync();
+    }
+
+    // ── Capacity over time ──────────────────────────────────────────────────
+
+    /// <summary>The capacity line, in a 100×100 box with fixed bounds (drawn with Stretch=Fill).</summary>
+    [ObservableProperty]
+    private Geometry? _capacityLineGeometry;
+
+    /// <summary>The area under <see cref="CapacityLineGeometry"/>, in the same box.</summary>
+    [ObservableProperty]
+    private Geometry? _capacityAreaGeometry;
+
+    [ObservableProperty]
+    private bool _hasCapacityHistory;
+
+    [ObservableProperty]
+    private string _capacitySummary = "Reading Windows battery history…";
+
+    [ObservableProperty]
+    private string _capacityStartLabel = string.Empty;
+
+    [ObservableProperty]
+    private string _capacityEndLabel = string.Empty;
+
+    private async Task LoadCapacityHistoryAsync()
+    {
+        var history = await Task.Run(_batteryService.GetCapacityHistoryAsync);
+        if (history is null)
+        {
+            HasCapacityHistory = false;
+            CapacitySummary = "Windows has not recorded capacity history for this battery yet.";
+            return;
+        }
+
+        (CapacityLineGeometry, CapacityAreaGeometry) = BuildCapacityGeometry(history);
+        var first = history.Points[0];
+        var last = history.Points[^1];
+        double change = last.FullChargeMwh - first.FullChargeMwh;
+        int days = Math.Max(1, (int)Math.Round((last.EndUtc - first.EndUtc).TotalDays));
+        string span = days >= 14 ? $"{days / 7} weeks" : $"{days} days";
+        CapacitySummary = Math.Abs(change) < 1
+            ? $"Unchanged at {last.FullChargeMwh:N0} mWh over {span}"
+            : $"{(change < 0 ? "Down" : "Up")} {Math.Abs(change):N0} mWh ({Math.Abs(change) / first.FullChargeMwh:P1}) over {span}";
+        CapacityStartLabel = first.EndUtc.ToLocalTime().ToString("d MMM");
+        CapacityEndLabel = last.EndUtc.ToLocalTime().ToString("d MMM");
+        HasCapacityHistory = true;
+    }
+
+    /// <summary>
+    /// Maps the history into a 100×100 box: time left to right, capacity bottom to top. The
+    /// vertical range is at least 10% of the design capacity, so day-to-day wobble of a few
+    /// hundred mWh is not blown up into a cliff.
+    /// </summary>
+    internal static (Geometry Line, Geometry Area) BuildCapacityGeometry(BatteryCapacityHistory history)
+    {
+        var points = history.Points;
+        double min = points.Min(p => p.FullChargeMwh), max = points.Max(p => p.FullChargeMwh);
+        double minRange = (history.DesignMwh > 0 ? history.DesignMwh : max) * 0.10;
+        if (max - min < minRange)
+        {
+            double mid = (max + min) / 2;
+            min = mid - minRange / 2;
+            max = mid + minRange / 2;
+        }
+        double t0 = points[0].EndUtc.Ticks, t1 = points[^1].EndUtc.Ticks;
+        double span = Math.Max(1, t1 - t0);
+
+        System.Windows.Point Map(BatteryCapacityPoint p) =>
+            new System.Windows.Point((p.EndUtc.Ticks - t0) / span * 100, 100 - (p.FullChargeMwh - min) / (max - min) * 100);
+
+        var line = new StreamGeometry();
+        var area = new StreamGeometry();
+        using (var ctx = line.Open())
+        {
+            ctx.BeginFigure(Map(points[0]), false, false);
+            ctx.PolyLineTo(points.Skip(1).Select(Map).ToList(), true, true);
+            // Invisible corners pin the bounds, so Stretch=Fill maps the box exactly
+            ctx.BeginFigure(new System.Windows.Point(0, 0), false, false);
+            ctx.BeginFigure(new System.Windows.Point(100, 100), false, false);
+        }
+        using (var ctx = area.Open())
+        {
+            ctx.BeginFigure(new System.Windows.Point(0, 100), true, true);
+            ctx.PolyLineTo(points.Select(Map).Append(new System.Windows.Point(100, 100)).ToList(), false, true);
+            ctx.BeginFigure(new System.Windows.Point(0, 0), false, false);
+        }
+        line.Freeze();
+        area.Freeze();
+        return (line, area);
+    }
+
+    [ObservableProperty]
+    private bool _isCreatingReport;
+
+    /// <summary>Creates the full Windows battery report and opens it in the browser.</summary>
+    [RelayCommand]
+    private async Task OpenBatteryReportAsync()
+    {
+        if (IsCreatingReport) return;
+        IsCreatingReport = true;
+        try
+        {
+            string? path = await Task.Run(_batteryService.CreateHtmlBatteryReportAsync);
+            if (path == null)
+            {
+                _notificationService?.Show("Windows could not create a battery report on this PC.");
+                return;
+            }
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _notificationService?.Show("Could not open the battery report: " + ex.Message);
+        }
+        finally
+        {
+            IsCreatingReport = false;
+        }
     }
 
     private void PopulatePowerOptions()
@@ -411,6 +542,27 @@ public partial class BatteryViewModel : ObservableObject
             value ? "Overnight adaptive charging enabled." : "Overnight charging disabled.");
     }
 
+    /// <summary>The battery's own sensor, in the unit chosen in Settings.</summary>
+    private void ApplyTemperature(double? celsius)
+    {
+        if (celsius is not { } c)
+        {
+            Temperature = "Not reported";
+            TemperatureStatus = "No sensor";
+            TemperatureDescription = "This laptop doesn't report a battery temperature.";
+            return;
+        }
+
+        var unit = _settingsService?.GetSettings().TemperatureUnit ?? TemperatureUnit.Celsius;
+        Temperature = AxePower.Core.Helpers.TemperatureHelper.Format(c, unit);
+        (TemperatureStatus, TemperatureDescription) = c switch
+        {
+            < 40 => ("Normal", "Battery temperature is within normal range."),
+            < 50 => ("Warm", "The battery is warm. Heavy load or fast charging does this."),
+            _ => ("Hot", "The battery is hot. Let the laptop cool down."),
+        };
+    }
+
     private async Task RefreshStatusAsync()
     {
         var status = _batteryService.GetCurrentStatus();
@@ -418,15 +570,24 @@ public partial class BatteryViewModel : ObservableObject
         BatteryPercentage = $"{RawBatteryPercentage}%";
         IsPluggedIn = status.IsPluggedIn;
         PowerSource = status.IsPluggedIn ? "AC Power" : "Battery";
-        ChargingState = status.HasBattery ? (status.IsPluggedIn ? "Charging" : "Discharging") : "Not Applicable";
+        // Windows' own wording; plugged in is not the same as charging (Conservation mode holds ~80%)
+        ChargingState = !status.HasBattery ? "Not Applicable"
+            : status.IsCharging ? "Charging"
+            : !status.IsPluggedIn ? "On battery"
+            : status.BatteryPercentage >= 99 ? "Fully charged"
+            : "Plugged in, not charging";
         
         // Populate rich hardware telemetry
         HealthStatus = status.HealthStatus;
         HealthPercentage = status.HealthPercentage;
         CycleCount = status.CycleCount;
         DeviceChemistry = status.Chemistry;
-        Temperature = status.Temperature;
+        ApplyTemperature(status.TemperatureC);
         CurrentPowerUsage = status.CurrentPowerUsage;
+        (PowerFlowLabel, PowerFlowDescription) = !status.HasBattery ? ("No battery", "This PC runs from the charger only.")
+            : status.IsCharging ? ("Charging", "Power going into the battery.")
+            : !status.IsPluggedIn ? ("Discharging", "Power the laptop is drawing from the battery.")
+            : ("Battery idle", "Running on the charger; the battery is neither charging nor draining.");
         DesignCapacity = status.DesignCapacity;
         FullChargeCapacity = status.FullChargeCapacity;
         Voltage = status.Voltage;

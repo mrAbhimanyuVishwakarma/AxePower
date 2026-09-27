@@ -16,6 +16,8 @@ using AxePower.App.ViewModels;
 using AxePower.App.ViewModels.Music;
 using AxePower.App.ViewModels.ShareScreen;
 using AxePower.Core.Services.ShareScreen;
+using AxePower.Core.Services.Accounts;
+using AxePower.Core.Services.Friends;
 using AxePower.App.Helpers;
 
 namespace AxePower.App;
@@ -147,6 +149,9 @@ public partial class App : Application
             var appMonitorService = Services.GetRequiredService<AppMonitorService>();
             appMonitorService.Start();
 
+            // First look after startup has applied Smart, then every few seconds
+            Services.GetRequiredService<AxePower.Core.Services.Routines.RoutineEngine>().Start();
+
             var mainWindow = Services.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
 
@@ -174,6 +179,12 @@ public partial class App : Application
             // AxePower Music: media controls need the window handle; restoring the last session
             // (reading tags) runs in the background and never blocks the UI
             _ = InitializeMusicAsync(new WindowInteropHelper(mainWindow).EnsureHandle());
+
+            // Restores a saved sign-in in the background; signed out, it does nothing and needs no network
+            _ = Services.GetRequiredService<AccountService>().InitializeAsync();
+
+            // Friends follows the account: starts on sign-in, stops on sign-out, idle while signed out
+            Services.GetRequiredService<FriendsService>().Attach();
         }
         catch (Exception ex)
         {
@@ -242,6 +253,7 @@ public partial class App : Application
         services.AddSingleton<DisplayService>();
         services.AddSingleton<DriverUpdateService>();
         services.AddSingleton<MsiAfterburnerService>();
+        services.AddSingleton<ToolsService>();
         services.AddSingleton<DebloatService>();
         services.AddSingleton<AndroidControlService>();
         services.AddSingleton<ControllerNavigationService>();
@@ -299,6 +311,39 @@ public partial class App : Application
         services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
         services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
 
+        // Power timer: shut down / restart / sleep after a set time (in-process only)
+        services.AddSingleton<ITouchpadPlatform, WindowsTouchpadPlatform>();
+        services.AddSingleton<TouchpadService>();
+        services.AddSingleton<IPowerActions, WindowsPowerActions>();
+        services.AddSingleton<PowerTimerService>();
+        services.AddSingleton<PowerTimerViewModel>();
+
+        // Routines: if-then rules run by one engine (skillsMD/ROUTINES_PLAN.md)
+        services.AddSingleton<AxePower.Core.Services.Routines.IRoutineWorld, AxePower.Core.Services.Routines.WindowsRoutineWorld>();
+        services.AddSingleton<AxePower.Core.Services.Routines.IRoutineActions, AxePower.Core.Services.Routines.WindowsRoutineActions>();
+        services.AddSingleton<AxePower.Core.Services.Routines.RoutineEngine>();
+
+        // AxePower account (optional, Supabase): see skillsMD/ACCOUNTS_PROFILE_PLAN.md
+        services.AddSingleton(SupabaseProject.AxePower);
+        services.AddSingleton(sp => new SupabaseAccountApi(sp.GetRequiredService<SupabaseProject>()));
+        services.AddSingleton<IAccountApi>(sp => sp.GetRequiredService<SupabaseAccountApi>());
+        services.AddSingleton<IFriendsApi>(sp => sp.GetRequiredService<SupabaseAccountApi>());
+        services.AddSingleton(sp => new AccountSessionStore(sp.GetRequiredService<LogService>()));
+        services.AddSingleton<AccountService>();
+        services.AddSingleton<AccountViewModel>();
+
+        // Friends on the account (SHARE_SOCIAL_PLAN.md, F2). "Playing …" comes from Game Mode's detection.
+        services.AddSingleton(sp => new FriendsService(
+            sp.GetRequiredService<AccountService>(),
+            sp.GetRequiredService<IFriendsApi>(),
+            () => new SupabaseRealtimeFeed(sp.GetRequiredService<SupabaseProject>(), sp.GetRequiredService<LogService>()),
+            sp.GetRequiredService<IClock>(),
+            sp.GetRequiredService<LogService>(),
+            sp.GetRequiredService<SettingsService>(),
+            runningGame: async () => await sp.GetRequiredService<GameModeGuard>().FindRunningGameAsync() is { } exe
+                ? GamePosterService.GetCleanTitle(exe)
+                : null));
+
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton(new MusicStoragePaths());
@@ -328,6 +373,9 @@ public partial class App : Application
         services.AddSingleton<PortalAccessToken>();
         services.AddSingleton<IMusicPlayerService, MusicPlayerService>();
         services.AddSingleton<IPlayerIntegration, SmtcIntegration>();
+        services.AddSingleton<RecentlyPlayedService>();
+        services.AddSingleton<IPlayerIntegration>(sp => sp.GetRequiredService<RecentlyPlayedService>());
+        services.AddSingleton<RecentSearchesService>();
         services.AddSingleton<PlayerIntegrationHost>();
 
         // AxePower Music — App
@@ -339,6 +387,7 @@ public partial class App : Application
         services.AddSingleton<NowPlayingViewModel>();   // singleton on purpose: every surface shares it
         services.AddSingleton<LyricsViewModel>();
         services.AddSingleton<AmbientModeViewModel>();
+        services.AddSingleton<AmbientWindowService>();
         services.AddTransient<MusicViewModel>();
         services.AddTransient<MusicSettingsViewModel>();
         services.AddSingleton<SourcesViewModel>();
@@ -358,10 +407,13 @@ public partial class App : Application
         services.AddTransient<SystemDoctorViewModel>();
         services.AddTransient<DebloatViewModel>();
         services.AddTransient<SoftwareHubViewModel>();
+        services.AddTransient<ToolsViewModel>();
+        services.AddTransient<RoutinesViewModel>();
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
         services.AddTransient<TerminalViewModel>();
         services.AddSingleton<ShareScreenSettingsViewModel>();   // shared by the stage and the Settings page
+        services.AddSingleton<FriendsHubViewModel>();
         services.AddSingleton<ShareScreenViewModel>();   // singleton: a live stream must survive page switches
 
         // Views
@@ -443,6 +495,30 @@ public partial class App : Application
         Console.WriteLine(
             $"Music library: schema v{LibraryDatabase.SchemaVersion}, " +
             $"{(System.IO.File.Exists(libraryDb.FilePath) ? "present" : "not created yet")} at {libraryDb.FilePath}.");
+        var powerTimer = sp.GetRequiredService<PowerTimerService>();
+        Console.WriteLine(
+            $"Power timer: {(powerTimer.IsRunning ? $"{powerTimer.Action} in {powerTimer.Remaining}" : "idle")}, " +
+            $"actions {sp.GetRequiredService<IPowerActions>().GetType().Name}, view model {sp.GetRequiredService<PowerTimerViewModel>().GetType().Name}.");
+        // Read-only: looks for each app, installs and opens nothing
+        var toolsService = sp.GetRequiredService<ToolsService>();
+        sp.GetRequiredService<ToolsViewModel>();
+        Console.WriteLine("Tools: " + string.Join(", ", ToolsService.Tools.Select(t =>
+            $"{t.Name} {(toolsService.FindExe(t) is { } exe ? "installed at " + exe : "not installed")}")) + ".");
+        // Read-only: reads saved routines and the PC's state; the engine is not started, so nothing runs
+        var routineSettings = sp.GetRequiredService<SettingsService>().GetSettings().Routines ?? new();
+        sp.GetRequiredService<AxePower.Core.Services.Routines.RoutineEngine>();
+        sp.GetRequiredService<RoutinesViewModel>();
+        var routineWorld = sp.GetRequiredService<AxePower.Core.Services.Routines.IRoutineWorld>().Read();
+        Console.WriteLine(
+            $"Routines: {routineSettings.Count} saved, {routineSettings.Count(r => r.Enabled)} on (engine not started); " +
+            $"sees {(routineWorld.IsPluggedIn ? "plugged in" : "on battery")}, battery {(routineWorld.HasBattery ? routineWorld.BatteryPercent + "%" : "none")}, " +
+            $"{routineWorld.RunningApps.Count} running app(s), clock {routineWorld.Now:HH:mm}.");
+        var recentlyPlayed = sp.GetRequiredService<RecentlyPlayedService>();
+        Console.WriteLine(
+            $"Music history: {recentlyPlayed.Get(streamed: false).Count} local, {recentlyPlayed.Get(streamed: true).Count} streamed, " +
+            $"{sp.GetRequiredService<RecentSearchesService>().Get().Count} recent search(es); " +
+            $"Ambient screensaver {(music.AmbientAutoEnter ? $"on after {music.AmbientIdleMinutes} min" : "off")}, " +
+            $"window service {sp.GetRequiredService<AmbientWindowService>().GetType().Name} (not started).");
 
         var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
         var shareTools = sp.GetRequiredService<IShareToolProvider>();
@@ -455,6 +531,19 @@ public partial class App : Application
         Console.WriteLine(
             $"Friends room services resolved: {sp.GetRequiredService<IShareScreenService>().GetType().Name}, " +
             $"voice {sp.GetRequiredService<IRoomVoiceService>().GetType().Name} (devices not opened).");
+
+        // Read-only: decrypts the saved session to report it, never refreshes it or calls the network
+        var savedAccount = sp.GetRequiredService<AccountSessionStore>().Load();
+        sp.GetRequiredService<AccountService>();
+        var friendsService = sp.GetRequiredService<FriendsService>(); // not attached: no network, no presence
+        Console.WriteLine(
+            $"Friends: {(friendsService.IsActive ? "running" : "idle")}; share activity {(friendsService.ShareActivity ? "on" : "off")}, " +
+            $"appear offline {(friendsService.AppearOffline ? "on" : "off")}.");
+        Console.WriteLine(
+            "Account: " + (savedAccount is null ? "signed out"
+                : savedAccount.Profile is { } accountProfile ? $"@{accountProfile.Username} (saved session, not refreshed)"
+                : "signed in, no username yet (saved session)") +
+            $"; backend {sp.GetRequiredService<SupabaseProject>().Url.Host}.");
 
         try
         {
@@ -549,6 +638,7 @@ public partial class App : Application
             Services.GetRequiredService<MusicShortcutHandler>().Start();
             Services.GetRequiredService<DiscoveryService>().Start();
             Services.GetRequiredService<MusicRemote>().Start();
+            Services.GetRequiredService<AmbientWindowService>().Start();
         }
         catch (Exception ex)
         {
@@ -567,6 +657,16 @@ public partial class App : Application
                 var player = Services.GetService<IMusicPlayerService>();
                 if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
                 Services.GetService<PlayerIntegrationHost>()?.Dispose();
+                Services.GetService<AmbientWindowService>()?.Dispose();
+                // Running routines are undone (previous mode, reopened apps) before the timer goes
+                var routines = Services.GetService<AxePower.Core.Services.Routines.RoutineEngine>();
+                if (routines != null) Task.Run(routines.StopAsync).Wait(TimeSpan.FromSeconds(5));
+                Services.GetService<PowerTimerService>()?.Dispose();   // closing AxePower cancels the timer
+
+                // Friends see you leave straight away instead of when the heartbeat runs out
+                var friends = Services.GetService<FriendsService>();
+                if (friends is { IsActive: true }) Task.Run(() => friends.GoOfflineAsync(TimeSpan.FromSeconds(2))).Wait(TimeSpan.FromSeconds(3));
+                friends?.Dispose();
             }
             catch { }
 

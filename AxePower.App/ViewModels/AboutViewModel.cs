@@ -183,11 +183,16 @@ public partial class AboutViewModel : ObservableObject
         LicenseType = "AxePower Pro";
     }
 
+    /// <summary>The account shown on the Profile page, which this view model backs. Null in tests that build the page bare.</summary>
+    public AccountViewModel? Account { get; init; }
+
     public AboutViewModel(
         DriverUpdateService driverUpdateService, 
         NotificationService notificationService,
-        UpdateService updateService) : this()
+        UpdateService updateService,
+        AccountViewModel? account = null) : this()
     {
+        Account = account;
         _driverUpdateService = driverUpdateService;
         _notificationService = notificationService;
         _updateService = updateService;
@@ -461,6 +466,16 @@ public partial class AboutViewModel : ObservableObject
     {
         IsPrivacyPolicyOpen = false;
     }
+
+    /// <summary>The Terms of Service dialog, beside Privacy Policy in the About page's bottom bar.</summary>
+    [ObservableProperty]
+    private bool _isTermsOpen;
+
+    [RelayCommand]
+    private void OpenTerms() => IsTermsOpen = true;
+
+    [RelayCommand]
+    private void CloseTerms() => IsTermsOpen = false;
 
     [RelayCommand]
     private void UpdateDrivers()

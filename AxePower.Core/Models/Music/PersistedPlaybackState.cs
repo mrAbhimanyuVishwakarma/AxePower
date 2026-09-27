@@ -51,13 +51,14 @@ public sealed class PersistedPlaybackState
     /// <summary>
     /// Drops entries whose file no longer exists and fixes up the index and the unshuffled
     /// order. If the current entry is gone, the next surviving entry becomes current at 0.
+    /// Streamed entries have no file and are always kept.
     /// </summary>
     public PersistedPlaybackState WithoutMissingFiles(Func<string, bool> fileExists, out int dropped)
     {
         var keep = new List<int>();
         for (int i = 0; i < Queue.Count; i++)
         {
-            if (!string.IsNullOrEmpty(Queue[i].Path) && fileExists(Queue[i].Path)) keep.Add(i);
+            if (Queue[i].Stream is not null || (!string.IsNullOrEmpty(Queue[i].Path) && fileExists(Queue[i].Path))) keep.Add(i);
         }
 
         dropped = Queue.Count - keep.Count;
@@ -106,4 +107,11 @@ public sealed class PersistedQueueEntry
 
     [JsonPropertyName("path")]
     public string Path { get; set; } = string.Empty;
+
+    /// <summary>
+    /// For a streamed track, which has no file: where it came from and what to show until it is
+    /// played. Null for a local file. Sessions saved before this existed simply lack it.
+    /// </summary>
+    [JsonPropertyName("stream")]
+    public RecentPlay? Stream { get; set; }
 }

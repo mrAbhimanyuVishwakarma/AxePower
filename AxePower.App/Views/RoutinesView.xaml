@@ -1,0 +1,375 @@
+<UserControl x:Class="AxePower.App.Views.RoutinesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AxePower.App.ViewModels"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:RoutinesViewModel, IsDesignTimeCreatable=False}"
+             Background="Transparent"
+             AutomationProperties.Name="Routines">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
+
+        <!-- Small square icon button, as on the Tools cards -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="6,0,0,0"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8">
+                            <TextBlock Text="{TemplateBinding Content}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{TemplateBinding Foreground}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- "All of these" / "Any of these" -->
+        <Style x:Key="SegmentButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="bg" Background="Transparent" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="14" Padding="12,4" Margin="0,0,6,0">
+                            <ContentPresenter VerticalAlignment="Center" TextElement.FontSize="12"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SectionLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="Margin" Value="2,0,0,10"/>
+        </Style>
+        <Style x:Key="Word" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="8,0"/>
+        </Style>
+        <!-- Same box as the power timer's: rounded, skinned, accent border while typing -->
+        <Style x:Key="Field" TargetType="TextBox">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="box" CornerRadius="8" BorderThickness="1" Padding="8,0"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="Pick" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="SelectedValuePath" Value="Value"/>
+            <Setter Property="DisplayMemberPath" Value="Label"/>
+        </Style>
+        <Style x:Key="Row" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,16,32,24" MaxWidth="1000" HorizontalAlignment="Stretch">
+            <!-- Header -->
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Style="{StaticResource IconButton}" Content="&#xE72B;" Command="{Binding BackCommand}" Margin="0,0,12,0" VerticalAlignment="Top"
+                        ToolTip="Back to Tools" AutomationProperties.Name="Back to Tools"/>
+                <StackPanel Grid.Column="1">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Routines" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Text="If this, then that. AxePower checks every few seconds; a routine runs while its &quot;If&quot; is true and, with &quot;Undo when it ends&quot;, puts things back afterwards."/>
+                </StackPanel>
+                <Button Grid.Column="2" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding NewRoutineCommand}" Padding="18,7" Height="32" VerticalAlignment="Top"
+                        Visibility="{Binding IsListing, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="New routine" FontSize="12.5"/>
+                </Button>
+            </Grid>
+
+            <!-- ── The list ───────────────────────────────────────────── -->
+            <StackPanel Visibility="{Binding IsListing, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="Start from" Style="{StaticResource SectionLabel}"/>
+                <ItemsControl ItemsSource="{Binding Templates}" Focusable="False" Margin="0,0,0,18">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="4"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.UseTemplateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                    Cursor="Hand" Margin="0,0,10,0" AutomationProperties.Name="{Binding Name}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bg" Style="{DynamicResource CardStyle}" Padding="14">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding Name}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Description}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="Your routines" Style="{StaticResource SectionLabel}"/>
+                <Border Style="{DynamicResource CardStyle}" Padding="18" Visibility="{Binding HasRoutines, Converter={StaticResource InverseBoolToVis}}">
+                    <TextBlock FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"
+                               Text="No routines yet. Start from one above, or make your own with New routine."/>
+                </Border>
+                <ItemsControl ItemsSource="{Binding Routines}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{DynamicResource CardStyle}" Padding="18" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Width="40" Height="40" Margin="0,0,14,0" VerticalAlignment="Top">
+                                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.15"/>
+                                        <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="{DynamicResource AccentBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                            <Border CornerRadius="9" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center" BorderThickness="1">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                                        <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding IsEnabled}" VerticalAlignment="Center"
+                                                  ToolTip="On or off" AutomationProperties.Name="Routine on or off"/>
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE70F;" Command="{Binding EditCommand}" Margin="10,0,0,0"
+                                                ToolTip="Edit" AutomationProperties.Name="Edit"/>
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE74D;" Command="{Binding DeleteCommand}"
+                                                ToolTip="Delete" AutomationProperties.Name="Delete"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- ── The editor ─────────────────────────────────────────── -->
+            <Border Style="{DynamicResource CardStyle}" Padding="22" DataContext="{Binding Editor}"
+                    Visibility="{Binding DataContext.IsEditing, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="Name" Style="{StaticResource SectionLabel}"/>
+                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}" MaxWidth="360" HorizontalAlignment="Left" Width="360"
+                             Margin="0,0,0,18" AutomationProperties.Name="Routine name"/>
+
+                    <!-- If -->
+                    <Grid Margin="0,0,0,10">
+                        <TextBlock Text="IF" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <RadioButton Style="{StaticResource SegmentButton}" Content="All of these" IsChecked="{Binding IsAllSelected}"/>
+                            <RadioButton Style="{StaticResource SegmentButton}" Content="Any of these" IsChecked="{Binding IsAnySelected}"/>
+                        </StackPanel>
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Conditions}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Row}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="210"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Style="{StaticResource Pick}" ItemsSource="{x:Static vm:RoutineChoices.ConditionKinds}" SelectedValue="{Binding Kind}"
+                                                  AutomationProperties.Name="Condition"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowTime, Converter={StaticResource BoolToVis}}">
+                                                <TextBox Style="{StaticResource Field}" Width="72" Text="{Binding From, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="From"/>
+                                                <TextBlock Text="to" Style="{StaticResource Word}"/>
+                                                <TextBox Style="{StaticResource Field}" Width="72" Text="{Binding To, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="To"/>
+                                                <ComboBox Style="{StaticResource Pick}" Width="130" Margin="10,0,0,0" ItemsSource="{x:Static vm:RoutineChoices.Days}" SelectedValue="{Binding Days}"
+                                                          AutomationProperties.Name="Days"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowApp, Converter={StaticResource BoolToVis}}">
+                                                <TextBox Style="{StaticResource Field}" Width="200" Text="{Binding App, UpdateSourceTrigger=PropertyChanged}"
+                                                         ToolTip="The program's file name, e.g. cs2.exe" AutomationProperties.Name="App"/>
+                                                <Button Style="{StaticResource IconButton}" Content="&#xE8E5;" Command="{Binding BrowseAppCommand}" ToolTip="Pick the app" AutomationProperties.Name="Pick the app"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowPercent, Converter={StaticResource BoolToVis}}">
+                                                <TextBox Style="{StaticResource Field}" Width="60" Text="{Binding PercentText, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Battery percent"/>
+                                                <TextBlock Text="%" Style="{StaticResource Word}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE711;" Command="{Binding RemoveCommand}" ToolTip="Remove" AutomationProperties.Name="Remove condition"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddConditionCommand}" HorizontalAlignment="Left" Padding="14,6" Margin="0,2,0,20">
+                        <TextBlock Text="+ Add an If" FontSize="12.5"/>
+                    </Button>
+
+                    <!-- Then -->
+                    <TextBlock Text="THEN" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10"/>
+                    <ItemsControl ItemsSource="{Binding Actions}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Row}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="210"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Style="{StaticResource Pick}" ItemsSource="{x:Static vm:RoutineChoices.ActionKinds}" SelectedValue="{Binding Kind}"
+                                                  AutomationProperties.Name="Action"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
+                                            <ComboBox Style="{StaticResource Pick}" Width="150" ItemsSource="{x:Static vm:RoutineChoices.Modes}" SelectedValue="{Binding Mode}"
+                                                      Visibility="{Binding ShowMode, Converter={StaticResource BoolToVis}}" AutomationProperties.Name="Power mode"/>
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowApps, Converter={StaticResource BoolToVis}}">
+                                                <TextBox Style="{StaticResource Field}" Width="260" Text="{Binding AppsText, UpdateSourceTrigger=PropertyChanged}"
+                                                         ToolTip="Program names, separated by commas, e.g. Discord, chrome.exe" AutomationProperties.Name="Apps to close"/>
+                                                <Button Style="{StaticResource IconButton}" Content="&#xE8E5;" Command="{Binding BrowseAppsCommand}" ToolTip="Add an app" AutomationProperties.Name="Add an app"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowTarget, Converter={StaticResource BoolToVis}}">
+                                                <TextBox Style="{StaticResource Field}" Width="260" Text="{Binding Target, UpdateSourceTrigger=PropertyChanged}"
+                                                         ToolTip="A program, file or web address" AutomationProperties.Name="App or website to open"/>
+                                                <Button Style="{StaticResource IconButton}" Content="&#xE8E5;" Command="{Binding BrowseTargetCommand}" ToolTip="Pick the app" AutomationProperties.Name="Pick the app"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding ShowTimer, Converter={StaticResource BoolToVis}}">
+                                                <ComboBox Style="{StaticResource Pick}" Width="130" ItemsSource="{x:Static vm:RoutineChoices.TimerActions}" SelectedValue="{Binding TimerAction}"
+                                                          AutomationProperties.Name="Timer action"/>
+                                                <TextBlock Text="in" Style="{StaticResource Word}"/>
+                                                <TextBox Style="{StaticResource Field}" Width="60" Text="{Binding MinutesText, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Minutes"/>
+                                                <TextBlock Text="min" Style="{StaticResource Word}"/>
+                                            </StackPanel>
+                                            <TextBox Style="{StaticResource Field}" Width="320" Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"
+                                                     Visibility="{Binding ShowMessage, Converter={StaticResource BoolToVis}}" AutomationProperties.Name="Notification text"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE711;" Command="{Binding RemoveCommand}" ToolTip="Remove" AutomationProperties.Name="Remove action"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddActionCommand}" HorizontalAlignment="Left" Padding="14,6" Margin="0,2,0,20">
+                        <TextBlock Text="+ Add a Then" FontSize="12.5"/>
+                    </Button>
+
+                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding UndoWhenItEnds}" HorizontalAlignment="Left" Margin="0,0,0,6">
+                        <StackPanel>
+                            <TextBlock Text="Undo when it ends" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Puts the power mode back, reopens closed apps and cancels its timer once the If is no longer true."
+                                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" MaxWidth="520"/>
+                        </StackPanel>
+                    </CheckBox>
+
+                    <TextBlock Text="{Binding Error}" Foreground="{DynamicResource ErrorBrush}" FontSize="12.5" TextWrapping="Wrap" Margin="0,12,0,0"
+                               Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding DataContext.SaveEditorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Padding="18,7" MinWidth="96" Height="32">
+                            <TextBlock Text="Save" FontSize="12.5"/>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding DataContext.CancelEditorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Padding="18,7" MinWidth="96" Height="32" Margin="10,0,0,0">
+                            <TextBlock Text="Cancel" FontSize="12.5"/>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -21,6 +21,16 @@ public static class TouchpadScrollHelper
             UIElement.PreviewMouseWheelEvent,
             new MouseWheelEventHandler(OnPreviewMouseWheel),
             true);
+
+        // A closed dropdown must never react to the wheel. WPF changes a focused ComboBox's
+        // selection on each notch, so scrolling over Settings -> Theme flew through every skin.
+        EventManager.RegisterClassHandler(
+            typeof(ComboBox),
+            UIElement.PreviewMouseWheelEvent,
+            new MouseWheelEventHandler((sender, e) =>
+            {
+                if (sender is ComboBox { IsDropDownOpen: false }) e.Handled = true;
+            }));
     }
 
     private static void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -32,7 +42,12 @@ public static class TouchpadScrollHelper
 
         if (scrollViewer == null) return;
 
-        double multiplier = GetScrollMultiplier(scrollViewer);
+        // An open dropdown list: gentle steps, and the wheel stays in the list even at its ends
+        // instead of scrolling the page behind it
+        bool inPopup = IsInPopup(scrollViewer);
+        if (inPopup) e.Handled = true;
+
+        double multiplier = inPopup ? DropDownMultiplier : GetScrollMultiplier(scrollViewer);
 
         // Check if Shift is held down for horizontal scrolling
         bool isHorizontal = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
@@ -67,6 +82,19 @@ public static class TouchpadScrollHelper
                 }
             }
         }
+    }
+
+    private const double DropDownMultiplier = 0.3; // 120 delta -> 36px, about one item
+
+    private static bool IsInPopup(DependencyObject element)
+    {
+        DependencyObject? current = element, root = element;
+        while (current != null)
+        {
+            root = current;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return root?.GetType().Name == "PopupRoot";
     }
 
     private static double GetScrollMultiplier(ScrollViewer scrollViewer)

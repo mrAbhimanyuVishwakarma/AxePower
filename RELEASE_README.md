@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.4-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.9-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -35,6 +35,77 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🌡️ **True CPU & GPU Temperatures:** Reads your machine's real sensors — and keeps working on Windows 11 PCs with Memory Integrity turned on, where most monitoring tools show nothing.
 
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
+
+---
+
+## 🌟 What's New in v2.0.9
+
+- 🔁 **Routines**: build Samsung-style **If → Then** automations from Tools → Timer & Routines.
+  - Conditions cover time ranges, running apps, plugged-in/on-battery state, and battery level. Match every condition or any condition.
+  - Actions can change the power mode, close or open apps, start the shutdown/restart/sleep timer, or show a notification.
+  - Routines can restore what they changed when their conditions stop, and the most recently started routine wins when rules overlap.
+- ⏱️ **Timer & Routines**: the Tools card now shows live timer/routine status and opens the full Routines editor.
+- 🧰 **Expanded Tools**: Revo Uninstaller and WizTree join MSI Afterburner, CPU-Z, GPU-Z, and CrystalDiskInfo, with each card using the app's real icon.
+- 🎨 **UI polish**: cleaner tray menus and consistent surfaces, controls, and status areas across built-in and custom skins.
+- 📦 **Packaging**: ships as **`AxePower-v2.0.9-Setup.exe`**.
+
+## What's New in v2.0.8
+
+- 👤 **AxePower Account** (optional; everything still works without one):
+  - Sign in with **Google, GitHub, Discord, Steam** or **email**. Your name and picture sit at the bottom of the sidebar.
+  - A unique **@username** and a display name. The username can change once every 30 days.
+  - Your sign-in is saved encrypted for your Windows user. Offline, AxePower keeps showing your profile.
+- 🪪 **Profile**: About is now **Profile**: your account, plus version, updates, release notes, support and the legal pages in one place. Edit your profile, sign out, or delete your account there.
+- 👥 **Friends on your account**:
+  - Add friends by **@username**, with **suggestions as you type**. Accept or decline requests.
+  - See who is **online, away or offline**, and what they're doing: "Playing Valorant", "In a call", "Sharing screen".
+  - **Invite** a friend to a call or to watch your screen: they get a pop-up with **Join** on any page. Calls still connect directly (same Wi-Fi or Tailscale).
+  - Your old contacts stay as **Saved rooms**. The name under the friends list is gone (the sidebar shows who you are), and the settings gear moved to the top.
+- 🔒 **Privacy controls** in Settings → Friends: hide what you're doing, appear offline, choose whether people can find you by name, and manage blocked people. Blocking ends a friendship, and the other person isn't told.
+- 📜 **Privacy Policy and Terms** now describe what an optional account stores, who can see it, and how to delete it.
+- 🧹 **Fixes**: the Game Mode card's name no longer disappears in small windows, a muted microphone shows a crossed-out mic (it showed a magnifier), and primary buttons have readable text in the Light skin.
+- 📦 **Packaging**: ships as **`AxePower-v2.0.8-Setup.exe`**.
+
+## What's New in v2.0.7
+
+- 🧰 **Tools**: the sidebar's MSI Afterburner entry is now **Tools**, a page with MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo. Each card opens the app, or installs it through WinGet straight from its publisher, and shows whether it is running. AxePower never bundles these apps.
+- 🎨 **30 new skins**: Midnight Sakura, Synthwave Sunset, Molten Lava, Deep Ocean, Matrix Terminal, Paper & Ink, Mint Latte, Aurora Glass, Frosted Rose Glass (the first light glass skin), High Contrast, and twenty more across classic editor palettes and gaming looks. Every one passes a text-contrast check.
+- ⚙️ **Settings**:
+  - A category list beside the settings (it folds into an icon rail), one category per page, and slightly more compact rows.
+  - **Taskbar preferences**: choose which items the tray menu shows. Settings and Exit always stay.
+  - **Check for updates** in Settings works like the one in About, patch notes included.
+  - The Theme list shows skin names, sorted with each glass version under its skin, and the mouse wheel no longer flicks through themes.
+- 🔋 **Battery**: plugged in but not charging (for example with Conservation Mode) is shown as such; temperature comes from the battery's own sensor in °C or °F; the serial number and manufacture date are the battery's own. Chemistry shows "Not reported" when the battery doesn't say.
+- 🖱️ **Touchpad**: the Settings switch really turns the touchpad off and on, using the same switch as Windows, and stays in step with it.
+- 👥 **Friends**: the page follows every skin, glass included. Its settings category is renamed Friends.
+- 🧹 **Fixes**: About page icons and Check for updates follow every skin; tray menu modes keep their colours (Eco green, Smart blue, Beast red, Game Mode purple).
+- 📦 **Packaging**: ships as **`AxePower-v2.0.7-Setup.exe`**.
+
+## What's New in v2.0.6
+
+- ⏱️ **Power timer**:
+  - Shut down, restart or sleep your PC after the time you type, or a quick 15 m / 30 m / 1 h / 2 h preset, from the button in the bottom-right corner of every page.
+  - The countdown turns **red** for the last two minutes and a warning appears on screen. Its "Extend time in AxePower" line opens the timer so you can add 10 minutes or cancel.
+  - The timer runs inside AxePower: exiting the app cancels it.
+- 🎵 **Music**:
+  - **Ambient Mode** fills the whole screen with album art and synced lyrics, and can open by itself like a **screensaver** after 1, 2, 5 or 10 idle minutes while music plays (Music Settings → Ambient Mode). It never covers a full-screen game or video.
+  - **Lyrics are found for far more songs.** The catalogue lookup had been failing on most YouTube titles; it now matches them, and lines change within about 40 ms of being sung.
+  - A **compact player**, **YT Music / Local Music** buttons in the header, **Last played** lists for each, the **last 7 YouTube searches** with their songs, and your **YouTube queue restored** after a restart.
+  - **Add Folder** picks real folders (several at once), remembers them, scans in the background, and every folder card has a small **×** to remove it (your files are never touched).
+- 🔋 **Battery**:
+  - **Health is now real.** It is read from your battery's own design capacity; before, it was always shown as 98%. Expect your number to change.
+  - A **Capacity over time** chart from the history Windows keeps, and **Open full battery report** for the complete Windows report.
+- 🧹 **Cleaner pages**:
+  - Bottom status bars removed from Battery, Phone Control, Optimizer, Doctor, Update PC and Uninstaller Pro.
+  - The help window lists tools on the left and keeps one size for every tool.
+  - Dropdowns are solid on glass skins, and the text cursor is visible in every text box on dark skins.
+- 🔐 **Privacy & legal**:
+  - A rewritten **Privacy Policy** and new **Terms of Service** in About, matching the website.
+  - Complete open-source **license notices**, now shipped with portable builds as well as the installer.
+- 🗑️ **Removed**: a Software Hub link to a site distributing cracked games, and a duplicate Settings button on the Battery page.
+- 📦 **Packaging**: ships as **`AxePower-v2.0.6-Setup.exe`**.
+
+> **Heads-up:** a YouTube Music queue saved by v2.0.4 cannot be restored once (it was saved without the details needed); from v2.0.6 on, it is kept across restarts.
 
 ---
 

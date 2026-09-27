@@ -12,8 +12,15 @@ public partial class LibraryItemViewModel : ObservableObject
 {
     public string Id { get; init; } = Guid.NewGuid().ToString();
     public string Title { get; init; } = string.Empty;
-    public string Subtitle { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _subtitle = string.Empty;
+
+    /// <summary>A folder the listener added: it can be removed from the library (files are never touched).</summary>
+    public bool IsRemovable { get; init; }
     public string? Path { get; set; }
+
+    /// <summary>For a search results card, the text that was searched.</summary>
+    public string? Query { get; set; }
     public string IconGlyph { get; init; } = "\uE8D6";
     public Brush GradientBrush { get; init; } = Brushes.Transparent;
 

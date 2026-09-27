@@ -94,6 +94,14 @@ public class ShareScreenSettings
     [JsonPropertyName("viewerPort")]
     public int ViewerPort { get; set; } = 8890;
 
+    /// <summary>Friends may see what you're doing ("Playing …", "In a call", "Sharing screen").</summary>
+    [JsonPropertyName("shareActivityWithFriends")]
+    public bool ShareActivityWithFriends { get; set; } = true;
+
+    /// <summary>Friends see you as offline, whatever you're doing.</summary>
+    [JsonPropertyName("appearOffline")]
+    public bool AppearOffline { get; set; }
+
     /// <summary>List of saved/remembered friends and their addresses.</summary>
     [JsonPropertyName("savedFriends")]
     public List<SavedFriend> SavedFriends { get; set; } = new();
@@ -116,6 +124,8 @@ public class ShareScreenSettings
         KeepAwakeWhileSharing = KeepAwakeWhileSharing,
         AllowRemoteControl = AllowRemoteControl,
         ViewerPort = ViewerPort,
+        ShareActivityWithFriends = ShareActivityWithFriends,
+        AppearOffline = AppearOffline,
         SavedFriends = SavedFriends.Select(f => f with { }).ToList()
     };
 }

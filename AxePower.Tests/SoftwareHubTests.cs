@@ -97,7 +97,7 @@ public class SoftwareHubTests
         Assert.Contains("rockstar", ids);
         Assert.Contains("ubisoft", ids);
         Assert.Contains("battlenet", ids);
-        Assert.Contains("fitgirl", ids);
+        Assert.DoesNotContain("fitgirl", ids);   // pointed users to cracked games; removed 2026-09-25
         Assert.Contains("dlss5swapper", ids);
         Assert.Contains("afterburner", ids);
         Assert.Contains("7zip", ids);

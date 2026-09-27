@@ -153,8 +153,22 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         }
     }
 
-    partial void OnFriendsFilterTabChanged(string value) => OnPropertyChanged(nameof(FilteredFriends));
-    partial void OnFriendSearchTextChanged(string value) => OnPropertyChanged(nameof(FilteredFriends));
+    partial void OnFriendsFilterTabChanged(string value)
+    {
+        OnPropertyChanged(nameof(FilteredFriends));
+        AccountFriends?.SetFilter(value, FriendSearchText);
+    }
+
+    partial void OnFriendSearchTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(FilteredFriends));
+        AccountFriends?.SetFilter(FriendsFilterTab, value);
+    }
+
+    /// <summary>Friends on the AxePower account (null in tests that build the page without one).</summary>
+    public FriendsHubViewModel? AccountFriends { get; }
+
+    public bool HasSavedRooms => SavedFriends.Count > 0;
 
     partial void OnIsDeafenedChanged(bool value)
     {
@@ -233,8 +247,11 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
     public string ParticipantCountText => IsFriendJoined ? "2" : "1";
 
-    public string SelfAvatarInitial => !string.IsNullOrEmpty(Environment.UserName)
-        ? Environment.UserName[..1].ToUpperInvariant()
+    /// <summary>Your name in rooms and chat: the account's display name when signed in, else the Windows user name.</summary>
+    public string SelfName => AccountFriends?.Account is { IsSignedIn: true } account ? account.DisplayName : Environment.UserName;
+
+    public string SelfAvatarInitial => !string.IsNullOrEmpty(SelfName)
+        ? SelfName[..1].ToUpperInvariant()
         : "U";
 
     public string FriendAvatarInitial => !string.IsNullOrEmpty(FriendName)
@@ -257,7 +274,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>The name shown on the tile, as a viewer would label this stream.</summary>
-    public string TileName => Environment.UserName;
+    public string TileName => SelfName;
 
     public string ElapsedText => Telemetry.Elapsed.TotalHours >= 1
         ? Telemetry.Elapsed.ToString(@"h\:mm\:ss")
@@ -278,7 +295,8 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     /// <summary>Speaker or muted-speaker, matching what the stream currently carries.</summary>
     public string AudioGlyph => IsDeafened ? "\uE74F" : "\uE767";
 
-    public string MicGlyph => IsMicMuted ? "\uE721" : "\uE720";
+    /// <summary>Microphone (E720), or the slashed microphone (F781) when muted. E721 is the search magnifier.</summary>
+    public string MicGlyph => IsMicMuted ? "\uF781" : "\uE720";
 
     public string AudioTooltip => IsDeafened ? "Hear the call" : "Deafen call audio";
 
@@ -289,9 +307,11 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         LogService logService,
         ShareChatStore? chatStore = null,
         ShareAttachmentStore? attachmentStore = null,
-        IRoomVoiceService? voiceService = null)
+        IRoomVoiceService? voiceService = null,
+        FriendsHubViewModel? friendsHub = null)
     {
         _shareService = shareService;
+        AccountFriends = friendsHub;
         Settings = settings;
         _notificationService = notificationService;
         _logService = logService;
@@ -307,9 +327,29 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
             if (msg.IsAttachment) SharedFiles.Add(msg);
         }
 
+        if (AccountFriends is { } hub)
+        {
+            hub.SetFilter(FriendsFilterTab, FriendSearchText);
+            hub.GetRoomLink = GetRoomLinkForInviteAsync;
+            hub.JoinRequested += (_, invite) => JoinFromInvite(invite, hub.NameOf(invite.FromUserId));
+            hub.Account.PropertyChanged += (_, _) =>
+            {
+                OnPropertyChanged(nameof(SelfName));
+                OnPropertyChanged(nameof(SelfAvatarInitial));
+                OnPropertyChanged(nameof(TileName));
+            };
+
+            // Friends see "In a call" / "Sharing screen" while that is true
+            PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is nameof(IsInCall) or nameof(IsLive)) hub.UpdateSession(IsInCall, IsLive);
+            };
+        }
+
         // Ensure friend list updates propagate to filtered properties
         Settings.SavedFriends.CollectionChanged += (_, _) =>
         {
+            OnPropertyChanged(nameof(HasSavedRooms));
             OnPropertyChanged(nameof(FilteredFriends));
             OnPropertyChanged(nameof(OnlineFriendsCount));
             OnPropertyChanged(nameof(AllFriendsCount));
@@ -445,6 +485,41 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     }
 
     private bool HasViewerLink() => !string.IsNullOrWhiteSpace(ViewerUrl);
+
+    /// <summary>
+    /// For an invite from the Friends list: opens this PC's room if it isn't open yet and returns
+    /// its link. A watch invite needs the screen shared first, since there'd be nothing to watch.
+    /// </summary>
+    private async Task<string?> GetRoomLinkForInviteAsync(AxePower.Core.Services.Friends.InviteKind kind)
+    {
+        if (kind == AxePower.Core.Services.Friends.InviteKind.Watch && !IsLive)
+        {
+            _notificationService.Show("Share your screen first, then invite friends to watch.");
+            return null;
+        }
+
+        if (State is ShareSessionState.Idle or ShareSessionState.Faulted)
+        {
+            var result = await _shareService.StartRoomAsync(Settings.BuildSessionSettings(), CancellationToken.None);
+            Apply(result);
+            if (result.State == ShareSessionState.RoomOpen) StartVoiceDevices();
+        }
+
+        return HasViewerLink() ? ViewerUrl : null;
+    }
+
+    /// <summary>Joining a friend's invite: the same as joining by link, without saving it as a room.</summary>
+    private void JoinFromInvite(AxePower.Core.Services.Friends.FriendInvite invite, string friendName)
+    {
+        NavigateTo?.Invoke("Friends");
+        _joinForScreen = invite.Kind == AxePower.Core.Services.Friends.InviteKind.Watch;
+        JoinAddressInput = invite.RoomLink;
+        FriendNameInput = friendName;
+        var remember = RememberFriend;
+        RememberFriend = false;
+        try { ConnectToRoom(); }
+        finally { RememberFriend = remember; }
+    }
 
     [RelayCommand(CanExecute = nameof(HasViewerLink))]
     private void CopyViewerLink()
@@ -1028,7 +1103,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
         var message = new ShareChatMessage(
             Guid.NewGuid().ToString("N"),
-            Environment.UserName,
+            SelfName,
             text,
             DateTime.Now,
             IsSelf: true);
@@ -1056,7 +1131,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
             var file = _attachmentStore.Import(dialog.FileName);
             var chunkCount = (int)Math.Ceiling(file.Bytes.Length / (double)ShareAttachmentStore.WireChunkBytes);
             var card = new ShareChatMessage(
-                Guid.NewGuid().ToString("N"), Environment.UserName, string.Empty, DateTime.Now, true,
+                Guid.NewGuid().ToString("N"), SelfName, string.Empty, DateTime.Now, true,
                 ShareChatKinds.File, file.Id, file.Name, file.Size, file.Sha256, 0, chunkCount);
 
             Messages.Add(card);

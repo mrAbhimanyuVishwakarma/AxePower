@@ -233,6 +233,100 @@ public class BatteryService : IDisposable
         }
     }
 
+    internal static string HealthLabel(double health) =>
+        health >= 90 ? "Excellent" : health >= 80 ? "Good" : health >= 60 ? "Fair" : "Worn";
+
+    /// <summary>
+    /// Full-charge capacity as Windows has recorded it over time (weekly, then daily entries in
+    /// the battery report), oldest first. Null when Windows has no history for this battery.
+    /// </summary>
+    public async Task<BatteryCapacityHistory?> GetCapacityHistoryAsync()
+    {
+        string reportPath = Path.Combine(Path.GetTempPath(), $"AxePower_capacityreport_{Environment.ProcessId}.xml");
+        try
+        {
+            if (!await RunPowercfgAsync($"/batteryreport /xml /output \"{reportPath}\"") || !File.Exists(reportPath)) return null;
+            return ParseCapacityHistory(System.Xml.Linq.XDocument.Load(reportPath));
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"[Battery] Could not read capacity history: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            try { if (File.Exists(reportPath)) File.Delete(reportPath); } catch { }
+        }
+    }
+
+    /// <summary>Reads the HistoryEntry records of a powercfg battery report.</summary>
+    internal static BatteryCapacityHistory? ParseCapacityHistory(System.Xml.Linq.XDocument doc)
+    {
+        var points = new List<BatteryCapacityPoint>();
+        double design = 0;
+        foreach (var entry in doc.Descendants().Where(e => e.Name.LocalName == "HistoryEntry"))
+        {
+            if (!DateTime.TryParse((string?)entry.Attribute("EndDate"), System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var endUtc)) continue;
+            if (!double.TryParse((string?)entry.Attribute("FullChargeCapacity"), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var full) || full <= 0) continue;
+            if (double.TryParse((string?)entry.Attribute("DesignCapacity"), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var d) && d > 0) design = d;
+
+            // A replaced battery starts a new history; only the current battery's entries count
+            if ((string?)entry.Attribute("BatteryChanged") == "1") points.Clear();
+            points.Add(new BatteryCapacityPoint(endUtc, full));
+        }
+
+        points.Sort((a, b) => a.EndUtc.CompareTo(b.EndUtc));
+        return points.Count >= 2 ? new BatteryCapacityHistory(points, design) : null;
+    }
+
+    /// <summary>
+    /// Writes the full Windows battery report (HTML) into AxePower's folder and returns its path,
+    /// or null if Windows could not produce one. The report stays on this computer.
+    /// </summary>
+    public async Task<string?> CreateHtmlBatteryReportAsync()
+    {
+        try
+        {
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower");
+            Directory.CreateDirectory(folder);
+            string path = Path.Combine(folder, "battery-report.html");
+            return await RunPowercfgAsync($"/batteryreport /output \"{path}\"") && File.Exists(path) ? path : null;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning($"[Battery] Could not create the battery report: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static async Task<bool> RunPowercfgAsync(string arguments)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "powercfg.exe",
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        using var proc = System.Diagnostics.Process.Start(psi);
+        if (proc == null) return false;
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        try
+        {
+            await proc.WaitForExitAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            try { proc.Kill(true); } catch { }
+            return false;
+        }
+        return proc.ExitCode == 0;
+    }
+
     // Pre-seeds 25 plausible baseline points across the last 24 hours ending at the current percentage
     private static List<BatteryHistoryPoint> GenerateSeedHistory(int currentPercentage, bool isPluggedIn, DateTime now)
     {
@@ -398,7 +492,7 @@ public class BatteryService : IDisposable
                 IsPluggedIn = sps.ACLineStatus == 1,
                 BatteryPercentage = sps.BatteryLifePercent <= 100 ? sps.BatteryLifePercent : 0,
                 HasBattery = hasBattery,
-                IsCharging = hasBattery && sps.ACLineStatus == 1 && sps.BatteryFlag == 8
+                IsCharging = hasBattery && sps.ACLineStatus == 1 && (sps.BatteryFlag & 8) != 0 // a bit mask: 8 is charging, 1 is high
             };
 
             if (sps.BatteryLifeTime > 0 && sps.BatteryLifeTime < 100000)
@@ -443,7 +537,7 @@ public class BatteryService : IDisposable
         target.HealthPercentage = source.HealthPercentage;
         target.CycleCount = source.CycleCount;
         target.Chemistry = source.Chemistry;
-        target.Temperature = source.Temperature;
+        target.TemperatureC = source.TemperatureC;
         target.CurrentPowerUsage = source.CurrentPowerUsage;
         target.DesignCapacity = source.DesignCapacity;
         target.FullChargeCapacity = source.FullChargeCapacity;
@@ -472,7 +566,6 @@ public class BatteryService : IDisposable
                     var voltage = obj["DesignVoltage"]?.ToString();
                     var estRun = obj["EstimatedRunTime"]?.ToString();
 
-                    if (!string.IsNullOrWhiteSpace(name)) status.SerialNumber = name;
                     if (!string.IsNullOrWhiteSpace(devId))
                     {
                         if (devId.Contains("Sunwoda", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "Sunwoda";
@@ -481,8 +574,9 @@ public class BatteryService : IDisposable
                         else if (devId.Contains("LGC", StringComparison.OrdinalIgnoreCase) || devId.Contains("LG", StringComparison.OrdinalIgnoreCase)) status.Manufacturer = "LG Chem";
                         else status.Manufacturer = "OEM (Internal)";
                     }
-                    
-                    if (chem == "2" || string.IsNullOrWhiteSpace(status.Chemistry)) status.Chemistry = "Lithium-Ion";
+
+                    // Win32_Battery's Name is the model (e.g. L23D4PK4); the serial comes from the driver below
+                    status.Chemistry = chem switch { "3" => "Lead Acid", "4" => "Nickel Cadmium", "5" => "Nickel Metal Hydride", "6" => "Lithium-Ion", "7" => "Zinc Air", "8" => "Lithium-Polymer", _ => status.Chemistry };
 
                     if (double.TryParse(voltage, out var vMv) && vMv > 0)
                     {
@@ -497,7 +591,28 @@ public class BatteryService : IDisposable
                 }
             }
 
-            // 2. Query root/wmi for FullChargedCapacity
+            // 2. Design capacity from the battery's own data. It used to be invented as 102% of the
+            //    full-charge capacity, which pinned health at 98% whatever the battery's state.
+            double designCapacity = 0;
+            try
+            {
+                using var staticSearcher = new ManagementObjectSearcher(@"root\wmi", "SELECT DesignedCapacity FROM BatteryStaticData");
+                foreach (ManagementObject obj in staticSearcher.Get())
+                {
+                    if (double.TryParse(obj["DesignedCapacity"]?.ToString(), out var dc) && dc > 0)
+                    {
+                        designCapacity = dc;
+                        break;
+                    }
+                }
+            }
+            catch (ManagementException)
+            {
+                // Not every battery driver publishes static data; health then shows as not reported
+            }
+            status.DesignCapacity = designCapacity > 0 ? $"{designCapacity:N0} mWh" : "Not reported";
+
+            // Then the full-charge capacity
             double fullCapacity = 0;
             using (var searcher = new ManagementObjectSearcher("root\\wmi", "SELECT * FROM BatteryFullChargedCapacity"))
             {
@@ -507,7 +622,6 @@ public class BatteryService : IDisposable
                     {
                         fullCapacity = fcc;
                         status.FullChargeCapacity = $"{fcc:N0} mWh";
-                        status.DesignCapacity = $"{Math.Round(fcc * 1.02):N0} mWh";
                         break;
                     }
                 }
@@ -540,21 +654,20 @@ public class BatteryService : IDisposable
                     var chgRate = Convert.ToDouble(obj["ChargeRate"] ?? 0);
                     var activeRate = Math.Max(disRate, chgRate);
 
-                    if (activeRate > 0)
+                    // Rates are in mW: what flows into the battery while charging, out of it on battery
+                    if (obj["Charging"] is bool charging) status.IsCharging = charging;
+                    status.CurrentPowerUsage = $"{activeRate / 1000.0:F1} W";
+
+                    // Health is how much of the original capacity is left
+                    if (fullCapacity > 0 && designCapacity > 0)
                     {
-                        double watts = (activeRate > 1000) ? activeRate / 1000.0 : activeRate;
-                        status.CurrentPowerUsage = $"{watts:F1} W";
-                    }
-                    else
-                    {
-                        status.CurrentPowerUsage = status.IsPluggedIn ? "0.0 W (AC Power)" : "0.0 W";
+                        double health = Math.Min(100.0, fullCapacity / designCapacity * 100.0);
+                        status.HealthPercentage = $"{health:F0}%";
+                        status.HealthStatus = HealthLabel(health);
                     }
 
                     if (double.TryParse(obj["RemainingCapacity"]?.ToString(), out var remCap) && remCap > 0 && fullCapacity > 0)
                     {
-                        double health = Math.Min(100.0, (fullCapacity / (fullCapacity * 1.02)) * 100.0);
-                        status.HealthPercentage = $"{health:F0}%";
-                        status.HealthStatus = health >= 90 ? "Excellent" : (health >= 80 ? "Good" : "Fair");
                         
                         if (disRate > 0 && !status.IsPluggedIn)
                         {
@@ -567,45 +680,33 @@ public class BatteryService : IDisposable
                         }
                         else if (status.IsPluggedIn)
                         {
-                            status.EstimatedTimeRemaining = status.BatteryPercentage >= 99 ? "Fully Charged" : "Charging on AC";
+                            status.EstimatedTimeRemaining = status.BatteryPercentage >= 99 ? "Fully charged"
+                                : status.IsCharging && chgRate > 0 && fullCapacity > remCap ? ToFull((fullCapacity - remCap) / chgRate)
+                                : status.IsCharging ? "Charging" : "Not charging";
                         }
                     }
                     break;
                 }
             }
 
-            // 5. Query live hardware thermal sensor for battery/chassis temperature
-            try
-            {
-                using var thermalSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation");
-                foreach (ManagementObject obj in thermalSearcher.Get())
-                {
-                    if (double.TryParse(obj["HighPrecisionTemperature"]?.ToString(), out var hpTemp) && hpTemp > 2000)
-                    {
-                        double cel = (hpTemp / 10.0) - 273.15;
-                        if (cel >= 0 && cel <= 110)
-                        {
-                            status.Temperature = $"{cel:F0}°C";
-                            break;
-                        }
-                    }
-                    else if (double.TryParse(obj["Temperature"]?.ToString(), out var tempK) && tempK > 200)
-                    {
-                        double cel = tempK - 273.15;
-                        if (cel >= 0 && cel <= 110)
-                        {
-                            status.Temperature = $"{cel:F0}°C";
-                            break;
-                        }
-                    }
-                }
-            }
-            catch { }
+            // 5. What the battery itself reports: serial, chemistry, temperature, manufacture date.
+            //    The ACPI thermal zone used before is not the battery, and stays put under load.
+            var device = BatteryDeviceReader.Read();
+            if (device.SerialNumber != null) status.SerialNumber = device.SerialNumber;
+            if (device.Chemistry != null) status.Chemistry = device.Chemistry;
+            status.TemperatureC = device.TemperatureC;
+            if (device.ManufactureDate is { } made) status.ManufactureDate = made.ToString("MMM d, yyyy");
         }
         catch (Exception ex)
         {
             _logService.LogWarning($"WMI battery query: {ex.Message}");
         }
+    }
+
+    private static string ToFull(double hours)
+    {
+        int minutes = (int)Math.Round(hours * 60);
+        return minutes >= 60 ? $"{minutes / 60}h {minutes % 60:D2}m to full" : $"{Math.Max(1, minutes)}m to full";
     }
 
     public void SetConservationMode(bool enabled)
@@ -728,20 +829,6 @@ public class BatteryService : IDisposable
         catch (Exception ex)
         {
             _logService.LogError("Failed to update FnLock in registry.", ex);
-        }
-    }
-
-    public void SetTouchpad(bool enabled)
-    {
-        try
-        {
-            const string hive = "Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad\\Status";
-            using var key = Registry.CurrentUser.CreateSubKey(hive);
-            key?.SetValue("TouchPadEnabled", enabled ? 1 : 0, RegistryValueKind.DWord);
-        }
-        catch (Exception ex)
-        {
-            _logService.LogError("Failed to update Touchpad in registry.", ex);
         }
     }
 

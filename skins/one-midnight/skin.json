@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "one-midnight",
+  "name": "One Midnight",
+  "description": "Balanced cool greys with friendly blue.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#1E2127",
+    "sidebar": "#21252B",
+    "card": "#282C34",
+    "cardElevated": "#2F343E",
+    "hover": "#3A3F4B",
+    "border": "#3E4451",
+    "divider": "#2F343E",
+    "textPrimary": "#E6E9EF",
+    "textSecondary": "#ABB2BF",
+    "textMuted": "#828997",
+    "textDisabled": "#5C6370",
+    "accent": "#61AFEF",
+    "success": "#98C379",
+    "warning": "#E5C07B",
+    "error": "#E06C75",
+    "eco": "#98C379",
+    "smart": "#56B6C2",
+    "beast": "#D19A66",
+    "buttonPrimary": "#61AFEF",
+    "buttonPrimaryText": "#1E2127"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#61AFEF, #C678DD, #56B6C2"
+  }
+}

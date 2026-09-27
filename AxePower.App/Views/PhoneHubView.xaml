@@ -44,7 +44,7 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
@@ -55,7 +55,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -66,7 +66,6 @@
             <RowDefinition Height="Auto"/>  <!-- Header -->
             <RowDefinition Height="Auto"/>  <!-- Tab Switcher -->
             <RowDefinition Height="*"/>     <!-- Active Content Scroll -->
-            <RowDefinition Height="69"/>    <!-- Bottom Status Bar -->
         </Grid.RowDefinitions>
 
         <!-- ─── 1. Header ───────────────────────────────────────────────────── -->
@@ -980,27 +979,6 @@
 
         </Grid>
 
-        <!-- ─── 4. Bottom Status Bar ────────────────────────────────────────── -->
-        <Border Grid.Row="3" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
-            <Grid Margin="32,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Grid Width="32" Height="32" Margin="0,0,16,0">
-                        <Ellipse Fill="{DynamicResource ElevatedCardBackgroundBrush}" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1" />
-                        <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Phone Control Hub Active" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,2"/>
-                        <TextBlock Text="High-speed Wi-Fi LAN Drop, Screen Mirroring, Second Monitor &amp; Windows Phone Link." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </Border>
 
         <!-- ─── 5. QR Code Modal Overlay ─────────────────────────────────────── -->
         <Grid Grid.Row="0" Grid.RowSpan="4"

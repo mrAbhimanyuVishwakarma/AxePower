@@ -1,0 +1,222 @@
+<UserControl x:Class="AxePower.App.Views.PowerTimerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AxePower.App.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:PowerTimerViewModel, IsDesignTimeCreatable=False}"
+             HorizontalAlignment="Right" VerticalAlignment="Bottom"
+             AutomationProperties.Name="Power timer">
+    <UserControl.Resources>
+        <!-- Corner button: round when idle, a pill with the countdown while running, red in the last two minutes -->
+        <Style x:Key="PowerTimerButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="MinWidth" Value="38" />
+            <Setter Property="Padding" Value="11,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" CornerRadius="19" Padding="{TemplateBinding Padding}" BorderThickness="1"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsWarning}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+                                <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TimerNumberBoxStyle" TargetType="TextBox">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="MaxLength" Value="4" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="box" CornerRadius="8" BorderThickness="1"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Margin="2,0" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PresetButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel HorizontalAlignment="Right">
+        <!-- Options panel: drawn in the window, not a Popup, so it never floats above other apps -->
+        <Border Width="316" Padding="18" Margin="0,0,0,10" CornerRadius="14" BorderThickness="1"
+                Background="{DynamicResource PopupBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                Visibility="{Binding IsFlyoutOpen, Converter={StaticResource BoolToVis}}">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="6" Direction="270" Opacity="0.4" Color="#000000" />
+            </Border.Effect>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource AccentBrush}"
+                               VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBlock Text="Power timer" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Running: what is due and when, with cancel and more time -->
+                <Border CornerRadius="10" Padding="12,10" Margin="0,0,0,14" BorderThickness="1"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsWarning}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RunningLabel, StringFormat={}{0} in}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="20" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsWarning}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="+10 min" Height="30" Padding="10,0" Margin="0,0,6,0"
+                                    Command="{Binding AddTenMinutesCommand}" ToolTip="Add 10 minutes" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Cancel" Height="30" Padding="10,0"
+                                    Command="{Binding CancelCommand}" ToolTip="Cancel the timer" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- What to do -->
+                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="2" HorizontalAlignment="Left" Margin="0,0,0,14">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource MusicTabRadioStyle}" GroupName="PowerTimerAction" Content="Shut down"
+                                     IsChecked="{Binding IsShutdownSelected, Mode=TwoWay}" />
+                        <RadioButton Style="{StaticResource MusicTabRadioStyle}" GroupName="PowerTimerAction" Content="Restart"
+                                     IsChecked="{Binding IsRestartSelected, Mode=TwoWay}" />
+                        <RadioButton Style="{StaticResource MusicTabRadioStyle}" GroupName="PowerTimerAction" Content="Sleep"
+                                     IsChecked="{Binding IsSleepSelected, Mode=TwoWay}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- After how long -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock Text="After" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBox x:Name="HoursBox" Style="{StaticResource TimerNumberBoxStyle}"
+                             Text="{Binding HoursText, UpdateSourceTrigger=PropertyChanged}"
+                             PreviewTextInput="NumberBox_PreviewTextInput" DataObject.Pasting="NumberBox_Pasting"
+                             AutomationProperties.Name="Hours" />
+                    <TextBlock Text="h" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="6,0,12,0" />
+                    <TextBox Style="{StaticResource TimerNumberBoxStyle}"
+                             Text="{Binding MinutesText, UpdateSourceTrigger=PropertyChanged}"
+                             PreviewTextInput="NumberBox_PreviewTextInput" DataObject.Pasting="NumberBox_Pasting"
+                             AutomationProperties.Name="Minutes">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding StartCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <TextBlock Text="min" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="6,0,0,0" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button Style="{StaticResource PresetButtonStyle}" Content="15m" Command="{Binding PresetCommand}" CommandParameter="15" />
+                    <Button Style="{StaticResource PresetButtonStyle}" Content="30m" Command="{Binding PresetCommand}" CommandParameter="30" />
+                    <Button Style="{StaticResource PresetButtonStyle}" Content="1h" Command="{Binding PresetCommand}" CommandParameter="60" />
+                    <Button Style="{StaticResource PresetButtonStyle}" Content="2h" Command="{Binding PresetCommand}" CommandParameter="120" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding InputError}" FontSize="11.5" Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap" Margin="0,0,0,8"
+                           Visibility="{Binding InputError, Converter={StaticResource NotNullToVis}}" />
+
+                <Button HorizontalAlignment="Stretch" Padding="16,9" FontSize="13.5" Command="{Binding StartCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+                            <Setter Property="Content" Value="Start timer" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                    <Setter Property="Content" Value="Replace timer" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <TextBlock Text="Runs while AxePower is open. Closing AxePower cancels it." FontSize="11" TextWrapping="Wrap"
+                           Foreground="{DynamicResource MutedTextBrush}" Margin="0,10,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- The corner button -->
+        <Button x:Name="TimerButton" Style="{StaticResource PowerTimerButtonStyle}" HorizontalAlignment="Right"
+                Command="{Binding ToggleFlyoutCommand}"
+                ToolTip="{Binding ButtonToolTip}" AutomationProperties.Name="{Binding ButtonToolTip}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" FontSize="15" VerticalAlignment="Center"
+                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                <StackPanel Orientation="Horizontal" Margin="8,0,2,0" VerticalAlignment="Center"
+                            Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding RunningLabel}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0" VerticalAlignment="Center"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                    <TextBlock Text="{Binding CountdownText}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center"
+                               FontFamily="Segoe UI Variable Display, Segoe UI"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                </StackPanel>
+            </StackPanel>
+        </Button>
+    </StackPanel>
+</UserControl>

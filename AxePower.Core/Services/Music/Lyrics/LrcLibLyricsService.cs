@@ -33,6 +33,9 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
         @"\[(?:official|music|video|audio|lyrics?|hd|4k|remastered|full|song|feat|ft)[^\]]*\]",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    /// <summary>How long to wait before asking a busy LRCLIB again. Settable so tests do not wait.</summary>
+    internal TimeSpan BusyRetryDelay { get; set; } = TimeSpan.FromMilliseconds(800);
+
     private readonly HttpClient _http;
     private readonly LogService _log;
     private readonly IYouTubeCaptionLyricsProvider? _youtubeLyrics;
@@ -91,16 +94,20 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
             var candidates = SearchCandidates(metadata).Take(4).ToList();
             foreach (var candidate in candidates)
             {
+                // The exact-match endpoint answers 400 without an artist; the search below covers
+                // title-only candidates instead.
+                if (string.IsNullOrWhiteSpace(candidate.Artist)) continue;
+
                 string url = LrcLibEndpoint
-                    + "?track_name=" + Uri.EscapeDataString(candidate.Title);
-                if (!string.IsNullOrWhiteSpace(candidate.Artist))
-                    url += "&artist_name=" + Uri.EscapeDataString(candidate.Artist);
+                    + "?track_name=" + Uri.EscapeDataString(candidate.Title)
+                    + "&artist_name=" + Uri.EscapeDataString(candidate.Artist);
                 if (track.Duration > TimeSpan.Zero)
                     url += "&duration=" + (int)Math.Round(track.Duration.TotalSeconds);
 
-                using var response = await _http.GetAsync(url, ct);
-                if (response.StatusCode == HttpStatusCode.NotFound) continue;
-                response.EnsureSuccessStatusCode();
+                // One failed candidate (not found, busy, rejected) must not end the lookup:
+                // the fuzzy search after this loop is what matches most YouTube uploads.
+                using var response = await GetLrcLibAsync(url, ct);
+                if (!response.IsSuccessStatusCode) continue;
 
                 var exact = await response.Content.ReadFromJsonAsync<LrcLibResponse>(cancellationToken: ct);
                 LyricsResult? result = ToResult(exact);
@@ -121,7 +128,7 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
             foreach (string query in queries)
             {
                 string url = LrcLibSearchEndpoint + "?q=" + Uri.EscapeDataString(query);
-                using var response = await _http.GetAsync(url, ct);
+                using var response = await GetLrcLibAsync(url, ct);
                 if (!response.IsSuccessStatusCode) continue;
 
                 var results = await response.Content.ReadFromJsonAsync<List<LrcLibResponse>>(cancellationToken: ct);
@@ -150,6 +157,18 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
             _log.LogWarning($"[Music] LRCLIB lyrics lookup failed: {ex.Message}");
             return null;
         }
+    }
+
+    /// <summary>LRCLIB answers 503 or 429 when it is busy; one short retry usually gets through.</summary>
+    private async Task<HttpResponseMessage> GetLrcLibAsync(string url, CancellationToken ct)
+    {
+        var response = await _http.GetAsync(url, ct);
+        if (response.StatusCode is not (HttpStatusCode.ServiceUnavailable or HttpStatusCode.TooManyRequests))
+            return response;
+
+        response.Dispose();
+        await Task.Delay(BusyRetryDelay, ct);
+        return await _http.GetAsync(url, ct);
     }
 
     private async Task<LyricsResult?> TryKugouAsync(
@@ -243,8 +262,19 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
             if (IsUsableArtist(featuredArtist)) Add(artists, featuredArtist);
         }
 
+        // "Song (Full Video) Artist": uploads often put the singer after the noise tag
+        string firstPart = rawTitle.Split('|')[0];
+        var tag = ParenthesizedNoise.Match(firstPart) is { Success: true } paren ? paren : BracketedNoise.Match(firstPart);
+        if (tag.Success)
+        {
+            string before = CleanTitle(firstPart[..tag.Index]);
+            string after = CleanArtist(firstPart[(tag.Index + tag.Length)..]);
+            if (!string.IsNullOrWhiteSpace(before)) Add(titles, before);
+            if (IsUsableArtist(after)) Add(artists, after);
+        }
+
         if (titles.Count == 0) Add(titles, rawTitle.Trim());
-        return new LyricsMetadata(titles.ToList(), artists.ToList());
+        return new LyricsMetadata(titles.ToList(), artists.ToList(), Normalize(rawTitle));
     }
 
     private static IEnumerable<(string Title, string Artist)> SearchCandidates(LyricsMetadata metadata)
@@ -280,7 +310,14 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
                 .Select(artist => ArtistSimilarity(candidateArtist, Normalize(artist)))
                 .DefaultIfEmpty(0)
                 .Max();
+
+            // Uploads name the singer somewhere in the title even when the channel is a label
+            if (NamedInTitle(candidateArtist, metadata.RawTitle)) artistScore = Math.Max(artistScore, 0.8);
             if (artistScore < 0.45) return false;
+        }
+        else if (NamedInTitle(Normalize(candidate.ArtistName ?? string.Empty), metadata.RawTitle))
+        {
+            artistScore = 0.8;
         }
         else
         {
@@ -313,6 +350,13 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
             score = Math.Max(score, 0.8);
         }
         return score;
+    }
+
+    /// <summary>True when a whole word of the artist (4+ letters) appears in the upload title.</summary>
+    private static bool NamedInTitle(string candidateArtist, string rawTitle)
+    {
+        var titleWords = new HashSet<string>(rawTitle.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        return Words(candidateArtist).Any(word => word.Length >= 4 && titleWords.Contains(word));
     }
 
     private static string[] Words(string value) => value
@@ -395,7 +439,7 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.0.4 (https://github.com/AxePower)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.0.9 (https://github.com/AxePower)");
         return client;
     }
 
@@ -407,7 +451,8 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
         if (_ownsClient) _http.Dispose();
     }
 
-    private sealed record LyricsMetadata(IReadOnlyList<string> Titles, IReadOnlyList<string> Artists);
+    /// <param name="RawTitle">The whole upload title, normalized, for spotting an artist named anywhere in it.</param>
+    private sealed record LyricsMetadata(IReadOnlyList<string> Titles, IReadOnlyList<string> Artists, string RawTitle);
 
     private sealed record LrcLibResponse(
         [property: JsonPropertyName("id")] int Id,

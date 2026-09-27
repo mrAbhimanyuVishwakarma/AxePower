@@ -96,6 +96,40 @@ public sealed class LyricsTests
         Assert.Contains(handler.Requests, request => request.RequestUri!.AbsolutePath.EndsWith("/search"));
     }
 
+    /// <summary>
+    /// The real LRCLIB rejects an exact lookup without an artist with 400, and answers 503 when
+    /// busy. Neither may end the lookup before the search that matches noisy YouTube titles.
+    /// </summary>
+    [Fact]
+    public async Task Service_KeepsSearching_WhenLrcLibRejectsOrIsBusy()
+    {
+        int searches = 0;
+        var handler = new StubHandler(request =>
+        {
+            var uri = request.RequestUri!;
+            if (uri.Host != "lrclib.net") return new HttpResponseMessage(HttpStatusCode.NotFound);
+            if (uri.AbsolutePath.EndsWith("/get", StringComparison.Ordinal))
+                return new HttpResponseMessage(uri.Query.Contains("artist_name=") ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.BadRequest);
+
+            // Busy the first time, like the live service under load
+            if (searches++ == 0) return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            return Json("[{\"id\":7,\"trackName\":\"Jaani Tera Naa\",\"artistName\":\"Sunanda Sharma\","
+                + "\"duration\":205,\"syncedLyrics\":\"[00:12.500]First line\"}]");
+        });
+        using var client = new HttpClient(handler);
+        using var service = new LrcLibLyricsService(client, new LogService()) { BusyRetryDelay = TimeSpan.Zero };
+        var track = TrackFor("Jaani Tera Naa (Full Video) Sunanda Sharma | Jaani | New Punjabi Songs 2026", "T-Series")
+            with { Duration = TimeSpan.FromSeconds(206) };
+
+        var result = await service.GetLyricsAsync(track);
+
+        Assert.NotNull(result);
+        Assert.Equal("LRCLIB", result!.Provider);
+        Assert.True(result.IsSynchronized);
+        Assert.Equal(12.5, result.Lines.Single().Timestamp.TotalSeconds);
+        Assert.DoesNotContain(handler.Requests, r => r.RequestUri!.AbsolutePath.EndsWith("/get") && !r.RequestUri.Query.Contains("artist_name="));
+    }
+
     [Fact]
     public async Task Service_UsesYouTubeCaptionsAfterCatalogueProvidersHaveNoMatch()
     {

@@ -1,9 +1,14 @@
 using System.Collections.Generic;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AxePower.App.Models;
 
-public class ToolInstructionItem
+public partial class ToolInstructionItem : ObservableObject
 {
+    /// <summary>The guide open in the help window; its row in the tool list is highlighted.</summary>
+    [ObservableProperty]
+    private bool _isSelected;
+
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string IconGlyph { get; set; } = string.Empty;

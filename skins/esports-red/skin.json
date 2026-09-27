@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "esports-red",
+  "name": "Esports Red",
+  "description": "Arena black with racing red.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#09090B",
+    "sidebar": "#0E0E11",
+    "card": "#141418",
+    "cardElevated": "#1B1B21",
+    "hover": "#25252D",
+    "border": "#33333D",
+    "divider": "#1B1B21",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#D4D4DC",
+    "textMuted": "#8E8E9A",
+    "textDisabled": "#55555F",
+    "accent": "#E10600",
+    "success": "#22C55E",
+    "warning": "#F59E0B",
+    "error": "#FF3B30",
+    "eco": "#22C55E",
+    "smart": "#3B82F6",
+    "beast": "#E10600",
+    "buttonPrimary": "#E10600",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 45,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#E10600, #FF6B6B, #1B1B21"
+  }
+}
