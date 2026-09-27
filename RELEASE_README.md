@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.8-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.9-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -38,7 +38,18 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 ---
 
-## 🌟 What's New in v2.0.8
+## 🌟 What's New in v2.0.9
+
+- 🔁 **Routines**: build Samsung-style **If → Then** automations from Tools → Timer & Routines.
+  - Conditions cover time ranges, running apps, plugged-in/on-battery state, and battery level. Match every condition or any condition.
+  - Actions can change the power mode, close or open apps, start the shutdown/restart/sleep timer, or show a notification.
+  - Routines can restore what they changed when their conditions stop, and the most recently started routine wins when rules overlap.
+- ⏱️ **Timer & Routines**: the Tools card now shows live timer/routine status and opens the full Routines editor.
+- 🧰 **Expanded Tools**: Revo Uninstaller and WizTree join MSI Afterburner, CPU-Z, GPU-Z, and CrystalDiskInfo, with each card using the app's real icon.
+- 🎨 **UI polish**: cleaner tray menus and consistent surfaces, controls, and status areas across built-in and custom skins.
+- 📦 **Packaging**: ships as **`AxePower-v2.0.9-Setup.exe`**.
+
+## What's New in v2.0.8
 
 - 👤 **AxePower Account** (optional; everything still works without one):
   - Sign in with **Google, GitHub, Discord, Steam** or **email**. Your name and picture sit at the bottom of the sidebar.

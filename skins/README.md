@@ -94,14 +94,14 @@ A brush or colour takes one hex value. A gradient takes one colour per stop, com
 unknown name is an error, so a typo is reported instead of silently ignored. The built-in skins show
 real examples.
 
-All 62 names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarBackgroundColor`
+All 63 names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarBackgroundColor`
 `TitleBarBackgroundColor` `WindowBackgroundBrush` `WindowSecondaryBackgroundBrush`
 `SidebarBackgroundBrush` `TitleBarBackgroundBrush` `CardBackgroundColor`
 `ElevatedCardBackgroundColor` `HoverSurfaceColor` `CardBackgroundBrush`
 `ElevatedCardBackgroundBrush` `PopupBackgroundBrush` `CardHoverBrush` `HoverBackgroundBrush` `CtaButtonBackgroundBrush`
 `CtaButtonForegroundBrush` `CardBorderColor` `DividerColor` `CardBorderBrush` `CardShadowEffect`
 `DividerBrush` `PrimaryTextBrush` `SecondaryTextBrush` `MutedTextBrush` `DisabledTextBrush`
-`PrimaryBlueBrush` `AccentBrush` `AccentHoverBrush` `AccentPressedBrush` `FocusBrush`
+`PrimaryBlueBrush` `AccentBrush` `AccentHoverBrush` `AccentPressedBrush` `FocusBrush` `AccentForegroundBrush`
 `SuccessBrush` `WarningBrush` `ErrorBrush` `EcoBrush` `SmartBrush` `BeastBrush`
 `TrayMenuBackgroundBrush` `TrayMenuBorderBrush` `TrayMenuForegroundBrush`
 `TrayMenuHoverBackgroundBrush` `TrayMenuHoverForegroundBrush` `TrayMenuSeparatorBrush`
@@ -110,7 +110,7 @@ All 62 names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarB
 `ShareTileBorderBrush` `ShareControlBarBrush` `ShareControlButtonBrush`
 `ShareControlButtonHoverBrush` `ShareControlForegroundBrush` `ShareControlMutedBrush`
 `ShareNamePillBrush` `ShareDangerBrush` `ShareDangerHoverBrush` `ShareLiveBrush`
-(`CardShadowEffect` and `AppIconImage` are not colours and can't be overridden.)
+(`CardShadowEffect` and `AppIconImage` are not colours and can't be overridden. `AccentForegroundBrush`, the text on accent buttons, defaults to black, or white when the accent is too dark for black.)
 
 ## Asking for a skin
 

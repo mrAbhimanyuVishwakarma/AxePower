@@ -317,7 +317,7 @@
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentBrush}" />
-                            <Setter Property="Foreground" Value="#FFFFFF" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

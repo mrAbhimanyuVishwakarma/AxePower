@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.8-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.0.9-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 

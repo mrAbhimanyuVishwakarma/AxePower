@@ -5,7 +5,7 @@ description: Plan for Routines — Samsung-style "If … Then …" rules on the 
 
 # Routines — Plan
 
-> **Status:** planned; only the Tools cards exist · **Written:** 2026-09-27 · **Desktop:** v2.0.9 (branch `v2.0.9`)
+> **Status:** R0 and R1 built, **never run on the real PC** (see *Open*) · **Written:** 2026-09-27 · **Desktop:** v2.0.9 (branch `v2.0.9`)
 
 Goal: let the owner write simple **If … Then …** rules, the way Samsung's *Routines* works, and
 have AxePower carry them out and put things back when the "If" stops being true.
@@ -21,8 +21,8 @@ Only if-then routines. No Samsung-style *Modes*.
 |---|---|
 | What it is | **If-then routines only** (owner, 2026-09-27). |
 | Where it lives | **Tools → "Timer & Routines"** section: a **Timer** card and a separate **Routines** card (owner, 2026-09-27). |
-| Auto Switch and Game Mode app rules | **Open.** Move them in as ready-made routines, or leave them where they are. |
-| Two routines want the same setting | **Open.** Suggested: the one that started most recently wins. |
+| Auto Switch and Game Mode app rules | **Stay where they are** for now (chosen 2026-09-27 when the owner said "make the routine"; the owner can still ask for R5). |
+| Two routines want the same setting | **The one that started most recently wins** (chosen 2026-09-27; easy to change to a priority order). |
 | Release | **v2.0.9** (owner, 2026-09-27). |
 
 ## How Samsung does it
@@ -47,7 +47,7 @@ We copy all of that. We also allow **"any of these"** as well as **"all of these
 | [AppKillerService](../AxePower.Core/Services/AppKillerService.cs) (Game Booster) — close apps, restart them later | The **"Close apps"** action, with restart as its undo. |
 | [PowerPlanService](../AxePower.Core/Services/PowerPlanService.cs) `ApplyModeAsync` | The **"Power mode"** action. |
 | [DynamicModeAutomationService](../AxePower.Core/Services/DynamicModeAutomationService.cs) `OnModeChangedAsync` — never called | Nothing directly; it stays out of this plan. |
-| Tools → **Timer & Routines** section | Built 2026-09-27. The **Timer** card shows the timer's status and opens the timer. The **Routines** card says "Coming soon" and has no button; in R1 it opens the routines page. |
+| Tools → **Timer & Routines** section | Built 2026-09-27. The **Timer** card shows the timer's status and opens the timer. The **Routines** card shows how many are on or running and opens the Routines page. |
 
 ## The rule
 
@@ -137,12 +137,48 @@ there is always a warning and a way to cancel.
 
 There is no image for this page in `ui reference/`; it follows the Tools cards. The owner checks it.
 
+## What R1 built (2026-09-27)
+
+| Piece | File |
+|---|---|
+| Model, rules, `Problems()` for the editor | [Routine.cs](../AxePower.Core/Models/Routines/Routine.cs) |
+| Sentences for the cards, ready-made routines | [RoutineText.cs](../AxePower.Core/Models/Routines/RoutineText.cs) |
+| Engine, condition checks, `IRoutineWorld` / `IRoutineActions` | [RoutineEngine.cs](../AxePower.Core/Services/Routines/RoutineEngine.cs) |
+| Real PC state and actions | [WindowsRoutineWorld.cs](../AxePower.Core/Services/Routines/WindowsRoutineWorld.cs) |
+| Page, list, editor | [RoutinesViewModel.cs](../AxePower.App/ViewModels/RoutinesViewModel.cs), [RoutinesView.xaml](../AxePower.App/Views/RoutinesView.xaml) |
+| Started / stopped | [App.xaml.cs](../AxePower.App/App.xaml.cs): `Start()` after App rules; `StopAsync()` at exit, before the timer is disposed |
+| Tests | [RoutineEngineTests.cs](../AxePower.Tests/Routines/RoutineEngineTests.cs), [RoutinesPageTests.cs](../AxePower.Tests/Routines/RoutinesPageTests.cs) |
+
+How it differs from the design above:
+- **Every R1 condition is a state.** The engine polls every 5 s (first look 10 s after startup) instead
+  of listening to events; "at 07:00" is written as a time range. Event triggers are still to come.
+- **App running** is read from the process list on each poll, not WMI, so it works without admin.
+- **Close apps** asks each window to close, waits up to 5 s, then ends the process. It records the
+  program paths itself (not Game Booster's shared list) and reopens exactly those on undo.
+- **Opening and reopening apps goes through Explorer,** so they start as the signed-in user, not
+  elevated like AxePower. A target with command-line arguments is not supported.
+- **The Timer stays its own card;** the Routines page has no timer section.
+- Ready-made: *Gaming*, *Battery saver*, *Night*, *Bedtime* (time only; idle is R2). *Headphones*
+  waits for the Bluetooth condition.
+- `--self-test` prints routines saved/on and what the engine sees (power, battery, running apps, clock).
+
+## Open
+
+Nothing below has been seen working on the real PC; the tests run against fakes.
+- **The engine on the real PC:** a mode applied and put back, apps closed and reopened (not elevated),
+  a timer started and cancelled. Try *Battery saver* by unplugging and *Gaming* with a real game.
+- **The page in the real window:** list, editor, pickers, toggles (seen only as off-screen renders).
+- **Auto Switch counts as "someone else changed the mode".** Plugging in or out while a routine owns
+  the mode makes routines stop restoring it. Intended by "manual changes win", but it may surprise;
+  decide once it has been tried.
+- **The notification action shows the in-app toast only,** which is not seen while AxePower is in the tray.
+
 ## Phases
 
 | Phase | What | Done when |
 |---|---|---|
-| **R0** | Tools section "Timer & Routines": Timer card (status + opens the timer) and a Routines card marked "Coming soon". | **Built 2026-09-27**; owner to check in the real window. |
-| **R1** | Engine, storage, page (Timer section, list, builder, ready-made routines). Conditions: time, app, power source, battery. Actions: power mode, close apps, open app, power timer, notify. Undo stacks. | Unit tests over fake sources and actions, then the owner runs *Gaming* and *Battery saver* for real. |
+| **R0** | Tools section "Timer & Routines": Timer card (status + opens the timer) and a Routines card. | **Built 2026-09-27**; owner to check in the real window. |
+| **R1** | Engine, storage, page (list, builder, ready-made routines). Conditions: time, app, power source, battery. Actions: power mode, close apps, open app, power timer, notify. Undo stacks. | **Built 2026-09-27**, tests green over fakes. Done once the owner has run *Gaming* and *Battery saver* for real. |
 | **R2** | Conditions: Wi-Fi, Bluetooth, display, lock/idle/wake, temperature. | Each seen changing on the real PC, including SSID with location access off. |
 | **R3** | Actions: volume, audio output, brightness, refresh rate, music; Do Not Disturb if possible. | Each applied and undone on the real PC. |
 | **R4** | Phone: "phone connected" condition; run a routine from AxePower Mobile. | Seen from a real phone. |

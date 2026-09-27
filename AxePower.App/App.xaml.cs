@@ -149,6 +149,9 @@ public partial class App : Application
             var appMonitorService = Services.GetRequiredService<AppMonitorService>();
             appMonitorService.Start();
 
+            // First look after startup has applied Smart, then every few seconds
+            Services.GetRequiredService<AxePower.Core.Services.Routines.RoutineEngine>().Start();
+
             var mainWindow = Services.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
 
@@ -315,6 +318,11 @@ public partial class App : Application
         services.AddSingleton<PowerTimerService>();
         services.AddSingleton<PowerTimerViewModel>();
 
+        // Routines: if-then rules run by one engine (skillsMD/ROUTINES_PLAN.md)
+        services.AddSingleton<AxePower.Core.Services.Routines.IRoutineWorld, AxePower.Core.Services.Routines.WindowsRoutineWorld>();
+        services.AddSingleton<AxePower.Core.Services.Routines.IRoutineActions, AxePower.Core.Services.Routines.WindowsRoutineActions>();
+        services.AddSingleton<AxePower.Core.Services.Routines.RoutineEngine>();
+
         // AxePower account (optional, Supabase): see skillsMD/ACCOUNTS_PROFILE_PLAN.md
         services.AddSingleton(SupabaseProject.AxePower);
         services.AddSingleton(sp => new SupabaseAccountApi(sp.GetRequiredService<SupabaseProject>()));
@@ -400,6 +408,7 @@ public partial class App : Application
         services.AddTransient<DebloatViewModel>();
         services.AddTransient<SoftwareHubViewModel>();
         services.AddTransient<ToolsViewModel>();
+        services.AddTransient<RoutinesViewModel>();
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
         services.AddTransient<TerminalViewModel>();
@@ -495,6 +504,15 @@ public partial class App : Application
         sp.GetRequiredService<ToolsViewModel>();
         Console.WriteLine("Tools: " + string.Join(", ", ToolsService.Tools.Select(t =>
             $"{t.Name} {(toolsService.FindExe(t) is { } exe ? "installed at " + exe : "not installed")}")) + ".");
+        // Read-only: reads saved routines and the PC's state; the engine is not started, so nothing runs
+        var routineSettings = sp.GetRequiredService<SettingsService>().GetSettings().Routines ?? new();
+        sp.GetRequiredService<AxePower.Core.Services.Routines.RoutineEngine>();
+        sp.GetRequiredService<RoutinesViewModel>();
+        var routineWorld = sp.GetRequiredService<AxePower.Core.Services.Routines.IRoutineWorld>().Read();
+        Console.WriteLine(
+            $"Routines: {routineSettings.Count} saved, {routineSettings.Count(r => r.Enabled)} on (engine not started); " +
+            $"sees {(routineWorld.IsPluggedIn ? "plugged in" : "on battery")}, battery {(routineWorld.HasBattery ? routineWorld.BatteryPercent + "%" : "none")}, " +
+            $"{routineWorld.RunningApps.Count} running app(s), clock {routineWorld.Now:HH:mm}.");
         var recentlyPlayed = sp.GetRequiredService<RecentlyPlayedService>();
         Console.WriteLine(
             $"Music history: {recentlyPlayed.Get(streamed: false).Count} local, {recentlyPlayed.Get(streamed: true).Count} streamed, " +
@@ -640,6 +658,9 @@ public partial class App : Application
                 if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
                 Services.GetService<PlayerIntegrationHost>()?.Dispose();
                 Services.GetService<AmbientWindowService>()?.Dispose();
+                // Running routines are undone (previous mode, reopened apps) before the timer goes
+                var routines = Services.GetService<AxePower.Core.Services.Routines.RoutineEngine>();
+                if (routines != null) Task.Run(routines.StopAsync).Wait(TimeSpan.FromSeconds(5));
                 Services.GetService<PowerTimerService>()?.Dispose();   // closing AxePower cancels the timer
 
                 // Friends see you leave straight away instead of when the heartbeat runs out

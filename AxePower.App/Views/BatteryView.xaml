@@ -36,7 +36,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="tabBorder" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="tabBorder" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>

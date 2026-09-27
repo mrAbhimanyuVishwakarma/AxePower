@@ -90,11 +90,11 @@
     <Style TargetType="Button" x:Key="PrimaryButtonStyle">
         <Style.Resources>
             <Style TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#FFFFFF" />
+                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
             </Style>
         </Style.Resources>
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-        <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="32,12" />
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
@@ -554,7 +554,7 @@
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
-                            <Setter Property="Foreground" Value="#FFFFFF" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -562,7 +562,7 @@
                                 <Condition Property="IsHighlighted" Value="True" />
                             </MultiTrigger.Conditions>
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentHoverBrush}" />
-                            <Setter Property="Foreground" Value="#FFFFFF" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
                         </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

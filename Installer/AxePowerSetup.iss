@@ -1,9 +1,9 @@
 [Setup]
 AppName=AxePower
-AppVersion=2.0.8
+AppVersion=2.0.9
 DefaultDirName={autopf}\AxePower
 DefaultGroupName=AxePower
-OutputBaseFilename=AxePower-v2.0.8-Setup
+OutputBaseFilename=AxePower-v2.0.9-Setup
 Compression=lzma
 SolidCompression=yes
 ArchitecturesAllowed=x64

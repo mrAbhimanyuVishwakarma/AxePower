@@ -43,7 +43,7 @@
         <!-- Active variant applied via DataTrigger below -->
         <Style x:Key="ShellToggleActiveStyle" TargetType="Button" BasedOn="{StaticResource ShellToggleStyle}">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
         </Style>
     </UserControl.Resources>
@@ -119,7 +119,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsCmdActive}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -137,7 +137,7 @@
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsPowerShellActive}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -201,8 +201,8 @@
 
                 <Button Grid.Column="2" Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding RunCommandCommand}" Padding="16,7" FontSize="12.5" Margin="10,0,0,0">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Run" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="&#xE751;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                        <TextBlock Text="Run" FontWeight="SemiBold" Foreground="{DynamicResource AccentForegroundBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="&#xE751;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource AccentForegroundBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </Grid>

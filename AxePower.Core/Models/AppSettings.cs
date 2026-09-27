@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using AxePower.Core.Models.Music;
 using AxePower.Core.Models.Uninstaller;
+using AxePower.Core.Models.Routines;
 using AxePower.Core.Models.ShareScreen;
 
 namespace AxePower.Core.Models;
@@ -185,6 +187,10 @@ public class AppSettings
     [JsonPropertyName("shareScreen")]
     public ShareScreenSettings ShareScreen { get; set; } = new();
 
+    /// <summary>If-then routines (skillsMD/ROUTINES_PLAN.md). A settings file without this key has none.</summary>
+    [JsonPropertyName("routines")]
+    public List<Routine> Routines { get; set; } = new();
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -237,7 +243,8 @@ public class AppSettings
             // An explicit "music": null in the file must not leave callers with a null section
             Music = (this.Music ?? new MusicSettings()).Clone(),
             Uninstaller = (this.Uninstaller ?? new UninstallerSettings()).Clone(),
-            ShareScreen = (this.ShareScreen ?? new ShareScreenSettings()).Clone()
+            ShareScreen = (this.ShareScreen ?? new ShareScreenSettings()).Clone(),
+            Routines = (this.Routines ?? new()).Select(r => r.Clone()).ToList()
         };
     }
 }

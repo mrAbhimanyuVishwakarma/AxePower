@@ -149,6 +149,8 @@ public static class SkinCompiler
         Solid("AccentHoverBrush", isLight ? Hex.Mix(accent, "#FF000000", 0.15) : Hex.Mix(accent, "#FFFFFFFF", 0.25));
         Solid("AccentPressedBrush", Hex.Mix(accent, "#FF000000", isLight ? 0.3 : 0.2));
         Solid("FocusBrush", accent);
+        // Text on accent-filled buttons (Open, Install, Save…): black, or white on a dark accent
+        Solid("AccentForegroundBrush", Hex.TextOn(accent));
 
         // Semantic and power modes
         Solid("SuccessBrush", success);
@@ -172,7 +174,7 @@ public static class SkinCompiler
         {
             Solid("TrayMenuBackgroundBrush", "#FF3D4450");
             Solid("TrayMenuBorderBrush", "#FF282828");
-            Solid("TrayMenuForegroundBrush", "#FFDCDEDF");
+            Solid("TrayMenuForegroundBrush", "#FFFFFFFF");
             Solid("TrayMenuHoverBackgroundBrush", "#FFDCDEDF");
             Solid("TrayMenuHoverForegroundBrush", "#FF1E2228");
             Solid("TrayMenuSeparatorBrush", "#FF5E6063");
@@ -319,6 +321,29 @@ public static class Hex
         if (oa <= 0) return Format(0, 0, 0, 0);
         int Ch(int t, int b) => (int)Math.Round((t * ta + b * ba * (1 - ta)) / oa, MidpointRounding.ToEven);
         return Format((int)Math.Round(oa * 255, MidpointRounding.ToEven), Ch(tr, br), Ch(tg, bg), Ch(tb, bb));
+    }
+
+    /// <summary>WCAG relative luminance of the colour channels, 0 (black) to 1 (white).</summary>
+    public static double Luminance(string argb)
+    {
+        var (_, r, g, b) = Parse(argb);
+        static double Lin(int c)
+        {
+            double s = c / 255.0;
+            return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4);
+        }
+        return 0.2126 * Lin(r) + 0.7152 * Lin(g) + 0.0722 * Lin(b);
+    }
+
+    /// <summary>
+    /// Text for a surface of this colour: black, unless white reads better (a dark accent such as
+    /// the light skin's blue or a deep red).
+    /// </summary>
+    public static string TextOn(string argb)
+    {
+        double l = Luminance(argb);
+        double onBlack = (l + 0.05) / 0.05, onWhite = 1.05 / (l + 0.05);
+        return onBlack >= onWhite ? "#FF000000" : "#FFFFFFFF";
     }
 
     /// <summary>Scales the colour's alpha by <paramref name="alpha"/>/255 (an opaque colour takes it as is).</summary>

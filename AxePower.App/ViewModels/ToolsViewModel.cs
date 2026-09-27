@@ -11,6 +11,7 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Routines;
 
 namespace AxePower.App.ViewModels;
 
@@ -35,16 +36,20 @@ public partial class ToolsViewModel : ObservableObject
     public IReadOnlyList<ToolGroup> RightColumn { get; }
 
     public TimerCard TimerCard { get; }
-    public RoutinesCard RoutinesCard { get; } = new();
+    public RoutinesCard RoutinesCard { get; }
+
+    /// <summary>Set by the main window: opens another page, such as Routines.</summary>
+    public Action<string>? NavigateTo { get; set; }
 
     public ToolsViewModel(ToolsService tools, IWinGetHubService? winget = null, MsiAfterburnerService? afterburner = null, NotificationService? notifications = null,
-        PowerTimerViewModel? timer = null)
+        PowerTimerViewModel? timer = null, SettingsService? settings = null, RoutineEngine? routines = null)
     {
         _tools = tools;
         _winget = winget;
         _afterburner = afterburner;
         _notifications = notifications;
         TimerCard = new TimerCard(timer);
+        RoutinesCard = new RoutinesCard(settings, routines, () => NavigateTo?.Invoke("Routines"));
 
         var groups = ToolsService.Tools
             .GroupBy(t => t.Group)
@@ -72,6 +77,7 @@ public partial class ToolsViewModel : ObservableObject
     public void Refresh()
     {
         foreach (var card in Cards) card.Refresh();
+        RoutinesCard.Refresh();
     }
 
     /// <summary>Only whether each installed app is running. Cheap enough for a timer.</summary>
@@ -145,9 +151,38 @@ public sealed partial class TimerCard
     }
 }
 
-/// <summary>If-then routines. Not built yet (skillsMD/ROUTINES_PLAN.md); the card says so.</summary>
-public sealed class RoutinesCard
+/// <summary>If-then routines (skillsMD/ROUTINES_PLAN.md): how many are on and running, and a button to the Routines page.</summary>
+public sealed partial class RoutinesCard : ObservableObject
 {
+    private readonly SettingsService? _settings;
+    private readonly RoutineEngine? _engine;
+    private readonly Action _open;
+
+    public RoutinesCard(SettingsService? settings, RoutineEngine? engine, Action open)
+    {
+        _settings = settings;
+        _engine = engine;
+        _open = open;
+        Refresh();
+    }
+
+    [ObservableProperty]
+    private string _statusText = "None yet";
+
+    [ObservableProperty]
+    private bool _isActive;
+
+    [RelayCommand]
+    private void Open() => _open();
+
+    public void Refresh()
+    {
+        var routines = _settings?.GetSettings().Routines ?? new();
+        int on = routines.Count(r => r.Enabled);
+        int running = _engine?.RunningCount ?? 0;
+        IsActive = running > 0;
+        StatusText = routines.Count == 0 ? "None yet" : running > 0 ? $"{running} running" : $"{on} on";
+    }
 }
 
 /// <summary>One app on the Tools page.</summary>

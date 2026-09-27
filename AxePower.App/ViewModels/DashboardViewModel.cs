@@ -614,7 +614,7 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
     {
-        // Only the seven the owner chose (2026-09-26), in their order; newer entries were removed on request.
+        // The seven the owner chose (2026-09-26), plus Timer & Routines second (2026-09-27), in their order.
         new()
         {
             Title = "DLSS 5 Swapper",
@@ -623,6 +623,15 @@ public partial class DashboardViewModel : ObservableObject
             Glyph = "\uE7FC",
             Description = "1-Click portable downloader & runner. Swap DLSS, Streamline DLLs, RenoDX, and ReShade silently in games.",
             TargetNavigation = "UpdatePc:Apps:Gaming"
+        },
+        new()
+        {
+            Title = "Timer & Routines",
+            Badge = "NEW IN 2.0.9",
+            BadgeColorHex = "#0EA5E9",
+            Glyph = "\uE916",
+            Description = "Shut down, restart or sleep on a timer, and if-then routines that run on their own: Beast when a game starts, Eco on battery, sleep at bedtime. Both are in Tools.",
+            TargetNavigation = "Tools"
         },
         new()
         {

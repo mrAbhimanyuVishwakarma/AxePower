@@ -60,6 +60,7 @@ public partial class MainViewModel : ObservableObject
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
     public ToolsViewModel? ToolsVm { get; }
+    public RoutinesViewModel? RoutinesVm { get; }
     public MusicViewModel? MusicVm { get; }
     public ShareScreenViewModel? ShareScreenVm { get; }
     public ShareScreenViewModel? FriendsVm => ShareScreenVm;
@@ -176,9 +177,13 @@ public partial class MainViewModel : ObservableObject
         NowPlayingViewModel? nowPlaying = null,
         ShareScreenViewModel? shareScreenVm = null,
         ToolsViewModel? toolsVm = null,
-        AccountViewModel? accountVm = null)
+        AccountViewModel? accountVm = null,
+        RoutinesViewModel? routinesVm = null)
     {
         ToolsVm = toolsVm;
+        if (ToolsVm != null) ToolsVm.NavigateTo = target => Navigate(target);
+        RoutinesVm = routinesVm;
+        if (RoutinesVm != null) RoutinesVm.NavigateTo = target => Navigate(target);
         AccountVm = accountVm;
         MusicVm = musicVm;
         ShareScreenVm = shareScreenVm;
@@ -407,7 +412,7 @@ public partial class MainViewModel : ObservableObject
         {
             IsMaintenanceExpanded = true;
         }
-        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat" or "Tools")
+        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat" or "Tools" or "Routines")
         {
             IsUtilitiesExpanded = true;
         }
@@ -431,6 +436,7 @@ public partial class MainViewModel : ObservableObject
             "Debloat"     => DebloatVm,
             "Terminal"    => TerminalVm,
             "Tools"       => (object?)ToolsVm ?? DashboardVm,
+            "Routines"    => (object?)RoutinesVm ?? DashboardVm,
             "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
             "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
             "ShareScreen" => (object?)ShareScreenVm ?? DashboardVm,

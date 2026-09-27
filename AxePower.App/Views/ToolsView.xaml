@@ -209,7 +209,7 @@
             </Border>
         </DataTemplate>
 
-        <!-- If-then routines: planned, not built -->
+        <!-- If-then routines: how many are on or running, and the way to the Routines page -->
         <DataTemplate DataType="{x:Type vm:RoutinesCard}">
             <Border Style="{DynamicResource CardStyle}" Padding="18" Margin="0,0,0,12">
                 <Grid>
@@ -231,12 +231,37 @@
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <TextBlock Text="Routines" Style="{StaticResource CardTitle}"/>
-                        <Border Style="{StaticResource StatusPill}">
-                            <TextBlock Text="Coming soon" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                        <Border>
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </Border>
                     </StackPanel>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardPurpose}" Margin="0,5,0,0"
-                               Text="If this, then that: Beast mode when a game starts, Eco on battery, close apps at bedtime."/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource CardPurpose}"
+                               Text="If this, then that: Beast mode when a game starts, Eco on battery, sleep at bedtime."/>
+
+                    <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding OpenCommand}" Padding="18,7" MinWidth="96" Height="32">
+                        <TextBlock Text="Open routines" FontSize="12.5"/>
+                    </Button>
                 </Grid>
             </Border>
         </DataTemplate>

@@ -86,7 +86,7 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
@@ -100,7 +100,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>

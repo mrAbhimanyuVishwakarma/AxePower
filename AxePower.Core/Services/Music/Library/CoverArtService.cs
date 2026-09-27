@@ -132,7 +132,7 @@ public sealed class CoverArtService : ICoverArtService
     private static HttpClient CreateArtworkClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.0.8");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.0.9");
         return client;
     }
 

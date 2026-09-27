@@ -32,10 +32,13 @@ public class SkinCompilerTests : IDisposable
             ["CardBorderColor"] = "Color #FFCBD5E1",
             ["CardBorderBrush"] = "Solid #FFCBD5E1",
             ["PopupBackgroundBrush"] = "Solid #FFFFFFFF",
+            // 2026-09-27: text on accent buttons comes from the skin; the light blue accent keeps white
+            ["AccentForegroundBrush"] = "Solid #FFFFFFFF",
         },
         // 2026-09-25: an opaque surface for dropdowns, which on glass showed the page through them
-        ["dark"] = new() { ["PopupBackgroundBrush"] = "Solid #FF1A1C23" },
-        ["glass"] = new() { ["PopupBackgroundBrush"] = "Solid #FF030405" },
+        // 2026-09-27: tray menu text is pure white on dark skins (owner's request)
+        ["dark"] = new() { ["PopupBackgroundBrush"] = "Solid #FF1A1C23", ["TrayMenuForegroundBrush"] = "Solid #FFFFFFFF", ["AccentForegroundBrush"] = "Solid #FF000000" },
+        ["glass"] = new() { ["PopupBackgroundBrush"] = "Solid #FF030405", ["TrayMenuForegroundBrush"] = "Solid #FFFFFFFF", ["AccentForegroundBrush"] = "Solid #FF000000" },
     };
 
     [Theory]
@@ -57,8 +60,17 @@ public class SkinCompilerTests : IDisposable
             .ToList();
 
         Assert.True(differences.Count == 0, string.Join(Environment.NewLine, differences));
-        Assert.Equal(62, actual.Count);
+        Assert.Equal(63, actual.Count);
     }
+
+    [Theory]
+    [InlineData("#38BDF8", "#FF000000")]   // glass: light blue
+    [InlineData("#FCEE0A", "#FF000000")]   // neon-city: yellow, where white was unreadable
+    [InlineData("#A855F7", "#FF000000")]   // royal-amethyst
+    [InlineData("#2563EB", "#FFFFFFFF")]   // light: dark blue keeps white
+    [InlineData("#B91C1C", "#FFFFFFFF")]   // paper-and-ink: deep red keeps white
+    public void AccentButtonText_IsBlack_UnlessTheAccentIsTooDark(string accent, string text) =>
+        Assert.Equal(text, Hex.TextOn(accent));
 
     [Fact]
     public void AnAccentOnlySkin_TakesEverythingElseFromItsBase()
@@ -146,7 +158,7 @@ public class SkinCompilerTests : IDisposable
 
         var compiled = SkinCompiler.Compile(def, dark);
 
-        Assert.Equal(62, compiled.Resources.Count);
+        Assert.Equal(63, compiled.Resources.Count);
     }
 
     [Fact]

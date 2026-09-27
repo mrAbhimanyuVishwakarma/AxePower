@@ -29,7 +29,7 @@
                                 BorderThickness="1.5">
                             <TextBlock x:Name="CheckMark" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets"
                                        FontSize="11" FontWeight="Bold"
-                                       Foreground="#FFFFFF"
+                                       Foreground="{DynamicResource AccentForegroundBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Visibility="Collapsed"/>
                         </Border>
@@ -78,7 +78,7 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
@@ -89,7 +89,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -124,7 +124,7 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
@@ -135,7 +135,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -144,11 +144,11 @@
         <Style x:Key="PillAccentButtonStyle" TargetType="Button">
             <Style.Resources>
                 <Style TargetType="TextBlock">
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                 </Style>
             </Style.Resources>
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Padding" Value="24,9"/>

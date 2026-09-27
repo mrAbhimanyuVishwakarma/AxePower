@@ -20,7 +20,7 @@ public class DashboardFeaturesTests
         "Dashboard", "AutoSwitch", "GameMode", "Battery", "Music", "Settings", "Logs", "About", "Profile",
         "Uninstaller", "Optimizer", "Utilities", "Doctor", "Maintenance", "Debloat", "Terminal",
         "SoftwareHub", "UpdatePc", "ShareScreen", "PhoneControl", "PhoneHub", "SecondMonitor",
-        "PhoneLink", "Tools"
+        "PhoneLink", "Tools", "Routines"
     };
 
     private static List<AppFeatureItem> Features() => DashboardViewModel.BuildNewFeatures().ToList();
@@ -54,12 +54,12 @@ public class DashboardFeaturesTests
     }
 
     [Fact]
-    public void TheListIsTheSevenThe_OwnerChose_InTheirOrder()
+    public void TheListIsTheOnesThe_OwnerChose_InTheirOrder()
     {
         // The Dashboard selects the first entry on load, so ordering decides what is shown.
         // The owner picks this list each release; change it only when they do.
         Assert.Equal(
-            new[] { "DLSS 5 Swapper", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller", "Terminal" },
+            new[] { "DLSS 5 Swapper", "Timer & Routines", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller", "Terminal" },
             Features().Select(f => f.Title));
     }
 
