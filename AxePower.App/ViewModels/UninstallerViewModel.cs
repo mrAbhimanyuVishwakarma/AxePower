@@ -70,6 +70,11 @@ public sealed partial class UninstallerViewModel : ObservableObject
     private string _selectedFilter = "All";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDesktopSection))]
+    [NotifyPropertyChangedFor(nameof(IsWindowsAppsSection))]
+    private string _selectedAppSection = "Desktop";
+
+    [ObservableProperty]
     private int _appCount;
 
     [ObservableProperty]
@@ -102,7 +107,10 @@ public sealed partial class UninstallerViewModel : ObservableObject
 
     public ICollectionView ApplicationsView => _applicationsView;
 
-    public string[] FilterOptions { get; } = ["All", "Win32", "MSI", "Store Apps", "Broken", "Protected"];
+    public string[] FilterOptions { get; } = ["All", "Win32", "MSI", "Broken", "Protected"];
+
+    public bool IsDesktopSection => SelectedAppSection == "Desktop";
+    public bool IsWindowsAppsSection => SelectedAppSection == "WindowsApps";
 
     public UninstallerSettings Settings => _settings;
 
@@ -391,6 +399,9 @@ public sealed partial class UninstallerViewModel : ObservableObject
     private void CloseResults() => IsResultsVisible = false;
 
     [RelayCommand]
+    private void CloseDetails() => SelectedApplication = null;
+
+    [RelayCommand]
     private void OpenLog(UninstallResult? result)
     {
         if (result is null || string.IsNullOrEmpty(result.LogPath) || !File.Exists(result.LogPath))
@@ -436,9 +447,21 @@ public sealed partial class UninstallerViewModel : ObservableObject
         SelectedFilter = filter;
     }
 
+    [RelayCommand]
+    private void SelectAppSection(string? section)
+    {
+        SelectedApplication = null;
+        SelectedAppSection = string.Equals(section, "WindowsApps", StringComparison.OrdinalIgnoreCase)
+            ? "WindowsApps"
+            : "Desktop";
+        SelectedFilter = "All";
+    }
+
     partial void OnSearchTextChanged(string value) => RefreshView();
 
     partial void OnSelectedFilterChanged(string value) => RefreshView();
+
+    partial void OnSelectedAppSectionChanged(string value) => RefreshView();
 
     private void RefreshView()
     {
@@ -450,6 +473,9 @@ public sealed partial class UninstallerViewModel : ObservableObject
     {
         if (obj is not InstalledApplicationViewModel vm) return false;
         var app = vm.Application;
+
+        bool isWindowsApp = vm.ApplicationTypeLabel == "AppX";
+        if (IsWindowsAppsSection != isWindowsApp) return false;
 
         // Visibility settings (the Protected chip always shows protected apps)
         if (app.IsProtected && !_settings.ShowProtectedApplications && SelectedFilter != "Protected") return false;
@@ -469,7 +495,6 @@ public sealed partial class UninstallerViewModel : ObservableObject
         {
             "Win32"      => vm.ApplicationTypeLabel == "Win32",
             "MSI"        => vm.ApplicationTypeLabel == "MSI",
-            "Store Apps" => vm.ApplicationTypeLabel == "AppX",
             "Broken"     => vm.IsBroken,
             "Protected"  => app.IsProtected,
             _            => true, // All

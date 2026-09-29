@@ -53,8 +53,9 @@ public partial class MainViewModel : ObservableObject
     /// <summary>The optional AxePower account: sidebar item and the sign-in dialog over the window.</summary>
     public AccountViewModel? AccountVm { get; }
     public UninstallerViewModel UninstallerVm { get; }
-    public SystemOptimizerViewModel OptimizerVm { get; }
-    public SystemDoctorViewModel DoctorVm { get; }
+    public SystemCareViewModel SystemCareVm { get; }
+    public SystemOptimizerViewModel OptimizerVm => SystemCareVm.OptimizerVm;
+    public SystemDoctorViewModel DoctorVm => SystemCareVm.DoctorVm;
     public DebloatViewModel DebloatVm { get; }
     public SoftwareHubViewModel SoftwareHubVm { get; }
     public PhoneHubViewModel PhoneHubVm { get; }
@@ -98,8 +99,7 @@ public partial class MainViewModel : ObservableObject
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
     public Style? AboutActiveStyle => GetStyleForView(AboutVm);
     public Style? UninstallerActiveStyle => GetSubItemStyleForView(UninstallerVm);
-    public Style? OptimizerActiveStyle => GetSubItemStyleForView(OptimizerVm);
-    public Style? DoctorActiveStyle => GetSubItemStyleForView(DoctorVm);
+    public Style? SystemCareActiveStyle => GetSubItemStyleForView(SystemCareVm);
     public Style? DebloatActiveStyle => GetSubItemStyleForView(DebloatVm);
     public Style? TerminalActiveStyle => GetSubItemStyleForView(TerminalVm);
     public Style? ToolsActiveStyle => GetSubItemStyleForView((object?)ToolsVm ?? new object());
@@ -158,8 +158,7 @@ public partial class MainViewModel : ObservableObject
         LogsViewModel logsVm,
         AboutViewModel aboutVm,
         UninstallerViewModel uninstallerVm,
-        SystemOptimizerViewModel optimizerVm,
-        SystemDoctorViewModel doctorVm,
+        SystemCareViewModel systemCareVm,
         DebloatViewModel debloatVm,
         SoftwareHubViewModel softwareHubVm,
         PhoneHubViewModel phoneHubVm,
@@ -210,8 +209,7 @@ public partial class MainViewModel : ObservableObject
         LogsVm = logsVm;
         AboutVm = aboutVm;
         UninstallerVm = uninstallerVm;
-        OptimizerVm = optimizerVm;
-        DoctorVm = doctorVm;
+        SystemCareVm = systemCareVm;
         DebloatVm = debloatVm;
         SoftwareHubVm = softwareHubVm;
         PhoneHubVm = phoneHubVm;
@@ -372,8 +370,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(SettingsActiveStyle));
         OnPropertyChanged(nameof(AboutActiveStyle));
         OnPropertyChanged(nameof(UninstallerActiveStyle));
-        OnPropertyChanged(nameof(OptimizerActiveStyle));
-        OnPropertyChanged(nameof(DoctorActiveStyle));
+        OnPropertyChanged(nameof(SystemCareActiveStyle));
         OnPropertyChanged(nameof(DebloatActiveStyle));
         OnPropertyChanged(nameof(TerminalActiveStyle));
         OnPropertyChanged(nameof(ToolsActiveStyle));
@@ -408,11 +405,11 @@ public partial class MainViewModel : ObservableObject
 
         _currentNavSection = baseKey;
 
-        if (baseKey is "Optimizer" or "Doctor" or "Maintenance" or "Terminal")
+        if (baseKey is "SystemCare" or "Optimizer" or "Doctor" or "Maintenance" or "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Debloat")
         {
             IsMaintenanceExpanded = true;
         }
-        else if (baseKey is "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Utilities" or "Debloat" or "Tools" or "Routines")
+        else if (baseKey is "Utilities" or "Terminal" or "Tools" or "Routines")
         {
             IsUtilitiesExpanded = true;
         }
@@ -429,10 +426,11 @@ public partial class MainViewModel : ObservableObject
             "About"       => AboutVm,   // older links; the page is Profile now
             "Profile"     => AboutVm,
             "Uninstaller" => UninstallerVm,
-            "Optimizer"   => OptimizerVm,
-            "Utilities"   => OptimizerVm,
-            "Doctor"      => DoctorVm,
-            "Maintenance" => DoctorVm,
+            "SystemCare"  => OpenSystemCare("Optimizer"),
+            "Optimizer"   => OpenSystemCare("Optimizer"),
+            "Doctor"      => OpenSystemCare("Doctor"),
+            "Maintenance" => SwitchSoftwareHubTab(arg1, arg2),
+            "Utilities"   => TerminalVm,
             "Debloat"     => DebloatVm,
             "Terminal"    => TerminalVm,
             "Tools"       => (object?)ToolsVm ?? DashboardVm,
@@ -455,6 +453,12 @@ public partial class MainViewModel : ObservableObject
 
         // The sidebar's "Sign in" item: land on Profile with the sign-in dialog already open.
         if (baseKey == "Profile" && AccountVm is { IsSignedOut: true, IsDialogOpen: false }) AccountVm.OpenSignIn();
+    }
+
+    private object OpenSystemCare(string section)
+    {
+        SystemCareVm.SelectSection(section);
+        return SystemCareVm;
     }
 
     /// <summary>

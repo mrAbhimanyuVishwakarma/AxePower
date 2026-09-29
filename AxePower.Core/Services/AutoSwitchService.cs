@@ -13,6 +13,7 @@ public class AutoSwitchService : IDisposable
     private readonly SettingsService _settingsService;
     private readonly LogService _logService;
     private readonly NotificationService _notificationService;
+    private readonly IAlertSoundService _alertSoundService;
     private readonly GameModeGuard? _gameModeGuard;
 
     private CancellationTokenSource? _serviceCts;
@@ -21,6 +22,7 @@ public class AutoSwitchService : IDisposable
     
     private bool? _lastPluggedInState = null;
     private bool _inLowBatteryState = false;
+    private bool _inLowBatteryAlertState = false;
     private bool _isPaused = false;
 
     public AutoSwitchService(
@@ -29,6 +31,7 @@ public class AutoSwitchService : IDisposable
         SettingsService settingsService,
         LogService logService,
         NotificationService notificationService,
+        IAlertSoundService alertSoundService,
         GameModeGuard? gameModeGuard = null)
     {
         _gameModeGuard = gameModeGuard;
@@ -37,6 +40,7 @@ public class AutoSwitchService : IDisposable
         _settingsService = settingsService;
         _logService = logService;
         _notificationService = notificationService;
+        _alertSoundService = alertSoundService;
     }
 
     public void Start()
@@ -57,6 +61,7 @@ public class AutoSwitchService : IDisposable
         var status = _batteryService.GetCurrentStatus();
         _lastPluggedInState = status.IsPluggedIn;
         _inLowBatteryState = settings.LowBatteryRuleEnabled && status.BatteryPercentage <= settings.LowBatteryThresholdPercent;
+        _inLowBatteryAlertState = !status.IsPluggedIn && status.BatteryPercentage <= settings.LowBatteryThresholdPercent;
         _logService.LogInfo("Startup: applying Smart mode.");
         _ = _powerPlanService.ApplyModeAsync(PowerMode.Smart);
     }
@@ -108,19 +113,29 @@ public class AutoSwitchService : IDisposable
     public async Task EvaluatePowerStateAsync()
     {
         await Task.CompletedTask;
+
+        var settings = _settingsService.GetSettings();
+        var status = _batteryService.GetCurrentStatus();
+
+        // The audible warning is independent of automatic mode switching and Game Mode. It uses
+        // the same threshold, but still protects the user when those automations are paused/off.
+        bool isLowBatteryAlert = !status.IsPluggedIn && (_inLowBatteryAlertState
+            ? status.BatteryPercentage < settings.LowBatteryThresholdPercent + 5
+            : status.BatteryPercentage <= settings.LowBatteryThresholdPercent);
+        if (ShouldPlayLowBatteryAlert(settings, _inLowBatteryAlertState, isLowBatteryAlert, status.IsPluggedIn))
+            _alertSoundService.PlayLowBatteryAlert();
+        _inLowBatteryAlertState = isLowBatteryAlert;
+
         if (_isPaused)
         {
             return;
         }
 
-        var settings = _settingsService.GetSettings();
         if (!settings.AutoSwitchEnabled)
         {
             return;
         }
 
-        var status = _batteryService.GetCurrentStatus();
-        
         // Hysteresis calculation for low battery
         bool isLowBattery = _inLowBatteryState;
         if (settings.LowBatteryRuleEnabled)
@@ -202,7 +217,7 @@ public class AutoSwitchService : IDisposable
                 {
                     _logService.LogInfo($"Applying target mode: {targetMode}");
                     var success = await _powerPlanService.ApplyModeAsync(targetMode);
-                    if (success && settings.ShowNotifications)
+                    if (success && ShouldNotifyModeSwitch(settings))
                     {
                         _notificationService.Show($"AxePower switched to {targetMode} mode.");
                     }
@@ -226,6 +241,13 @@ public class AutoSwitchService : IDisposable
             _logService.LogError("Error during power mode transition.", ex);
         }
     }
+
+    internal static bool ShouldNotifyModeSwitch(AppSettings settings) =>
+        settings.ShowNotifications && settings.NotifyOnModeSwitch;
+
+    internal static bool ShouldPlayLowBatteryAlert(
+        AppSettings settings, bool wasLowBattery, bool isLowBattery, bool isPluggedIn) =>
+        settings.LowBatteryAlertSound && !isPluggedIn && !wasLowBattery && isLowBattery;
 
     public void CancelPendingTransition()
     {

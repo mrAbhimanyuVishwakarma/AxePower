@@ -1,22 +1,29 @@
 using System;
-using System.Diagnostics;
-using System.IO;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Win32;
 using AxePower.Core.Models;
 
 namespace AxePower.Core.Services;
 
 public class WindowsUpdateShieldService : IWindowsUpdateShieldService
 {
-    private readonly LogService _log;
+    internal const string UpdatePolicyKey = @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate";
+    internal const string AuPolicyKey = @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU";
 
-    private const string UpdatePolicyKey = @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate";
-    private const string AuPolicyKey = @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU";
+    private static readonly string[] UpdateServices = { "wuauserv", "bits", "cryptsvc", "msiserver" };
+
+    private readonly LogService _log;
+    private readonly IWindowsUpdateSystem _system;
 
     public WindowsUpdateShieldService(LogService log)
+        : this(log, new WindowsUpdateSystem())
+    {
+    }
+
+    internal WindowsUpdateShieldService(LogService log, IWindowsUpdateSystem system)
     {
         _log = log;
+        _system = system;
     }
 
     public WindowsUpdateShieldStatus GetStatus()
@@ -25,151 +32,175 @@ public class WindowsUpdateShieldService : IWindowsUpdateShieldService
 
         try
         {
-            using var key = Registry.LocalMachine.OpenSubKey(UpdatePolicyKey);
-            if (key != null)
-            {
-                var deferVal = key.GetValue("DeferFeatureUpdates");
-                status.IsSecurityOnlyEnabled = (deferVal is int intVal && intVal == 1);
-            }
+            // Both values are required for the card's "365 days" claim to be true. A partial or
+            // externally modified policy is deliberately shown as off rather than overstated.
+            status.IsSecurityOnlyEnabled =
+                _system.ReadDword(UpdatePolicyKey, "DeferFeatureUpdates") == 1 &&
+                _system.ReadDword(UpdatePolicyKey, "DeferFeatureUpdatesPeriodInDays") == 365;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _log.LogWarning($"[UpdateShield] Could not read feature-update policy: {ex.Message}");
+        }
 
         try
         {
-            using var auKey = Registry.LocalMachine.OpenSubKey(AuPolicyKey);
-            if (auKey != null)
-            {
-                var noRebootVal = auKey.GetValue("NoAutoRebootWithLoggedOnUsers");
-                status.IsNoForcedRebootEnabled = (noRebootVal is int intVal && intVal == 1);
-            }
+            status.IsNoForcedRebootEnabled =
+                _system.ReadDword(AuPolicyKey, "NoAutoRebootWithLoggedOnUsers") == 1;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _log.LogWarning($"[UpdateShield] Could not read reboot policy: {ex.Message}");
+        }
 
         return status;
     }
 
-    public async Task<bool> SetSecurityOnlyUpdatesAsync(bool enable)
-    {
-        return await Task.Run(() =>
-        {
-            try
-            {
-                if (enable)
-                {
-                    using var key = Registry.LocalMachine.CreateSubKey(UpdatePolicyKey);
-                    key?.SetValue("DeferFeatureUpdates", 1, RegistryValueKind.DWord);
-                    key?.SetValue("DeferFeatureUpdatesPeriodInDays", 365, RegistryValueKind.DWord);
-                    key?.SetValue("BranchReadinessLevel", 16, RegistryValueKind.DWord);
-                    _log.LogInfo("[UpdateShield] Enabled Security-Only Updates (Deferred Feature Updates for 365 days).");
-                }
-                else
-                {
-                    using var key = Registry.LocalMachine.OpenSubKey(UpdatePolicyKey, true);
-                    key?.DeleteValue("DeferFeatureUpdates", false);
-                    key?.DeleteValue("DeferFeatureUpdatesPeriodInDays", false);
-                    key?.DeleteValue("BranchReadinessLevel", false);
-                    _log.LogInfo("[UpdateShield] Reverted to default Windows Update delivery policy.");
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _log.LogError("[UpdateShield] Failed to set Security-Only policy", ex);
-                return false;
-            }
-        });
-    }
-
-    public async Task<bool> SetNoForcedRebootAsync(bool enable)
-    {
-        return await Task.Run(() =>
-        {
-            try
-            {
-                if (enable)
-                {
-                    using var key = Registry.LocalMachine.CreateSubKey(AuPolicyKey);
-                    key?.SetValue("NoAutoRebootWithLoggedOnUsers", 1, RegistryValueKind.DWord);
-                    key?.SetValue("AUOptions", 3, RegistryValueKind.DWord); // Notify download and auto install
-                    _log.LogInfo("[UpdateShield] Enabled No Forced Reboots for logged-on users.");
-                }
-                else
-                {
-                    using var key = Registry.LocalMachine.OpenSubKey(AuPolicyKey, true);
-                    key?.DeleteValue("NoAutoRebootWithLoggedOnUsers", false);
-                    _log.LogInfo("[UpdateShield] Reverted forced reboot policy to default.");
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _log.LogError("[UpdateShield] Failed to set No-Forced-Reboot policy", ex);
-                return false;
-            }
-        });
-    }
-
-    public async Task<bool> ResetWindowsUpdateCacheAsync(IProgress<string> outputProgress)
-    {
-        return await Task.Run(() =>
-        {
-            outputProgress.Report("=== Stopping Windows Update & BITS Services ===");
-            ExecuteCommand("net.exe", "stop wuauserv", outputProgress);
-            ExecuteCommand("net.exe", "stop bits", outputProgress);
-            ExecuteCommand("net.exe", "stop cryptSvc", outputProgress);
-            ExecuteCommand("net.exe", "stop msiserver", outputProgress);
-
-            outputProgress.Report("\n=== Cleaning Corrupted SoftwareDistribution Download Cache ===");
-            try
-            {
-                var winDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-                var downloadPath = Path.Combine(winDir, "SoftwareDistribution", "Download");
-                if (Directory.Exists(downloadPath))
-                {
-                    foreach (var file in Directory.EnumerateFiles(downloadPath, "*", SearchOption.AllDirectories))
-                    {
-                        try { File.Delete(file); } catch { }
-                    }
-                    outputProgress.Report($"✓ Purged cached installation files from: {downloadPath}");
-                }
-            }
-            catch (Exception ex)
-            {
-                outputProgress.Report($"[NOTICE] Cache clean exception: {ex.Message}");
-            }
-
-            outputProgress.Report("\n=== Restarting Windows Update & Cryptographic Services ===");
-            ExecuteCommand("net.exe", "start cryptSvc", outputProgress);
-            ExecuteCommand("net.exe", "start bits", outputProgress);
-            ExecuteCommand("net.exe", "start wuauserv", outputProgress);
-            ExecuteCommand("net.exe", "start msiserver", outputProgress);
-
-            outputProgress.Report("\n=== Windows Update Reset & Repair Completed ===");
-            _log.LogInfo("[UpdateShield] Windows Update cache reset successfully executed.");
-            return true;
-        });
-    }
-
-    private static void ExecuteCommand(string fileName, string args, IProgress<string> outputProgress)
+    public Task<bool> SetSecurityOnlyUpdatesAsync(bool enable) => Task.Run(() =>
     {
         try
         {
-            var psi = new ProcessStartInfo
+            if (enable)
             {
-                FileName = fileName,
-                Arguments = args,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-            using var proc = Process.Start(psi);
-            proc?.WaitForExit(5000);
-            outputProgress.Report($"> {fileName} {args} (Exit: {proc?.ExitCode ?? -1})");
+                _system.WriteDword(UpdatePolicyKey, "DeferFeatureUpdates", 1);
+                _system.WriteDword(UpdatePolicyKey, "DeferFeatureUpdatesPeriodInDays", 365);
+            }
+            else
+            {
+                _system.DeleteValue(UpdatePolicyKey, "DeferFeatureUpdates");
+                _system.DeleteValue(UpdatePolicyKey, "DeferFeatureUpdatesPeriodInDays");
+
+                // AxePower builds before 2.0.9 wrote this retired value. Remove only the exact
+                // value AxePower used, leaving an administrator's different policy untouched.
+                if (_system.ReadDword(UpdatePolicyKey, "BranchReadinessLevel") == 16)
+                    _system.DeleteValue(UpdatePolicyKey, "BranchReadinessLevel");
+            }
+
+            bool verified = GetStatus().IsSecurityOnlyEnabled == enable;
+            if (!verified)
+            {
+                _log.LogError("[UpdateShield] Security-only policy did not verify after writing.");
+                return false;
+            }
+
+            _log.LogInfo(enable
+                ? "[UpdateShield] Deferred feature updates for 365 days; quality/security updates remain enabled."
+                : "[UpdateShield] Restored the default feature-update deferral policy.");
+            return true;
         }
         catch (Exception ex)
         {
-            outputProgress.Report($"[ERROR] Failed to run {fileName} {args}: {ex.Message}");
+            _log.LogError("[UpdateShield] Failed to set security-only policy", ex);
+            return false;
         }
-    }
+    });
+
+    public Task<bool> SetNoForcedRebootAsync(bool enable) => Task.Run(() =>
+    {
+        try
+        {
+            if (enable)
+            {
+                // Do not set AUOptions here: changing how updates download is unrelated to
+                // preventing a restart while somebody is signed in.
+                _system.WriteDword(AuPolicyKey, "NoAutoRebootWithLoggedOnUsers", 1);
+            }
+            else
+            {
+                _system.DeleteValue(AuPolicyKey, "NoAutoRebootWithLoggedOnUsers");
+
+                // Clean up the download-policy value written by older AxePower releases.
+                if (_system.ReadDword(AuPolicyKey, "AUOptions") == 3)
+                    _system.DeleteValue(AuPolicyKey, "AUOptions");
+            }
+
+            bool verified = GetStatus().IsNoForcedRebootEnabled == enable;
+            if (!verified)
+            {
+                _log.LogError("[UpdateShield] No-forced-reboot policy did not verify after writing.");
+                return false;
+            }
+
+            _log.LogInfo(enable
+                ? "[UpdateShield] Blocked automatic restart while a user is logged on."
+                : "[UpdateShield] Restored the default logged-on-user restart policy.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError("[UpdateShield] Failed to set no-forced-reboot policy", ex);
+            return false;
+        }
+    });
+
+    public Task<bool> ResetWindowsUpdateCacheAsync(IProgress<string> outputProgress) => Task.Run(() =>
+    {
+        var restart = new List<string>();
+        bool success = true;
+
+        outputProgress.Report("=== Stopping Windows Update services ===");
+        try
+        {
+            foreach (string service in UpdateServices)
+            {
+                var state = _system.GetServiceState(service);
+                if (!state.Exists)
+                {
+                    outputProgress.Report($"[NOTICE] {service}: {state.Detail}");
+                    continue;
+                }
+
+                if (!state.IsRunning)
+                {
+                    outputProgress.Report($"✓ {service}: already stopped; it will remain stopped.");
+                    continue;
+                }
+
+                var stopped = _system.StopService(service, TimeSpan.FromSeconds(20));
+                outputProgress.Report(stopped.Success
+                    ? $"✓ {service}: stopped."
+                    : $"[ERROR] {service}: {stopped.Detail}");
+                if (stopped.Success) restart.Add(service);
+                else success = false;
+            }
+
+            if (success)
+            {
+                outputProgress.Report("\n=== Clearing SoftwareDistribution download cache ===");
+                var cleaned = _system.ClearUpdateDownloadCache();
+                outputProgress.Report(cleaned.Success
+                    ? $"✓ {cleaned.Detail}"
+                    : $"[ERROR] {cleaned.Detail}");
+                success = cleaned.Success;
+            }
+            else
+            {
+                outputProgress.Report("\n[ERROR] Cache was not deleted because one or more active update services could not be stopped.");
+            }
+        }
+        catch (Exception ex)
+        {
+            success = false;
+            outputProgress.Report($"[ERROR] Update cache reset failed: {ex.Message}");
+            _log.LogError("[UpdateShield] Windows Update cache reset failed", ex);
+        }
+        finally
+        {
+            outputProgress.Report("\n=== Restoring services that AxePower stopped ===");
+            foreach (string service in restart)
+            {
+                var started = _system.StartService(service, TimeSpan.FromSeconds(20));
+                outputProgress.Report(started.Success
+                    ? $"✓ {service}: running."
+                    : $"[ERROR] {service}: {started.Detail}");
+                if (!started.Success) success = false;
+            }
+        }
+
+        outputProgress.Report(success
+            ? "\n=== Windows Update cache reset completed successfully ==="
+            : "\n=== Windows Update cache reset finished with errors ===");
+        if (success) _log.LogInfo("[UpdateShield] Windows Update cache reset completed successfully.");
+        return success;
+    });
 }

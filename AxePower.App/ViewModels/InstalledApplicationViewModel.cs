@@ -28,6 +28,19 @@ public sealed partial class InstalledApplicationViewModel : ObservableObject
     public string Version        => Application.Version;
     public string DisplaySize    => Application.DisplaySize;
     public string DisplayInstallDate => Application.DisplayInstallDate;
+    public long EstimatedSizeKb => Application.EstimatedSizeKb;
+    public string InstallDateSortKey => Application.InstallDate ?? string.Empty;
+    public string ArchitectureSortKey => Application.Architecture ?? string.Empty;
+
+    /// <summary>Friendly architecture text for the table's Type column.</summary>
+    public string ArchitectureDisplayLabel => Application.Architecture.Trim().ToLowerInvariant() switch
+    {
+        "x64" => "64-bit",
+        "x86" => "32-bit",
+        "arm64" => "ARM64",
+        "neutral" => "Neutral",
+        _ => string.Empty,
+    };
 
     /// <summary>Filter-chip category: Win32, MSI, AppX or Broken.</summary>
     public string ApplicationTypeLabel => Application.UninstallerKind == UninstallerKind.BrokenEntry
@@ -38,6 +51,11 @@ public sealed partial class InstalledApplicationViewModel : ObservableObject
             ApplicationType.MSI => "MSI",
             _ => "Win32",
         };
+
+    /// <summary>User-facing type shown beside the app name; AppX/MSIX is labelled Store.</summary>
+    public string ApplicationTypeDisplayLabel => ApplicationTypeLabel == "AppX"
+        ? "Store"
+        : ApplicationTypeLabel;
 
     /// <summary>The uninstaller technology, e.g. "Inno Setup" or "Windows Installer (msiexec)".</summary>
     public string KindLabel => UninstallCommandBuilder.KindName(Application.UninstallerKind);

@@ -132,7 +132,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <Image x:Name="GameModeIcon" Grid.Column="0" Grid.RowSpan="2" Source="/Resources/Gamemode.png" Width="30" Height="30" Margin="0,0,9,0"
+                        <Image x:Name="GameModeIcon" Grid.Column="0" Grid.RowSpan="2" Source="/Resources/Gamemode.png" Width="42" Height="42" Margin="0,0,10,0"
                                Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                         <TextBlock x:Name="GameModeTitle" Grid.Column="1" Grid.Row="0" Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}"
                                    FontSize="13.5" FontWeight="SemiBold" TextWrapping="NoWrap" VerticalAlignment="Bottom"/>
@@ -176,10 +176,14 @@
                         <Style TargetType="Border">
                             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedMode}" Value="Eco">
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding SelectedMode}" Value="Eco"/>
+                                        <Condition Binding="{Binding DataContext.GameModeVm.IsManualGameModeActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
                                     <Setter Property="BorderBrush" Value="{DynamicResource EcoBrush}"/>
                                     <Setter Property="BorderThickness" Value="2"/>
-                                </DataTrigger>
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
@@ -219,10 +223,14 @@
                         <Style TargetType="Border">
                             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedMode}" Value="Smart">
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding SelectedMode}" Value="Smart"/>
+                                        <Condition Binding="{Binding DataContext.GameModeVm.IsManualGameModeActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
                                     <Setter Property="BorderBrush" Value="{DynamicResource SmartBrush}"/>
                                     <Setter Property="BorderThickness" Value="2"/>
-                                </DataTrigger>
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
@@ -262,10 +270,14 @@
                         <Style TargetType="Border">
                             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedMode}" Value="Beast">
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding SelectedMode}" Value="Beast"/>
+                                        <Condition Binding="{Binding DataContext.GameModeVm.IsManualGameModeActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
                                     <Setter Property="BorderBrush" Value="{DynamicResource BeastBrush}"/>
                                     <Setter Property="BorderThickness" Value="2"/>
-                                </DataTrigger>
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>

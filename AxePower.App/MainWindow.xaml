@@ -53,6 +53,9 @@
         <DataTemplate DataType="{x:Type viewmodels:SystemDoctorViewModel}">
             <views:SystemDoctorView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:SystemCareViewModel}">
+            <views:SystemCareView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:TerminalViewModel}">
             <views:TerminalView />
         </DataTemplate>
@@ -275,27 +278,35 @@
 
                             <!-- Maintenance Sub-items -->
                             <StackPanel Visibility="{Binding ShowMaintenanceItems, Converter={StaticResource BoolToVis}}">
-                                <!-- Optimizer -->
-                                <Button Style="{Binding OptimizerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Optimizer" ToolTip="Optimizer: safe Windows debloat, telemetry removal and gamer optimizations">
+                                <!-- Windows Update -->
+                                <Button Style="{Binding UpdatePcActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="UpdatePc" ToolTip="Windows Update: drivers, WinGet batch upgrades and Windows updates">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Windows Update" Style="{StaticResource SidebarLabelStyle}"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- System Care -->
+                                <Button Style="{Binding SystemCareActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="SystemCare" ToolTip="System Care: optimization, health repairs, cleanup and DNS tools">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Optimizer" Style="{StaticResource SidebarLabelStyle}"/>
+                                        <TextBlock Text="System Care" Style="{StaticResource SidebarLabelStyle}"/>
                                     </StackPanel>
                                 </Button>
 
-                                <!-- Doctor -->
-                                <Button Style="{Binding DoctorActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Doctor" ToolTip="Doctor: Windows health repair (SFC/DISM), shader cache cleaner and DNS benchmark">
+                                <!-- Uninstaller -->
+                                <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller: remove applications and clean verified leftovers">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE958;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Doctor" Style="{StaticResource SidebarLabelStyle}"/>
+                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Uninstaller" Style="{StaticResource SidebarLabelStyle}"/>
                                     </StackPanel>
                                 </Button>
 
-                                <!-- Terminal -->
-                                <Button Style="{Binding TerminalActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Terminal" ToolTip="Terminal: built-in CMD / PowerShell, where AxePower's commands report">
+                                <!-- Debloat -->
+                                <Button Style="{Binding DebloatActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Debloat" ToolTip="Debloat Hub: Win11Debloat &amp; WinUtil Windows tools">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Terminal" Style="{StaticResource SidebarLabelStyle}"/>
+                                        <TextBlock Text="Debloat" Style="{StaticResource SidebarLabelStyle}"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -315,35 +326,19 @@
 
                             <!-- Utilities Sub-items -->
                             <StackPanel Visibility="{Binding ShowUtilitiesItems, Converter={StaticResource BoolToVis}}">
+                                <!-- Terminal -->
+                                <Button Style="{Binding TerminalActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Terminal" ToolTip="Terminal: built-in CMD / PowerShell, where AxePower's commands report">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Terminal" Style="{StaticResource SidebarLabelStyle}"/>
+                                    </StackPanel>
+                                </Button>
+
                                 <!-- Tools: MSI Afterburner, CPU-Z, GPU-Z, CrystalDiskInfo -->
                                 <Button Style="{Binding ToolsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Tools" ToolTip="Tools: MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo" AutomationProperties.Name="Tools">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xEC7A;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="Tools" Style="{StaticResource SidebarLabelStyle}"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <!-- Uninstaller -->
-                                <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller: remove applications and clean verified leftovers">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Uninstaller" Style="{StaticResource SidebarLabelStyle}"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <!-- Update PC -->
-                                <Button Style="{Binding UpdatePcActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="UpdatePc" ToolTip="Update PC: drivers, WinGet batch upgrade and Windows Update">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Update PC" Style="{StaticResource SidebarLabelStyle}"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <!-- Debloat -->
-                                <Button Style="{Binding DebloatActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Debloat" ToolTip="Debloat Hub: Win11Debloat &amp; WinUtil Windows tools">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Debloat" Style="{StaticResource SidebarLabelStyle}"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel>

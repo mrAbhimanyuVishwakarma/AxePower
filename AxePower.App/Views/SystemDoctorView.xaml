@@ -64,7 +64,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>  <!-- Header -->
-            <RowDefinition Height="Auto"/>  <!-- Tab Switcher -->
+            <RowDefinition Height="0"/>     <!-- Categories moved to System Care's left rail -->
             <RowDefinition Height="*"/>     <!-- Active Tab Content -->
         </Grid.RowDefinitions>
 
@@ -73,7 +73,7 @@
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                     <TextBlock Text="&#xE958;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    <TextBlock Text="System Doctor &amp; Maintenance" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Doctor &amp; Repair" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Text="Automated Windows health repair, shader/junk cache cleaner, and low-latency gaming DNS benchmark."
                            FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -81,7 +81,7 @@
         </Grid>
 
         <!-- ─── 2. Segmented Tab Switcher ───────────────────────────────────── -->
-        <Border Grid.Row="1" Padding="40,0,40,16">
+        <Border Grid.Row="1" Padding="40,0,40,16" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">
                 <RadioButton Content="🩺 Health &amp; Repairs" Style="{StaticResource DoctorTabStyle}"
                              IsChecked="True" Command="{Binding SetTabCommand}" CommandParameter="Doctor" Margin="0,0,10,0"/>

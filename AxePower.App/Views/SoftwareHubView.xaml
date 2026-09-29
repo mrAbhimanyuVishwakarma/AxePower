@@ -14,6 +14,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
         <converters:InverseBooleanConverter x:Key="InverseBool"/>
+        <converters:LessThanConverter x:Key="LessThan"/>
         <!-- Declared locally as well as in App.xaml so the view can be constructed standalone -->
         <converters:StringEqualsToBooleanConverter x:Key="StringEqualsToBool"/>
 
@@ -140,6 +141,70 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Settings-style navigation row used only by the software package page. -->
+        <Style x:Key="SoftwareCategoryRailStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Row"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="11,9">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="22"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="Glyph"
+                                           Grid.Column="0"
+                                           Text="{TemplateBinding Tag}"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="14"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock x:Name="Title"
+                                           Grid.Column="1"
+                                           Text="{TemplateBinding Content}"
+                                           Margin="10,0,0,0"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"
+                                           Visibility="{Binding DataContext.IsCategoryListCollapsed, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBoolToVis}}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                <Setter TargetName="Title" Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Pill Accent Button Style -->
         <Style x:Key="PillAccentButtonStyle" TargetType="Button">
             <Style.Resources>
@@ -259,7 +324,7 @@
                                             IsEnabled="{Binding IsCheckingAllUpdates, Converter={StaticResource InverseBool}}"
                                             HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Check for updates" FontWeight="SemiBold" FontSize="13" Foreground="#FFFFFF"/>
+                                            <TextBlock Text="Check for updates" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource AccentForegroundBrush}"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -305,6 +370,7 @@
                                                                     Command="{Binding DataContext.OpenGraphicsCompanionAppCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                     CommandParameter="{Binding}"
                                                                     ToolTip="{Binding CompanionAppName, StringFormat='Open {0} in the Microsoft Store'}"
+                                                                    AutomationProperties.Name="Open NVIDIA Control Panel"
                                                                     Visibility="{Binding HasCompanionApp, Converter={StaticResource BoolToVis}}"
                                                                     Padding="9,7" Margin="0,0,6,0" FontSize="11">
                                                                 <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
@@ -314,12 +380,10 @@
                                                                     Command="{Binding DataContext.OpenNvidiaPickerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                     CommandParameter="{Binding}"
                                                                     ToolTip="Select specific Game Ready driver version or rollback if the new update has bugs or stuttering"
+                                                                    AutomationProperties.Name="Select NVIDIA driver version"
                                                                     Visibility="{Binding IsNvidia, Converter={StaticResource BoolToVis}}"
-                                                                    Padding="10,7" Margin="0,0,6,0" FontSize="11">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                                    <TextBlock Text="Versions" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                                </StackPanel>
+                                                                    Padding="9,7" Margin="0,0,6,0" FontSize="11">
+                                                                <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                                                             </Button>
 
                                                             <!-- Official download page — only when there is no Store app for this vendor -->
@@ -585,23 +649,134 @@
                     </Style>
                 </Grid.Style>
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>  <!-- Search & Category Filters -->
-                    <RowDefinition Height="Auto"/>  <!-- Batch Selection Toolbar -->
-                    <RowDefinition Height="*"/>     <!-- Packages Grid -->
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <!-- Search & Filters -->
-                <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="260"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <!-- Category navigation belongs only to this package page. -->
+                <Border Grid.Column="0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Width" Value="220"/>
+                            <Setter Property="Background" Value="{DynamicResource WindowSecondaryBackgroundBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                            <Setter Property="CornerRadius" Value="10,0,0,10"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsCategoryListCollapsed}" Value="True">
+                                    <Setter Property="Width" Value="64"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <Border IsHitTestVisible="False">
+                            <Border.OpacityMask>
+                                <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="0,120">
+                                    <GradientStop Color="Transparent" Offset="0"/>
+                                    <GradientStop Color="#80000000" Offset="0.45"/>
+                                    <GradientStop Color="Black" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.OpacityMask>
+                        </Border>
+
+                        <DockPanel>
+                            <Grid DockPanel.Dock="Top" Margin="10,12,10,8">
+                                <TextBlock Text="CATEGORIES"
+                                           FontSize="10"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           Margin="10,0,8,0"
+                                           VerticalAlignment="Center"
+                                           Visibility="{Binding IsCategoryListCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                                <Button HorizontalAlignment="Right"
+                                        Width="32"
+                                        Height="32"
+                                        Cursor="Hand"
+                                        Command="{Binding ToggleCategoryListCommand}"
+                                        AutomationProperties.Name="Collapse or expand software categories">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="ToolTip" Value="Collapse categories"/>
+                                            <Setter Property="Content" Value="&#xE76B;"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="ToggleBackground" Background="Transparent" CornerRadius="8">
+                                                            <TextBlock Text="{TemplateBinding Content}"
+                                                                       FontFamily="Segoe MDL2 Assets"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="ToggleBackground" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                                                <Setter TargetName="ToggleBackground" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCategoryListCollapsed}" Value="True">
+                                                    <Setter Property="ToolTip" Value="Expand categories"/>
+                                                    <Setter Property="Content" Value="&#xE76C;"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+
+                            <StackPanel Margin="10,0,10,10">
+                            <RadioButton Content="All" ToolTip="All"
+                                         Tag="&#xE71D;"
+                                         GroupName="SoftwareCategories"
+                                         Style="{StaticResource SoftwareCategoryRailStyle}"
+                                         IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringEqualsToBool}, ConverterParameter=All}"/>
+                            <RadioButton Content="Runtimes &amp; DirectX" ToolTip="Runtimes &amp; DirectX"
+                                         Tag="&#xE896;"
+                                         GroupName="SoftwareCategories"
+                                         Style="{StaticResource SoftwareCategoryRailStyle}"
+                                         IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Runtimes}"/>
+                            <RadioButton Content="Gaming &amp; Launchers" ToolTip="Gaming &amp; Launchers"
+                                         Tag="&#xE7FC;"
+                                         GroupName="SoftwareCategories"
+                                         Style="{StaticResource SoftwareCategoryRailStyle}"
+                                         IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Gaming}"/>
+                            <RadioButton Content="Hardware &amp; Tuning" ToolTip="Hardware &amp; Tuning"
+                                         Tag="&#xE950;"
+                                         GroupName="SoftwareCategories"
+                                         Style="{StaticResource SoftwareCategoryRailStyle}"
+                                         IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Monitoring}"/>
+                            <RadioButton Content="Tools &amp; Utilities" ToolTip="Tools &amp; Utilities"
+                                         Tag="&#xE90F;"
+                                         GroupName="SoftwareCategories"
+                                         Style="{StaticResource SoftwareCategoryRailStyle}"
+                                         IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Utilities}"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1" Margin="18,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>  <!-- Search -->
+                        <RowDefinition Height="Auto"/>  <!-- Batch Selection Toolbar -->
+                        <RowDefinition Height="*"/>     <!-- Packages Grid -->
+                    </Grid.RowDefinitions>
 
                     <!-- Search Input -->
-                    <Border Grid.Column="0" Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                    <Border Grid.Row="0" Width="300" HorizontalAlignment="Left"
+                            Background="{DynamicResource ElevatedCardBackgroundBrush}"
                             BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                            CornerRadius="8" Padding="10,6" Margin="0,0,14,0">
+                            CornerRadius="8" Padding="10,6" Margin="0,0,0,10">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -616,49 +791,38 @@
                         </Grid>
                     </Border>
 
-                    <!-- Category Chips -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <RadioButton Content="All" Style="{StaticResource CategoryChipStyle}"
-                                     IsChecked="{Binding SelectedCategory, Converter={StaticResource StringEqualsToBool}, ConverterParameter=All}" Margin="0,0,6,0"/>
-                        <RadioButton Content="Runtimes &amp; DirectX" Style="{StaticResource CategoryChipStyle}"
-                                     IsChecked="{Binding SelectedCategory, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Runtimes}" Margin="0,0,6,0"/>
-                        <RadioButton Content="Gaming &amp; Launchers" Style="{StaticResource CategoryChipStyle}"
-                                     IsChecked="{Binding SelectedCategory, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Gaming}" Margin="0,0,6,0"/>
-                        <RadioButton Content="Hardware &amp; Tuning" Style="{StaticResource CategoryChipStyle}"
-                                     IsChecked="{Binding SelectedCategory, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Monitoring}" Margin="0,0,6,0"/>
-                        <RadioButton Content="Tools &amp; Utilities" Style="{StaticResource CategoryChipStyle}"
-                                     IsChecked="{Binding SelectedCategory, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Utilities}" Margin="0,0,6,0"/>
-                    </StackPanel>
-                </Grid>
-
                 <!-- Batch Selection Toolbar (flat strip, no card, so the package list gets the height) -->
                 <Border Grid.Row="1" Margin="0,0,0,10">
                     <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <!-- Quick Selection Buttons & Status -->
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <WrapPanel Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">
                             <Button Content="Select Uninstalled" Style="{DynamicResource SecondaryButtonStyle}"
                                     Command="{Binding SelectUninstalledCommand}"
-                                    Padding="12,5" FontSize="12" Margin="0,0,8,0"
+                                    Padding="12,5" FontSize="12" Margin="0,0,8,6"
                                     AutomationProperties.Name="Select all uninstalled packages"/>
 
                             <Button Content="Select All" Style="{DynamicResource SecondaryButtonStyle}"
                                     Command="{Binding SelectAllCommand}"
-                                    Padding="12,5" FontSize="12" Margin="0,0,8,0"
+                                    Padding="12,5" FontSize="12" Margin="0,0,8,6"
                                     AutomationProperties.Name="Select all packages"/>
 
                             <Button Content="Clear" Style="{DynamicResource SecondaryButtonStyle}"
                                     Command="{Binding ClearSelectionCommand}"
-                                    Padding="10,5" FontSize="12" Margin="0,0,12,0"
+                                    Padding="10,5" FontSize="12" Margin="0,0,12,6"
                                     IsEnabled="{Binding HasSelectedPackages}"
                                     AutomationProperties.Name="Clear package selection"/>
 
                             <!-- Selection Pill Badge -->
-                            <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" Padding="10,4" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" Padding="10,4" Margin="0,0,0,6" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="{Binding SelectedCount, StringFormat='{}{0} Selected'}" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
@@ -668,10 +832,29 @@
                             <!-- Batch status text if installing -->
                             <TextBlock Text="{Binding BatchInstallStatus}" FontSize="12" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0,0,0"
                                        Visibility="{Binding IsBatchInstalling, Converter={StaticResource BoolToVis}}"/>
-                        </StackPanel>
+                        </WrapPanel>
 
                         <!-- Batch Action Buttons (Direct & Terminal) -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <WrapPanel VerticalAlignment="Center">
+                            <WrapPanel.Style>
+                                <Style TargetType="WrapPanel">
+                                    <!-- Keep actions inline while the category rail is collapsed. -->
+                                    <Setter Property="Grid.Row" Value="0"/>
+                                    <Setter Property="Grid.Column" Value="1"/>
+                                    <Setter Property="Grid.ColumnSpan" Value="1"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Style.Triggers>
+                                        <!-- Move actions below only when the content area is actually narrow. -->
+                                        <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource LessThan}, ConverterParameter=820}" Value="True">
+                                            <Setter Property="Grid.Row" Value="1"/>
+                                            <Setter Property="Grid.Column" Value="0"/>
+                                            <Setter Property="Grid.ColumnSpan" Value="2"/>
+                                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                                            <Setter Property="Margin" Value="0,4,0,0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </WrapPanel.Style>
                             <!-- Direct Install Button -->
                             <Button Style="{DynamicResource PrimaryButtonStyle}"
                                     Command="{Binding InstallSelectedDirectCommand}"
@@ -695,12 +878,12 @@
                                     <TextBlock Text="Install in Terminal" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-                        </StackPanel>
+                        </WrapPanel>
                     </Grid>
                 </Border>
 
                 <!-- Packages List -->
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl ItemsSource="{Binding FilteredPackages}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -708,6 +891,10 @@
                                         BorderBrush="{DynamicResource CardBorderBrush}"
                                         BorderThickness="1" CornerRadius="12" Padding="16,10" Margin="0,0,0,6">
                                     <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -716,7 +903,7 @@
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Selection CheckBox -->
-                                        <CheckBox Grid.Column="0" Style="{StaticResource FluentCardCheckBoxStyle}"
+                                        <CheckBox Grid.RowSpan="2" Grid.Column="0" Style="{StaticResource FluentCardCheckBoxStyle}"
                                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                   VerticalAlignment="Center"
                                                   Margin="0,0,14,0"
@@ -724,31 +911,49 @@
                                                   AutomationProperties.Name="{Binding Name, StringFormat='Select {0}'}"/>
 
                                         <!-- Package Icon -->
-                                        <Border Grid.Column="1" Width="36" Height="36" CornerRadius="9" Background="{DynamicResource CardBackgroundBrush}" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <Border Grid.RowSpan="2" Grid.Column="1" Width="36" Height="36" CornerRadius="9" Background="{DynamicResource CardBackgroundBrush}" Margin="0,0,14,0" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
 
                                         <!-- Details -->
                                         <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                                <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                            <WrapPanel Margin="0,0,0,2">
+                                                <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" Margin="0,0,10,2"/>
                                                 
-                                                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="6" Padding="8,2" Margin="0,0,8,2" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding CategoryDisplayName}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" FontWeight="SemiBold"/>
                                                 </Border>
 
-                                                <Border Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                <Border Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="0,0,0,2" VerticalAlignment="Center"
                                                         Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVis}}">
                                                     <TextBlock Text="INSTALLED" FontSize="10.5" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold"/>
                                                 </Border>
-                                            </StackPanel>
+                                            </WrapPanel>
 
                                             <TextBlock Text="{Binding Description}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="17"/>
                                             <TextBlock Text="{Binding WinGetId, StringFormat='WinGet ID: {0}'}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.6" Margin="0,1,0,0"/>
                                         </StackPanel>
 
                                         <!-- Action Buttons -->
-                                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                                        <WrapPanel VerticalAlignment="Center">
+                                            <WrapPanel.Style>
+                                                <Style TargetType="WrapPanel">
+                                                    <!-- Collapsed category rail: retain the original compact inline actions. -->
+                                                    <Setter Property="Grid.Row" Value="0"/>
+                                                    <Setter Property="Grid.Column" Value="3"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                    <Setter Property="Margin" Value="16,0,0,0"/>
+                                                    <Style.Triggers>
+                                                        <!-- Use a lower row only when the card itself has insufficient width. -->
+                                                        <DataTrigger Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource LessThan}, ConverterParameter=760}" Value="True">
+                                                            <Setter Property="Grid.Row" Value="1"/>
+                                                            <Setter Property="Grid.Column" Value="2"/>
+                                                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                            <Setter Property="Margin" Value="0,8,0,0"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </WrapPanel.Style>
                                             <!-- Custom Dual Buttons (e.g. Ninite: Install local + Custom web) -->
                                             <StackPanel Orientation="Horizontal" Visibility="{Binding ShowCustomInstallerButtons, Converter={StaticResource BoolToVis}}">
                                                 <Button Style="{DynamicResource PrimaryButtonStyle}"
@@ -824,13 +1029,14 @@
                                                     Padding="12,5" FontSize="12.5">
                                                 <TextBlock Text="Uninstall" Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
                                             </Button>
-                                        </StackPanel>
+                                        </WrapPanel>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                </Grid>
             </Grid>
 
             <!-- TAB 3: Windows Update Shield -->
@@ -872,6 +1078,7 @@
                                 <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}"
                                           IsChecked="{Binding IsSecurityOnlyActive, Mode=OneWay}"
                                           Command="{Binding ToggleSecurityOnlyCommand}"
+                                          IsEnabled="{Binding IsChangingUpdatePolicy, Converter={StaticResource InverseBool}}"
                                           VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
@@ -900,6 +1107,7 @@
                                 <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}"
                                           IsChecked="{Binding IsNoForcedRebootActive, Mode=OneWay}"
                                           Command="{Binding ToggleNoForcedRebootCommand}"
+                                          IsEnabled="{Binding IsChangingUpdatePolicy, Converter={StaticResource InverseBool}}"
                                           VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
@@ -927,6 +1135,7 @@
 
                                 <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"
                                         Command="{Binding ResetUpdateCacheCommand}"
+                                        IsEnabled="{Binding IsResettingUpdateCache, Converter={StaticResource InverseBool}}"
                                         Padding="18,10" FontSize="13" VerticalAlignment="Center">
                                     <TextBlock Text="Reset &amp; Repair Cache" FontWeight="SemiBold"/>
                                 </Button>

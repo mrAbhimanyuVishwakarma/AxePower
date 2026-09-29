@@ -277,6 +277,9 @@ public partial class SoftwareHubViewModel : ObservableObject
     private string _selectedCategory = "All";
 
     [ObservableProperty]
+    private bool _isCategoryListCollapsed = true;
+
+    [ObservableProperty]
     private string _searchText = string.Empty;
 
     // BIOS & Firmware Properties
@@ -360,6 +363,12 @@ public partial class SoftwareHubViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isCreatingRestorePoint;
+
+    [ObservableProperty]
+    private bool _isChangingUpdatePolicy;
+
+    [ObservableProperty]
+    private bool _isResettingUpdateCache;
 
     [ObservableProperty]
     private int _selectedCount;
@@ -630,12 +639,18 @@ public partial class SoftwareHubViewModel : ObservableObject
         SelectedCategory = category;
     }
 
+    [RelayCommand]
+    private void ToggleCategoryList()
+    {
+        IsCategoryListCollapsed = !IsCategoryListCollapsed;
+    }
+
     partial void OnSearchTextChanged(string value)
     {
         ApplyFilter();
     }
 
-    // Category chips bind two-way to SelectedCategory, so filter whenever it changes.
+    // Category controls bind two-way to SelectedCategory, so filter whenever it changes.
     partial void OnSelectedCategoryChanged(string value)
     {
         ApplyFilter();
@@ -902,15 +917,43 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public async Task ToggleSecurityOnlyUpdatesAsync()
     {
-        bool newState = !IsSecurityOnlyUpdates;
-        bool ok = await _updateShieldService.SetSecurityOnlyUpdatesAsync(newState);
-        if (ok)
+        if (IsChangingUpdatePolicy) return;
+        if (!TerminalService.IsProcessElevated())
         {
-            IsSecurityOnlyUpdates = newState;
-            Notify(newState
-                ? "Windows Update set to Security-Only updates (no feature bloat)."
-                : "Windows Update restored to default updates.");
-            AppendLog($"[Policy Changed] Security-Only Updates: {newState}");
+            Notify("Changing Windows Update policy needs administrator rights — use Relaunch with Admin, then try again.");
+            AppendLog("[Update Policy] Security-only change skipped: administrator rights are required.");
+            LoadShieldSettings();
+            return;
+        }
+
+        IsChangingUpdatePolicy = true;
+        bool requested = !IsSecurityOnlyUpdates;
+        try
+        {
+            bool ok = await _updateShieldService.SetSecurityOnlyUpdatesAsync(requested);
+            LoadShieldSettings();
+            if (ok && IsSecurityOnlyUpdates == requested)
+            {
+                Notify(requested
+                    ? "Feature updates deferred for 365 days; security and quality updates stay enabled."
+                    : "Windows feature-update deferral restored to default.");
+                AppendLog($"[Policy Changed] Security-only updates: {requested} (verified)");
+            }
+            else
+            {
+                Notify("Windows did not apply the feature-update policy. Check administrator rights and logs.");
+                AppendLog("[Update Policy Error] Security-only policy could not be verified.");
+            }
+        }
+        catch (Exception ex)
+        {
+            LoadShieldSettings();
+            Notify($"Windows Update policy change failed: {ex.Message}");
+            AppendLog($"[Update Policy Error] {ex.Message}");
+        }
+        finally
+        {
+            IsChangingUpdatePolicy = false;
         }
     }
 
@@ -920,21 +963,51 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public async Task ToggleNoForcedRebootAsync()
     {
-        bool newState = !IsNoForcedReboot;
-        bool ok = await _updateShieldService.SetNoForcedRebootAsync(newState);
-        if (ok)
+        if (IsChangingUpdatePolicy) return;
+        if (!TerminalService.IsProcessElevated())
         {
-            IsNoForcedReboot = newState;
-            Notify(newState
-                ? "Forced reboots during gaming/active hours are now blocked."
-                : "Default Windows reboot behavior restored.");
-            AppendLog($"[Policy Changed] No Forced Reboot: {newState}");
+            Notify("Changing the automatic-restart policy needs administrator rights — use Relaunch with Admin, then try again.");
+            AppendLog("[Update Policy] Restart-policy change skipped: administrator rights are required.");
+            LoadShieldSettings();
+            return;
+        }
+
+        IsChangingUpdatePolicy = true;
+        bool requested = !IsNoForcedReboot;
+        try
+        {
+            bool ok = await _updateShieldService.SetNoForcedRebootAsync(requested);
+            LoadShieldSettings();
+            if (ok && IsNoForcedReboot == requested)
+            {
+                Notify(requested
+                    ? "Automatic restarts are blocked while a user is logged on."
+                    : "Default Windows restart policy restored.");
+                AppendLog($"[Policy Changed] No forced reboot: {requested} (verified)");
+            }
+            else
+            {
+                Notify("Windows did not apply the restart policy. Check administrator rights and logs.");
+                AppendLog("[Update Policy Error] Restart policy could not be verified.");
+            }
+        }
+        catch (Exception ex)
+        {
+            LoadShieldSettings();
+            Notify($"Windows restart-policy change failed: {ex.Message}");
+            AppendLog($"[Update Policy Error] {ex.Message}");
+        }
+        finally
+        {
+            IsChangingUpdatePolicy = false;
         }
     }
 
     [RelayCommand]
     public async Task ResetUpdateCacheAsync()
     {
+        if (IsResettingUpdateCache) return;
+
         // Stopping the update services and clearing SoftwareDistribution needs admin rights
         if (!TerminalService.IsProcessElevated())
         {
@@ -943,12 +1016,26 @@ public partial class SoftwareHubViewModel : ObservableObject
             return;
         }
 
-        AppendLog("\n>>> [Update Cache Reset] Stopping services, clearing the download cache, restarting services...");
-        var progress = new Progress<string>(AppendLog);
-        bool ok = await _updateShieldService.ResetWindowsUpdateCacheAsync(progress);
-        Notify(ok
-            ? "Windows Update cache reset. Check for updates again."
-            : "Windows Update cache reset did not complete. See the console for details.");
+        IsResettingUpdateCache = true;
+        try
+        {
+            _terminalService.RequestNavigateToTerminal();
+            AppendLog("\n>>> [Update Cache Reset] Stopping services, clearing the download cache, restoring prior service state...");
+            var progress = new Progress<string>(AppendLog);
+            bool ok = await _updateShieldService.ResetWindowsUpdateCacheAsync(progress);
+            Notify(ok
+                ? "Windows Update cache reset. Check for updates again."
+                : "Windows Update cache reset did not complete. See the Terminal for details.");
+        }
+        catch (Exception ex)
+        {
+            Notify($"Windows Update cache reset failed: {ex.Message}");
+            AppendLog($"[Update Cache Reset Error] {ex.Message}");
+        }
+        finally
+        {
+            IsResettingUpdateCache = false;
+        }
     }
 
     [RelayCommand]
@@ -1072,6 +1159,11 @@ public partial class SoftwareHubViewModel : ObservableObject
             var stamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
             bool ok = await _systemRestoreService.CreateRestorePointAsync($"AxePower Restore Point — {stamp}", progress);
             Notify(ok ? "✓ System Restore point created." : "Restore point finished with notices. Check the Terminal.");
+        }
+        catch (Exception ex)
+        {
+            Notify($"System Restore point failed: {ex.Message}");
+            AppendLog($"[Restore Point Error] {ex.Message}");
         }
         finally
         {

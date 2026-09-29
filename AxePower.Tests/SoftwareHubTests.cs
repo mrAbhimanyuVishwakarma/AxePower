@@ -154,9 +154,15 @@ public class SoftwareHubTests
 
         Assert.Equal("Updaters", vm.ActiveTab);
         Assert.Equal("All", vm.SelectedCategory);
+        Assert.True(vm.IsCategoryListCollapsed);
         Assert.NotEmpty(vm.AllPackages);
         Assert.Equal(vm.AllPackages.Count, vm.FilteredPackages.Count);
         Assert.NotNull(vm.FirmwareInfo);
+
+        vm.ToggleCategoryListCommand.Execute(null);
+        Assert.False(vm.IsCategoryListCollapsed);
+        vm.ToggleCategoryListCommand.Execute(null);
+        Assert.True(vm.IsCategoryListCollapsed);
 
         // Filter Runtimes
         vm.SetCategoryCommand.Execute("Runtimes");

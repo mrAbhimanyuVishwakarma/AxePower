@@ -236,7 +236,8 @@ public partial class App : Application
         services.AddSingleton<HardwareMonitorService>();
         services.AddSingleton<BatteryService>();
         services.AddSingleton<PowerPlanService>();
-        services.AddSingleton<NotificationService>();
+        services.AddSingleton(sp => new NotificationService(sp.GetRequiredService<SettingsService>()));
+        services.AddSingleton<IAlertSoundService, WindowsAlertSoundService>();
         services.AddSingleton<StartupService>();
         services.AddSingleton<AutoSwitchService>();
         services.AddSingleton<AppKillerService>();
@@ -405,6 +406,7 @@ public partial class App : Application
         services.AddTransient<UninstallerViewModel>();
         services.AddTransient<SystemOptimizerViewModel>();
         services.AddTransient<SystemDoctorViewModel>();
+        services.AddTransient<SystemCareViewModel>();
         services.AddTransient<DebloatViewModel>();
         services.AddTransient<SoftwareHubViewModel>();
         services.AddTransient<ToolsViewModel>();

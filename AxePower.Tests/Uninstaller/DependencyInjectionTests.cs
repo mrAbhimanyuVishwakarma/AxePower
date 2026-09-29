@@ -34,7 +34,8 @@ public class DependencyInjectionTests
             services.AddSingleton(sp => new SettingsService(sp.GetRequiredService<LogService>(), settingsDir));
             services.AddSingleton<BatteryService>();
             services.AddSingleton<PowerPlanService>();
-            services.AddSingleton<NotificationService>();
+            services.AddSingleton(sp => new NotificationService(sp.GetRequiredService<SettingsService>()));
+            services.AddSingleton<IAlertSoundService, WindowsAlertSoundService>();
             services.AddSingleton<StartupService>();
             services.AddSingleton<AutoSwitchService>();
             services.AddSingleton<AppKillerService>();
@@ -104,6 +105,7 @@ public class DependencyInjectionTests
             services.AddTransient<UninstallerViewModel>();
             services.AddTransient<SystemOptimizerViewModel>();
             services.AddTransient<SystemDoctorViewModel>();
+            services.AddTransient<SystemCareViewModel>();
             services.AddTransient<DebloatViewModel>();
             services.AddTransient<SoftwareHubViewModel>();
             services.AddTransient<ToolsViewModel>();
@@ -123,6 +125,7 @@ public class DependencyInjectionTests
             var mainVm = provider.GetRequiredService<MainViewModel>();
             Assert.NotNull(mainVm);
             Assert.NotNull(mainVm.UninstallerVm);
+            Assert.NotNull(mainVm.SystemCareVm);
             Assert.NotNull(mainVm.OptimizerVm);
             Assert.NotNull(mainVm.DoctorVm);
             Assert.NotNull(mainVm.DebloatVm);
@@ -138,10 +141,29 @@ public class DependencyInjectionTests
             Assert.Equal(mainVm.UninstallerVm, mainVm.CurrentView);
 
             mainVm.NavigateCommand.Execute("Optimizer");
-            Assert.Equal(mainVm.OptimizerVm, mainVm.CurrentView);
+            Assert.Equal(mainVm.SystemCareVm, mainVm.CurrentView);
+            Assert.Equal("Optimizer", mainVm.SystemCareVm.ActiveSection);
 
             mainVm.NavigateCommand.Execute("Doctor");
-            Assert.Equal(mainVm.DoctorVm, mainVm.CurrentView);
+            Assert.Equal(mainVm.SystemCareVm, mainVm.CurrentView);
+            Assert.Equal("Doctor", mainVm.SystemCareVm.ActiveSection);
+
+            mainVm.NavigateCommand.Execute("SystemCare");
+            Assert.Equal(mainVm.SystemCareVm, mainVm.CurrentView);
+            Assert.Equal("Optimizer", mainVm.SystemCareVm.ActiveSection);
+            Assert.Equal("All", mainVm.SystemCareVm.SelectedCategory);
+
+            mainVm.SystemCareVm.SelectCategoryCommand.Execute("Privacy");
+            Assert.Equal("Optimizer", mainVm.SystemCareVm.ActiveSection);
+            Assert.Equal("Privacy", mainVm.OptimizerVm.SelectedCategory);
+
+            mainVm.SystemCareVm.SelectCategoryCommand.Execute("Cleaner");
+            Assert.Equal("Doctor", mainVm.SystemCareVm.ActiveSection);
+            Assert.Equal("Cleaner", mainVm.DoctorVm.ActiveTab);
+
+            mainVm.SystemCareVm.SelectCategoryCommand.Execute("Dns");
+            Assert.Equal("Doctor", mainVm.SystemCareVm.ActiveSection);
+            Assert.Equal("Dns", mainVm.DoctorVm.ActiveTab);
 
             mainVm.NavigateCommand.Execute("Debloat");
             Assert.Equal(mainVm.DebloatVm, mainVm.CurrentView);

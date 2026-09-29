@@ -78,7 +78,7 @@
             <StackPanel Grid.Column="0">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                     <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    <TextBlock Text="System Optimizer &amp; Debloat" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Optimize" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Text="Safe Windows tweaks, background telemetry debloat, and gamer latency optimizations."
                            FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -162,7 +162,7 @@
         <Border Grid.Row="2" Padding="40,0,40,16">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="280"/>
+                    <ColumnDefinition Width="360"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
@@ -185,7 +185,7 @@
                 </Border>
 
                 <!-- Filter Chips -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
                     <RadioButton Content="All Tweaks" Style="{StaticResource OptimizerFilterChipStyle}"
                                  IsChecked="True" Command="{Binding SetCategoryCommand}" CommandParameter="All" Margin="0,0,8,0"/>
                     <RadioButton Content="🛡️ Privacy &amp; Telemetry" Style="{StaticResource OptimizerFilterChipStyle}"

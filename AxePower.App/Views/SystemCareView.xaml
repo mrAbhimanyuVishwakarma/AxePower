@@ -1,0 +1,212 @@
+<UserControl x:Class="AxePower.App.Views.SystemCareView"
+             x:Name="Root"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AxePower.App.ViewModels"
+             xmlns:views="clr-namespace:AxePower.App.Views"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:SystemCareViewModel, IsDesignTimeCreatable=False}"
+             Background="Transparent"
+             AutomationProperties.Name="System Care">
+
+    <UserControl.Resources>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <converters:NullToVisibilityConverter x:Key="NotNullToVis" Invert="True"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Shared System Care category rail, matching the Settings page navigation. -->
+        <Border Grid.Column="0">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Width" Value="220"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsCategoryListCollapsed}" Value="True">
+                            <Setter Property="Width" Value="64"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Grid>
+                <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}"
+                        BorderBrush="{DynamicResource DividerBrush}"
+                        BorderThickness="0,0,1,0"
+                        IsHitTestVisible="False">
+                    <Border.OpacityMask>
+                        <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="0,120">
+                            <GradientStop Color="Transparent" Offset="0"/>
+                            <GradientStop Color="#80000000" Offset="0.45"/>
+                            <GradientStop Color="Black" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.OpacityMask>
+                </Border>
+
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="12,20,10,12">
+                        <TextBlock Text="System Care"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,0,0"
+                                   Visibility="{Binding IsCategoryListCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                        <Button HorizontalAlignment="Right"
+                                Width="32"
+                                Height="32"
+                                Cursor="Hand"
+                                Command="{Binding ToggleCategoryListCommand}"
+                                AutomationProperties.Name="Collapse or expand the System Care list">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="ToolTip" Value="Collapse the list"/>
+                                    <Setter Property="Content" Value="&#xE76B;"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Background" Background="Transparent" CornerRadius="8">
+                                                    <TextBlock Text="{TemplateBinding Content}"
+                                                               FontFamily="Segoe MDL2 Assets"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Background" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                                        <Setter TargetName="Background" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCategoryListCollapsed}" Value="True">
+                                            <Setter Property="ToolTip" Value="Expand the list"/>
+                                            <Setter Property="Content" Value="&#xE76C;"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Focusable="False"
+                                  Padding="10,0">
+                        <ItemsControl ItemsSource="{Binding Categories}"
+                                      Focusable="False"
+                                      AutomationProperties.Name="System Care categories">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding GroupHeader}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   Margin="10,12,8,6"
+                                                   Visibility="{Binding GroupHeader, Converter={StaticResource NotNullToVis}}"/>
+
+                                        <Button Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding Id}"
+                                                Cursor="Hand"
+                                                Margin="0,0,0,4"
+                                                HorizontalContentAlignment="Stretch"
+                                                ToolTip="{Binding Title}"
+                                                AutomationProperties.Name="{Binding Title}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="Row"
+                                                            CornerRadius="8"
+                                                            Padding="11,8"
+                                                            Background="Transparent"
+                                                            BorderThickness="1"
+                                                            BorderBrush="Transparent">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock x:Name="Glyph"
+                                                                       Text="{Binding Glyph}"
+                                                                       FontFamily="Segoe MDL2 Assets"
+                                                                       FontSize="14"
+                                                                       Width="20"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       VerticalAlignment="Center"/>
+                                                            <TextBlock x:Name="Title"
+                                                                       Text="{Binding Title}"
+                                                                       FontSize="12.5"
+                                                                       Margin="12,0,0,0"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       Visibility="{Binding DataContext.IsCategoryListCollapsed, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBoolToVis}}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                            <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                                            <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+                                                        </Trigger>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                            <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                            <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                            <Setter TargetName="Title" Property="FontWeight" Value="SemiBold"/>
+                                                            <Setter TargetName="Glyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                        </DataTrigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <views:SystemOptimizerView DataContext="{Binding OptimizerVm}">
+                <views:SystemOptimizerView.Style>
+                    <Style TargetType="views:SystemOptimizerView">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.ActiveSection, ElementName=Root}" Value="Optimizer">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </views:SystemOptimizerView.Style>
+            </views:SystemOptimizerView>
+
+            <views:SystemDoctorView DataContext="{Binding DoctorVm}">
+                <views:SystemDoctorView.Style>
+                    <Style TargetType="views:SystemDoctorView">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.ActiveSection, ElementName=Root}" Value="Doctor">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </views:SystemDoctorView.Style>
+            </views:SystemDoctorView>
+        </Grid>
+    </Grid>
+</UserControl>

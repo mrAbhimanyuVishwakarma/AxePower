@@ -110,6 +110,30 @@ public class EndToEndSafetyValidationTests : IDisposable
         Assert.DoesNotContain("Notepad", appVm2.DisplayName);
     }
 
+    [Fact]
+    public async Task DesktopAndWindowsApps_AreSeparated_AndDesktopDefaultsToAlphabeticalOrder()
+    {
+        await _wpf.RunAsync(async () =>
+        {
+            var (vm, _, _, discovery) = CreateHarness();
+            discovery.Apps.AddRange([
+                App("Zulu Desktop", kind: UninstallerKind.Nsis),
+                App("Alpha Desktop", kind: UninstallerKind.Msi),
+                App("Store Package", kind: UninstallerKind.StoreApp),
+            ]);
+
+            await vm.RefreshCommand.ExecuteAsync(null);
+
+            Assert.Equal(["Alpha Desktop", "Zulu Desktop"],
+                vm.ApplicationsView.Cast<InstalledApplicationViewModel>().Select(a => a.DisplayName));
+
+            vm.SelectAppSectionCommand.Execute("WindowsApps");
+
+            Assert.Equal(["Store Package"],
+                vm.ApplicationsView.Cast<InstalledApplicationViewModel>().Select(a => a.DisplayName));
+        });
+    }
+
     [Theory]
     [InlineData(UninstallerKind.Unknown, "Win32")]
     [InlineData(UninstallerKind.Nsis, "Win32")]
@@ -121,6 +145,30 @@ public class EndToEndSafetyValidationTests : IDisposable
     {
         var vm = new InstalledApplicationViewModel(App("X", kind: kind));
         Assert.Equal(expected, vm.ApplicationTypeLabel);
+    }
+
+    [Theory]
+    [InlineData(UninstallerKind.Unknown, "Win32")]
+    [InlineData(UninstallerKind.Msi, "MSI")]
+    [InlineData(UninstallerKind.StoreApp, "Store")]
+    [InlineData(UninstallerKind.BrokenEntry, "Broken")]
+    public void ApplicationRows_ShowFriendlyTypeBesideTheName(UninstallerKind kind, string expected)
+    {
+        var vm = new InstalledApplicationViewModel(App("X", kind: kind));
+        Assert.Equal(expected, vm.ApplicationTypeDisplayLabel);
+    }
+
+    [Theory]
+    [InlineData("x64", "64-bit")]
+    [InlineData("x86", "32-bit")]
+    [InlineData("arm64", "ARM64")]
+    [InlineData("neutral", "Neutral")]
+    [InlineData("", "")]
+    public void ApplicationRows_ShowFriendlyArchitecture(string architecture, string expected)
+    {
+        var app = App("X");
+        app.Architecture = architecture;
+        Assert.Equal(expected, new InstalledApplicationViewModel(app).ArchitectureDisplayLabel);
     }
 
     [Fact]
@@ -142,6 +190,10 @@ public class EndToEndSafetyValidationTests : IDisposable
 
             Assert.True(vm.IsDetailPanelVisible);
             Assert.False(string.IsNullOrEmpty(appVm.PlanDescription));
+
+            vm.CloseDetailsCommand.Execute(null);
+            Assert.False(vm.IsDetailPanelVisible);
+            Assert.Null(vm.SelectedApplication);
         });
     }
 
@@ -261,6 +313,30 @@ public class EndToEndSafetyValidationTests : IDisposable
         Assert.False(blocked.IsSelected);
         Assert.False(admin.CanSelect);
         Assert.True(adminElevated.CanSelect);
+    }
+
+    [Fact]
+    public void SelectAllLeftovers_SelectsOnlySafePermittedRows()
+    {
+        _wpf.Invoke(() =>
+        {
+            var (vm, _, _, _) = CreateHarness();
+            var safe = new LeftoverItemViewModel(new LeftoverItem { Path = @"C:\Safe" });
+            var blocked = new LeftoverItemViewModel(new LeftoverItem { Path = @"C:\Blocked", BlockedReason = "Protected" });
+            var needsAdmin = new LeftoverItemViewModel(
+                new LeftoverItem { Path = @"HKLM\SOFTWARE\Admin", RequiresElevation = true },
+                isElevated: false);
+            vm.LeftoverItems.Add(safe);
+            vm.LeftoverItems.Add(blocked);
+            vm.LeftoverItems.Add(needsAdmin);
+
+            vm.SelectAllLeftoversCommand.Execute(null);
+
+            Assert.True(safe.IsSelected);
+            Assert.False(blocked.IsSelected);
+            Assert.False(needsAdmin.IsSelected);
+            Assert.Equal("1 item selected", vm.SelectedLeftoverCount);
+        });
     }
 
     [Fact]

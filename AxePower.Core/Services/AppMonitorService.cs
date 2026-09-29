@@ -171,8 +171,9 @@ public class AppMonitorService : IDisposable
 
             Task.Run(async () => 
             {
-                await _powerPlanService.ApplyModeAsync(rule.TargetMode);
-                _notificationService.Show($"Game Mode: Switched to {rule.TargetMode}");
+                bool success = await _powerPlanService.ApplyModeAsync(rule.TargetMode);
+                if (success && AutoSwitchService.ShouldNotifyModeSwitch(_settingsService.GetSettings()))
+                    _notificationService.Show($"Game Mode: Switched to {rule.TargetMode}");
             });
 
             RaiseTrackedAppEvent(TrackedAppStarted, processName);
@@ -204,7 +205,8 @@ public class AppMonitorService : IDisposable
                 }
             }
 
-            _notificationService.Show("Game Mode: App closed, reverting power mode.");
+            if (AutoSwitchService.ShouldNotifyModeSwitch(settings))
+                _notificationService.Show("Game Mode: App closed, reverting power mode.");
 
             RaiseTrackedAppEvent(TrackedAppStopped, processName);
         }

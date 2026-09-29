@@ -41,7 +41,14 @@ public sealed partial class UninstallerViewModel
     [ObservableProperty]
     private int _leftoverBlockedCount;
 
-    public string SelectedLeftoverCount => $"{LeftoverItems.Count(i => i.IsSelected)} items selected";
+    public string SelectedLeftoverCount
+    {
+        get
+        {
+            int count = LeftoverItems.Count(i => i.IsSelected);
+            return count == 1 ? "1 item selected" : $"{count} items selected";
+        }
+    }
     public bool IsAdminBannerVisible => LeftoverNeedsAdminCount > 0 && !IsElevated;
     public string ReviewBackupFolder => _reviewSession is null ? string.Empty : _manifests.GetSessionFolder(_reviewSession.SessionId);
 
@@ -160,6 +167,16 @@ public sealed partial class UninstallerViewModel
         OnPropertyChanged(nameof(SelectedLeftoverCount));
         OnPropertyChanged(nameof(IsAdminBannerVisible));
         OnPropertyChanged(nameof(ReviewBackupFolder));
+    }
+
+    /// <summary>Select every leftover that is currently safe and permitted to clean.</summary>
+    [RelayCommand]
+    private void SelectAllLeftovers()
+    {
+        foreach (var item in LeftoverItems)
+            item.IsSelected = item.CanSelect;
+
+        OnPropertyChanged(nameof(SelectedLeftoverCount));
     }
 
     [RelayCommand(CanExecute = nameof(CanStartWork))]
