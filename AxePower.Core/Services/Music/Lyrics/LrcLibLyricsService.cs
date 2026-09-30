@@ -439,7 +439,7 @@ public sealed class LrcLibLyricsService : ILyricsService, IDisposable
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.0.9 (https://github.com/AxePower)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.1.0 (https://github.com/AxePower)");
         return client;
     }
 

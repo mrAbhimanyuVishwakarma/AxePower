@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.9-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.1.0-blueviolet)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -17,6 +17,10 @@
 
 ## 🚀 Key Features
 
+- 🧰 **System Care Workspace**: Optimizer and Doctor are unified behind a collapsible category rail, with recommended tweaks, repair actions, restore points, junk cleanup, DNS switching, and live terminal output in one place.
+- 🛡️ **Windows Update Controls That Perform Real Work**: Apply the recommended security-updates-only policy, block forced reboots while signed in, repair the Windows Update cache and services, and create a restore point before changes.
+- 🗂️ **Table-Based Uninstaller Pro**: Full-width Win32 and Windows Apps views with file-type badges, sortable columns, ascending/descending alphabetical order, batch selection, broken-entry filtering, and a Select All action for detected leftovers.
+- 🧭 **Responsive Software Hub**: A collapsible category rail for runtimes, gaming, hardware tuning, and utilities. Install controls stay inline when space permits and move below content only in compact layouts.
 - 🎵 **Integrated Music Player & Media Hub**: Built-in high-fidelity audio engine supporting local libraries and YouTube Music streaming. Features an aesthetic Header Player matching the dashboard design and automatically follows default Windows audio output device switches.
 - 🖥️ **Share Screen & GameStream**: Low-latency desktop and game display sharing directly to friends in their web browser without requiring them to install third-party clients.
 - 🗑️ **Next-Gen Uninstaller Pro**: Deep leftover scanner with confidence scoring, registry backup manifests, broken uninstaller recovery, and PowerShell execution safety nets.
@@ -68,14 +72,13 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
 | **🖥️ Share Screen** | 🖥️ | Low-latency display and gameplay streaming to any browser with audio. |
 | **MAINTENANCE** | | |
-| **⚡ Optimizer** | ⚡ | Safe Windows debloat, telemetry removal, and system performance optimizations. |
-| **🩺 Doctor** | 🩺 | Windows system health repair (SFC/DISM), shader cache cleaner, and DNS benchmark. |
-| **🖥️ Terminal** | 🖥️ | Built-in CMD / PowerShell session and the shared output console for every command AxePower runs. |
-| **UTILITIES** | | |
-| **✈️ MSI Afterburner** | ✈️ | Dedicated GPU overclocking and OSD launcher with built-in guide modal *(Credit to MSI)*. |
-| **🗑️ Uninstaller Pro** | 🗑️ | Comprehensive app discovery, batch uninstallation, and leftover cleaner. |
-| **🔄 Update PC** | 🔄 | Elevated one-click driver and package updates. |
+| **🛡️ Windows Update** | 🛡️ | Driver/package checks, security-only update policy, forced-reboot protection, cache/service repair, and restore points. |
+| **🧰 System Care** | 🧰 | Recommended optimizations, SFC/DISM health repair, junk cleanup, DNS tools, and other guarded maintenance actions. |
+| **🗑️ Uninstaller** | 🗑️ | Sortable Win32/Windows Apps inventory, batch uninstall, broken-entry handling, and selectable leftovers. |
 | **🧹 Debloat** | 🧹 | Win11Debloat by Raphire integration. |
+| **UTILITIES** | | |
+| **🖥️ Terminal** | 🖥️ | Built-in CMD / PowerShell session and the shared output console for every command AxePower runs. |
+| **🛠️ Tools** | 🛠️ | Trusted monitoring and cleanup utilities, Timer, and Routines. |
 | **FOOTER (PINNED)** | | |
 | **⚙️ Settings** | ⚙️ | Application preferences, performance defaults, theme (System / Dark / Light / Glass), **Run as administrator**, startup toggles, and notification settings. |
 | **ℹ️ About** | ℹ️ | License details, system compatibility, update checker, and official website links. |
@@ -170,7 +173,7 @@ sequenceDiagram
     AboutView->>Vm: CheckForUpdatesCommand
     Vm->>Svc: CheckForUpdatesAsync()
     Svc->>GH: GET /repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest
-    GH-->>Svc: Latest Release JSON (v2.0.0, Assets: Setup.exe)
+    GH-->>Svc: Latest Release JSON (v2.1.0, Assets: Setup.exe)
     Svc-->>Vm: UpdateCheckResult (HasUpdate = true)
     Vm->>AboutView: Display "Update Available" Modal Dialog
     

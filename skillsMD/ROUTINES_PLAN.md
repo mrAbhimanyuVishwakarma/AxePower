@@ -5,7 +5,7 @@ description: Plan for Routines — Samsung-style "If … Then …" rules on the 
 
 # Routines — Plan
 
-> **Status:** R0 and R1 built, **never run on the real PC** (see *Open*) · **Written:** 2026-09-27 · **Desktop:** v2.0.9 (branch `v2.0.9`)
+> **Status:** R0 and R1 built, **never run on the real PC** (see *Open*) · **Written:** 2026-09-27 · **Desktop:** v2.1.0 (branch `V2.1.0`)
 
 Goal: let the owner write simple **If … Then …** rules, the way Samsung's *Routines* works, and
 have AxePower carry them out and put things back when the "If" stops being true.

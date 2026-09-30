@@ -12,10 +12,10 @@
     <RootNamespace>AxePower.App</RootNamespace>
     <ApplicationIcon>Resources\AxePower_white.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.0.9</Version>
-    <AssemblyVersion>2.0.9.0</AssemblyVersion>
-    <FileVersion>2.0.9.0</FileVersion>
-    <InformationalVersion>2.0.9</InformationalVersion>
+    <Version>2.1.0</Version>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
+    <InformationalVersion>2.1.0</InformationalVersion>
     <Authors>Abhimanyu Vishwakarma</Authors>
     <Company>AxePower</Company>
     <Product>AxePower</Product>

@@ -4,7 +4,7 @@
 **Downloads & Releases Repository:** [AxePower_Download](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download)  
 **Website:** [AxePower.com](https://axepower.com) (`AppWebsite/`)  
 **Primary Architect & Developer:** [Abhimanyu Vishwakarma](https://github.com/mrAbhimanyuVishwakarma)  
-**Last Updated:** September 23, 2026
+**Last Updated:** September 30, 2026
 
 ---
 
@@ -49,6 +49,14 @@ AxePower/
 ---
 
 ## 🛠️ Work Completed & Verified
+
+### 0. AxePower v2.1.0 Release (`September 30, 2026`)
+- Unified Optimizer and Doctor as **System Care**, with a collapsible category rail and responsive action layout.
+- Completed the **Windows Update** security-only policy, forced-reboot protection, cache/service repair, and restore-point flows.
+- Rebuilt **Uninstaller** around sortable full-width Win32/Windows Apps tables, visible app types, batch selection, and Select All for leftovers.
+- Added a collapsible category rail and responsive action placement to the **Software Hub** without clipping app rows.
+- Wired Notifications & Alerts settings to their runtime behavior and corrected Game Mode selection/active-state visuals.
+- Reorganized navigation into Maintenance (Windows Update, System Care, Uninstaller, Debloat) and Utilities (Terminal, Tools).
 
 ### 1. Official Single-Page Product Website (`AppWebsite/`)
 - **Brand Fidelity & Theme-Adaptive Icons**:

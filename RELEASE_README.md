@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
 ![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0.9-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.1.0-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -37,6 +37,17 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
 
 ---
+
+## 🌟 What's New in v2.1.0
+
+- 🧰 **System Care, rebuilt**: Optimizer and Doctor now share one focused workspace with a collapsible category rail, recommended actions, health repairs, cleanup, DNS tools, restore points, and live terminal output.
+- 🛡️ **Windows Update controls**: the recommended security-updates-only policy, forced-reboot protection, Windows Update cache/service repair, and restore-point creation now execute their real Windows operations and report clear status.
+- 🗂️ **Uninstaller redesign**: Win32 and Windows Apps get dedicated views in a full-width sortable table, with application type beside each app, ascending/descending ordering, batch selection, and **Select All** for leftovers.
+- 🧭 **Responsive Software Hub**: categories move into a collapsible left rail. Install controls remain on the right when space allows and flow beneath app details only at compact widths, avoiding clipped cards and buttons.
+- 🔔 **Notifications & Alerts**: desktop notifications, automatic-mode-change notices, and the low-battery alert chime are wired to persistent settings and runtime behavior.
+- 🎮 **Game Mode clarity**: only the active mode glows after applying; a manually chosen Eco, Smart, or Beast card previews its glow before Apply. The Game Mode dashboard icon now fills its card height cleanly.
+- 🧹 **Navigation and UI polish**: Maintenance is now Windows Update, System Care, Uninstaller, and Debloat; Utilities contains Terminal and Tools. NVIDIA Control Panel and Versions use compact icon-only actions where required.
+- 📦 **Packaging**: ships as **`AxePower-v2.1.0-Setup.exe`**.
 
 ## 🌟 What's New in v2.0.9
 
