@@ -38,7 +38,7 @@
 - ⚙️ **Smart Performance Defaults**: Out-of-the-box defaults set to **Smart Mode** for AC power and **Eco Mode** on battery, with custom dropdown configuration in Settings.
 - 📌 **Steam-Style Taskbar Context Menu**: Dark Steam slate aesthetic with full-width dividers, direct 1-click power mode switching (Eco, Smart, Beast, Game Mode), and quick launcher shortcuts.
 - 📜 **Steam Update Banner & Scrollable Patch Notes**: Steam Cyan/Blue bottom banner with complete scrollable changelog feed, reaction bar (`👍 Rate Up`, `👎`, `💬 Discuss`, `🔗 Share`), and smooth scroll arrows.
-- 🚀 **Silent Background Auto-Updater**: Native update engine that checks for latest releases, streams installer downloads in the background with zero disruption, and provides 1-click "Restart & Install".
+- 🚀 **Reliable Background Auto-Updater**: Native update engine with shared background/manual downloads, slow-network tolerance, visible progress, verified partial files, installer validation, and 1-click launch.
 - 🛍️ **Software Hub & Ninite Multi-Installer**:
   - **Ninite Integration**: Bundled local multi-installer + online custom package builder for zero-click multi-app setups.
   - **Expanded Suite**: Audacity, OBS Studio, DaVinci Resolve, GIMP, Canva, Blender, HandBrake, PowerToys, ShareX, Peace Equalizer, Dolby Access, SteelSeries GG Sonar, and hardware diagnostic utilities.

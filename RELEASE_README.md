@@ -46,6 +46,7 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🧭 **Responsive Software Hub**: categories move into a collapsible left rail. Install controls remain on the right when space allows and flow beneath app details only at compact widths, avoiding clipped cards and buttons.
 - 🔔 **Notifications & Alerts**: desktop notifications, automatic-mode-change notices, and the low-battery alert chime are wired to persistent settings and runtime behavior.
 - 🎮 **Game Mode clarity**: only the active mode glows after applying; a manually chosen Eco, Smart, or Beast card previews its glow before Apply. The Game Mode dashboard icon now fills its card height cleanly.
+- 🚀 **Updater reliability fix**: background and manual updates now share one download, use a verified `.part` file, tolerate slow GitHub responses, surface progress and failures, validate the installer before launch, and reuse a completed download. Release notes are displayed without raw Markdown symbols.
 - 🧹 **Navigation and UI polish**: Maintenance is now Windows Update, System Care, Uninstaller, and Debloat; Utilities contains Terminal and Tools. NVIDIA Control Panel and Versions use compact icon-only actions where required.
 - 📦 **Packaging**: ships as **`AxePower-v2.1.0-Setup.exe`**.
 

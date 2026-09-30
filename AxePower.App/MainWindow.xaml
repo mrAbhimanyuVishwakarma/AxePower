@@ -974,6 +974,7 @@
                                         <TextBlock Text="&#x2022; Uninstaller: full-width Win32 and Windows Apps tables, visible app types, alphabetical sorting in both directions, batch selection, and Select All for leftovers." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
                                         <TextBlock Text="&#x2022; Software Hub: a collapsible category rail and responsive install controls keep every app row readable without clipping." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
                                         <TextBlock Text="&#x2022; Notifications and Game Mode: alert settings now drive runtime behavior, while mode cards distinguish a pending selection from the currently applied mode." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                        <TextBlock Text="&#x2022; Updater: background and manual updates share one verified download, handle slow connections, show progress and failures, and launch only a complete Windows installer." Foreground="#C6D4DF" FontSize="12.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6"/>
                                     </StackPanel>
                                 </StackPanel>
 

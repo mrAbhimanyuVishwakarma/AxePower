@@ -57,6 +57,7 @@ AxePower/
 - Added a collapsible category rail and responsive action placement to the **Software Hub** without clipping app rows.
 - Wired Notifications & Alerts settings to their runtime behavior and corrected Game Mode selection/active-state visuals.
 - Reorganized navigation into Maintenance (Windows Update, System Care, Uninstaller, Debloat) and Utilities (Terminal, Tools).
+- Repaired the in-app updater with a single-flight download gate, `.part` files, slow-network and stall timeouts, size/PE validation, completed-download reuse, clear progress/errors, and cleaned release-note formatting.
 
 ### 1. Official Single-Page Product Website (`AppWebsite/`)
 - **Brand Fidelity & Theme-Adaptive Icons**:
