@@ -196,6 +196,7 @@ public partial class AboutViewModel : ObservableObject
         _driverUpdateService = driverUpdateService;
         _notificationService = notificationService;
         _updateService = updateService;
+        _updateService.DownloadProgressChanged += OnDownloadProgressChanged;
 
         _ = SyncCommunityStatsAsync();
     }
@@ -410,8 +411,23 @@ public partial class AboutViewModel : ObservableObject
         {
             IsDownloadingUpdate = true;
             DownloadProgress = 0;
-            DownloadStatusText = "Downloading " + (AssetName ?? "update installer") + "...";
+            DownloadStatusText = _updateService.IsDownloadInProgress
+                ? "Finishing the background download..."
+                : "Downloading " + (AssetName ?? "update installer") + "...";
             _downloadCts = new CancellationTokenSource();
+
+            if (!string.IsNullOrWhiteSpace(DownloadedInstallerPath) && File.Exists(DownloadedInstallerPath))
+            {
+                DownloadStatusText = "Launching installer...";
+                if (_updateService.ApplyUpdate(DownloadedInstallerPath))
+                {
+                    Application.Current?.Shutdown();
+                    return;
+                }
+
+                DownloadedInstallerPath = null;
+                IsUpdateDownloaded = false;
+            }
 
             var progress = new Progress<double>(p =>
             {
@@ -420,6 +436,8 @@ public partial class AboutViewModel : ObservableObject
             });
 
             var installerPath = await _updateService.DownloadUpdateAsync(DownloadUrl, progress, _downloadCts.Token);
+            DownloadedInstallerPath = installerPath;
+            IsUpdateDownloaded = true;
 
             DownloadStatusText = "Launching installer...";
             await Task.Delay(500);
@@ -443,7 +461,30 @@ public partial class AboutViewModel : ObservableObject
         catch (Exception ex)
         {
             IsDownloadingUpdate = false;
+            DownloadStatusText = "Download failed. Try again or open the release page.";
             _notificationService?.Show("Download failed: " + ex.Message);
+        }
+    }
+
+    private void OnDownloadProgressChanged(object? sender, UpdateDownloadProgressEventArgs e)
+    {
+        void UpdateUi()
+        {
+            DownloadProgress = e.Percentage;
+            if (IsDownloadingUpdate)
+            {
+                DownloadStatusText = e.StatusText;
+            }
+        }
+
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.CheckAccess())
+        {
+            UpdateUi();
+        }
+        else
+        {
+            dispatcher.BeginInvoke(UpdateUi);
         }
     }
 
