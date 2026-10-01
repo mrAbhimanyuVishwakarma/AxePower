@@ -837,6 +837,128 @@
                         </Border>
                     </Border>
 
+                    <!-- CARD: AxePower Mobile -->
+                    <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=AxePowerMobile}" Margin="0" Padding="22">
+                        <StackPanel>
+                            <!-- Card Header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                <Border Width="38" Height="38" CornerRadius="10" Background="#1AE11D48" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="#E11D48"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="AxePower Mobile" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Worldwide cloud access, live telemetry sync, and battery management." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Cloud Status Banner -->
+                            <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                            <Border Width="8" Height="8" CornerRadius="4" Background="#10B981" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Cloud Account Pairing" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Sign in with the same AxePower account on phone and PC to connect anywhere in the world." FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Enable Remote Mobile Access -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Enable remote mobile access" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Allow your AxePower Mobile app to connect to this PC over the cloud." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding MobileRemoteAccessEnabled}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Telemetry Sync (CPU, GPU, RAM, Temps) -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Telemetry sync (CPU, GPU, RAM, Temps)" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Stream live sensor telemetry. Turning off stops hardware polling to save PC resources and laptop battery." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding MobileAllowTelemetry}" IsEnabled="{Binding MobileRemoteAccessEnabled}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Battery Sync -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Battery sync &amp; tuning" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Stream battery level, AC/charging state, and Conservation Mode / Rapid Charge status." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding MobileAllowBatterySync}" IsEnabled="{Binding MobileRemoteAccessEnabled}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Power Mode Remote Control -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Power mode remote control" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Allow switching between Eco, Smart, Beast and Game Mode from your mobile app." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding MobileAllowPowerModeControl}" IsEnabled="{Binding MobileRemoteAccessEnabled}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Battery Tuning Remote Control -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Battery tuning remote control" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Allow toggling Conservation Mode and Rapid Charge remotely from your mobile device." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding MobileAllowBatteryTuning}" IsEnabled="{Binding MobileRemoteAccessEnabled}" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                            <!-- Remote System Power -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <TextBlock Text="Remote system power controls (Opt-in)" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                    <TextBlock Text="Allow remote locking, sleep, restart or shutdown from your mobile device." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding MobileAllowSystemPower}" IsEnabled="{Binding MobileRemoteAccessEnabled}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
                     <!-- CARD 3: Updates & Version (Integrated Check Button) -->
                     <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Updates}" Margin="0" Padding="22">
                         <StackPanel>

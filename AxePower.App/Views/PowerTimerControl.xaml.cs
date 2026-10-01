@@ -56,13 +56,13 @@ public partial class PowerTimerControl : UserControl
 
     private bool IsInside(DependencyObject element)
     {
-        for (var node = element; node != null; node = Parent(node))
+        for (var node = element; node != null; node = GetParentNode(node))
             if (ReferenceEquals(node, this)) return true;
         return false;
     }
 
     // Text runs are not visuals, so they only have a logical parent
-    private static DependencyObject? Parent(DependencyObject node) =>
+    private static DependencyObject? GetParentNode(DependencyObject node) =>
         node is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D
             ? System.Windows.Media.VisualTreeHelper.GetParent(node) ?? LogicalTreeHelper.GetParent(node)
             : LogicalTreeHelper.GetParent(node);

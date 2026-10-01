@@ -191,6 +191,10 @@ public class AppSettings
     [JsonPropertyName("routines")]
     public List<Routine> Routines { get; set; } = new();
 
+    /// <summary>AxePower Mobile cloud bridge and remote access preferences.</summary>
+    [JsonPropertyName("remoteAccess")]
+    public RemoteAccessSettings RemoteAccess { get; set; } = new();
+
     public AppSettings Clone()
     {
         return new AppSettings
@@ -244,7 +248,39 @@ public class AppSettings
             Music = (this.Music ?? new MusicSettings()).Clone(),
             Uninstaller = (this.Uninstaller ?? new UninstallerSettings()).Clone(),
             ShareScreen = (this.ShareScreen ?? new ShareScreenSettings()).Clone(),
-            Routines = (this.Routines ?? new()).Select(r => r.Clone()).ToList()
+            Routines = (this.Routines ?? new()).Select(r => r.Clone()).ToList(),
+            RemoteAccess = (this.RemoteAccess ?? new RemoteAccessSettings()).Clone()
         };
     }
+}
+
+public class RemoteAccessSettings
+{
+    [JsonPropertyName("enabled")]
+    public bool Enabled { get; set; } = true;
+
+    [JsonPropertyName("allowTelemetry")]
+    public bool AllowTelemetry { get; set; } = true;
+
+    [JsonPropertyName("allowBatterySync")]
+    public bool AllowBatterySync { get; set; } = true;
+
+    [JsonPropertyName("allowPowerModeControl")]
+    public bool AllowPowerModeControl { get; set; } = true;
+
+    [JsonPropertyName("allowBatteryTuning")]
+    public bool AllowBatteryTuning { get; set; } = true;
+
+    [JsonPropertyName("allowSystemPower")]
+    public bool AllowSystemPower { get; set; } = false;
+
+    public RemoteAccessSettings Clone() => new()
+    {
+        Enabled = this.Enabled,
+        AllowTelemetry = this.AllowTelemetry,
+        AllowBatterySync = this.AllowBatterySync,
+        AllowPowerModeControl = this.AllowPowerModeControl,
+        AllowBatteryTuning = this.AllowBatteryTuning,
+        AllowSystemPower = this.AllowSystemPower
+    };
 }

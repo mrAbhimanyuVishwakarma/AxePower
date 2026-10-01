@@ -152,6 +152,9 @@ public partial class App : Application
             // First look after startup has applied Smart, then every few seconds
             Services.GetRequiredService<AxePower.Core.Services.Routines.RoutineEngine>().Start();
 
+            // AxePower Mobile cloud bridge for remote telemetry and sync
+            _ = Services.GetRequiredService<CloudBridgeService>();
+
             var mainWindow = Services.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
 
@@ -378,6 +381,7 @@ public partial class App : Application
         services.AddSingleton<IPlayerIntegration>(sp => sp.GetRequiredService<RecentlyPlayedService>());
         services.AddSingleton<RecentSearchesService>();
         services.AddSingleton<PlayerIntegrationHost>();
+        services.AddSingleton<CloudBridgeService>();
 
         // AxePower Music — App
         services.AddSingleton<MusicDispatcher>();

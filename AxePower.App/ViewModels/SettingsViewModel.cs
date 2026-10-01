@@ -369,10 +369,80 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// CurrentSettings is a snapshot taken at construction, so first pull in the state the
-    /// sidebar has saved since then; otherwise any Settings change would revert it.
-    /// </summary>
+    // ── AxePower Mobile Remote Access ──────────────────────────────────────
+
+    [ObservableProperty]
+    private bool _mobileRemoteAccessEnabled = true;
+
+    partial void OnMobileRemoteAccessEnabledChanged(bool value)
+    {
+        if (CurrentSettings?.RemoteAccess != null)
+        {
+            CurrentSettings.RemoteAccess.Enabled = value;
+            SaveCurrentSettings();
+        }
+    }
+
+    [ObservableProperty]
+    private bool _mobileAllowTelemetry = true;
+
+    partial void OnMobileAllowTelemetryChanged(bool value)
+    {
+        if (CurrentSettings?.RemoteAccess != null)
+        {
+            CurrentSettings.RemoteAccess.AllowTelemetry = value;
+            SaveCurrentSettings();
+        }
+    }
+
+    [ObservableProperty]
+    private bool _mobileAllowBatterySync = true;
+
+    partial void OnMobileAllowBatterySyncChanged(bool value)
+    {
+        if (CurrentSettings?.RemoteAccess != null)
+        {
+            CurrentSettings.RemoteAccess.AllowBatterySync = value;
+            SaveCurrentSettings();
+        }
+    }
+
+    [ObservableProperty]
+    private bool _mobileAllowPowerModeControl = true;
+
+    partial void OnMobileAllowPowerModeControlChanged(bool value)
+    {
+        if (CurrentSettings?.RemoteAccess != null)
+        {
+            CurrentSettings.RemoteAccess.AllowPowerModeControl = value;
+            SaveCurrentSettings();
+        }
+    }
+
+    [ObservableProperty]
+    private bool _mobileAllowBatteryTuning = true;
+
+    partial void OnMobileAllowBatteryTuningChanged(bool value)
+    {
+        if (CurrentSettings?.RemoteAccess != null)
+        {
+            CurrentSettings.RemoteAccess.AllowBatteryTuning = value;
+            SaveCurrentSettings();
+        }
+    }
+
+    [ObservableProperty]
+    private bool _mobileAllowSystemPower = false;
+
+    partial void OnMobileAllowSystemPowerChanged(bool value)
+    {
+        if (CurrentSettings?.RemoteAccess != null)
+        {
+            CurrentSettings.RemoteAccess.AllowSystemPower = value;
+            SaveCurrentSettings();
+        }
+    }
+
     /// <summary>The Music settings group (null in minimal test setups, which hides it).</summary>
     public AxePower.App.ViewModels.Music.MusicSettingsViewModel? Music { get; }
 
@@ -407,6 +477,7 @@ public partial class SettingsViewModel : ObservableObject
         new SettingsCategoryItem("Notifications", "Notifications & Alerts", "\uEA8F"),
         new SettingsCategoryItem("Startup", "Startup & Elevation", "\uE7E8"),
         new SettingsCategoryItem("Taskbar", "Taskbar preferences", "\uE75B"),
+        new SettingsCategoryItem("AxePowerMobile", "AxePower Mobile", "\uE8EA"),
         new SettingsCategoryItem("ShareScreen", "Friends", "\uE779"),
         new SettingsCategoryItem("Music", "Music & Playlists", "\uE8D6"),
         new SettingsCategoryItem("Updates", "Updates & Maintenance", "\uE777"),
@@ -448,7 +519,7 @@ public partial class SettingsViewModel : ObservableObject
 
     private void LoadTrayMenuOptions()
     {
-        var hidden = new HashSet<string>(_currentSettings.HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        var hidden = new HashSet<string>(CurrentSettings.HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
         string? previousGroup = null;
         TrayMenuOptions = AxePower.App.Models.TrayMenuCatalog.Entries.Select(entry =>
         {
@@ -532,6 +603,12 @@ public partial class SettingsViewModel : ObservableObject
         _isTouchpadAvailable = _touchpad?.IsEnabled() is not null;
         _autoCheckUpdates = _currentSettings.AutoCheckUpdates;
         _autoDownloadUpdates = _currentSettings.AutoDownloadUpdates;
+        _mobileRemoteAccessEnabled = _currentSettings.RemoteAccess?.Enabled ?? true;
+        _mobileAllowTelemetry = _currentSettings.RemoteAccess?.AllowTelemetry ?? true;
+        _mobileAllowBatterySync = _currentSettings.RemoteAccess?.AllowBatterySync ?? true;
+        _mobileAllowPowerModeControl = _currentSettings.RemoteAccess?.AllowPowerModeControl ?? true;
+        _mobileAllowBatteryTuning = _currentSettings.RemoteAccess?.AllowBatteryTuning ?? true;
+        _mobileAllowSystemPower = _currentSettings.RemoteAccess?.AllowSystemPower ?? false;
 
         InitializeTemperatureUnit();
         InitializeRefreshRates();
