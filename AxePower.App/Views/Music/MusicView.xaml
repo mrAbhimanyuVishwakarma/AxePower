@@ -60,6 +60,11 @@
                         ToolTip="Ambient Mode (F11): full screen album art and lyrics" ToolTipService.ShowOnDisabled="True"
                         AutomationProperties.Name="Open Ambient Mode" />
 
+                <!-- Mobile Connect QR Button -->
+                <Button Style="{StaticResource MusicIconButtonStyle}" Width="38" Height="38" Content="&#xED14;"
+                        Command="{Binding ToggleMobileConnectCommand}" Margin="0,0,8,0"
+                        ToolTip="Connect Mobile Remote (QR Code)" AutomationProperties.Name="Connect Mobile Remote" />
+
                 <!-- Music Settings Button ("*" Gear Icon) -->
                 <Button Style="{StaticResource MusicIconButtonStyle}" Width="38" Height="38" Content="&#xE713;"
                         Command="{Binding ToggleMusicSettingsCommand}" Margin="0,0,8,0"
@@ -1100,6 +1105,59 @@
 
                     <Button Grid.Row="2" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Right" Margin="0,16,0,0"
                             Command="{Binding CloseMusicSettingsCommand}" Content="Done" Padding="24,8"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ─── Modal 3: Mobile Connect QR Dialog ─── -->
+        <Grid Grid.Row="0" Grid.RowSpan="2" Background="#B2000000"
+              Visibility="{Binding IsMobileConnectOpen, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="100">
+            <Border Width="480" MaxHeight="620" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5"
+                    CornerRadius="16" Padding="28">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="8" Direction="270" Opacity="0.5" Color="#000000" />
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,20">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="&#xED14;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Connect Mobile Remote" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource MusicIconButtonStyle}" HorizontalAlignment="Right" Content="&#xE711;"
+                                Command="{Binding CloseMobileConnectCommand}" ToolTip="Close" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <!-- QR Code Frame / Glass card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1" CornerRadius="16" Padding="24" HorizontalAlignment="Center" Margin="0,0,0,18">
+                            <StackPanel HorizontalAlignment="Center">
+                                <!-- QR Glyph Visual -->
+                                <Border Background="#1AFFFFFF" CornerRadius="12" Width="180" Height="180" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Viewbox Width="130" Height="130">
+                                        <TextBlock Text="&#xED14;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Viewbox>
+                                </Border>
+                                <TextBlock Text="SCAN WITH MOBILE APP" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" Margin="0,14,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Scan this QR code with your mobile app to pair, control playback, and sync your queue in real time."
+                                   FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,12" MaxWidth="360"/>
+                    </StackPanel>
+
+                    <Button Grid.Row="2" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Right" Margin="0,16,0,0"
+                            Command="{Binding CloseMobileConnectCommand}" Content="Done" Padding="24,8"/>
                 </Grid>
             </Border>
         </Grid>

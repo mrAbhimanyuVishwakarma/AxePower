@@ -493,6 +493,17 @@ public partial class MusicViewModel : ObservableObject
     [RelayCommand]
     public void CloseMusicSettings() => IsMusicSettingsOpen = false;
 
+    // ── Mobile Connect / QR Remote Dialog ───────────────────────────────────
+
+    [ObservableProperty]
+    private bool _isMobileConnectOpen;
+
+    [RelayCommand]
+    public void ToggleMobileConnect() => IsMobileConnectOpen = !IsMobileConnectOpen;
+
+    [RelayCommand]
+    public void CloseMobileConnect() => IsMobileConnectOpen = false;
+
     [RelayCommand]
     public void ChangePlaylistPath()
     {

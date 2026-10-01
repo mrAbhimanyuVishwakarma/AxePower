@@ -7,6 +7,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using AxePower.Core.Helpers;
 using AxePower.Core.Services;
 
 namespace AxePower.App.ViewModels;
@@ -181,6 +184,7 @@ public partial class AboutViewModel : ObservableObject
 
         LicenseUser = string.IsNullOrWhiteSpace(Environment.MachineName) ? "This PC" : Environment.MachineName;
         LicenseType = "AxePower Pro";
+        GenerateMobileDownloadQr();
     }
 
     /// <summary>The account shown on the Profile page, which this view model backs. Null in tests that build the page bare.</summary>
@@ -205,6 +209,37 @@ public partial class AboutViewModel : ObservableObject
     private void OpenDeveloper()
     {
         OpenUrl("https://github.com/mrAbhimanyuVishwakarma");
+    }
+
+    [ObservableProperty]
+    private ImageSource? _mobileDownloadQrCode;
+
+    public string MobileAppDownloadUrl => "https://axepower.vercel.app/mobile";
+
+    public void GenerateMobileDownloadQr()
+    {
+        try
+        {
+            byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(MobileAppDownloadUrl, 8, 3, 0x00000000, 0x00FFFFFF);
+            using var ms = new MemoryStream(bmpBytes);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = ms;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            MobileDownloadQrCode = bitmap;
+        }
+        catch
+        {
+            MobileDownloadQrCode = null;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenMobileDownloadLink()
+    {
+        OpenUrl(MobileAppDownloadUrl);
     }
 
     [RelayCommand]
