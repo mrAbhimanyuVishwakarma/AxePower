@@ -39,7 +39,7 @@ public class PhoneControlTests
     public void PhoneHubViewModel_InitializesWithDefaultStateAndTabs()
     {
         var log = new LogService();
-        var lan = new LanDropService(log);
+        var lan = new LanDropService(log, downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
         var android = new AndroidControlService(log);
         var notif = new NotificationService();
 
@@ -61,7 +61,7 @@ public class PhoneControlTests
     public async Task LanDrop_ServerCanStartAndStopGracefully()
     {
         var log = new LogService();
-        var lan = new LanDropService(log, new PortalAccessToken(new InMemorySecretStore()));
+        var lan = new LanDropService(log, new PortalAccessToken(new InMemorySecretStore()), downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
 
         bool started = await lan.StartServerAsync("127.0.0.1", 5058);
         Assert.True(started);
@@ -77,7 +77,7 @@ public class PhoneControlTests
     {
         // The portal binds to every interface, so starting it with no way to tell an intended
         // request from any other would expose file upload and the remote to the whole network.
-        var lan = new LanDropService(new LogService());
+        var lan = new LanDropService(new LogService(), downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
 
         bool started = await lan.StartServerAsync("127.0.0.1", 5059);
 
@@ -89,7 +89,7 @@ public class PhoneControlTests
     public async Task LanDrop_PortalLinkCarriesTheAccessToken()
     {
         var token = new PortalAccessToken(new InMemorySecretStore());
-        var lan = new LanDropService(new LogService(), token);
+        var lan = new LanDropService(new LogService(), token, downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
 
         await lan.StartServerAsync("127.0.0.1", 5060);
         try
@@ -113,15 +113,8 @@ public class PhoneControlTests
         var provider = AxePower.App.App.ConfigureServices();
         var lan = provider.GetRequiredService<LanDropService>();
 
-        var tokenField = typeof(LanDropService).GetField("_token",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        var musicField = typeof(LanDropService).GetField("_music",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
-        Assert.NotNull(tokenField);
-        Assert.NotNull(musicField);
-        Assert.NotNull(tokenField!.GetValue(lan));
-        Assert.NotNull(musicField!.GetValue(lan));
+        Assert.True(lan.HasAccessToken);
+        Assert.True(lan.HasMusicRemote);
     }
 
     /// <summary>Credentials in memory, so no test writes the real DPAPI secret file.</summary>
@@ -142,7 +135,7 @@ public class PhoneControlTests
     public void PhoneHubViewModel_SpaceDeskCommand_InitializesAndIsExposed()
     {
         var log = new LogService();
-        var lan = new LanDropService(log);
+        var lan = new LanDropService(log, downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
         var android = new AndroidControlService(log);
         var notif = new NotificationService();
 
@@ -160,7 +153,7 @@ public class PhoneControlTests
     public void PhoneHubViewModel_ShowDownloadQr_SetsOfficialStoreUrls(string platform, string expectedUrl)
     {
         var log = new LogService();
-        var lan = new LanDropService(log);
+        var lan = new LanDropService(log, downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
         var android = new AndroidControlService(log);
         var notif = new NotificationService();
 

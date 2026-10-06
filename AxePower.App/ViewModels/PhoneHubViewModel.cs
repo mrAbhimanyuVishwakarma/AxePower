@@ -13,6 +13,7 @@ using Microsoft.Win32;
 using AxePower.Core.Helpers;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
+using AxePower.Core.Services.LanDrop;
 
 namespace AxePower.App.ViewModels;
 
@@ -72,6 +73,21 @@ public partial class PhoneHubViewModel : ObservableObject
     public ObservableCollection<LanDropFileItem> ReceivedFiles { get; } = new();
     public ObservableCollection<LanDropFileItem> SharedFiles { get; } = new();
     public ObservableCollection<LanDropTextMessage> ClipboardMessages { get; } = new();
+    public ObservableCollection<LanDropClientSession> ConnectedClients { get; } = new();
+
+    /// <summary>Shown while the selected adapter's network is Public or cannot be classified.</summary>
+    [ObservableProperty]
+    private bool _isPublicNetworkWarningVisible;
+
+    [ObservableProperty]
+    private string _networkWarningText = string.Empty;
+
+    /// <summary>True after a start was refused on an untrusted network, offering a one-session override.</summary>
+    [ObservableProperty]
+    private bool _canStartOnUntrustedNetwork;
+
+    public int ConnectedClientsCount => ConnectedClients.Count;
+    public bool HasConnectedClients => ConnectedClients.Count > 0;
 
     public int ReceivedCount => ReceivedFiles.Count;
     public int SharedCount => SharedFiles.Count;
@@ -139,6 +155,12 @@ public partial class PhoneHubViewModel : ObservableObject
         RefreshIpList();
         CheckSpaceDeskInstalled();
         UpdateQrCode();
+        RefreshNetworkClassification();
+
+        _lanDropService.OnClientsChanged += (s, e) =>
+        {
+            Application.Current?.Dispatcher.BeginInvoke(RefreshConnectedClients);
+        };
 
         // Subscribe to LAN Drop events
         _lanDropService.OnFileReceived += (s, item) =>
@@ -174,9 +196,13 @@ public partial class PhoneHubViewModel : ObservableObject
                     PortalUrl = string.IsNullOrEmpty(state.PortalUrl) ? state.ServerUrl : state.PortalUrl;
                 }
                 UpdateQrCode();
+                RefreshNetworkClassification();
+                RefreshConnectedClients();
                 StatusMessage = IsServerRunning
                     ? $"Server active on {ServerUrl} — Scan QR code on your phone"
-                    : "Server stopped.";
+                    : _lanDropService.LastRefusedNetwork is not null
+                        ? "Not started: Windows treats this network as Public or cannot classify it."
+                        : "Server stopped.";
             });
         };
 
@@ -221,6 +247,7 @@ public partial class PhoneHubViewModel : ObservableObject
         {
             ServerUrl = $"http://{value}:{PortNumber}/";
             UpdateQrCode();
+            RefreshNetworkClassification();
             if (IsServerRunning)
             {
                 _ = _lanDropService.StartServerAsync(value, PortNumber);
@@ -283,12 +310,75 @@ public partial class PhoneHubViewModel : ObservableObject
             {
                 _notificationService.Show($"🚀 LAN Drop active at {ServerUrl}");
             }
+            else if (_lanDropService.LastRefusedNetwork is not null)
+            {
+                StatusMessage = "Not started: Windows treats this network as Public or cannot classify it.";
+                _notificationService.Show("⚠️ LAN Drop did not start on an untrusted network.");
+            }
             else
             {
                 StatusMessage = "Failed to start server. Try selecting a different port or network adapter.";
                 _notificationService.Show("❌ Failed to start LAN Drop server.");
             }
         }
+    }
+
+    /// <summary>
+    /// Starts on a Public or unclassified network after the user has seen the warning. The
+    /// override applies to this server session only; the next start is refused again.
+    /// </summary>
+    [RelayCommand]
+    public async Task StartOnUntrustedNetworkAsync()
+    {
+        StatusMessage = "Starting local web server on an untrusted network...";
+        bool started = await _lanDropService.StartServerAsync(SelectedIpAddress, PortNumber, allowUntrustedNetwork: true);
+        if (started)
+        {
+            _notificationService.Show($"⚠️ LAN Drop active at {ServerUrl} on an untrusted network for this session.");
+        }
+        else
+        {
+            StatusMessage = "Failed to start server. Try selecting a different port or network adapter.";
+            _notificationService.Show("❌ Failed to start LAN Drop server.");
+        }
+    }
+
+    [RelayCommand]
+    public void DisconnectAllClients()
+    {
+        _lanDropService.DisconnectAllClientsAndRotateAccess();
+        RefreshConnectedClients();
+        _notificationService.Show("🔒 Disconnected all devices. Phones need the new QR code to reconnect.");
+    }
+
+    [RelayCommand]
+    public void DisconnectClient(LanDropClientSession? client)
+    {
+        if (client == null) return;
+        _lanDropService.DisconnectClient(client.Id);
+        RefreshConnectedClients();
+        _notificationService.Show($"Disconnected {client.DeviceName}.");
+    }
+
+    private void RefreshConnectedClients()
+    {
+        ConnectedClients.Clear();
+        foreach (var client in _lanDropService.GetConnectedClients())
+        {
+            ConnectedClients.Add(client);
+        }
+        OnPropertyChanged(nameof(ConnectedClientsCount));
+        OnPropertyChanged(nameof(HasConnectedClients));
+    }
+
+    public void RefreshNetworkClassification()
+    {
+        var classification = _lanDropService.IsRunning || string.IsNullOrEmpty(SelectedIpAddress)
+            ? _lanDropService.CurrentNetworkClassification
+            : NetworkProfileClassifier.ClassifyCurrentNetwork(SelectedIpAddress);
+        IsPublicNetworkWarningVisible = classification.IsPublicOrUnclassified;
+        NetworkWarningText = classification.WarningMessage ?? string.Empty;
+        CanStartOnUntrustedNetwork = !_lanDropService.IsRunning && _lanDropService.LastRefusedNetwork is not null;
     }
 
     [RelayCommand]
@@ -453,7 +543,11 @@ public partial class PhoneHubViewModel : ObservableObject
             Clipboard.SetText(ShareLink);
             _notificationService.Show("📋 Copied Server URL to clipboard!");
         }
-        catch { }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another app holds the clipboard. Say so; never log what was being copied.
+            _notificationService.Show("Could not copy: another app is using the clipboard. Try again.");
+        }
     }
 
     [RelayCommand]
@@ -492,7 +586,11 @@ public partial class PhoneHubViewModel : ObservableObject
             Clipboard.SetText(msg.Content);
             _notificationService.Show("📋 Copied message to clipboard!");
         }
-        catch { }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another app holds the clipboard. Say so; never log what was being copied.
+            _notificationService.Show("Could not copy: another app is using the clipboard. Try again.");
+        }
     }
 
     // ─── Android Screen Mirroring Commands ─────────────────────────────
@@ -652,7 +750,7 @@ public partial class PhoneHubViewModel : ObservableObject
                 }
             }
         }
-        catch { }
+        catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Registry(caught)) { /* Not found in the registry: the folder search below runs next. */ }
 
         return null;
     }
@@ -714,7 +812,7 @@ public partial class PhoneHubViewModel : ObservableObject
                         installed = p.ExitCode == 0;
                     }
                 }
-                catch { }
+                catch { /* winget unavailable: installed stays false and the user gets the download page. */ }
             }
 
             CheckSpaceDeskInstalled();
@@ -746,7 +844,10 @@ public partial class PhoneHubViewModel : ObservableObject
             {
                 Process.Start(new ProcessStartInfo { FileName = "https://www.spacedesk.net/", UseShellExecute = true });
             }
-            catch { }
+                        catch (Exception openError) when (openError is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                _notificationService.Show("Could not open the SpaceDesk website. Open it from your browser instead.");
+            }
         }
         finally
         {
@@ -848,7 +949,10 @@ public partial class PhoneHubViewModel : ObservableObject
                         UseShellExecute = true
                     });
                 }
-                catch { }
+                                catch (Exception openError) when (openError is System.ComponentModel.Win32Exception or InvalidOperationException)
+                {
+                    _notificationService.Show("Could not open the Phone Link page. Open it from your browser instead.");
+                }
             }
         }
     }
@@ -868,7 +972,10 @@ public partial class PhoneHubViewModel : ObservableObject
             {
                 Process.Start(new ProcessStartInfo { FileName = QrModalUrl, UseShellExecute = true });
             }
-            catch { }
+                        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                _notificationService.Show("Could not open the link. Open it from your browser instead.");
+            }
         }
     }
 
@@ -897,13 +1004,19 @@ public partial class PhoneHubViewModel : ObservableObject
     public void OpenSpaceDeskWebsite()
     {
         try { Process.Start(new ProcessStartInfo { FileName = "https://www.spacedesk.net/", UseShellExecute = true }); }
-        catch { }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            _notificationService.Show("Could not open the SpaceDesk website.");
+        }
     }
 
     [RelayCommand]
     public void OpenWindowsDisplaySettings()
     {
         try { Process.Start(new ProcessStartInfo { FileName = "ms-settings:display", UseShellExecute = true }); }
-        catch { }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            _notificationService.Show("Could not open Display settings.");
+        }
     }
 }
