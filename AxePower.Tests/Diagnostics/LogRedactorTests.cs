@@ -70,8 +70,10 @@ public class LogRedactorTests
         log.LogError("error", new InvalidOperationException($"failed {link}"));
 
         Assert.Equal(4, seen.Count);
-        Assert.All(seen, e => Assert.DoesNotContain("0123456789abcdef0123456789abcdef", e.Message));
-        Assert.Contains("InvalidOperationException", seen[2].Message);
+        Assert.All(seen, e => Assert.DoesNotContain("0123456789abcdef0123456789abcdef", e.ToString()));
+        // The exception is its own field since Prompt 23: type and message for warnings, plus stack for errors.
+        Assert.StartsWith("InvalidOperationException:", seen[2].Exception);
+        Assert.StartsWith("System.InvalidOperationException:", seen[3].Exception);
     }
 
     [Fact]

@@ -112,8 +112,10 @@
                                                Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontFamily="Consolas" VerticalAlignment="Center"/>
                                     
                                     <!-- Message -->
-                                    <TextBlock Grid.Column="2" Text="{Binding Message}" 
-                                               Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center">
+                                        <Run Text="{Binding Category, Mode=OneWay}" Foreground="{DynamicResource MutedTextBrush}" FontWeight="SemiBold"/>
+                                        <Run Text="{Binding Message, Mode=OneWay}"/>
+                                    </TextBlock>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

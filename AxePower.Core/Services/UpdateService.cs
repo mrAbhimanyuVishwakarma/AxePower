@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Services.Update;
 using AxePower.Core.Helpers;
+using AxePower.Core.Services.Diagnostics;
 
 namespace AxePower.Core.Services;
 
@@ -110,6 +111,7 @@ public class UpdateService
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
+        using var correlation = LogService.BeginCorrelation();
         var currentVersion = GetCurrentVersion();
 
         foreach (var endpoint in ReleaseEndpoints)
@@ -215,6 +217,25 @@ public class UpdateService
         IProgress<double> progress,
         CancellationToken cancellationToken = default,
         UpdateManifest? manifest = null)
+    {
+        using var correlation = LogService.BeginCorrelation();
+        try
+        {
+            return await DownloadVerifiedUpdateAsync(downloadUrl, progress, cancellationToken, manifest);
+        }
+        catch (UpdateVerificationException ex)
+        {
+            // A refused update is a security event: record it, then let the caller tell the user.
+            _logService.Log(LogLevels.Warning, "Update", LogEvents.UpdateVerificationFailed, ex.Message);
+            throw;
+        }
+    }
+
+    private async Task<string> DownloadVerifiedUpdateAsync(
+        string downloadUrl,
+        IProgress<double> progress,
+        CancellationToken cancellationToken,
+        UpdateManifest? manifest)
     {
         if (string.IsNullOrWhiteSpace(downloadUrl))
         {

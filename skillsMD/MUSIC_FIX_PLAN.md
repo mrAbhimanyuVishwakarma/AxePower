@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `4f47dab` plus uncommitted Prompt 22 work (null-safe loading of playback state, recently played and recent searches) in the working tree
+> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `c6fddb6` plus uncommitted Prompt 23 work (structured diagnostics; LAN Drop logs a lockout event and no longer logs transferred file names) in the working tree
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and
@@ -362,6 +362,11 @@ it instead of re-scanning folders on each visit.
 
 Delete each line once it has shipped and been mentioned in release notes.
 
+- **AxePower.log is gone.** Diagnostics now live in `%LOCALAPPDATA%\AxePower\Diagnostics` as
+  structured, redacted files kept 14 days or 20 MB, with Settings › Diagnostics & Privacy to
+  inspect, export or delete them. The old `AxePower.log` files are deleted on the first start.
+  LAN Drop's log no longer names the files sent between phone and PC (only kind and size).
+  (Prompt 23, 2026-10-06)
 - **Old LAN portal links stop working.** The portal now requires an access token, carried by the
   QR link. A bookmark of the plain `http://<ip>:5050/` address returns 401 (since 2026-10-06 with a
   short "Access link needed" page). Covered by a What's

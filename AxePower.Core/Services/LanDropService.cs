@@ -368,7 +368,7 @@ public class LanDropService : IDisposable, ILanDropHost
     {
         if (_storage.AddShared(filePath) is { } item)
         {
-            _logService.LogInfo($"[LanDrop] Added file for sharing: {item.FileName} ({item.FormattedSize})");
+            _logService.LogInfo($"[LanDrop] Added a {AxePower.Core.Services.LanDrop.LanDropLogText.Kind(item.FileName)} file for sharing ({item.FormattedSize}).");
         }
     }
 

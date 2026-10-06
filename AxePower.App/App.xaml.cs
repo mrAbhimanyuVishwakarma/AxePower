@@ -10,6 +10,7 @@ using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
+using AxePower.Core.Services.Diagnostics;
 using AxePower.Core.Services.Music;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
@@ -28,14 +29,11 @@ public partial class App : Application
     private const string MutexName = "AxePower.Desktop.Singleton";
     private const string PipeName = "AxePower.Desktop.Singleton.Pipe";
 
+    /// <summary>The app's log, kept in %LOCALAPPDATA%\AxePower\Diagnostics. Created after the self-test branch, which writes nothing.</summary>
+    private LogService? _log;
+
     private void Application_Startup(object sender, StartupEventArgs e)
     {
-        string logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AxePower", "AxePower.log");
-        try
-        {
-            System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] [STARTUP] Process ID: {Environment.ProcessId}, Args: '{string.Join(" ", e.Args)}'\n");
-        }
-        catch { /* Best-effort startup trace; the app starts whether or not it can be written. */ }
 
         // Initialize smooth proportional touchpad & mouse wheel scrolling globally
         try
@@ -51,6 +49,10 @@ public partial class App : Application
             Environment.Exit(0);
             return;
         }
+
+        _log = CreateDiagnosticsLog();
+        _log.Log(LogLevels.Info, "App", LogEvents.AppStarted,
+            $"AxePower started (process {Environment.ProcessId}, {e.Args.Length} argument(s): {string.Join(" ", e.Args)})");
 
         // Single instance check
         try
@@ -71,11 +73,7 @@ public partial class App : Application
 
                 if (signaled && hasInteractiveWindow)
                 {
-                    try
-                    {
-                        System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] [SINGLE_INSTANCE_EXIT] Active interactive instance signaled successfully: {string.Join(", ", existingProcesses.Select(p => p.Id))}\n");
-                    }
-                    catch { /* Best-effort trace before this second instance exits. */ }
+                    _log.LogInfo($"[App] Another instance is already open (process {string.Join(", ", existingProcesses.Select(p => p.Id))}); handed over to it and exiting.");
                     Environment.Exit(0);
                     return;
                 }
@@ -99,8 +97,7 @@ public partial class App : Application
         {
             try
             {
-                var log = Services?.GetService<LogService>();
-                log?.LogError($"[Unhandled UI Exception] {args.Exception.Message}", args.Exception);
+                _log?.Log(LogLevels.Error, "App", LogEvents.UnhandledUiException, $"Unhandled UI exception: {args.Exception.Message}", args.Exception);
             }
             catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
             args.Handled = true;
@@ -112,16 +109,24 @@ public partial class App : Application
             {
                 try
                 {
-                    var log = Services?.GetService<LogService>();
-                    log?.LogError($"[Unhandled AppDomain Exception] {ex.Message}", ex);
+                    _log?.Log(LogLevels.Error, "App", LogEvents.UnhandledException, $"Unhandled exception: {ex.Message}", ex);
                 }
                 catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
             }
         };
 
+        TaskScheduler.UnobservedTaskException += (s, args) =>
+        {
+            try
+            {
+                _log?.Log(LogLevels.Warning, "App", LogEvents.UnobservedTaskException, "A background task failed and nothing observed it.", args.Exception);
+            }
+            catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
+        };
+
         try
         {
-            Services = ConfigureServices();
+            Services = ConfigureServices(_log);
 
             var settingsService = Services.GetRequiredService<SettingsService>();
             settingsService.LoadSettings();
@@ -193,8 +198,7 @@ public partial class App : Application
         {
             try
             {
-                var log = Services?.GetService<LogService>() ?? new LogService();
-                log.LogError($"[Startup Failure] {ex.Message}", ex);
+                (_log ?? new LogService()).Log(LogLevels.Error, "App", LogEvents.StartupFailed, $"Startup failed: {ex.Message}", ex);
             }
             catch { /* Broad on purpose: the startup-failure path must still show its message box. */ }
 
@@ -228,12 +232,31 @@ public partial class App : Application
         return true;
     }
 
-    internal static IServiceProvider ConfigureServices()
+    /// <param name="log">
+    /// The app's disk-backed log. Tests and the self-test pass nothing and get an in-memory log, so
+    /// they never write diagnostics to this PC.
+    /// </param>
+    /// <summary>
+    /// The disk-backed log: prunes old diagnostics and, once, removes AxePower.log and
+    /// AxePower.log.old from %APPDATA%, which predate full redaction (owner's choice, 2026-10-06).
+    /// </summary>
+    private static LogService CreateDiagnosticsLog()
+    {
+        var store = new DiagnosticsStore(DiagnosticsStore.DefaultDirectory);
+        var log = new LogService(store);
+        store.EnforceRetention();
+        var removed = DiagnosticsStore.DeleteLegacyLogs(DiagnosticsStore.LegacyDirectory);
+        if (removed > 0)
+            log.Log(LogLevels.Info, "Diagnostics", LogEvents.LegacyLogsRemoved, $"Removed {removed} log file(s) from before structured diagnostics.");
+        return log;
+    }
+
+    internal static IServiceProvider ConfigureServices(LogService? log = null)
     {
         var services = new ServiceCollection();
 
         // Core Services
-        services.AddSingleton<LogService>();
+        services.AddSingleton(log ?? new LogService());
         services.AddSingleton<SettingsService>();
         services.AddSingleton<ElevationService>();
         services.AddSingleton<HardwareMonitorService>();
@@ -416,6 +439,9 @@ public partial class App : Application
         services.AddTransient<AutoSwitchViewModel>();
         services.AddTransient<GameModeViewModel>();
         services.AddTransient<BatteryViewModel>();
+        services.AddSingleton<IDiagnosticsPrompts, DiagnosticsPrompts>();
+        services.AddTransient<DiagnosticsViewModel>(sp => new DiagnosticsViewModel(
+            sp.GetRequiredService<LogService>(), sp.GetRequiredService<SettingsService>(), sp.GetRequiredService<IDiagnosticsPrompts>()));
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<LogsViewModel>();
         services.AddTransient<AboutViewModel>();
@@ -578,6 +604,14 @@ public partial class App : Application
                 : savedAccount.Profile is { } accountProfile ? $"@{accountProfile.Username} (saved session, not refreshed)"
                 : "signed in, no username yet (saved session)") +
             $"; backend {sp.GetRequiredService<SupabaseProject>().Url.Host}.");
+
+        // Read-only: summarising never creates the folder, and this run's log is in memory only.
+        var diagnostics = new DiagnosticsStore(DiagnosticsStore.DefaultDirectory);
+        var diagnosticsSummary = diagnostics.Summarize();
+        var legacyLogs = DiagnosticsStore.LegacyLogNames.Count(n => System.IO.File.Exists(System.IO.Path.Combine(DiagnosticsStore.LegacyDirectory, n)));
+        Console.WriteLine(
+            $"Diagnostics: {diagnosticsSummary.Files} file(s), {diagnosticsSummary.Bytes / 1024} KB on this PC; kept {diagnostics.Retention.MaxAge.TotalDays:0} days or " +
+            $"{diagnostics.Retention.MaxTotalBytes / (1024 * 1024)} MB; {legacyLogs} old log file(s) waiting to be removed; this run logs in memory only ({(sp.GetRequiredService<LogService>().Store is null ? "yes" : "NO")}).");
 
         try
         {

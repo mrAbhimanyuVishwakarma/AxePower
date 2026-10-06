@@ -95,7 +95,7 @@ internal sealed class LanDropEndpoints
 
         await LanDropHttp.WriteAttachmentHeadAsync(stream, item.FileName, new FileInfo(item.FilePath).Length, ct);
         await LanDropStorage.CopyToAsync(item, stream, ct);
-        _log.LogInfo($"[LanDrop] Completed download stream for: {item.FileName}");
+        _log.LogInfo($"[LanDrop] Completed download stream for a {LanDropLogText.Kind(item.FileName)} file.");
     }
 
     /// <summary>POST /api/remote — a media key or lock, from a short text body.</summary>
@@ -174,7 +174,7 @@ internal sealed class LanDropEndpoints
                 foreach (var item in await _storage.ReceiveMultipartAsync(body, boundary, userAgent, ct))
                 {
                     _host.FileReceived(item);
-                    _log.LogInfo($"[LanDrop] Received uploaded file: {item.FileName} ({item.FormattedSize})");
+                    _log.LogInfo($"[LanDrop] Received an uploaded {LanDropLogText.Kind(item.FileName)} file ({item.FormattedSize}).");
                 }
             }
             else
@@ -191,7 +191,7 @@ internal sealed class LanDropEndpoints
 
                 var item = await _storage.ReceiveRawAsync(body, LanDropPathSanitizer.NormalizeFileName(rawFilename), request.ContentLength, userAgent, ct);
                 _host.FileReceived(item);
-                _log.LogInfo($"[LanDrop] Received uploaded binary: {item.FileName} ({item.FormattedSize})");
+                _log.LogInfo($"[LanDrop] Received an uploaded {LanDropLogText.Kind(item.FileName)} binary ({item.FormattedSize}).");
             }
         }
         catch (SecurityException sex)

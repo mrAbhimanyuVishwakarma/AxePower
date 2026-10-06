@@ -470,6 +470,9 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Settings › Diagnostics & Privacy: inspect, export and delete what AxePower has logged.</summary>
+    public DiagnosticsViewModel? Diagnostics { get; }
+
     // ── Categories (the collapsible list beside the settings) ───────────────
 
     /// <summary>One entry per settings card; "About" opens the About page instead.</summary>
@@ -484,6 +487,7 @@ public partial class SettingsViewModel : ObservableObject
         new SettingsCategoryItem("ShareScreen", "Friends", "\uE779"),
         new SettingsCategoryItem("Music", "Music & Playlists", "\uE8D6"),
         new SettingsCategoryItem("Updates", "Updates & Maintenance", "\uE777"),
+        new SettingsCategoryItem("Diagnostics", "Diagnostics & Privacy", "\uE9D9"),
     };
 
     [ObservableProperty]
@@ -574,9 +578,11 @@ public partial class SettingsViewModel : ObservableObject
         GameModeGpuService? gameModeGpu = null,
         IGpuDisplayModeController? displayModeController = null,
         AxePower.App.Services.IGameModePrompts? gameModePrompts = null,
-        TouchpadService? touchpad = null)
+        TouchpadService? touchpad = null,
+        DiagnosticsViewModel? diagnostics = null)
     {
         _touchpad = touchpad;
+        Diagnostics = diagnostics;
         Music = music;
         ShareScreen = shareScreen;
         _settingsService = settingsService;

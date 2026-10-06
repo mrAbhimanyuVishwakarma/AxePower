@@ -47,6 +47,26 @@ Network & internet → your Wi-Fi → Properties.
 
 **Tell me:** pass, or a screenshot of what is off.
 
+### A4. Settings › Diagnostics & Privacy (Prompt 23)
+**Need:** this PC, the app built from the current code.
+**Do:**
+1. Start AxePower once. `%APPDATA%\AxePower\AxePower.log` and `AxePower.log.old` should be gone
+   (they are deleted on the first start), and `%LOCALAPPDATA%\AxePower\Diagnostics` should hold
+   one `axepower-YYYYMMDD.jsonl` file.
+2. Settings → **Diagnostics & Privacy**. The card should say how many files are stored, since
+   when, and "Kept on this PC for 14 days or 20 MB … Never uploaded."
+3. Click **Open…**. Click through the files on the left: each one shows its full text on the
+   right. Tick **Include my settings**: a `settings.json` appears, and your folders, app lists and
+   friends show as `[removed: N item(s)]`. Search the log text for your Windows user name or this
+   PC's name: neither should appear.
+4. Click **Save bundle…**, save it to the Desktop, open the .zip: it holds exactly the files you
+   saw. Cancel the Save dialog once too: nothing should be written.
+5. Back in the card, click **Delete all…**, answer **No** (nothing changes), then again and
+   answer **Yes**: the card says "Nothing stored" until the next event is logged.
+6. Look at the card and the window in Dark and Light.
+
+**Tell me:** pass, or a screenshot of what is off.
+
 ---
 
 ## B. Checks that need a phone (about 20 minutes)
@@ -181,6 +201,7 @@ choices.
 | A1 Visual check | this PC | waiting |
 | A2 Chat ended | this PC | waiting |
 | A3 Public-network banners | this PC on a Public network | waiting |
+| A4 Diagnostics & Privacy | this PC | waiting |
 | B1 LAN Drop on a phone | phone | waiting |
 | B2 Firewall rule | installer build | waiting |
 | C1 Share Screen, two PCs | second PC | waiting |

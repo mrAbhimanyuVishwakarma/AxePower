@@ -68,6 +68,7 @@ public class WinGetHubService : IWinGetHubService
 
     public async Task<PackageOperationResult> RunAsync(PackageAction action, string id, IProgress<string> outputProgress, CancellationToken cancellationToken = default)
     {
+        using var correlation = LogService.BeginCorrelation();
         var plan = _planner.Plan(action, id);
         try
         {

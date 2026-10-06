@@ -84,6 +84,7 @@ public sealed class BatchUninstallService : IBatchUninstallService
         UninstallBatchControl? control = null,
         CancellationToken cancellationToken = default)
     {
+        using var correlation = LogService.BeginCorrelation();
         control ??= new UninstallBatchControl();
         var session = new UninstallSession
         {

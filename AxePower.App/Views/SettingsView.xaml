@@ -959,6 +959,69 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- CARD: Diagnostics & Privacy (inspect, export and delete what AxePower has logged) -->
+                    <Border Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Diagnostics}">
+                        <Border Style="{DynamicResource CardElevatedStyle}" Margin="0" Padding="22"
+                                DataContext="{Binding Diagnostics}" Visibility="{Binding Converter={StaticResource NotNullToVis}}">
+                            <StackPanel>
+                                <!-- Card Header -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                    <Border Width="38" Height="38" CornerRadius="10" Background="#1A3B82F6" Margin="0,0,14,0">
+                                        <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource PrimaryBlueBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Diagnostics &amp; Privacy" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
+                                        <TextBlock Text="What AxePower records about problems. It stays on this PC unless you save and share it yourself." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- What is stored -->
+                                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SummaryText}" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding RetentionText}" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Inspect and export -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Inspect and export" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="See every file and its full text, choose what to include, then save a .zip yourself. Nothing is uploaded." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding InspectCommand}"
+                                            IsEnabled="{Binding IsStored}" Content="Open…" Padding="16,6" Height="32" Cursor="Hand" VerticalAlignment="Center"
+                                            AutomationProperties.Name="Inspect and export diagnostics"/>
+                                </Grid>
+
+                                <Separator Background="{DynamicResource DividerBrush}" Margin="0,0,0,14"/>
+
+                                <!-- Delete all -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                                        <TextBlock Text="Delete all diagnostics" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                                        <TextBlock Text="Removes every stored log from this PC now. New events are recorded from then on." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding DeleteAllCommand}"
+                                            IsEnabled="{Binding HasFiles}" Content="Delete all…" Padding="16,6" Height="32" Cursor="Hand" VerticalAlignment="Center"
+                                            Foreground="{DynamicResource ErrorBrush}" AutomationProperties.Name="Delete all diagnostics"/>
+                                </Grid>
+
+                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AccentBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,12,0,0"
+                                           Visibility="{Binding StatusText, Converter={StaticResource NotNullToVis}}"/>
+                            </StackPanel>
+                        </Border>
+                    </Border>
+
                     <!-- CARD 3: Updates & Version (Integrated Check Button) -->
                     <Border Style="{DynamicResource CardElevatedStyle}" Visibility="{Binding DataContext.SelectedCategory, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CategoryVis}, ConverterParameter=Updates}" Margin="0" Padding="22">
                         <StackPanel>

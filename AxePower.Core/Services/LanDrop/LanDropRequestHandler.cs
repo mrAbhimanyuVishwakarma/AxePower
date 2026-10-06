@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AxePower.Core.Services.Diagnostics;
 
 namespace AxePower.Core.Services.LanDrop;
 
@@ -35,6 +36,7 @@ internal sealed class LanDropRequestHandler
 
     public async Task HandleAsync(Stream stream, IPAddress clientIp, CancellationToken ct)
     {
+        using var correlation = LogService.BeginCorrelation();
         // Early rejection if client IP is locked out due to repeated authentication failures
         if (_auth.IsLockedOut(clientIp, out var retryAfter))
         {
@@ -80,6 +82,11 @@ internal sealed class LanDropRequestHandler
 
             if (!_auth.Authorise(request, clientIp))
             {
+                // Locked-out addresses are refused before this point, so this fires once per lockout,
+                // not once per request: a scan cannot flood the log.
+                if (_auth.IsLockedOut(clientIp, out var lockedFor))
+                    _log.Log(LogLevels.Warning, "LanDrop", LogEvents.LanDropAccessRefused,
+                        $"{clientIp} is locked out for {Math.Max(1, (int)lockedFor.TotalSeconds)} s after repeated wrong access links.");
                 // The same answer for a missing token and a wrong one. A person who typed the
                 // plain address into a browser gets a hint on how to get in (without naming the
                 // product); everything else gets a bare 401, so scanning learns little.
