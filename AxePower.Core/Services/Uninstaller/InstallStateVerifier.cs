@@ -92,6 +92,7 @@ public sealed class InstallStateVerifier : IInstallStateVerifier
         }
         catch
         {
+            // Fails safe: an entry that cannot be read counts as still installed, so its files are never offered as leftovers.
             return true;
         }
     }

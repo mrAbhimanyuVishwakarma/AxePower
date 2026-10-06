@@ -89,7 +89,8 @@ public sealed class OAuthLoopback : IOAuthLoopback
 
     public void Dispose()
     {
-        try { _listener.Stop(); } catch { }
+        try { _listener.Stop(); }
+        catch (ObjectDisposedException) { /* Already stopped by an earlier Dispose. */ }
     }
 
     private static async Task<string?> ReadRequestTargetAsync(NetworkStream stream, CancellationToken ct)
@@ -111,7 +112,7 @@ public sealed class OAuthLoopback : IOAuthLoopback
         return null;
     }
 
-    internal static Dictionary<string, string> ParseQuery(string target)
+    internal static Dictionary<string, string> ParseQuery(string target, int maxParameters = 200)
     {
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         int q = target.IndexOf('?');
@@ -119,9 +120,32 @@ public sealed class OAuthLoopback : IOAuthLoopback
 
         foreach (var pair in target[(q + 1)..].Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
+            if (result.Count >= maxParameters) break;
+
             int eq = pair.IndexOf('=');
-            var key = Uri.UnescapeDataString((eq < 0 ? pair : pair[..eq]).Replace('+', ' '));
-            var value = eq < 0 ? string.Empty : Uri.UnescapeDataString(pair[(eq + 1)..].Replace('+', ' '));
+            string rawKey = eq < 0 ? pair : pair[..eq];
+            string rawValue = eq < 0 ? string.Empty : pair[(eq + 1)..];
+
+            string key;
+            string value;
+            try
+            {
+                key = Uri.UnescapeDataString(rawKey.Replace('+', ' '));
+            }
+            catch (UriFormatException)
+            {
+                key = WebUtility.UrlDecode(rawKey.Replace('+', ' '));
+            }
+
+            try
+            {
+                value = Uri.UnescapeDataString(rawValue.Replace('+', ' '));
+            }
+            catch (UriFormatException)
+            {
+                value = WebUtility.UrlDecode(rawValue.Replace('+', ' '));
+            }
+
             result[key] = value;
         }
         return result;

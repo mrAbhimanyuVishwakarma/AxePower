@@ -169,7 +169,7 @@ internal sealed class OpusDecoder : IDecoder
 
     public void Dispose()
     {
-        try { _reader.Close(); } catch { }
+        try { _reader.Close(); } catch { /* Best-effort close of a decoder we are discarding. */ }
         _file.Dispose();
     }
 }

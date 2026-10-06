@@ -280,7 +280,11 @@ public partial class ToolCard : ObservableObject
     [RelayCommand]
     private void OpenWebsite()
     {
-        try { Process.Start(new ProcessStartInfo { FileName = Definition.WebUrl, UseShellExecute = true }); } catch { }
+        try { Process.Start(new ProcessStartInfo { FileName = Definition.WebUrl, UseShellExecute = true }); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            _owner.Notify($"Could not open the {Definition.Name} website.");
+        }
     }
 
     private async Task RunAsync(string verb, string busy, string done, string failed)

@@ -125,13 +125,13 @@ public sealed class LeftoverScanContext
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 files++;
-                try { size += file.Length; } catch { }
+                try { size += file.Length; } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Size unknown for this file: left out of the estimate. */ }
                 if (!executables && file.Extension.ToLowerInvariant() is ".exe" or ".dll" or ".sys") executables = true;
                 if (files >= FolderInspectionLimit) break;
             }
         }
         catch (OperationCanceledException) { throw; }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* The folder became unreadable mid-scan: evidence stays as found so far. */ }
 
         item.SizeBytes = size;
         if (files == 0) item.Evidence.Add(ConfidenceRecords.IsEmptyFolder);

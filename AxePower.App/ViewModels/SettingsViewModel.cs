@@ -327,7 +327,10 @@ public partial class SettingsViewModel : ObservableObject
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:devices-touchpad") { UseShellExecute = true });
         }
-        catch { }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            _notificationService.Show("Could not open the touchpad settings.");
+        }
     }
 
     public IEnumerable<PowerMode> AvailableModes => Enum.GetValues(typeof(PowerMode)).Cast<PowerMode>();
@@ -337,7 +340,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly BatteryService? _batteryService;
     private readonly ElevationService? _elevationService;
 
-    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "2.0.3";
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? UpdateService.FallbackVersion;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]

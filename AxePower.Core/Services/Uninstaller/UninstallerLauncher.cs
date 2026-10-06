@@ -43,6 +43,7 @@ internal static class UninstallerLauncher
         }
         catch (Exception ex)
         {
+            // Reported: the verdict carries the reason to the page and the history.
             return Result(ExecutionVerdict.Failed, null, $"The uninstaller could not be started: {ex.Message}");
         }
 
@@ -74,7 +75,7 @@ internal static class UninstallerLauncher
             int? rootCode = tree.RootExitCode;
             if (rootCode is null)
             {
-                try { if (process.HasExited) rootCode = process.ExitCode; } catch { }
+                try { if (process.HasExited) rootCode = process.ExitCode; } catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* No exit code available: the watcher's verdict stands. */ }
             }
 
             if (tree.Status == ProcessTreeStatus.WaitAbandoned)

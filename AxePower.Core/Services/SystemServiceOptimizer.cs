@@ -69,9 +69,9 @@ public class SystemServiceOptimizer
                 };
                 Process.Start(startInfo)?.WaitForExit();
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
-                // Ignore if we lack permissions or service doesn't exist
+                // sc.exe could not be started (no rights or not found): this service is left as it was.
             }
         }
     }

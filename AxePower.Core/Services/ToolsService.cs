@@ -79,8 +79,8 @@ public class ToolsService
         foreach (var path in tool.KnownPaths)
             if (File.Exists(path)) return path;
 
-        try { if (FromInstalledApps(tool) is { } fromList) return fromList; } catch { }
-        try { if (FromWinGetFolders(tool) is { } fromWinGet) return fromWinGet; } catch { }
+        try { if (FromInstalledApps(tool) is { } fromList) return fromList; } catch { /* Unreadable installed-apps list: the WinGet folders are tried next. */ }
+        try { if (FromWinGetFolders(tool) is { } fromWinGet) return fromWinGet; } catch { /* Unreadable WinGet folders: the tool counts as not installed. */ }
         return null;
     }
 

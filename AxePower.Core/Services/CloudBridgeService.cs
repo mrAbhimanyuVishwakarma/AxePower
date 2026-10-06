@@ -308,7 +308,10 @@ public sealed class CloudBridgeService : IDisposable
 
             await BroadcastToAllTopicsAsync(ws, "music_state", payload, CancellationToken.None);
         }
-        catch { }
+        catch (Exception ex) when (ex is WebSocketException or ObjectDisposedException or InvalidOperationException or OperationCanceledException or IOException)
+        {
+            // Best-effort: the next playback change sends the state again, and the bridge loop reconnects a dead socket.
+        }
     }
 
     private async Task BroadcastToAllTopicsAsync(ClientWebSocket ws, string eventName, JsonObject payload, CancellationToken ct)
@@ -519,7 +522,10 @@ public sealed class CloudBridgeService : IDisposable
                 _webSocket = null;
             }
         }
-        catch { }
+        catch (Exception ex) when (ex is WebSocketException or ObjectDisposedException or InvalidOperationException or OperationCanceledException or IOException)
+        {
+            // Best-effort teardown of the bridge socket; it is discarded either way.
+        }
     }
 
     public void Dispose()

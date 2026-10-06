@@ -71,8 +71,9 @@ public static class RegistryPath
             using (baseKey)
                 return baseKey.OpenSubKey(sub, writable);
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Registry(caught))
         {
+            // Unopenable counts as missing; deletes re-check existence afterwards.
             return null;
         }
     }
@@ -101,8 +102,9 @@ public static class RegistryPath
                 _ => string.Empty,
             };
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Registry(caught))
         {
+            // Unreadable value: treated as empty.
             return string.Empty;
         }
     }
@@ -120,8 +122,9 @@ public static class RegistryPath
                 _ => null,
             };
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Registry(caught))
         {
+            // Unreadable value: treated as absent.
             return null;
         }
     }

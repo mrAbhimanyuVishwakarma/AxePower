@@ -96,9 +96,9 @@ public class MemoryOptimizerService : IMemoryOptimizerService
                             trimmedProcesses++;
                         }
                     }
-                    catch
+                    catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
                     {
-                        // Ignore access denied for protected system processes
+                        // Access denied for protected system processes, or exited: skipped.
                     }
                     finally
                     {

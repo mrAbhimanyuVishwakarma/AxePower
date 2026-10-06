@@ -109,10 +109,10 @@ public class GameScannerService
                                             }
                                         }
                                     }
-                                    catch { }
+                                    catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* An unreadable shortcut is skipped. */ }
                                 }
                             }
-                            catch { }
+                            catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* Windows Script Host unavailable: Start Menu games are not found this way. */ }
                         }
                     }
                 }
@@ -171,7 +171,7 @@ public class GameScannerService
                 }
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Unreadable Steam library list: the default library is still scanned. */ }
     }
 
     private static void DiscoverEpicAndGogLibraries(HashSet<string> dirs)
@@ -190,7 +190,7 @@ public class GameScannerService
             string gog2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "GOG Galaxy", "Games");
             AddIfDirectoryExists(dirs, gog2);
         }
-        catch { }
+        catch { /* Best-effort: these launcher folders are optional extras for the scan. */ }
     }
 
     private static void AddIfDirectoryExists(HashSet<string> set, string path)
@@ -284,10 +284,10 @@ public class GameScannerService
                                     BannerUrl = $"https://cdn.cloudflare.steamstatic.com/steam/apps/{appId}/header.jpg"
                                 });
                             }
-                            catch { }
+                            catch { /* One unreadable Steam manifest is skipped. */ }
                         }
                     }
-                    catch { }
+                    catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* An unreadable library folder is skipped. */ }
                 }
 
                 // 2. Discover Epic Games manifests
@@ -325,7 +325,7 @@ public class GameScannerService
                                 }
                             }
                         }
-                        catch { }
+                        catch { /* One unreadable game entry is skipped. */ }
                     }
                 }
             }
@@ -397,7 +397,7 @@ public class GameScannerService
                 if (Directory.Exists(p)) steamAppsDirs.Add(p);
             }
         }
-        catch { }
+        catch { /* A drive that is not ready is skipped. */ }
     }
 
     public static bool IsSoftwareOrUtility(string name)

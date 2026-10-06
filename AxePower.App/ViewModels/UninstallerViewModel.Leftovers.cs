@@ -380,8 +380,15 @@ public sealed partial class UninstallerViewModel
     private async Task DeleteSessionAsync(UninstallSessionViewModel? session)
     {
         if (session is null) return;
-        await _historyService.DeleteSessionAsync(session.Session.SessionId);
-        Sessions.Remove(session);
+        try
+        {
+            await _historyService.DeleteSessionAsync(session.Session.SessionId);
+            Sessions.Remove(session);
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            _notification.Show("That history entry could not be deleted: the history file is in use or read-only. Try again in a moment.");
+        }
     }
 
     // ── Settings (persisted under "uninstaller" in settings.json) ────────────

@@ -359,10 +359,10 @@ public class HardwareMonitorService : IDisposable
             if (_isDisposed) return;
             _isDisposed = true;
 
-            try { _computer?.Close(); } catch { }
+            try { _computer?.Close(); } catch { /* Best-effort teardown of the sensor driver at shutdown. */ }
             _computer = null;
 
-            try { _lenovo?.Dispose(); } catch { }
+            try { _lenovo?.Dispose(); } catch { /* Best-effort teardown of the Lenovo sensor reader at shutdown. */ }
             _lenovo = null;
         }
     }

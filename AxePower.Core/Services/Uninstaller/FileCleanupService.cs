@@ -9,6 +9,10 @@ namespace AxePower.Core.Services.Uninstaller;
 /// </summary>
 public sealed class FileCleanupService : IFileCleanupService
 {
+    private readonly LogService? _log;
+
+    public FileCleanupService(LogService? log = null) => _log = log;
+
     public async Task<bool> DeleteFileAsync(string path, UninstallerSettings settings)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -29,8 +33,10 @@ public sealed class FileCleanupService : IFileCleanupService
                     return true;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                // Reported: the cleanup marks the item Failed ("still there"); the cause goes to the log.
+                _log?.LogWarning($"[Uninstaller] Could not remove {path}", ex);
                 return false;
             }
         });
@@ -56,8 +62,10 @@ public sealed class FileCleanupService : IFileCleanupService
                     return true;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                // Reported: the cleanup marks the item Failed ("still there"); the cause goes to the log.
+                _log?.LogWarning($"[Uninstaller] Could not remove {path}", ex);
                 return false;
             }
         });
@@ -95,7 +103,7 @@ public sealed class FileCleanupService : IFileCleanupService
     /// so there is no silent fall-back to a permanent delete. Items too large for the Recycle Bin
     /// make the shell ask before deleting them for good.
     /// </summary>
-    private static bool SendToRecycleBin(string path)
+    private bool SendToRecycleBin(string path)
     {
         try
         {
@@ -111,8 +119,9 @@ public sealed class FileCleanupService : IFileCleanupService
             int result = SHFileOperation(ref op);
             return result == 0 && !op.fAnyOperationsAborted;
         }
-        catch
+        catch (Exception ex)
         {
+            _log?.LogWarning($"[Uninstaller] Could not move {path} to the Recycle Bin", ex);
             return false;
         }
     }

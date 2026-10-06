@@ -49,8 +49,9 @@ public static class ShellLink
             var target = Environment.ExpandEnvironmentVariables(buffer.ToString().Trim());
             return target.Length == 0 ? null : target;
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Com(caught))
         {
+            // An unreadable shortcut has no target, so it is not linked to an app.
             return null;
         }
         finally

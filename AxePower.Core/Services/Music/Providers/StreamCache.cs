@@ -42,7 +42,7 @@ public sealed class StreamCache
         if (!file.Exists || file.Length < 16 * 1024) return false;
 
         // Touch it so pruning treats a replayed track as recently used.
-        try { File.SetLastAccessTimeUtc(path, DateTime.UtcNow); } catch { }
+        try { File.SetLastAccessTimeUtc(path, DateTime.UtcNow); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: pruning may then treat it as older than it is. */ }
         return true;
     }
 
@@ -95,7 +95,7 @@ public sealed class StreamCache
                 foreach (var file in dir.GetFiles())
                 {
                     long size = file.Length;
-                    try { file.Delete(); freed += size; } catch { }
+                    try { file.Delete(); freed += size; } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* In use (playing now): left for the next prune. */ }
                 }
             }
             catch (Exception ex)

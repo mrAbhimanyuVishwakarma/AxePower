@@ -92,7 +92,7 @@ public class BatteryService : IDisposable
                 }
             }
         }
-        catch { }
+        catch { /* The Lenovo energy driver is absent on other PCs; false means "not applied this way". */ }
         return false;
     }
 
@@ -133,7 +133,7 @@ public class BatteryService : IDisposable
                 await EnsureBaselineHistoryAsync(initial.BatteryPercentage, initial.IsPluggedIn);
             }
         }
-        catch { }
+        catch { /* Best-effort: the first history point is retried by the 60-second loop. */ }
 
         while (!token.IsCancellationRequested)
         {
@@ -153,7 +153,7 @@ public class BatteryService : IDisposable
                 // Poll every 60 seconds
                 await Task.Delay(TimeSpan.FromSeconds(60), token);
             }
-            catch (TaskCanceledException) { }
+            catch (TaskCanceledException) { /* The monitor was stopped. */ }
             catch (Exception ex)
             {
                 _logService.LogError("Error in battery history polling loop.", ex);
@@ -190,7 +190,7 @@ public class BatteryService : IDisposable
             }
             catch (OperationCanceledException)
             {
-                try { proc.Kill(true); } catch { }
+                try { proc.Kill(true); } catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* powercfg exited as the timeout fired. */ }
                 return null;
             }
 
@@ -229,7 +229,7 @@ public class BatteryService : IDisposable
         }
         finally
         {
-            try { if (File.Exists(reportPath)) File.Delete(reportPath); } catch { }
+            try { if (File.Exists(reportPath)) File.Delete(reportPath); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: a leftover battery report in the temp folder is harmless. */ }
         }
     }
 
@@ -255,7 +255,7 @@ public class BatteryService : IDisposable
         }
         finally
         {
-            try { if (File.Exists(reportPath)) File.Delete(reportPath); } catch { }
+            try { if (File.Exists(reportPath)) File.Delete(reportPath); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: a leftover battery report in the temp folder is harmless. */ }
         }
     }
 
@@ -321,7 +321,7 @@ public class BatteryService : IDisposable
         }
         catch (OperationCanceledException)
         {
-            try { proc.Kill(true); } catch { }
+            try { proc.Kill(true); } catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* powercfg exited as the timeout fired. */ }
             return false;
         }
         return proc.ExitCode == 0;
@@ -729,7 +729,7 @@ public class BatteryService : IDisposable
                     break;
                 }
             }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Wmi(caught)) { /* Only ASUS PCs have this class; one vendor method per PC applies. */ }
 
             // 3. Lenovo Vantage & Power Management Registry hives
             const string hive = "Software\\Lenovo\\VantageService\\AddinData\\IdeaNotebookAddin";
@@ -743,14 +743,14 @@ public class BatteryService : IDisposable
                 using var hklmKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\Lenovo\\PWRMTRV\\Data");
                 hklmKey?.SetValue("ConservationMode", enabled ? 1 : 0, RegistryValueKind.DWord);
             }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Needs admin and only matters on Lenovo PCs; the driver call above is the main path. */ }
 
             try
             {
                 using var hklmWowKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\WOW6432Node\\Lenovo\\PWRMTRV\\Data");
                 hklmWowKey?.SetValue("ConservationMode", enabled ? 1 : 0, RegistryValueKind.DWord);
             }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Needs admin and only matters on Lenovo PCs; the driver call above is the main path. */ }
 
             _logService.LogInfo($"[Hardware] Conservation Mode set to {(enabled ? "Enabled (80% Cap)" : "Disabled")}.");
         }
@@ -779,14 +779,14 @@ public class BatteryService : IDisposable
                 using var hklmKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\Lenovo\\PWRMTRV\\Data");
                 hklmKey?.SetValue("RapidCharge", enabled ? 1 : 0, RegistryValueKind.DWord);
             }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Needs admin and only matters on Lenovo PCs; the driver call above is the main path. */ }
 
             try
             {
                 using var hklmWowKey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\WOW6432Node\\Lenovo\\PWRMTRV\\Data");
                 hklmWowKey?.SetValue("RapidCharge", enabled ? 1 : 0, RegistryValueKind.DWord);
             }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Needs admin and only matters on Lenovo PCs; the driver call above is the main path. */ }
 
             _logService.LogInfo($"[Hardware] Rapid Charge set to {(enabled ? "Enabled" : "Disabled")}.");
         }

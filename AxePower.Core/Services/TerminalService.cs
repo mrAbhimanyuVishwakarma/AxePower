@@ -141,7 +141,7 @@ public class TerminalService
                 if (!_process.HasExited) _process.Kill(entireProcessTree: true);
             }
             catch { /* already gone */ }
-            try { _process.Dispose(); } catch { }
+            try { _process.Dispose(); } catch { /* Best-effort: the shell process has already been ended above. */ }
             _process = null;
         }
     }

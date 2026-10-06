@@ -45,12 +45,14 @@ internal static class PowerShellRunner
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            try { process.Kill(entireProcessTree: true); } catch { }
+            try { process.Kill(entireProcessTree: true); }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { /* It exited as the timeout or cancel fired. */ }
             return new Result(-1, string.Empty, "PowerShell timed out.", true);
         }
         catch (OperationCanceledException)
         {
-            try { process.Kill(entireProcessTree: true); } catch { }
+            try { process.Kill(entireProcessTree: true); }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { /* It exited as the timeout or cancel fired. */ }
             throw;
         }
     }

@@ -598,6 +598,7 @@ public partial class MusicViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
+            // Superseded by a newer request.
         }
         catch (Exception ex)
         {
@@ -795,6 +796,7 @@ public partial class MusicViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
+            // Superseded: the card was recycled.
         }
         catch
         {
@@ -1029,13 +1031,13 @@ public partial class MusicViewModel : ObservableObject
                         }
                     }
                 }
-                catch { }
+                catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.FileSystem(caught)) { /* An unreadable playlist file is skipped. */ }
 
                 item.Subtitle = $"{item.Songs.Count} track{(item.Songs.Count == 1 ? "" : "s")} • Local Playlist";
                 _localLibraryItems.Insert(0, item);
             }
         }
-        catch { }
+        catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.FileSystem(caught)) { /* An unreadable playlist folder is skipped. */ }
     }
 
     /// <summary>Most songs one card lists until the library database (M6) takes over.</summary>
@@ -1095,7 +1097,7 @@ public partial class MusicViewModel : ObservableObject
                 }
             }
         }
-        catch { }
+        catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.FileSystem(caught)) { /* An unreadable music folder is skipped. */ }
 
         return (songs, truncated);
     }

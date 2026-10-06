@@ -67,12 +67,16 @@ public sealed class BackupManifestStore
     };
 
     private readonly object _gate = new();
+    private readonly LogService? _log;
 
     public BackupManifestStore() : this(UninstallHistoryService.DefaultRoot) { }
 
-    public BackupManifestStore(string root)
+    public BackupManifestStore(LogService log) : this(UninstallHistoryService.DefaultRoot, log) { }
+
+    public BackupManifestStore(string root, LogService? log = null)
     {
         Root = root;
+        _log = log;
     }
 
     public string Root { get; }
@@ -96,14 +100,26 @@ public sealed class BackupManifestStore
     {
         lock (_gate)
         {
+            var path = Path.Combine(GetSessionFolder(sessionId), "manifest.json");
             try
             {
-                var path = Path.Combine(GetSessionFolder(sessionId), "manifest.json");
                 if (File.Exists(path))
                     return JsonSerializer.Deserialize<BackupManifest>(File.ReadAllText(path), JsonOptions)
                            ?? new BackupManifest { SessionId = sessionId };
             }
-            catch { }
+            catch (JsonException ex)
+            {
+                // A damaged index must not be overwritten by the next Record: it is the only map from
+                // backup files to what they restore. Keep it beside the new one for manual recovery.
+                var kept = Path.Combine(Path.GetDirectoryName(path)!, $"manifest.corrupt-{DateTime.Now:yyyyMMddHHmmss}.json");
+                try { File.Move(path, kept); }
+                catch (Exception moveError) when (moveError is IOException or UnauthorizedAccessException) { kept = path + " (could not be moved)"; }
+                _log?.LogWarning($"[Uninstaller] The backup index for session {sessionId} was damaged and was kept as {kept}; a new index is started", ex);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _log?.LogWarning($"[Uninstaller] The backup index for session {sessionId} could not be read", ex);
+            }
             return new BackupManifest { SessionId = sessionId };
         }
     }

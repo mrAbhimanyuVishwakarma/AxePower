@@ -195,7 +195,7 @@
                                 </StackPanel>
 
                                 <!-- Lower Box: Description Panel -->
-                                <Border Background="{DynamicResource SurfaceBrush}"
+                                <Border Background="Transparent"
                                         BorderBrush="{DynamicResource CardBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="8"

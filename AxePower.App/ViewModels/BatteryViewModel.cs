@@ -409,7 +409,7 @@ public partial class BatteryViewModel : ObservableObject
             SelectedLidActionAc = LidActionOptions.FirstOrDefault(o => o.Index == lidAc) ?? LidActionOptions.FirstOrDefault(o => o.Index == 0);
             SelectedLidActionDc = LidActionOptions.FirstOrDefault(o => o.Index == lidDc) ?? LidActionOptions.FirstOrDefault(o => o.Index == 1);
         }
-        catch { }
+        catch { /* powercfg unreadable: the pickers show the Windows defaults. */ }
         finally
         {
             _isInitializingPowerSettings = false;
@@ -648,7 +648,7 @@ public partial class BatteryViewModel : ObservableObject
                     _ => mode.ToString()
                 };
             }
-            catch { }
+            catch { /* Unknown plan: the current mode label keeps its last value. */ }
         }
     }
 
@@ -683,7 +683,10 @@ public partial class BatteryViewModel : ObservableObject
                         UseShellExecute = true
                     });
                 }
-                catch { }
+                catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+                {
+                    _notificationService?.Show("Could not open Windows Settings.");
+                }
             }
         }
     }
@@ -710,7 +713,10 @@ public partial class BatteryViewModel : ObservableObject
                     UseShellExecute = true
                 });
             }
-            catch { }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                _notificationService?.Show("Could not open Power Options.");
+            }
         }
     }
 }

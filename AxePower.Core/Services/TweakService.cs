@@ -337,11 +337,9 @@ public class TweakService : ITweakService
                 return true;
 
             case "classic-context-menu":
-                try
-                {
-                    Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}", false);
-                }
-                catch { }
+                // A missing key is fine (throwOnMissing: false); access denied reaches RevertTweakAsync,
+                // which logs it and reports the revert as failed instead of done.
+                Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}", false);
                 return true;
 
             case "sticky-keys-disable":
@@ -364,8 +362,9 @@ public class TweakService : ITweakService
             if (val is string strVal && int.TryParse(strVal, out int parsed)) return parsed;
             return null;
         }
-        catch
+        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
         {
+            // Unreadable counts as "not set", which shows the tweak as not applied.
             return null;
         }
     }
@@ -377,8 +376,9 @@ public class TweakService : ITweakService
             using var key = root.OpenSubKey(subKeyPath);
             return key?.GetValue(valueName)?.ToString();
         }
-        catch
+        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
         {
+            // Unreadable counts as "not set", which shows the tweak as not applied.
             return null;
         }
     }
@@ -390,8 +390,9 @@ public class TweakService : ITweakService
             using var key = root.OpenSubKey(subKeyPath);
             return key != null;
         }
-        catch
+        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
         {
+            // Unreadable counts as absent, which shows the tweak as not applied.
             return false;
         }
     }
@@ -410,12 +411,10 @@ public class TweakService : ITweakService
 
     private static void DeleteValue(RegistryKey root, string subKeyPath, string valueName)
     {
-        try
-        {
-            using var key = root.OpenSubKey(subKeyPath, true);
-            key?.DeleteValue(valueName, false);
-        }
-        catch { }
+        // Not swallowed: if the value cannot be removed, the tweak was not reverted, and the caller
+        // (Apply/RevertTweakAsync) logs it and reports failure.
+        using var key = root.OpenSubKey(subKeyPath, true);
+        key?.DeleteValue(valueName, false);
     }
 
     #endregion

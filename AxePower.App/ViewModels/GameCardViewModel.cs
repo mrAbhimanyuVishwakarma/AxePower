@@ -57,6 +57,9 @@ public partial class GameCardViewModel : ObservableObject
         _ => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280"))
     };
 
+    /// <summary>Shows a message to the user (set by the Game Mode page).</summary>
+    public Action<string>? Notify { get; init; }
+
     public GameCardViewModel(AppRule rule, Action<AppRule> removeCallback, Action saveCallback, string? steamAppId = null, string? exePath = null, string? customTitle = null)
     {
         Rule = rule;
@@ -149,7 +152,10 @@ public partial class GameCardViewModel : ObservableObject
                 UseShellExecute = true
             });
         }
-        catch { }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Notify?.Invoke($"Could not start {DisplayName}. Check that it is still installed.");
+        }
     }
 
     [RelayCommand]

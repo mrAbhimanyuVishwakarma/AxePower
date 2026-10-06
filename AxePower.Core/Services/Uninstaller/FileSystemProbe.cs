@@ -40,8 +40,9 @@ public sealed class FileSystemProbe : IFileSystemProbe
             var key = (path.ToUpperInvariant(), info.Length, info.LastWriteTimeUtc, text);
             return _scanCache.GetOrAdd(key, _ => Scan(path, Encoding.ASCII.GetBytes(text), maxBytes));
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.FileSystem(caught))
         {
+            // An unreadable file counts as not containing the text, so it is not taken as evidence.
             return false;
         }
     }

@@ -106,7 +106,7 @@ public class ThemeService
                     return AppTheme.Light;
                 }
             }
-            catch { }
+            catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Registry(caught)) { /* Unreadable: AxePower uses its dark skin. */ }
             return AppTheme.Dark;
         }
 
@@ -125,7 +125,7 @@ public class ThemeService
                 return sys == 1;
             }
         }
-        catch { }
+        catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Registry(caught)) { /* Unreadable: treated as a dark taskbar. */ }
 
         var actual = ResolveActualTheme(currentTheme);
         return actual == AppTheme.Light;
@@ -285,7 +285,7 @@ public class ThemeService
             SetWindowCompositionAttribute(hwnd, ref data);
             Marshal.FreeHGlobal(accentPtr);
         }
-        catch { }
+        catch { /* Acrylic is cosmetic; without it the skin's solid background shows. */ }
     }
 
     private static void DisableAcrylicFallback(IntPtr hwnd)
@@ -311,6 +311,6 @@ public class ThemeService
             SetWindowCompositionAttribute(hwnd, ref data);
             Marshal.FreeHGlobal(accentPtr);
         }
-        catch { }
+        catch { /* Best-effort: the window keeps its last effect. */ }
     }
 }

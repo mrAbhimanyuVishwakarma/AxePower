@@ -377,7 +377,7 @@ public partial class AccountViewModel : ObservableObject
             if (ct.IsCancellationRequested) return;
             OnUi(() => SetHint(free ? $"@{name} is available." : $"@{name} is taken or reserved.", free));
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { /* Cancelled: the name changed again before the check finished. */ }
         catch (AccountException)
         {
             if (!ct.IsCancellationRequested) OnUi(() => SetHint("Couldn't check right now; you can still try.", false));

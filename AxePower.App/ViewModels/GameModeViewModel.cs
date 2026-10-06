@@ -407,7 +407,7 @@ public partial class GameModeViewModel : ObservableObject
                 ? "4 Services Paused"
                 : "Services Normal";
         }
-        catch { }
+        catch { /* Display-only figures: a failure keeps the previous ones. */ }
     }
 
     public void RefreshAutomationStatus()
@@ -588,7 +588,7 @@ public partial class GameModeViewModel : ObservableObject
         GameCards.Clear();
         foreach (var rule in AppRules)
         {
-            GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave));
+            GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave) { Notify = _notificationService.Show });
         }
     }
 
@@ -713,7 +713,7 @@ public partial class GameModeViewModel : ObservableObject
                                 AppRules.Add(existingRule);
                             }
 
-                            GameCards.Add(new GameCardViewModel(existingRule, RemoveRule, AutoSave, game.SteamAppId, game.ExecutablePath, game.Name));
+                            GameCards.Add(new GameCardViewModel(existingRule, RemoveRule, AutoSave, game.SteamAppId, game.ExecutablePath, game.Name) { Notify = _notificationService.Show });
                         }
                     }
 
@@ -753,7 +753,7 @@ public partial class GameModeViewModel : ObservableObject
                 }
             });
         }
-        catch { }
+        catch { /* Best-effort tidy-up of the game list after a scan; the list stays as it was. */ }
     }
 
     [RelayCommand]
@@ -795,7 +795,7 @@ public partial class GameModeViewModel : ObservableObject
                         }
                     }
                 }
-                catch { }
+                catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Com(caught)) { /* Not a readable shortcut: the file itself is added as the game. */ }
             }
 
             if (string.IsNullOrEmpty(exeName))
@@ -813,7 +813,7 @@ public partial class GameModeViewModel : ObservableObject
             var newRule = new AppRule { ExecutableName = exeName, TargetMode = PowerMode.Beast };
             AppRules.Add(newRule);
             string title = GamePosterService.GetCleanTitle(exeName);
-            GameCards.Add(new GameCardViewModel(newRule, RemoveRule, AutoSave, null, filePath, title));
+            GameCards.Add(new GameCardViewModel(newRule, RemoveRule, AutoSave, null, filePath, title) { Notify = _notificationService.Show });
             AutoSave();
             RefreshActiveGameDetection();
             _notificationService.Show($"Added {title} to Game Rules.");
@@ -869,7 +869,7 @@ public partial class GameModeViewModel : ObservableObject
                     {
                         var rule = new AppRule { ExecutableName = game, TargetMode = PowerMode.Beast };
                         AppRules.Add(rule);
-                        GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave));
+                        GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave) { Notify = _notificationService.Show });
                         added++;
                     }
                 }
@@ -913,7 +913,7 @@ public partial class GameModeViewModel : ObservableObject
                     if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrWhiteSpace(p.MainWindowTitle))
                         withWindow.Add(p.ProcessName);
                 }
-                catch { }
+                catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Process(caught)) { /* Exited while listed. */ }
             }
 
             App.Current?.Dispatcher?.BeginInvoke(() =>

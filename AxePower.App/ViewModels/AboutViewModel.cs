@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using AxePower.Core.Helpers;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Update;
 
 namespace AxePower.App.ViewModels;
 
@@ -24,6 +25,9 @@ public partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReleaseVersionWithDate))]
     private string _version = "1.4.0";
+
+    [ObservableProperty]
+    private UpdateManifest? _manifest;
 
     [ObservableProperty]
     private string _runtime = ".NET 8.0";
@@ -230,8 +234,9 @@ public partial class AboutViewModel : ObservableObject
             bitmap.Freeze();
             MobileDownloadQrCode = bitmap;
         }
-        catch
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException or IOException)
         {
+            // No QR image: the download link is still shown as text.
             MobileDownloadQrCode = null;
         }
     }
@@ -313,6 +318,7 @@ public partial class AboutViewModel : ObservableObject
                 DownloadUrl = result.DownloadUrl;
                 AssetName = result.AssetName;
                 ReleaseUrl = result.ReleaseUrl;
+                Manifest = result.Manifest;
                 IsUpdateModalOpen = true;
                 _notificationService?.Show($"🚀 New update available: v{result.LatestVersion}!");
             }
@@ -363,7 +369,7 @@ public partial class AboutViewModel : ObservableObject
                 PatchNotesComments = stats.DiscussionsCount;
             });
         }
-        catch { }
+        catch { /* Offline: the like and comment counts stay hidden. */ }
     }
 
     [RelayCommand]
@@ -409,7 +415,10 @@ public partial class AboutViewModel : ObservableObject
             Clipboard.SetText("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases");
             _notificationService?.Show("🔗 Release link copied to clipboard!");
         }
-        catch { }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            _notificationService?.Show("Could not copy: another app is using the clipboard. Try again.");
+        }
     }
 
     [RelayCommand]
@@ -470,7 +479,7 @@ public partial class AboutViewModel : ObservableObject
                 DownloadStatusText = $"Downloading update... {p:0}%";
             });
 
-            var installerPath = await _updateService.DownloadUpdateAsync(DownloadUrl, progress, _downloadCts.Token);
+            var installerPath = await _updateService.DownloadUpdateAsync(DownloadUrl, progress, _downloadCts.Token, Manifest);
             DownloadedInstallerPath = installerPath;
             IsUpdateDownloaded = true;
 
@@ -492,6 +501,12 @@ public partial class AboutViewModel : ObservableObject
         {
             IsDownloadingUpdate = false;
             DownloadStatusText = "Download cancelled.";
+        }
+        catch (UpdateVerificationException ex)
+        {
+            IsDownloadingUpdate = false;
+            DownloadStatusText = "Update rejected: " + ex.Message;
+            _notificationService?.Show("Security verification failed: " + ex.Message);
         }
         catch (Exception ex)
         {

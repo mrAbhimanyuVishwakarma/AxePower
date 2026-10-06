@@ -68,7 +68,7 @@ public sealed class ProcessDetectionService : IProcessDetectionService
                 else
                     process.CloseMainWindow();
             }
-            catch
+            catch (Exception caught) when (ExpectedFailures.Process(caught))
             {
                 // Gone already, or it runs elevated and we can't signal it
             }

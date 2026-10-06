@@ -262,7 +262,7 @@ public sealed class YouTubeProvider : IStreamingProvider, IMetadataProvider, IDi
         }
         catch
         {
-            try { if (File.Exists(partial)) File.Delete(partial); } catch { }
+            try { if (File.Exists(partial)) File.Delete(partial); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: a partial stream download is overwritten next time. */ }
             throw;
         }
 

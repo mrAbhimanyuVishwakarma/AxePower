@@ -45,7 +45,7 @@ public sealed class WindowsRoutineWorld : IRoutineWorld
         foreach (var process in Process.GetProcesses())
         {
             try { apps.Add(process.ProcessName); }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* Exited while listed. */ }
             finally { process.Dispose(); }
         }
 
@@ -107,7 +107,7 @@ public sealed class WindowsRoutineActions : IRoutineActions
                         continue;
 
                     string? path = null;
-                    try { path = process.MainModule?.FileName; } catch { }
+                    try { path = process.MainModule?.FileName; } catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* Protected process: its path stays unknown. */ }
                     if (path != null && path.StartsWith(windows, StringComparison.OrdinalIgnoreCase)) continue;
 
                     bool closed = process.MainWindowHandle != IntPtr.Zero && process.CloseMainWindow() && process.WaitForExit(5000);

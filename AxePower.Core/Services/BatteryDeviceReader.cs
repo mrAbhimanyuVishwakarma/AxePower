@@ -29,7 +29,7 @@ public static class BatteryDeviceReader
         double? temperature = null;
         DateTime? manufactured = null, firstUse = null;
 
-        try { (serial, chemistry, temperature, manufactured) = ReadWindowsBattery(); } catch { }
+        try { (serial, chemistry, temperature, manufactured) = ReadWindowsBattery(); } catch { /* Best-effort extras: without them the battery card hides these fields. */ }
         try
         {
             var lenovo = ReadLenovoRecord();
@@ -40,7 +40,7 @@ public static class BatteryDeviceReader
                 firstUse = lenovo.Value.FirstUseDate;
             }
         }
-        catch { }
+        catch { /* Lenovo-only record: absent on other PCs. */ }
 
         return new BatteryDeviceDetails(serial, chemistry, temperature, manufactured, firstUse);
     }

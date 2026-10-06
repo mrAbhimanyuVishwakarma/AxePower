@@ -102,7 +102,7 @@ public class AutoSwitchService : IDisposable
                 await Task.Delay(TimeSpan.FromSeconds(60), token);
                 await EvaluatePowerStateAsync();
             }
-            catch (TaskCanceledException) { }
+            catch (TaskCanceledException) { /* Auto-switch was turned off. */ }
             catch (Exception ex)
             {
                 _logService.LogError("Error in AutoSwitchService fallback monitor loop.", ex);

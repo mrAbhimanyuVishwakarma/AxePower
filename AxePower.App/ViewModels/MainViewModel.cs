@@ -277,7 +277,7 @@ public partial class MainViewModel : ObservableObject
                     try
                     {
                         // Silently download the update in background
-                        var installerPath = await _updateService.DownloadUpdateAsync(result.DownloadUrl, new Progress<double>());
+                        var installerPath = await _updateService.DownloadUpdateAsync(result.DownloadUrl, new Progress<double>(), manifest: result.Manifest);
                         AboutVm.DownloadedInstallerPath = installerPath;
                         AboutVm.IsUpdateDownloaded = true;
                         AboutVm.SteamUpdateBannerMessage = $"AxePower v{result.LatestVersion} is downloaded and ready to install - ";

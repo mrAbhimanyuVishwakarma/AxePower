@@ -160,7 +160,7 @@ public sealed class BatchUninstallService : IBatchUninstallService
                     session.LeftoverItems.AddRange(leftovers);
                     _log.LogInfo($"[Uninstaller] {app.DisplayName} — {leftovers.Count} leftover items found.");
                 }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { /* The user cancelled the leftover scan; the uninstall result stands. */ }
                 catch (Exception ex)
                 {
                     _log.LogError($"[Uninstaller] Leftover scan failed for {app.DisplayName}: {ex.Message}");

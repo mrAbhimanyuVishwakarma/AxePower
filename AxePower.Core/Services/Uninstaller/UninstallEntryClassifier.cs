@@ -97,7 +97,7 @@ public static class UninstallEntryClassifier
         if (!Path.IsPathFullyQualified(path)) return string.Empty;
 
         try { path = Path.GetFullPath(path); }
-        catch { return string.Empty; }
+        catch (Exception caught) when (ExpectedFailures.Path(caught)) { /* An unusable install location counts as none. */ return string.Empty; }
 
         if (!fs.DirectoryExists(path) &&
             (fs.FileExists(path) || Path.GetExtension(path).ToLowerInvariant() is ".exe" or ".dll" or ".ico"))

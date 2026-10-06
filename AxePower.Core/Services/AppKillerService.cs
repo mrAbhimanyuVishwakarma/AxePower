@@ -13,6 +13,7 @@ public class AppKillerService
     [System.Runtime.InteropServices.DllImport("ntdll.dll", SetLastError = true)]
     private static extern int NtResumeProcess(IntPtr processHandle);
 
+    private readonly LogService? _log;
     private readonly List<int> _suspendedProcessIds = new();
     private readonly List<string> _killedAppPaths = new();
 
@@ -165,6 +166,8 @@ public class AppKillerService
         return filePath.StartsWith(windowsDir, StringComparison.OrdinalIgnoreCase);
     }
 
+    public AppKillerService(LogService? log = null) => _log = log;
+
     public int SuspendBackgroundApps()
     {
         int suspendedCount = 0;
@@ -196,9 +199,9 @@ public class AppKillerService
                     suspendedCount++;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
-                // Ignore processes we can't access
+                // Protected, elevated or already exited: left running, which is the safe outcome.
             }
         }
         
@@ -208,20 +211,37 @@ public class AppKillerService
     public int ResumeBackgroundApps()
     {
         int resumedCount = 0;
+        var stillSuspended = new List<int>();
         foreach (var pid in _suspendedProcessIds)
         {
             try
             {
-                var process = Process.GetProcessById(pid);
-                NtResumeProcess(process.Handle);
-                resumedCount++;
+                using var process = Process.GetProcessById(pid);
+                int status = NtResumeProcess(process.Handle);
+                if (status == 0)
+                {
+                    resumedCount++;
+                }
+                else
+                {
+                    // A suspended app that is not resumed stays frozen: never let that pass quietly.
+                    stillSuspended.Add(pid);
+                    _log?.LogWarning($"[AppKiller] Could not resume process {pid} (status 0x{status:X8}); it stays frozen until resumed or ended in Task Manager.");
+                }
             }
-            catch
+            catch (ArgumentException)
             {
-                // Process might have been closed or already exited
+                // It exited while suspended: nothing to resume.
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                stillSuspended.Add(pid);
+                _log?.LogWarning($"[AppKiller] Could not resume process {pid}; it stays frozen until resumed or ended in Task Manager", ex);
             }
         }
+        // Failures stay listed, so the next resume tries them again.
         _suspendedProcessIds.Clear();
+        _suspendedProcessIds.AddRange(stillSuspended);
         return resumedCount;
     }
 
@@ -256,9 +276,9 @@ public class AppKillerService
                     {
                         path = process.MainModule?.FileName;
                     }
-                    catch
+                    catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
                     {
-                        // Access denied on MainModule, ignore path saving
+                        // Access denied on MainModule: it is still closed, just not restarted later.
                     }
 
                     // SAFETY: Don't kill processes that live inside C:\Windows
@@ -274,9 +294,9 @@ public class AppKillerService
                     }
                 }
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
-                // Ignore processes we can't access
+                // Protected, elevated or already exited: left running, which is the safe outcome.
             }
         }
         
@@ -301,9 +321,9 @@ public class AppKillerService
                     restartedCount++;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
-                // Could not restart
+                _log?.LogWarning($"[AppKiller] Could not restart {path} after Game Mode", ex);
             }
         }
         _killedAppPaths.Clear();

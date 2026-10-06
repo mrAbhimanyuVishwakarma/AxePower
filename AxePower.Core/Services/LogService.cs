@@ -22,6 +22,9 @@ public class LogService
     public void LogInfo(string message) => Log(message, "INFO");
     
     public void LogWarning(string message) => Log(message, "WARN");
+
+    /// <summary>A handled failure worth knowing about: the message plus the exception's type and message, no stack.</summary>
+    public void LogWarning(string message, Exception ex) => Log($"{message} ({ex.GetType().Name}: {ex.Message})", "WARN");
     
     public void LogError(string message, Exception? ex = null)
     {
@@ -31,10 +34,11 @@ public class LogService
 
     private void Log(string message, string level)
     {
+        // Every line is redacted here, so no caller can leak a token, room secret or email address.
         var entry = new LogEntry
         {
             Timestamp = DateTime.Now,
-            Message = message,
+            Message = LogRedactor.Redact(message),
             Level = level
         };
 
@@ -55,9 +59,11 @@ public class LogService
             }
             File.AppendAllText(_logFilePath, entry.ToString() + Environment.NewLine);
         }
-        catch 
+        catch (Exception)
         {
-            // Ignore file write errors to prevent crashing
+            // Best-effort, and broad on purpose: logging runs inside other catch blocks, so a locked or
+            // read-only log file must never throw out of here. The entry still reached the in-app
+            // log through OnLogAdded above.
         }
     }
 

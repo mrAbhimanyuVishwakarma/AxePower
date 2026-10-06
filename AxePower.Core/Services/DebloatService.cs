@@ -116,8 +116,9 @@ public class DebloatService
                     _activeProcess = null;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
+                // The tool's process has gone; look for its window another way.
                 _activeProcess = null;
             }
         }
