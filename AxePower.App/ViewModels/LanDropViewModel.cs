@@ -26,6 +26,7 @@ public partial class LanDropViewModel : ObservableObject
     private bool _isServerRunning;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShareLink))]
     private string _serverUrl = string.Empty;
 
     [ObservableProperty]

@@ -169,3 +169,15 @@ AxePower classifies dependency updates into three tiers:
 1. **GitHub Dependabot** ([`.github/dependabot.yml`](../../.github/dependabot.yml)): Runs weekly on Mondays at 06:00 UTC, opening at most 5 PRs for maintainer review. Automatic merging is strictly prohibited.
 2. **Weekly CI Schedule** ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)): Triggers every Monday to audit all dependencies against the latest vulnerability databases.
 
+## QR code encoding (2026-10-06)
+
+The hand-written QR encoder in `AxePower.Core/Helpers/QrCodeGenerator.cs` produced codes that no scanner could read (even the content `HELLO` did not decode). It was replaced by a maintained library rather than repaired.
+
+| Package | Project | Relationship | Version | License | Why |
+|---|---|---|---:|---|---|
+| `QRCoder` | Core (flows to App, Tests, UpdateSigning) | Direct | 1.8.0 | MIT | Encodes the QR codes for the LAN Drop portal, Phone Hub and the About page. Only `QRCodeGenerator` and `QRCodeData.ModuleMatrix` are used; AxePower draws the SVG and BMP itself. |
+| `System.Drawing.Common` | Core | Transitive (from QRCoder) | 6.0.0 | MIT | Pulled in by QRCoder's .NET 6+ target. AxePower does not call it. |
+| `ZXing.Net` | Tests only | Direct | 0.16.11 | Apache-2.0 | A real decoder that reads every generated QR code back in `QrCodeDecodeTests` and the LAN Drop end-to-end test. Not shipped. |
+
+Lock files were refreshed with `dotnet restore AxePower.sln --force-evaluate`, and `dotnet list AxePower.sln package --vulnerable --include-transitive` reported no vulnerable packages afterwards.
+

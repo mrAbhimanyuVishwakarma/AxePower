@@ -55,8 +55,11 @@ Network & internet → your Wi-Fi → Properties.
 **Need:** this PC and a phone on the same **Private** Wi-Fi. An iPhone (Safari) and an Android
 phone (Chrome) are best if you have both.
 **Do:**
-1. Phone Control → LAN Drop → Start, and scan the QR code with the phone.
-2. The page should load, and the address bar should **not** contain `t=`.
+1. Phone Control → LAN Drop → Start, and scan the QR code with the phone. Also try the phone's
+   normal camera app, not only a scanner app. The address box under the QR should show the full
+   link ending in `?t=...`.
+2. The page should load, and the address bar should **not** contain `t=`. Then type only
+   `http://<ip>:5050/` into the phone's browser: it should show "Access link needed".
 3. From the phone: upload a photo, send a text to the PC's clipboard, download a file the PC
    shared, and press play, pause and next on the media buttons.
 4. Pull down to refresh the page on the phone: it should still work without scanning again.

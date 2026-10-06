@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `v2.1.1---monitization-features` · **Last updated:** 2026-10-05 · **Last commit covered:** `b68f001` plus uncommitted Prompt 12–21 work and the four follow-up fixes (encrypted control, host approval, WHEP proofs, Tailscale HTTPS) in the working tree
+> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `ee25700` plus the uncommitted QR encoder replacement and full-link fix in the working tree
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and
@@ -324,6 +324,14 @@ the page loads, the address bar no longer shows `t=`, and file upload, clipboard
 and the media buttons all work, including after a pull-to-refresh. Test Safari on iOS and
 Chrome on Android. Then confirm the music controls drive AxePower's own player and stay in sync
 with the desktop.
+**Partly fixed 2026-10-06 (uncommitted):** the owner reported that neither the QR nor the link
+worked from a phone. Three causes, all fixed: the hand-written QR encoder made codes no scanner
+could read (replaced by QRCoder; ZXing now decodes every generated code in the tests); the
+portal's own `/qr` SVG was light-on-dark with a 2-module margin (now dark-on-light, 4 modules);
+and Phone Hub and LAN Drop showed the plain address, which is a 401 without the token (the box now
+shows the full link, the same one the QR and Copy use, and the plain address in a browser gets a
+short "Access link needed" page instead of a bare 401). A test decodes the QR image and opens the
+portal with the link inside it. None of this has been scanned on a real phone yet.
 **Found:** 2026-09-23 / `9708096`
 
 ### P2 — `/api/remote` still drives Windows media keys, not AxePower's player
@@ -355,7 +363,8 @@ it instead of re-scanning folders on each visit.
 Delete each line once it has shipped and been mentioned in release notes.
 
 - **Old LAN portal links stop working.** The portal now requires an access token, carried by the
-  QR link. A bookmark of the plain `http://<ip>:5050/` address returns 401. Covered by a What's
+  QR link. A bookmark of the plain `http://<ip>:5050/` address returns 401 (since 2026-10-06 with a
+  short "Access link needed" page). Covered by a What's
   New card badged "SECURITY FIX"; still needs a line in the release notes.
   (`9708096`, 2026-09-23)
 - **LAN Drop no longer starts on Public or unclassified networks by default.** Phone Hub shows a

@@ -218,13 +218,13 @@ public partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     private ImageSource? _mobileDownloadQrCode;
 
-    public string MobileAppDownloadUrl => "https://axepower.vercel.app/mobile";
+    public string MobileAppDownloadUrl => "https://github.com/mrAbhimanyuVishwakarma/Axepower-Mobile-Download/releases";
 
     public void GenerateMobileDownloadQr()
     {
         try
         {
-            byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(MobileAppDownloadUrl, 8, 3, 0x00000000, 0x00FFFFFF);
+            byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(MobileAppDownloadUrl, 8, 4, 0x00000000, 0x00FFFFFF);
             using var ms = new MemoryStream(bmpBytes);
             var bitmap = new BitmapImage();
             bitmap.BeginInit();

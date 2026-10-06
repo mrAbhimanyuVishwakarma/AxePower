@@ -160,6 +160,14 @@
           "System.ValueTuple": "4.5.0"
         }
       },
+      "QRCoder": {
+        "type": "Transitive",
+        "resolved": "1.8.0",
+        "contentHash": "RuvX3PEXU6pbY/I5ItAk800jm62r+YnoPLgyS2WTgwxkOnGkOfU9ORiipHUF0LkLyqM8rlroUCA319JjRYfRFQ==",
+        "dependencies": {
+          "System.Drawing.Common": "6.0.0"
+        }
+      },
       "RAMSPDToolkit-NDD": {
         "type": "Transitive",
         "resolved": "1.4.2",
@@ -312,6 +320,14 @@
         "resolved": "10.0.10",
         "contentHash": "OvGz3PrzuAI/Sj7LTcXcCe3FClRI1IyRMZjNONcZtFh+Ww7nAtSh4kh08r8KVe/xxkXJPjR0Y1jF7H+N42d4xQ=="
       },
+      "System.Drawing.Common": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "NfuoKUiP2nUWwKZN6twGqXioIe1zVD0RIj2t976A+czLHr2nY454RwwXs6JU9Htc6mwqL6Dn/nEL3dpVf2jOhg==",
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "6.0.0"
+        }
+      },
       "System.IO.Ports": {
         "type": "Transitive",
         "resolved": "10.0.3",
@@ -383,6 +399,7 @@
           "NAudio.Core": "[2.4.0, )",
           "NAudio.Vorbis": "[1.5.0, )",
           "NAudio.Wasapi": "[2.4.0, )",
+          "QRCoder": "[1.8.0, )",
           "System.Management": "[10.0.10, )",
           "System.Security.Cryptography.ProtectedData": "[8.0.0, )",
           "System.ServiceProcess.ServiceController": "[10.0.10, )",

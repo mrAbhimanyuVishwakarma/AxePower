@@ -169,7 +169,7 @@
                             <!-- Direct URL Box -->
                             <TextBlock Text="Local Server URL:" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
                             <Grid Margin="0,0,0,14">
-                                <TextBox Text="{Binding ServerUrl, Mode=OneWay}" IsReadOnly="True"
+                                <TextBox Text="{Binding ShareLink, Mode=OneWay}" IsReadOnly="True"
                                          Background="Transparent" Foreground="{DynamicResource PrimaryTextBrush}"
                                          BorderBrush="{DynamicResource CardBorderBrush}" Padding="10,8" FontSize="12.5" FontWeight="SemiBold"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,4,0">

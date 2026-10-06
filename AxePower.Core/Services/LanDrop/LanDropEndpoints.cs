@@ -58,7 +58,7 @@ internal sealed class LanDropEndpoints
     /// <summary>GET /qr — the portal link as an SVG QR code.</summary>
     public Task QrAsync(Stream stream) =>
         LanDropHttp.SendAsync(stream, 200, "OK", "image/svg+xml",
-            Encoding.UTF8.GetBytes(QrCodeGenerator.GenerateSvg(_host.PortalUrl, 6, 2, "#00F0FF", "#0F172A")));
+            Encoding.UTF8.GetBytes(QrCodeGenerator.GenerateSvg(_host.PortalUrl, 6, 4, "#0F172A", "#FFFFFF")));
 
     /// <summary>GET /api/status — host, shared files, latest clipboard text and battery.</summary>
     public Task StatusAsync(Stream stream)

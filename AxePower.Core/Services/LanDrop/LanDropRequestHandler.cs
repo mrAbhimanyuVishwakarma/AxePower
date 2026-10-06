@@ -80,9 +80,13 @@ internal sealed class LanDropRequestHandler
 
             if (!_auth.Authorise(request, clientIp))
             {
-                // The same answer for a missing token and a wrong one, with nothing about
-                // what this service is, so scanning the network learns nothing from it.
-                await LanDropHttp.SendTextAsync(stream, 401, "Unauthorized", "Unauthorized");
+                // The same answer for a missing token and a wrong one. A person who typed the
+                // plain address into a browser gets a hint on how to get in (without naming the
+                // product); everything else gets a bare 401, so scanning learns little.
+                if (request.Method == "GET" && request.Path is "/" or "/index.html")
+                    await LanDropHttp.SendAsync(stream, 401, "Unauthorized", "text/html; charset=utf-8", AccessLinkNeededPage);
+                else
+                    await LanDropHttp.SendTextAsync(stream, 401, "Unauthorized", "Unauthorized");
                 await Task.Delay(50, ct);
                 return;
             }
@@ -116,6 +120,16 @@ internal sealed class LanDropRequestHandler
         await LanDropHttp.SendTextAsync(stream, 413, "Payload Too Large", "Payload Too Large");
         return true;
     }
+
+    /// <summary>What a browser shows for the plain address without the access token.</summary>
+    internal static readonly byte[] AccessLinkNeededPage = Encoding.UTF8.GetBytes(
+        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">" +
+        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Access link needed</title>" +
+        "<style>body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;" +
+        "justify-content:center;min-height:100vh;margin:0;padding:24px;box-sizing:border-box;text-align:center}" +
+        "main{max-width:420px}h1{font-size:1.3rem;margin:0 0 12px}p{line-height:1.5;color:#94a3b8;margin:0}</style></head>" +
+        "<body><main><h1>Access link needed</h1><p>This address only opens with its access link. " +
+        "Scan the QR code shown on the PC, or open the full link shown under it.</p></main></body></html>");
 
     private Task RouteAsync(Stream stream, LanDropRequest request, CancellationToken ct)
     {

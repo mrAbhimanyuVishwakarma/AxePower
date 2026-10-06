@@ -36,10 +36,11 @@ LGPL components (TagLib#) are shipped as separate, unmodified DLLs (`TagLibSharp
 | Microsoft.Management.Infrastructure.Runtime.Win / .Unix (dependencies of Microsoft.Management.Infrastructure) | 3.0.0 | MIT | https://github.com/PowerShell/MMI |
 | Microsoft.Web.WebView2 | 1.0.3485.44 | BSD-3-Clause (Microsoft) | https://www.nuget.org/packages/Microsoft.Web.WebView2 |
 | YoutubeExplode | 6.6.2 | MIT | https://github.com/Tyrrrz/YoutubeExplode |
+| QRCoder | 1.8.0 | MIT | https://github.com/Shane32/QRCoder |
 | Microsoft.Data.Sqlite, Microsoft.Data.Sqlite.Core | 8.0.11 | MIT | https://github.com/dotnet/efcore |
 | SQLitePCLRaw.bundle_e_sqlite3, .core, .lib.e_sqlite3, .provider.e_sqlite3 | 2.1.6 | Apache-2.0 | https://github.com/ericsink/SQLitePCL.raw |
 | SQLite (the native e_sqlite3 library inside SQLitePCLRaw.lib.e_sqlite3) | bundled | Public domain | https://www.sqlite.org/copyright.html |
-| .NET platform packages: Microsoft.Win32.SystemEvents, System.CodeDom, System.Diagnostics.EventLog, System.IO.Ports (with its runtime.*.runtime.native.System.IO.Ports helpers), System.Management, System.Security.Cryptography.ProtectedData, System.ServiceProcess.ServiceController, System.Threading.AccessControl, System.Memory, System.Numerics.Vectors, System.ValueTuple | 4.5.0 – 10.0.10 | MIT | https://github.com/dotnet/runtime |
+| .NET platform packages: Microsoft.Win32.SystemEvents, System.CodeDom, System.Drawing.Common, System.Diagnostics.EventLog, System.IO.Ports (with its runtime.*.runtime.native.System.IO.Ports helpers), System.Management, System.Security.Cryptography.ProtectedData, System.ServiceProcess.ServiceController, System.Threading.AccessControl, System.Memory, System.Numerics.Vectors, System.ValueTuple | 4.5.0 – 10.0.10 | MIT | https://github.com/dotnet/runtime |
 
 The source code of the MPL-2.0 components is available at the source links above. AxePower does not modify them.
 
@@ -78,6 +79,7 @@ Applies to:
 - Mono.Posix.NETStandard: Copyright (c) .NET Foundation Contributors
 - Microsoft.Extensions.DependencyInjection.Abstractions, Microsoft.Management.Infrastructure.Runtime.*, Microsoft.Data.Sqlite, Microsoft.Data.Sqlite.Core, and the .NET platform packages listed above: Copyright (c) .NET Foundation and Contributors / Copyright (c) Microsoft Corporation
 - YoutubeExplode: Copyright (c) Oleksii Holub
+- QRCoder: Copyright (c) 2013-2025 Raffael Herrmann, Copyright (c) 2024-2025 Shane Krueger
 
 ```text
 Permission is hereby granted, free of charge, to any person obtaining a copy

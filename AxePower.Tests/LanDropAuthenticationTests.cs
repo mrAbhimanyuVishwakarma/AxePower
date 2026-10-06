@@ -160,6 +160,39 @@ public sealed class LanDropAuthenticationTests : IDisposable
     }
 
     [Fact]
+    public async Task LanDrop_TheLinkInsideTheQrCode_OpensThePortal()
+    {
+        var (service, _, _, port) = CreateTestServer();
+
+        // What the Phone Hub page draws, read back the way a phone camera would.
+        var link = QrCodeDecodeTests.DecodeBmp(QrCodeGenerator.GenerateBmpBytes(service.PortalUrl, 8, 4, 0x00000000, 0x00FFFFFF));
+        Assert.Equal(service.PortalUrl, link);
+
+        var uri = new Uri(link!);
+        string response = await SendRawHttpRequestAsync(port,
+            $"GET {uri.PathAndQuery} HTTP/1.1\r\nHost: {uri.Authority}\r\nConnection: close\r\n\r\n");
+        Assert.StartsWith("HTTP/1.1 200 OK", response);
+        Assert.Contains("<title>AxePower Mobile Hub</title>", response);
+    }
+
+    [Fact]
+    public async Task LanDrop_PlainAddressInABrowser_SaysHowToGetIn_ButStaysA401()
+    {
+        var (_, _, _, port) = CreateTestServer();
+
+        string page = await SendRawHttpRequestAsync(port, $"GET / HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n");
+        Assert.StartsWith("HTTP/1.1 401 Unauthorized", page);
+        Assert.Contains("text/html", page);
+        Assert.Contains("Access link needed", page);
+        Assert.DoesNotContain("AxePower", page); // nothing for a network scan to learn
+
+        string api = await SendRawHttpRequestAsync(port, $"GET /api/status HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n");
+        Assert.StartsWith("HTTP/1.1 401 Unauthorized", api);
+        Assert.EndsWith("Unauthorized", api.TrimEnd());
+        Assert.DoesNotContain("Access link needed", api);
+    }
+
+    [Fact]
     public async Task LanDrop_PreviousSessionUrlNoLongerWorksAfterServerRestart()
     {
         var (service, _, token, port) = CreateTestServer();
