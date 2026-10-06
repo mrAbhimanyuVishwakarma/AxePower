@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AxePower.App", "AxePower.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AxePower.Tests", "AxePower.Tests\AxePower.Tests.csproj", "{D7349085-7899-4C1A-B280-0429316A7909}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{117B29D6-FFD9-4F2D-86AF-1A80D7A86FD0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AxePower.UpdateSigning", "tools\AxePower.UpdateSigning\AxePower.UpdateSigning.csproj", "{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,8 +59,23 @@ Global
 		{D7349085-7899-4C1A-B280-0429316A7909}.Release|x64.Build.0 = Release|Any CPU
 		{D7349085-7899-4C1A-B280-0429316A7909}.Release|x86.ActiveCfg = Release|Any CPU
 		{D7349085-7899-4C1A-B280-0429316A7909}.Release|x86.Build.0 = Release|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Debug|x64.Build.0 = Debug|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Debug|x86.Build.0 = Debug|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Release|x64.ActiveCfg = Release|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Release|x64.Build.0 = Release|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Release|x86.ActiveCfg = Release|Any CPU
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DE27E520-ACAD-4AE7-9F20-F09D8C0C224B} = {117B29D6-FFD9-4F2D-86AF-1A80D7A86FD0}
 	EndGlobalSection
 EndGlobal

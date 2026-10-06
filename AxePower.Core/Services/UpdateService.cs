@@ -2,19 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AxePower.Core.Services.Update;
 
 namespace AxePower.Core.Services;
 
 public class UpdateService
 {
     private readonly LogService _logService;
+    private readonly UpdateSecurityOptions _securityOptions;
+    private readonly IAuthenticodeVerifier _authenticodeVerifier;
+    private readonly IManifestVerifier _manifestVerifier;
     private readonly HttpClient _httpClient;
     private readonly HttpClient _downloadHttpClient;
     private readonly SemaphoreSlim _downloadGate = new(1, 1);
@@ -29,40 +37,74 @@ public class UpdateService
         "https://api.github.com/repos/mrAbhimanyuVishwakarma/AxePower/releases/latest"
     };
 
-    public UpdateService(LogService logService)
+    /// <summary>Single fallback when no assembly version is available; the assembly version is the source of truth.</summary>
+    public const string FallbackVersion = "2.1.0";
+
+    public UpdateService(
+        LogService logService,
+        UpdateSecurityOptions? securityOptions = null,
+        IAuthenticodeVerifier? authenticodeVerifier = null,
+        IManifestVerifier? manifestVerifier = null,
+        HttpClient? httpClient = null,
+        HttpClient? downloadHttpClient = null)
     {
         _logService = logService;
-        _httpClient = new HttpClient
+        _securityOptions = securityOptions ?? new UpdateSecurityOptions();
+        _authenticodeVerifier = authenticodeVerifier ?? new WindowsAuthenticodeVerifier(_securityOptions.RequireTrustedRoot);
+        _manifestVerifier = manifestVerifier ?? new EcdsaManifestVerifier(_securityOptions.PinnedPublicKeyPem);
+
+        _httpClient = httpClient ?? new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(15)
         };
-        _httpClient.DefaultRequestHeaders.Add("User-Agent", "AxePower-App/" + GetCurrentVersionString());
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
 
-        // Release assets can take longer than the API request timeout to begin or finish,
-        // especially when GitHub redirects to its object store. Per-stage cancellation is
-        // applied in DownloadUpdateAsync instead of one short timeout for the whole transfer.
-        _downloadHttpClient = new HttpClient
+        if (httpClient == null)
         {
-            Timeout = Timeout.InfiniteTimeSpan
-        };
-        _downloadHttpClient.DefaultRequestHeaders.Add("User-Agent", "AxePower-App/" + GetCurrentVersionString());
-        _downloadHttpClient.DefaultRequestHeaders.Add("Accept", "application/octet-stream");
-    }
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "AxePower-App/" + GetCurrentVersionString());
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+        }
 
-    /// <summary>Single fallback when no assembly version is available; the assembly version is the source of truth.</summary>
-    public const string FallbackVersion = "2.0.3";
+        // We use manual redirect handling on the download client to enforce strict allow-list validation.
+        if (downloadHttpClient != null)
+        {
+            _downloadHttpClient = downloadHttpClient;
+        }
+        else
+        {
+            var handler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            };
+            _downloadHttpClient = new HttpClient(handler)
+            {
+                Timeout = Timeout.InfiniteTimeSpan
+            };
+            _downloadHttpClient.DefaultRequestHeaders.Add("User-Agent", "AxePower-App/" + GetCurrentVersionString());
+            _downloadHttpClient.DefaultRequestHeaders.Add("Accept", "application/octet-stream");
+        }
+    }
 
     public string GetCurrentVersionString()
     {
-        var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+        var asm = ResolveProductAssembly();
         return asm.GetName().Version?.ToString(3) ?? FallbackVersion;
     }
 
     public Version GetCurrentVersion()
     {
-        var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+        var asm = ResolveProductAssembly();
         return asm.GetName().Version ?? Version.Parse(FallbackVersion);
+    }
+
+    private static Assembly ResolveProductAssembly()
+    {
+        var asm = Assembly.GetEntryAssembly();
+        if (asm == null || asm.GetName().Name?.StartsWith("testhost", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return typeof(UpdateService).Assembly;
+        }
+
+        return asm;
     }
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
@@ -95,6 +137,26 @@ public class UpdateService
                 bool hasUpdate = parsedVersion > currentVersion;
                 var (bestAssetUrl, assetName, sizeBytes) = FindBestAsset(release.Assets);
 
+                // Look for update-manifest.json or release-manifest.json asset
+                UpdateManifest? manifest = null;
+                string? manifestUrl = null;
+                var manifestAsset = release.Assets.FirstOrDefault(a =>
+                    a.Name.Equals("update-manifest.json", StringComparison.OrdinalIgnoreCase) ||
+                    a.Name.Equals("release-manifest.json", StringComparison.OrdinalIgnoreCase));
+
+                if (manifestAsset != null && !string.IsNullOrWhiteSpace(manifestAsset.BrowserDownloadUrl))
+                {
+                    manifestUrl = manifestAsset.BrowserDownloadUrl;
+                    try
+                    {
+                        manifest = await DownloadManifestAsync(manifestUrl, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logService.LogWarning($"Failed to download or parse update manifest from {manifestUrl}: {ex.Message}");
+                    }
+                }
+
                 return new UpdateCheckResult
                 {
                     HasUpdate = hasUpdate,
@@ -106,7 +168,9 @@ public class UpdateService
                     AssetName = assetName,
                     FileSizeBytes = sizeBytes,
                     PublishedAt = release.PublishedAt,
-                    ReleaseUrl = release.HtmlUrl ?? "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases"
+                    ReleaseUrl = release.HtmlUrl ?? "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases",
+                    Manifest = manifest,
+                    ManifestUrl = manifestUrl
                 };
             }
             catch (Exception ex)
@@ -126,122 +190,197 @@ public class UpdateService
         };
     }
 
-    public async Task<string> DownloadUpdateAsync(string downloadUrl, IProgress<double> progress, CancellationToken cancellationToken = default)
+    public async Task<UpdateManifest> DownloadManifestAsync(string manifestUrl, CancellationToken cancellationToken = default)
     {
+        ValidateUpdateUri(new Uri(manifestUrl));
+        using var resp = await _httpClient.GetAsync(manifestUrl, cancellationToken);
+        resp.EnsureSuccessStatusCode();
+
+        var json = await resp.Content.ReadAsStringAsync(cancellationToken);
+        var manifest = JsonSerializer.Deserialize<UpdateManifest>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        }) ?? throw new UpdateVerificationException("Failed to deserialize release manifest JSON.");
+
+        return manifest;
+    }
+
+    public async Task<string> DownloadUpdateAsync(
+        string downloadUrl,
+        IProgress<double> progress,
+        CancellationToken cancellationToken = default,
+        UpdateManifest? manifest = null)
+    {
+        if (string.IsNullOrWhiteSpace(downloadUrl))
+        {
+            throw new ArgumentException("Download URL cannot be null or empty.", nameof(downloadUrl));
+        }
+
+        var downloadUri = new Uri(downloadUrl);
+        ValidateUpdateUri(downloadUri);
+
+        // If manifest was not pre-fetched, fail closed if none is available
+        if (manifest == null)
+        {
+            throw new UpdateVerificationException(
+                "Update rejected: No cryptographically signed release manifest was provided. " +
+                "AxePower requires a verified manifest before downloading or applying updates.");
+        }
+
+        // 1. Verify manifest signature using pinned public key
+        if (!_manifestVerifier.VerifyManifest(manifest, manifest.Signature ?? string.Empty, out var manifestError))
+        {
+            throw new UpdateVerificationException(
+                $"Update manifest signature verification failed: {manifestError}");
+        }
+
+        // 2. Reject downgrade / replay attempts
+        if (_securityOptions.EnforceDowngradeProtection)
+        {
+            if (!Version.TryParse(manifest.Version, out var newVersion))
+            {
+                throw new UpdateVerificationException($"Invalid manifest version '{manifest.Version}'.");
+            }
+
+            var currentVersion = GetCurrentVersion();
+            if (newVersion <= currentVersion)
+            {
+                throw new UpdateVerificationException(
+                    $"Update rejected: Proposed version {newVersion} is not newer than current version {currentVersion}. " +
+                    "Downgrade and replay attacks are prohibited.");
+            }
+        }
+
         var tempDir = Path.Combine(Path.GetTempPath(), "AxePower_Update");
         if (!Directory.Exists(tempDir))
         {
             Directory.CreateDirectory(tempDir);
         }
 
-        var fileName = Path.GetFileName(new Uri(downloadUrl).LocalPath);
-        if (string.IsNullOrWhiteSpace(fileName) || !fileName.Contains('.'))
+        var assetName = !string.IsNullOrWhiteSpace(manifest.AssetName)
+            ? manifest.AssetName
+            : Path.GetFileName(downloadUri.LocalPath);
+
+        if (string.IsNullOrWhiteSpace(assetName) || !assetName.Contains('.'))
         {
-            fileName = "AxePower_Setup.exe";
+            assetName = "AxePower_Setup.exe";
         }
 
-        var destinationPath = Path.Combine(tempDir, fileName);
-        var partialPath = destinationPath + ".part";
+        var destinationPath = Path.Combine(tempDir, assetName);
+        var tempStagingPath = Path.Combine(tempDir, $"{Guid.NewGuid():N}_{assetName}.tmp");
 
-        // Auto-download and the Update Now button can arrive together. Only one transfer may
-        // write the versioned installer; later callers reuse the verified completed file.
         await _downloadGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (IsValidInstaller(destinationPath))
+            // If the destination file already exists and passes full Authenticode & hash checks, reuse it.
+            if (File.Exists(destinationPath) && VerifyCompletedFile(destinationPath, manifest))
             {
                 ReportDownloadProgress(progress, 100, "Update is ready to install.");
-                _logService.LogInfo($"Using already downloaded update: {destinationPath}");
+                _logService.LogInfo($"Reusing existing verified update: {destinationPath}");
                 return destinationPath;
             }
 
             IsDownloadInProgress = true;
             CurrentDownloadProgress = 0;
-            ReportDownloadProgress(progress, 0, $"Connecting to download {fileName}...");
-            _logService.LogInfo($"Downloading update from {downloadUrl} to {destinationPath}...");
+            ReportDownloadProgress(progress, 0, $"Connecting to download {assetName}...");
+            _logService.LogInfo($"Downloading update from {downloadUrl} to temporary staging file...");
 
-            if (File.Exists(partialPath))
-            {
-                File.Delete(partialPath);
-            }
+            // Stream download with safe redirect checking and incremental SHA-256 calculation
+            using var sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            long totalBytesRead = 0;
 
-            using var headerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            headerCts.CancelAfter(TimeSpan.FromMinutes(2));
-            using var response = await _downloadHttpClient.GetAsync(
-                downloadUrl,
-                HttpCompletionOption.ResponseHeadersRead,
-                headerCts.Token).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-
-            var totalBytes = response.Content.Headers.ContentLength ?? -1L;
-            using var stallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            stallCts.CancelAfter(TimeSpan.FromMinutes(2));
-            await using var sourceStream = await response.Content.ReadAsStreamAsync(stallCts.Token).ConfigureAwait(false);
-            await using var destStream = new FileStream(
-                partialPath,
+            await using (var destStream = new FileStream(
+                tempStagingPath,
                 FileMode.CreateNew,
                 FileAccess.Write,
                 FileShare.None,
                 64 * 1024,
-                FileOptions.Asynchronous | FileOptions.SequentialScan);
-
-            var buffer = new byte[64 * 1024];
-            var totalBytesRead = 0L;
-            int bytesRead;
-
-            while ((bytesRead = await sourceStream.ReadAsync(buffer.AsMemory(0, buffer.Length), stallCts.Token).ConfigureAwait(false)) > 0)
+                FileOptions.Asynchronous | FileOptions.SequentialScan))
             {
-                await destStream.WriteAsync(buffer.AsMemory(0, bytesRead), stallCts.Token).ConfigureAwait(false);
-                totalBytesRead += bytesRead;
-                stallCts.CancelAfter(TimeSpan.FromMinutes(2));
+                using var response = await SendRequestWithSafeRedirectsAsync(downloadUri, cancellationToken);
+                response.EnsureSuccessStatusCode();
 
-                if (totalBytes > 0)
+                var reportedContentLength = response.Content.Headers.ContentLength;
+                if (reportedContentLength.HasValue && manifest.ByteLength > 0 && reportedContentLength.Value != manifest.ByteLength)
                 {
-                    var percentage = Math.Clamp((double)totalBytesRead / totalBytes * 100.0, 0, 100);
-                    ReportDownloadProgress(progress, percentage, $"Downloading update... {percentage:0}%");
+                    throw new UpdateVerificationException(
+                        $"HTTP Content-Length ({reportedContentLength.Value}) does not match manifest byte length ({manifest.ByteLength}).");
                 }
-                else
+
+                await using var sourceStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                var buffer = new byte[64 * 1024];
+                int bytesRead;
+
+                while ((bytesRead = await sourceStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
                 {
-                    ReportDownloadProgress(
-                        progress,
-                        CurrentDownloadProgress,
-                        $"Downloading update... {totalBytesRead / 1024d / 1024d:0.0} MB");
+                    await destStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                    sha256.AppendData(buffer.AsSpan(0, bytesRead));
+                    totalBytesRead += bytesRead;
+
+                    if (manifest.ByteLength > 0)
+                    {
+                        var pct = Math.Clamp((double)totalBytesRead / manifest.ByteLength * 100.0, 0, 100);
+                        ReportDownloadProgress(progress, pct, $"Downloading update... {pct:0}%");
+                    }
+                    else
+                    {
+                        ReportDownloadProgress(progress, CurrentDownloadProgress, $"Downloading update... {totalBytesRead / 1024d / 1024d:0.0} MB");
+                    }
+                }
+
+                await destStream.FlushAsync(cancellationToken);
+            }
+
+            // 3. Verify total length
+            if (manifest.ByteLength > 0 && totalBytesRead != manifest.ByteLength)
+            {
+                throw new UpdateVerificationException(
+                    $"Update payload truncated: expected {manifest.ByteLength} bytes but received {totalBytesRead} bytes.");
+            }
+
+            // 4. Verify SHA-256 hash against manifest
+            var actualHash = Convert.ToHexString(sha256.GetHashAndReset()).ToLowerInvariant();
+            var expectedHash = manifest.Sha256.Trim().ToLowerInvariant();
+            if (!string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UpdateVerificationException(
+                    $"SHA-256 hash mismatch! The downloaded update does not match the signed manifest.\nExpected: {expectedHash}\nActual:   {actualHash}");
+            }
+
+            // 5. Verify Authenticode signature and publisher identity
+            if (_securityOptions.RequireAuthenticode)
+            {
+                var authResult = _authenticodeVerifier.Verify(tempStagingPath, _securityOptions.ExpectedPublisher);
+                if (!authResult.IsValid)
+                {
+                    throw new UpdateVerificationException(
+                        $"Authenticode signature verification failed for downloaded installer: {authResult.FailureReason}");
                 }
             }
 
-            await destStream.FlushAsync(stallCts.Token).ConfigureAwait(false);
-            await destStream.DisposeAsync().ConfigureAwait(false);
-
-            if (totalBytes > 0 && totalBytesRead != totalBytes)
+            // 6. Atomic promotion: move from temp staging to final destination
+            if (File.Exists(destinationPath))
             {
-                throw new InvalidDataException($"The update download was incomplete ({totalBytesRead} of {totalBytes} bytes).");
+                File.Delete(destinationPath);
             }
+            File.Move(tempStagingPath, destinationPath);
 
-            if (!IsValidInstaller(partialPath, totalBytes > 0 ? totalBytes : null))
-            {
-                throw new InvalidDataException("The downloaded update is not a valid Windows installer.");
-            }
-
-            File.Move(partialPath, destinationPath, overwrite: true);
-            ReportDownloadProgress(progress, 100, "Update downloaded. Launching installer...");
-            _logService.LogInfo($"Update downloaded successfully: {destinationPath} ({totalBytesRead} bytes).");
+            ReportDownloadProgress(progress, 100, "Update downloaded and cryptographically verified. Ready to install.");
+            _logService.LogInfo($"Update downloaded and verified successfully: {destinationPath}");
             return destinationPath;
         }
         catch (Exception ex)
         {
             try
             {
-                if (File.Exists(partialPath))
+                if (File.Exists(tempStagingPath))
                 {
-                    File.Delete(partialPath);
+                    File.Delete(tempStagingPath);
                 }
             }
-            catch
-            {
-                // Keep the original download error.
-            }
+            catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException) { /* Best-effort: a partial download in the temp folder is harmless and never run. */ }
 
-            _logService.LogError("Update download failed", ex);
+            _logService.LogError("Update download or verification failed", ex);
             throw;
         }
         finally
@@ -255,13 +394,24 @@ public class UpdateService
     {
         try
         {
-            if (!IsValidInstaller(installerPath))
+            if (string.IsNullOrWhiteSpace(installerPath) || !File.Exists(installerPath))
             {
-                _logService.LogError($"Refusing to launch an invalid or incomplete installer: {installerPath}");
+                _logService.LogError($"Refusing to launch update: file does not exist '{installerPath}'");
                 return false;
             }
 
-            _logService.LogInfo($"Launching installer: {installerPath}");
+            // Before execution, re-verify Authenticode signature and publisher identity
+            if (_securityOptions.RequireAuthenticode)
+            {
+                var authResult = _authenticodeVerifier.Verify(installerPath, _securityOptions.ExpectedPublisher);
+                if (!authResult.IsValid)
+                {
+                    _logService.LogError($"Refusing to execute installer: Authenticode verification failed: {authResult.FailureReason}");
+                    return false;
+                }
+            }
+
+            _logService.LogInfo($"Launching verified installer: {installerPath}");
             var psi = new ProcessStartInfo
             {
                 FileName = installerPath,
@@ -278,30 +428,122 @@ public class UpdateService
         }
     }
 
+    private bool VerifyCompletedFile(string path, UpdateManifest manifest)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            if (!info.Exists || (manifest.ByteLength > 0 && info.Length != manifest.ByteLength))
+            {
+                return false;
+            }
+
+            using var stream = File.OpenRead(path);
+            using var sha = SHA256.Create();
+            var hash = Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
+            if (!string.Equals(hash, manifest.Sha256.Trim().ToLowerInvariant(), StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (_securityOptions.RequireAuthenticode)
+            {
+                var auth = _authenticodeVerifier.Verify(path, _securityOptions.ExpectedPublisher);
+                if (!auth.IsValid) return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // Fails closed: an update that cannot be verified is not installed. Say why.
+            _logService.LogWarning("[Update] The downloaded update could not be verified and will not be installed", ex);
+            return false;
+        }
+    }
+
+    public void ValidateUpdateUri(Uri uri)
+    {
+        if (uri.Scheme != Uri.UriSchemeHttps)
+        {
+            if (!(_securityOptions.AllowHttpForTesting && uri.IsLoopback))
+            {
+                throw new UpdateVerificationException(
+                    $"Update download requires HTTPS. Insecure scheme '{uri.Scheme}' is rejected.");
+            }
+        }
+
+        if (!_securityOptions.AllowedHosts.Contains(uri.Host))
+        {
+            // Allow loopback if specifically enabled for tests
+            if (!(_securityOptions.AllowHttpForTesting && uri.IsLoopback))
+            {
+                throw new UpdateVerificationException(
+                    $"Host '{uri.Host}' is not in the allow-list of trusted release hosts.");
+            }
+        }
+
+        // If host is github.com or api.github.com, verify repository path
+        if (uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) ||
+            uri.Host.Equals("api.github.com", StringComparison.OrdinalIgnoreCase))
+        {
+            var path = uri.AbsolutePath.TrimStart('/');
+            if (path.StartsWith("repos/", StringComparison.OrdinalIgnoreCase))
+            {
+                path = path.Substring(6);
+            }
+
+            bool matchRepo = _securityOptions.AllowedRepositories.Any(r =>
+                path.StartsWith(r.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+
+            if (!matchRepo)
+            {
+                throw new UpdateVerificationException(
+                    $"Update URL path '{uri.AbsolutePath}' does not belong to an allow-listed AxePower repository.");
+            }
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendRequestWithSafeRedirectsAsync(Uri initialUri, CancellationToken cancellationToken)
+    {
+        var currentUri = initialUri;
+        const int maxRedirects = 5;
+        int redirectCount = 0;
+
+        while (redirectCount < maxRedirects)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, currentUri);
+            var response = await _downloadHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+            if (response.StatusCode is HttpStatusCode.MovedPermanently or
+                HttpStatusCode.Found or
+                HttpStatusCode.SeeOther or
+                HttpStatusCode.TemporaryRedirect or
+                (HttpStatusCode)308)
+            {
+                redirectCount++;
+                var location = response.Headers.Location
+                    ?? throw new UpdateVerificationException("Redirect received from server but Location header is missing.");
+
+                var nextUri = location.IsAbsoluteUri ? location : new Uri(currentUri, location);
+                ValidateUpdateUri(nextUri);
+
+                response.Dispose();
+                currentUri = nextUri;
+                continue;
+            }
+
+            return response;
+        }
+
+        throw new UpdateVerificationException($"Too many redirects ({redirectCount}) while downloading update.");
+    }
+
     private void ReportDownloadProgress(IProgress<double> progress, double percentage, string statusText)
     {
         CurrentDownloadProgress = percentage;
         progress.Report(percentage);
         DownloadProgressChanged?.Invoke(this, new UpdateDownloadProgressEventArgs(percentage, statusText));
-    }
-
-    private static bool IsValidInstaller(string path, long? expectedLength = null)
-    {
-        try
-        {
-            var info = new FileInfo(path);
-            if (!info.Exists || info.Length < 64 * 1024 || (expectedLength.HasValue && info.Length != expectedLength.Value))
-            {
-                return false;
-            }
-
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return stream.ReadByte() == 'M' && stream.ReadByte() == 'Z';
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     public static string FormatReleaseNotesForDisplay(string markdown)
@@ -329,7 +571,7 @@ public class UpdateService
             if (line.StartsWith("# ", StringComparison.Ordinal) &&
                 line.Contains("AxePower", StringComparison.OrdinalIgnoreCase))
             {
-                continue; // The dialog already shows the release title above the notes.
+                continue;
             }
 
             line = Regex.Replace(line, @"^#{1,6}\s+", string.Empty);
@@ -356,7 +598,6 @@ public class UpdateService
             return (null, null, 0);
         }
 
-        // 1. Look for .exe
         foreach (var asset in assets)
         {
             if (asset.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
@@ -365,7 +606,6 @@ public class UpdateService
             }
         }
 
-        // 2. Look for .msi
         foreach (var asset in assets)
         {
             if (asset.Name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase))
@@ -374,7 +614,6 @@ public class UpdateService
             }
         }
 
-        // 3. Look for .zip
         foreach (var asset in assets)
         {
             if (asset.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
@@ -383,7 +622,6 @@ public class UpdateService
             }
         }
 
-        // Fallback to first asset
         return (assets[0].BrowserDownloadUrl, assets[0].Name, assets[0].Size);
     }
 
@@ -422,14 +660,17 @@ public class UpdateService
                     if (response.IsSuccessStatusCode)
                     {
                         using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-                        using var doc = await System.Text.Json.JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+                        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
                         if (doc.RootElement.TryGetProperty("stargazers_count", out var starsProp))
                         {
                             totalStars += starsProp.GetInt32();
                         }
                     }
                 }
-                catch { }
+                catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException or InvalidOperationException or FormatException)
+                {
+                    // Best-effort: one repository's star count is decoration on the About page.
+                }
             }
 
             try
@@ -439,14 +680,17 @@ public class UpdateService
                 if (response.IsSuccessStatusCode)
                 {
                     using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-                    using var doc = await System.Text.Json.JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+                    using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
                     if (doc.RootElement.TryGetProperty("total_count", out var countProp))
                     {
                         totalDiscussions = countProp.GetInt32();
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException or InvalidOperationException or FormatException)
+            {
+                // Best-effort: the discussion count is decoration on the About page.
+            }
         }
         catch (Exception ex)
         {
@@ -491,6 +735,8 @@ public class UpdateCheckResult
     public long FileSizeBytes { get; set; }
     public DateTime? PublishedAt { get; set; }
     public string ReleaseUrl { get; set; } = string.Empty;
+    public UpdateManifest? Manifest { get; set; }
+    public string? ManifestUrl { get; set; }
 }
 
 public class GitHubReleaseResponse

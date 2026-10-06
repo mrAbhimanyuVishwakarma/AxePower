@@ -1,5 +1,5 @@
 #define AppName "AxePower"
-#define AppVersion "2.1.0"
+#include "AppVersion.iss"
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
 #define AppExeName "AxePower.exe"
@@ -34,6 +34,11 @@ CloseApplications=yes
 CloseApplicationsFilter=*.exe,*.dll
 RestartApplications=no
 AppMutex=AxePowerSingleInstanceMutex,AxePower_App_Mutex_2A4A87C1
+#ifdef SignToolCommand
+SignTool={#SignToolCommand}
+SignedUninstaller=yes
+SignedUninstallerDir=Output
+#endif
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -62,8 +67,15 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
+; LAN Drop firewall rule: inbound TCP 5050 for AxePower only, on Private and Domain networks.
+; Public stays under Windows' default inbound block. Delete first so upgrades never duplicate it.
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""AxePower LAN Drop"" dir=in action=allow program=""{app}\{#AppExeName}"" protocol=TCP localport=5050 profile=private,domain enable=yes"; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
 ; runasoriginaluser: Setup is elevated, but AxePower must start as the normal user
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+
+[UninstallRun]
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveLanDropFirewallRule"
 
 [Code]
 // AxePower targets net8.0-windows, which requires the 8.x desktop shared framework
@@ -205,16 +217,13 @@ begin
   begin
     if not InstallDotNetRuntime() then
     begin
-      // Suppressible so an unattended install answers itself instead of hanging on a dialog
-      if SuppressibleMsgBox('AxePower needs the Microsoft .NET 8 Desktop Runtime, but it could not be installed.'#13#10#13#10 +
-                'Continue installing AxePower anyway?'#13#10 +
-                'AxePower will not start until the runtime is installed from:'#13#10 +
-                'https://dotnet.microsoft.com/download/dotnet/8.0',
-                mbConfirmation, MB_YESNO, IDYES) = IDNO then
-      begin
-        Result := 'Setup was cancelled because the .NET 8 Desktop Runtime is required.';
-        Exit;
-      end;
+      SuppressibleMsgBox('AxePower requires the Microsoft .NET 8 Desktop Runtime (x64), but it could not be automatically installed or verified.'#13#10#13#10 +
+                'Please install the official runtime manually from:'#13#10 +
+                'https://dotnet.microsoft.com/download/dotnet/8.0'#13#10#13#10 +
+                'Setup will now abort to ensure application integrity.',
+                mbError, MB_OK, IDOK);
+      Result := 'Setup was cancelled because the .NET 8 Desktop Runtime is required.';
+      Exit;
     end;
   end;
 

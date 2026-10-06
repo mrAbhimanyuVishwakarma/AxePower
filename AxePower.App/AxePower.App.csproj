@@ -4,21 +4,16 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+
+
     <UseWPF>true</UseWPF>
     <!-- Ship as AxePower.exe; the project/namespace stay AxePower.App -->
     <AssemblyName>AxePower</AssemblyName>
     <RootNamespace>AxePower.App</RootNamespace>
     <ApplicationIcon>Resources\AxePower_white.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.1.0</Version>
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <FileVersion>2.1.0.0</FileVersion>
-    <InformationalVersion>2.1.0</InformationalVersion>
-    <Authors>Abhimanyu Vishwakarma</Authors>
-    <Company>AxePower</Company>
-    <Product>AxePower</Product>
+
+
     <AssemblyTitle>AxePower</AssemblyTitle>
     <Description>AxePower</Description>
   </PropertyGroup>

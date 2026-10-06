@@ -1,0 +1,82 @@
+name: Release Candidate Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release Candidate Version (e.g. 2.1.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build-release-candidate:
+    name: Build & Verify Release Candidate
+    runs-on: windows-2022
+    environment: release
+    permissions:
+      contents: write # Required to create draft GitHub Release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@6bd300f5eaf4f733e00787e7225e35732fe6adda # v4.0.1
+        with:
+          dotnet-version: '8.0.403'
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: |
+          Write-Host "Installing Inno Setup via Chocolatey..."
+          choco install innosetup -y --no-progress
+          $isccDir = "C:\Program Files (x86)\Inno Setup 6"
+          if (Test-Path $isccDir) {
+            Write-Host "Adding $isccDir to GITHUB_PATH"
+            Add-Content -Path $env:GITHUB_PATH -Value $isccDir
+          }
+
+      - name: Build, Sign, and Verify Release Candidate
+        shell: powershell
+        env:
+          AXEPOWER_RELEASE_MODE: "1"
+          SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+          SIGNING_EXPECTED_SUBJECT: ${{ secrets.SIGNING_EXPECTED_SUBJECT }}
+          SIGNING_RFC3161_URL: ${{ secrets.SIGNING_RFC3161_URL }}
+        run: |
+          $ver = "${{ github.event.inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($ver) -and "${{ github.ref_name }}".StartsWith("v")) {
+            $ver = "${{ github.ref_name }}".TrimStart('v')
+          }
+          Write-Host "Executing release packaging for version: $ver"
+          powershell -ExecutionPolicy Bypass -File scripts\package-release.ps1 -Version "$ver" -RequireSigned
+
+      - name: Upload Release Candidate Artifacts
+        uses: actions/upload-artifact@50769540e7f4bd5e21e577450dd083e05f850428 # v4.4.0
+        with:
+          name: axepower-release-candidate-${{ github.ref_name }}
+          path: artifacts/release/*
+          if-no-files-found: error
+
+      - name: Create Draft GitHub Release
+        uses: softprops/action-gh-release@c062e49c1b920cc8b171ecc25225bf41f4f13459 # v2.0.8
+        with:
+          draft: true
+          prerelease: true
+          name: AxePower ${{ github.ref_name }} (Release Candidate)
+          body_path: artifacts/release/release-notes.md
+          files: |
+            artifacts/release/AxePower-*-Setup.exe
+            artifacts/release/AxePower.exe
+            artifacts/release/sbom.cdx.json
+            artifacts/release/provenance.json
+            artifacts/release/SHA256SUMS

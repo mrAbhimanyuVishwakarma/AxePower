@@ -1,9 +1,11 @@
+#include "AppVersion.iss"
+
 [Setup]
 AppName=AxePower
-AppVersion=2.1.0
+AppVersion={#AppVersion}
 DefaultDirName={autopf}\AxePower
 DefaultGroupName=AxePower
-OutputBaseFilename=AxePower-v2.1.0-Setup
+OutputBaseFilename=AxePower-v{#AppVersion}-Setup
 Compression=lzma
 SolidCompression=yes
 ArchitecturesAllowed=x64
@@ -24,4 +26,11 @@ Name: "{group}\AxePower"; Filename: "{app}\AxePower.exe"
 Name: "{autodesktop}\AxePower"; Filename: "{app}\AxePower.exe"; Tasks: desktopicon
 
 [Run]
+; LAN Drop firewall rule: inbound TCP 5050 for AxePower only, on Private and Domain networks.
+; Public stays under Windows' default inbound block. Delete first so upgrades never duplicate it.
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""AxePower LAN Drop"" dir=in action=allow program=""{app}\AxePower.exe"" protocol=TCP localport=5050 profile=private,domain enable=yes"; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
 Filename: "{app}\AxePower.exe"; Description: "{cm:LaunchProgram,AxePower}"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveLanDropFirewallRule"

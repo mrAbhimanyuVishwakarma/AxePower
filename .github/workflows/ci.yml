@@ -1,0 +1,112 @@
+name: AxePower CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'v*'
+      - 'v2.1.1---monitization-features'
+  pull_request:
+    branches:
+      - main
+      - master
+      - 'v*'
+      - 'v2.1.1---monitization-features'
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & Test (Windows)
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@6bd300f5eaf4f733e00787e7225e35732fe6adda # v4.0.1
+        with:
+          dotnet-version: '8.0.403'
+
+      - name: Environment Diagnostics
+        shell: powershell
+        run: |
+          dotnet --info
+          Write-Host "Runner OS: $env:RUNNER_OS, Architecture: $env:RUNNER_ARCH"
+
+      - name: Dependency Audit & Policy Check
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts\audit-dependencies.ps1 -FailOnVulnerability
+
+      - name: Restore Dependencies (Locked Mode)
+        shell: powershell
+        run: |
+          Write-Host "Restoring dependencies with strict lock file enforcement..."
+          dotnet restore AxePower.sln --locked-mode
+
+      - name: Build Solution (Release)
+        shell: powershell
+        run: |
+          dotnet build AxePower.sln -c Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Run Test Suite & Collect Code Coverage
+        shell: powershell
+        run: |
+          # Isolate local state for DPAPI / test files
+          $env:AXEPOWER_TEST_TEMP = "$pwd\artifacts\test-temp"
+          if (!(Test-Path "$env:AXEPOWER_TEST_TEMP")) {
+            New-Item -ItemType Directory -Path "$env:AXEPOWER_TEST_TEMP" -Force | Out-Null
+          }
+
+          dotnet test AxePower.Tests\AxePower.Tests.csproj `
+            -c Release `
+            --no-build `
+            --collect:"XPlat Code Coverage" `
+            --results-directory ./artifacts/coverage `
+            --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload Test Results Artifact
+        uses: actions/upload-artifact@50769540e7f4bd5e21e577450dd083e05f850428 # v4.4.0
+        if: always()
+        with:
+          name: test-results
+          path: ./artifacts/coverage/*.trx
+          if-no-files-found: warn
+
+      - name: Upload Code Coverage Artifact
+        uses: actions/upload-artifact@50769540e7f4bd5e21e577450dd083e05f850428 # v4.4.0
+        if: always()
+        with:
+          name: code-coverage
+          path: ./artifacts/coverage/**/coverage.cobertura.xml
+          if-no-files-found: warn
+
+  security-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run TruffleHog Secret Scanner
+        uses: trufflesecurity/trufflehog@a8ff5c8a245d8b8a531f82f24827056fc184ad27 # v3.88.5
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified

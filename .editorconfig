@@ -1,0 +1,47 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_size = 4
+dotnet_sort_system_directives_first = true
+csharp_new_line_before_open_brace = all
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = true
+
+# Microsoft .NET Analyzers - Staged Conservative Baseline Policy
+# Staged as suggestion until their dedicated remediation milestones (tracked in docs/engineering/WARNINGS_DEBT.md)
+dotnet_diagnostic.CA2000.severity = suggestion # Dispose objects before losing scope (staged for Prompts 17-18)
+dotnet_diagnostic.CA2002.severity = warning    # Do not lock on objects with weak identity
+dotnet_diagnostic.CA2100.severity = suggestion # Review SQL queries for security vulnerabilities (staged for Prompt 32)
+dotnet_diagnostic.CA2101.severity = suggestion # Specify marshaling for P/Invoke string arguments
+dotnet_diagnostic.CA3001.severity = warning    # Review code for SQL injection vulnerabilities
+dotnet_diagnostic.CA3002.severity = warning    # Review code for XSS vulnerabilities
+dotnet_diagnostic.CA3003.severity = warning    # Review code for file path injection
+dotnet_diagnostic.CA5350.severity = suggestion # SHA1 in WebSocket RFC 6455 handshakes and cache keys
+dotnet_diagnostic.CA5351.severity = warning    # Do not use broken cryptographic algorithms (MD5)
+
+# Code quality suggestions
+dotnet_diagnostic.CA2007.severity = suggestion # Consider calling ConfigureAwait on awaited task
+dotnet_diagnostic.CA1822.severity = suggestion # Mark members as static
+
+[*.xaml]
+indent_size = 4
+
+[*.json]
+indent_size = 2
+
+[*.sql]
+indent_size = 2
+
+[*.{md,markdown}]
+indent_size = 2
+trim_trailing_whitespace = false
+
+[*.{ps1,psm1,psd1}]
+indent_size = 4
