@@ -1,0 +1,37 @@
+<UserControl x:Class="AxePower.App.Views.SoftwareHub.WebLinkWarningDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AxePower.App.ViewModels"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:SoftwareHubViewModel, IsDesignTimeCreatable=False}">
+    <!-- Asks before a web page opens in the browser. Moved out of SoftwareHubView.xaml unchanged (Prompt 20); its DataContext is the SoftwareHubViewModel. -->
+    <UserControl.Resources>
+        <ResourceDictionary Source="/AxePower;component/Resources/SoftwareHubStyles.xaml"/>
+    </UserControl.Resources>
+
+    <Grid Visibility="{Binding IsWarningModalOpen, Converter={StaticResource BoolToVis}}"
+          Background="#CC000000" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="1" CornerRadius="16" Width="500" Padding="28" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="6" Opacity="0.7" Color="#000000"/>
+            </Border.Effect>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                    <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="#F59E0B" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding WarningModalTitle}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding WarningModalMessage}" FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,24"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding CancelWebLinkWarningCommand}" Content="Cancel" Padding="18,9" Margin="0,0,10,0"/>
+                    <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding ConfirmOpenWebLinkCommand}" Content="Open in Browser" Padding="20,9"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

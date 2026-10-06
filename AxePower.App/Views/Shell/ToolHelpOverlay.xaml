@@ -1,0 +1,256 @@
+<UserControl x:Class="AxePower.App.Views.Shell.ToolHelpOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewmodels="clr-namespace:AxePower.App.ViewModels"
+             xmlns:views="clr-namespace:AxePower.App.Views"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
+             xmlns:musicviews="clr-namespace:AxePower.App.Views.Music"
+             mc:Ignorable="d">
+    <!-- The tool instructions and help window: tool list, step-by-step guide, tips and footer actions. Moved out of MainWindow.xaml unchanged (Prompt 20); its DataContext is the MainViewModel. -->
+    <Grid Visibility="{Binding IsToolHelpModalOpen, Converter={StaticResource BoolToVis}}"
+          WindowChrome.IsHitTestVisibleInChrome="True">
+        <!-- Backdrop dismiss on click -->
+        <Border Background="#CC0A0D14">
+            <Border.InputBindings>
+                <MouseBinding MouseAction="LeftClick" Command="{Binding CloseToolHelpCommand}"/>
+            </Border.InputBindings>
+        </Border>
+
+        <!-- Centered Modal Card -->
+        <!-- Fixed size for every tool: stretches up to 960x660 and is centred, so a short or long
+             guide never resizes the window; smaller windows shrink it instead of clipping it -->
+        <Border MaxWidth="960" MaxHeight="660" Margin="24"
+                Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="20"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.7" Direction="270" ShadowDepth="12"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <!-- Header -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- (was the horizontal tool strip; the tools are now a list on the right) -->
+                    <RowDefinition Height="0"/>
+                    <!-- Body: tool list on the left, guide on the right -->
+                    <RowDefinition Height="*"/>
+                    <!-- Footer actions -->
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <Border Grid.Row="0" Padding="24,20,20,16" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Icon Badge -->
+                        <Border Grid.Column="0" Width="44" Height="44" CornerRadius="12" Background="#1A2563EB" BorderBrush="#332563EB" BorderThickness="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <Grid>
+                                <TextBlock Text="{Binding SelectedToolHelp.IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Visibility="{Binding SelectedToolHelp.ImageIconSource, Converter={StaticResource NullToVis}}"/>
+                                <Image Source="{Binding SelectedToolHelp.ImageIconSource, TargetNullValue={x:Null}}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
+                                       Visibility="{Binding SelectedToolHelp.ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Title & Subtitle & Credit -->
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,2">
+                                <TextBlock Text="{Binding SelectedToolHelp.Title}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,12,0"/>
+                                <Border Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" CornerRadius="6" Padding="8,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding SelectedToolHelp.Credit}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource EcoBrush}"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="{Binding SelectedToolHelp.Subtitle}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+
+                        <!-- Close Button ✕ -->
+                        <Button Grid.Column="2" Command="{Binding CloseToolHelpCommand}"
+                                Width="32" Height="32" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" HorizontalAlignment="Right">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="16">
+                                                    <TextBlock Text="✕" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#22FFFFFF"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="230"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                <!-- Scrollable Guide Content -->
+                <ScrollViewer x:Name="ToolHelpScroller" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24,18">
+                    <StackPanel>
+                        <!-- Overview Card -->
+                        <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Overview" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding SelectedToolHelp.Overview}" FontSize="12" LineHeight="18" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step-by-Step Instructions -->
+                        <TextBlock Text="How To Use (Step-by-Step Instructions)" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,10"/>
+                        <ItemsControl ItemsSource="{Binding SelectedToolHelp.Steps}" Margin="0,0,0,16">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <!-- Step check icon -->
+                                            <Border Grid.Column="0" Width="18" Height="18" CornerRadius="9" Background="#1A2563EB" BorderBrush="#332563EB" BorderThickness="1" Margin="0,0,10,0" VerticalAlignment="Top">
+                                                <TextBlock Text="✓" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="1" Text="{Binding}" FontSize="12" LineHeight="17" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Pro Tips & Shortcuts -->
+                        <TextBlock Text="Pro Tips &amp; Shortcuts" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,10"/>
+                        <ItemsControl ItemsSource="{Binding SelectedToolHelp.Tips}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="💡" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Top"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding}" FontSize="11.5" LineHeight="16" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Tool list: every guide, one per row, the open one highlighted -->
+                <Border Grid.Column="0" Background="{DynamicResource WindowSecondaryBackgroundBrush}"
+                        BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="TOOLS" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource MutedTextBrush}" Margin="18,16,0,8"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False" Padding="10,0,10,12">
+                            <ItemsControl ItemsSource="{Binding AllToolGuides}" Focusable="False" AutomationProperties.Name="Tools">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.OpenToolHelpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding Id}" Cursor="Hand" Margin="0,0,0,4"
+                                                HorizontalContentAlignment="Stretch" FocusVisualStyle="{x:Null}"
+                                                AutomationProperties.Name="{Binding Title}" ToolTip="{Binding Title}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="row" CornerRadius="8" Padding="10,8" BorderThickness="1"
+                                                            Background="Transparent" BorderBrush="Transparent">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="22"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock x:Name="glyph" Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"
+                                                                       Visibility="{Binding ImageIconSource, Converter={StaticResource NullToVis}}"/>
+                                                            <Image Source="{Binding ImageIconSource, TargetNullValue={x:Null}}" Width="14" Height="14" HorizontalAlignment="Left"
+                                                                   VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"
+                                                                   Visibility="{Binding ImageIconSource, Converter={StaticResource NotNullToVis}}"/>
+                                                            <TextBlock x:Name="title" Grid.Column="1" Text="{Binding Title}" FontSize="12.5"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                            <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                                            <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+                                                        </Trigger>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                            <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                            <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                            <Setter TargetName="title" Property="FontWeight" Value="SemiBold"/>
+                                                            <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                        </DataTrigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+                </Grid>
+
+                <!-- Footer Bar -->
+                <Border Grid.Row="3" Padding="24,14" Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left Links: Learn More (AxePower Help Center) & Tool Repo -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenReadmeHelpCommand}" Height="34" Padding="12,0" Margin="0,0,8,0" ToolTip="Open AxePower Help Center &amp; Documentation">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Learn More" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding OpenSelectedToolCreditCommand}" Height="34" Padding="12,0" ToolTip="Open official project website or repository">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Tool Website / Source" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Right Buttons: Close & Launch -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding CloseToolHelpCommand}" Content="Close" Height="34" Padding="16,0" Margin="0,0,8,0"/>
+                            <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding LaunchSelectedToolCommand}" Content="{Binding SelectedToolHelp.LaunchButtonText}" Height="34" Padding="16,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

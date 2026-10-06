@@ -54,7 +54,7 @@ public partial class MainWindow : Window
             // Picking another tool in the help window starts its guide from the top
             else if (e.PropertyName == nameof(MainViewModel.SelectedToolHelp))
             {
-                ToolHelpScroller.ScrollToTop();
+                ToolHelp.ScrollGuideToTop();
             }
         };
         ApplyCaptionHeight();
@@ -221,7 +221,7 @@ public partial class MainWindow : Window
         {
             Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         }
-        catch { }
+        catch { /* Without the event the window does not follow a Windows theme switch until restarted. */ }
     }
 
     private void OpenApp_Click(object sender, RoutedEventArgs e) => BringToFront();
@@ -286,22 +286,6 @@ public partial class MainWindow : Window
             _ = vm.PhoneHubVm.SpaceDeskActionAsync();
         }
         OpenApp_Click(sender, e);
-    }
-
-    private void PatchNotesScrollUp_Click(object sender, RoutedEventArgs e)
-    {
-        PatchNotesScrollViewer?.LineUp();
-        PatchNotesScrollViewer?.LineUp();
-        PatchNotesScrollViewer?.LineUp();
-        PatchNotesScrollViewer?.LineUp();
-    }
-
-    private void PatchNotesScrollDown_Click(object sender, RoutedEventArgs e)
-    {
-        PatchNotesScrollViewer?.LineDown();
-        PatchNotesScrollViewer?.LineDown();
-        PatchNotesScrollViewer?.LineDown();
-        PatchNotesScrollViewer?.LineDown();
     }
 
     private bool _isExplicitShutdown;
@@ -461,7 +445,7 @@ public partial class MainWindow : Window
         {
             Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
         }
-        catch { }
+        catch { /* Best-effort teardown: subscribing may have failed in the first place. */ }
         base.OnClosed(e);
     }
 }

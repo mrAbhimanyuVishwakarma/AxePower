@@ -1,0 +1,65 @@
+<UserControl x:Class="AxePower.App.Views.Shell.UpdateBanner"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewmodels="clr-namespace:AxePower.App.ViewModels"
+             xmlns:views="clr-namespace:AxePower.App.Views"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
+             xmlns:musicviews="clr-namespace:AxePower.App.Views.Music"
+             mc:Ignorable="d">
+    <!-- The Steam-style "update ready" banner along the top of the window. Moved out of MainWindow.xaml unchanged (Prompt 20); its DataContext is the MainViewModel. -->
+    <Border VerticalAlignment="Bottom"
+            Background="#0080FF" Height="40"
+            Visibility="{Binding AboutVm.IsSteamUpdateBannerOpen, Converter={StaticResource BoolToVis}}">
+        <Grid Margin="24,0">
+            <!-- Left message & link & Restart button -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding AboutVm.SteamUpdateBannerMessage}" Foreground="#FFFFFF" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Button Command="{Binding AboutVm.OpenPatchNotesModalCommand}" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand" VerticalAlignment="Center">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <TextBlock Text="View patch notes" Foreground="#FFFFFF" FontSize="13" TextDecorations="Underline" FontWeight="Medium"/>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Visibility="{Binding AboutVm.IsUpdateDownloaded, Converter={StaticResource BoolToVis}}"
+                        Command="{Binding AboutVm.ApplyDownloadedUpdateCommand}"
+                        Content="Restart &amp; Install" Foreground="#004D99" FontWeight="Bold" FontSize="12"
+                        Background="#FFFFFF" BorderThickness="0" Padding="12,3" Height="26" Margin="14,0,0,0" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="installBtn" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="installBtn" Property="Background" Value="#E6F2FF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+
+            <!-- Right Close Button -->
+            <Button HorizontalAlignment="Right" Command="{Binding AboutVm.CloseSteamUpdateBannerCommand}"
+                    Content="Close" Foreground="#FFFFFF" FontSize="12.5" FontWeight="SemiBold"
+                    Background="#0066CC" BorderBrush="#0052A3" BorderThickness="1"
+                    Padding="16,4" Height="28" Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="closeBtn" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="closeBtn" Property="Background" Value="#0055AA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

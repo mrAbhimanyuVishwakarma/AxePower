@@ -1,0 +1,376 @@
+<UserControl x:Class="AxePower.App.Views.SoftwareHub.UpdatersTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AxePower.App.ViewModels"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:SoftwareHubViewModel, IsDesignTimeCreatable=False}">
+    <!-- The System and Driver Updaters tab: update status, graphics drivers, BIOS and firmware, the driver updater and app upgrades. Moved out of SoftwareHubView.xaml unchanged (Prompt 20); its DataContext is the SoftwareHubViewModel. -->
+    <UserControl.Resources>
+        <ResourceDictionary Source="/AxePower;component/Resources/SoftwareHubStyles.xaml"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding ActiveTab}" Value="Updaters">
+                        <Setter Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Hero Banner: Health & System Update Status (Matching User Design) -->
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="18" Padding="32,24" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left: Illustrated Monitor + Download Icon -->
+                        <Grid Grid.Column="0" Width="110" Height="86" Margin="0,0,32,0" VerticalAlignment="Center">
+                            <!-- Monitor Screen Outline -->
+                            <Border Width="82" Height="56" BorderBrush="#94A3B8" BorderThickness="2" CornerRadius="8" HorizontalAlignment="Left" VerticalAlignment="Top" Background="#0F172A"/>
+                            <!-- Monitor Stand -->
+                            <Path Data="M26,56 L20,74 L62,74 L56,56 Z" Stroke="#94A3B8" StrokeThickness="2" Fill="#0F172A" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <Line X1="16" Y1="74" X2="66" Y2="74" Stroke="#94A3B8" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <!-- Download Circle Badge -->
+                            <Border Width="44" Height="44" CornerRadius="22" BorderBrush="#60A5FA" BorderThickness="2.5" Background="#1E293B" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-4,-4,0">
+                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Right: Text Info & Action Button -->
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="An up-to-date system is a healthy system" FontSize="16.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding LastUpdatedText, StringFormat='Last updated: {0}'}" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,3"/>
+                            <TextBlock Text="{Binding NextScheduledUpdateText, StringFormat='Next scheduled update: {0}'}" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,16"/>
+
+                            <!-- Pill Button -->
+                            <Button Style="{StaticResource PillAccentButtonStyle}"
+                                    Command="{Binding CheckAllUpdatesCommand}"
+                                    IsEnabled="{Binding IsCheckingAllUpdates, Converter={StaticResource InverseBool}}"
+                                    HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Check for updates" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource AccentForegroundBrush}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Right: Graphics Driver Centre (auto-detected adapters only) -->
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center" MaxWidth="470" Margin="28,0,0,0"
+                                    Visibility="{Binding HasGraphicsAdapters, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal" Margin="2,0,0,8">
+                                <TextBlock Text="&#xF211;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="GRAPHICS DRIVERS" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <ItemsControl ItemsSource="{Binding GraphicsAdapters}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                                BorderThickness="1" CornerRadius="10" Padding="14,11" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Vendor accent bar -->
+                                                <Border Grid.Column="0" Width="3" CornerRadius="2" Background="{Binding AccentColorHex}" Margin="0,1,12,1"/>
+
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                                        <TextBlock Text="{Binding VendorName}" FontSize="13" FontWeight="SemiBold" Foreground="{Binding AccentColorHex}" VerticalAlignment="Center"/>
+                                                        <Border Background="#22FFFFFF" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding TypeLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Name}" FontSize="11.5" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis" MaxWidth="250" HorizontalAlignment="Left" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding DriverDisplay}" FontSize="10.5" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                    <!-- NVIDIA Control Panel (second Store app from the same vendor) -->
+                                                    <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                                            Command="{Binding DataContext.OpenGraphicsCompanionAppCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="{Binding CompanionAppName, StringFormat='Open {0} in the Microsoft Store'}"
+                                                            AutomationProperties.Name="Open NVIDIA Control Panel"
+                                                            Visibility="{Binding HasCompanionApp, Converter={StaticResource BoolToVis}}"
+                                                            Padding="9,7" Margin="0,0,6,0" FontSize="11">
+                                                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                                    </Button>
+                                                    <!-- NVIDIA Version Selector / Rollback Button -->
+                                                    <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                                            Command="{Binding DataContext.OpenNvidiaPickerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Select specific Game Ready driver version or rollback if the new update has bugs or stuttering"
+                                                            AutomationProperties.Name="Select NVIDIA driver version"
+                                                            Visibility="{Binding IsNvidia, Converter={StaticResource BoolToVis}}"
+                                                            Padding="9,7" Margin="0,0,6,0" FontSize="11">
+                                                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                                    </Button>
+
+                                                    <!-- Official download page — only when there is no Store app for this vendor -->
+                                                    <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                                            Command="{Binding DataContext.OpenGraphicsVendorSiteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Open the official driver download page"
+                                                            Visibility="{Binding ShowOfficialSiteFallback, Converter={StaticResource BoolToVis}}"
+                                                            Padding="9,7" Margin="0,0,6,0" FontSize="11">
+                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                                    </Button>
+                                                    <Button Style="{DynamicResource PrimaryButtonStyle}"
+                                                            Command="{Binding DataContext.UpdateGraphicsDriverCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            IsEnabled="{Binding DataContext.IsInstallingGraphicsDriver, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBool}}"
+                                                            ToolTip="{Binding ToolName, StringFormat='Install or update via {0}'}"
+                                                            Padding="14,7" FontSize="11.5">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Install" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Method 0: BIOS & UEFI Firmware Update Center (New Implementation) -->
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="14" Padding="24,20" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="52" Height="52" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}" Margin="0,0,20,0" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE950;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="BIOS &amp; UEFI Firmware Center" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <Border Background="#1A6366F1" BorderBrush="#336366F1" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="FIRMWARE CENTER" FontSize="10.5" Foreground="#818CF8" FontWeight="Bold"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Query motherboard BIOS versions, scan for Windows Update firmware capsules, and access official vendor update portals."
+                                           FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+
+                            <!-- Action Buttons -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Style="{DynamicResource SecondaryButtonStyle}"
+                                        Command="{Binding OpenVendorBiosPortalCommand}"
+                                        Margin="0,0,10,0" Padding="16,10" FontSize="13">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Vendor Portal" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{DynamicResource PrimaryButtonStyle}"
+                                        Command="{Binding CheckFirmwareUpdatesCommand}"
+                                        IsEnabled="{Binding IsCheckingFirmware, Converter={StaticResource InverseBool}}"
+                                        Padding="20,10" FontSize="13">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Check for BIOS Updates" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Live Firmware Details Grid -->
+                        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="10" Padding="16,14" Margin="0,16,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Detail 1: Current BIOS Version -->
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock Text="CURRENT BIOS VERSION" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding FirmwareInfo.BiosVersion}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding FirmwareInfo.BiosReleaseDate, StringFormat='Release: {0}'}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <!-- Detail 2: System Model & Motherboard -->
+                                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                    <TextBlock Text="SYSTEM &amp; MOTHERBOARD" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding FirmwareInfo.SystemModel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding FirmwareInfo.MotherboardProduct, StringFormat='Board: {0}'}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <!-- Detail 3: UEFI & Secure Boot -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="FIRMWARE STATUS" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding FirmwareInfo.UefiStatus}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding FirmwareInfo.SecureBootStatus, StringFormat='Secure Boot: {0}'}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Status Message Banner -->
+                        <Border Grid.Row="2" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,12,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="ⓘ" FontSize="13" Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding FirmwareCheckStatus}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <Button Grid.Column="2" Style="{DynamicResource SidebarButtonStyle}" Command="{Binding TriggerWindowsFirmwareScanCommand}" Padding="10,4" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Scan Windows Capsules" FontSize="11" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Method 1: Elevated 3-Step Driver & System Updater (Existing Implementation) -->
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="14" Padding="24,20" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="52" Height="52" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}" Margin="0,0,20,0" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="Elevated 3-Step Driver &amp; System Updater" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <Border Background="#1A06B6D4" BorderBrush="#3306B6D4" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="CLASSIC PIPELINE" FontSize="10.5" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Runs automated PowerShell administrator script to install Windows updates, GPU vendor software (NVIDIA App/AMD Adrenalin/Intel DSA), and upgrade system packages."
+                                           FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="2" Style="{DynamicResource PrimaryButtonStyle}"
+                                    Command="{Binding LaunchElevatedDriverUpdateCommand}"
+                                    Padding="22,12" FontSize="13.5" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Launch Update Pipeline" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <!-- Steps Breakdown -->
+                        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="10" Padding="16,14" Margin="0,16,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock Text="STEP 1" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Windows Software Updates" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Searches &amp; installs pending Microsoft system updates via COM API / USOClient." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                    <TextBlock Text="STEP 2" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="GPU &amp; Graphics Drivers" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Detects NVIDIA, AMD, or Intel hardware and updates vendor companion apps." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="STEP 3" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" Margin="0,0,0,2"/>
+                                    <TextBlock Text="All System Packages" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,2"/>
+                                    <TextBlock Text="Performs silent batch upgrade of all installed applications via WinGet CLI." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Method 2: In-App WinGet Batch Upgrades (New Implementation) -->
+                <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1" CornerRadius="14" Padding="24,20" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Width="52" Height="52" CornerRadius="12" Background="{DynamicResource CardBackgroundBrush}" Margin="0,0,20,0" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE74C;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="In-App WinGet Batch Upgrade" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <Border Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="NATIVE GUI" FontSize="10.5" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Directly executes 'winget upgrade --all' inside AxePower and streams live progress logs into the built-in terminal console."
+                                       FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                        </StackPanel>
+
+                        <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"
+                                Command="{Binding UpgradeAllAppsCommand}"
+                                IsEnabled="{Binding IsUpgradingAll, Converter={StaticResource InverseBool}}"
+                                Padding="20,12" FontSize="13.5" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Upgrade All Apps" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
