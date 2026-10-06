@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using AxePower.Core.Services.Processes;
 
 namespace AxePower.Core.Services;
 
@@ -54,12 +55,6 @@ public class DriverUpdateService
             {
                 return DriverUpdateLaunchResult.FocusedExisting;
             }
-
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var scriptsDir = Path.Combine(localAppData, "AxePower", "Scripts");
-            Directory.CreateDirectory(scriptsDir);
-
-            var scriptPath = Path.Combine(scriptsDir, "UpdateDrivers.ps1");
 
             var scriptContent = @"
 # AxePower - Automated Driver & System Update
@@ -180,19 +175,15 @@ Write-Host ""Press any key to close this window..."" -ForegroundColor Gray
 $null = $Host.UI.RawUI.ReadKey(""NoEcho,IncludeKeyDown"")
 ";
 
-            File.WriteAllText(scriptPath, scriptContent);
-
-            var psi = new ProcessStartInfo
+            var powershell = ExecutableAllowList.Windows().Resolve(AllowedTool.PowerShell);
+            if (powershell is null)
             {
-                FileName = "powershell.exe",
-                Arguments = $"-WindowStyle Minimized -NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\"",
-                WindowStyle = ProcessWindowStyle.Minimized,
-                UseShellExecute = true,
-                Verb = "runas"
-            };
+                _logService.LogError("Windows PowerShell was not found in System32; driver update not started.");
+                return DriverUpdateLaunchResult.Failed;
+            }
 
             _logService.LogInfo("Launching elevated driver update script minimized...");
-            _activeProcess = Process.Start(psi);
+            _activeProcess = Process.Start(BuildLaunch(powershell, scriptContent, TerminalService.IsProcessElevated()));
             return DriverUpdateLaunchResult.StartedNew;
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
@@ -206,6 +197,42 @@ $null = $Host.UI.RawUI.ReadKey(""NoEcho,IncludeKeyDown"")
             _logService.LogError("Error launching driver and system update", ex);
             return DriverUpdateLaunchResult.Failed;
         }
+    }
+
+    /// <summary>
+    /// How the updater window is started. Already elevated (the normal case): the script travels
+    /// inside the command line as <c>-EncodedCommand</c>, so there is no script file for another
+    /// process to swap before it runs. Not elevated: a UAC prompt is needed, and ShellExecute's
+    /// <c>runas</c> cannot carry a command line that long, so the script goes through a file in
+    /// AxePower's folder as before. Either way PowerShell comes from System32 and every argument is
+    /// passed separately.
+    /// </summary>
+    internal static ProcessStartInfo BuildLaunch(string powershellPath, string script, bool elevated)
+    {
+        var psi = new ProcessStartInfo(powershellPath) { WindowStyle = ProcessWindowStyle.Minimized };
+        psi.ArgumentList.Add("-WindowStyle");
+        psi.ArgumentList.Add("Minimized");
+        psi.ArgumentList.Add("-NoProfile");
+        psi.ArgumentList.Add("-ExecutionPolicy");
+        psi.ArgumentList.Add("Bypass");
+        if (elevated)
+        {
+            psi.UseShellExecute = false;
+            psi.ArgumentList.Add("-EncodedCommand");
+            psi.ArgumentList.Add(Convert.ToBase64String(Encoding.Unicode.GetBytes(script)));
+        }
+        else
+        {
+            var scriptsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Scripts");
+            Directory.CreateDirectory(scriptsDir);
+            var scriptPath = Path.Combine(scriptsDir, "UpdateDrivers.ps1");
+            File.WriteAllText(scriptPath, script);
+            psi.UseShellExecute = true;
+            psi.Verb = "runas";
+            psi.ArgumentList.Add("-File");
+            psi.ArgumentList.Add(scriptPath);
+        }
+        return psi;
     }
 
     /// <summary>
@@ -233,8 +260,9 @@ $null = $Host.UI.RawUI.ReadKey(""NoEcho,IncludeKeyDown"")
                     _activeProcess = null;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
+                // The updater window's process has gone; look for it another way below.
                 _activeProcess = null;
             }
         }
@@ -270,7 +298,7 @@ $null = $Host.UI.RawUI.ReadKey(""NoEcho,IncludeKeyDown"")
                         break;
                     }
                 }
-                catch { }
+                catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { /* That process exited or is not ours to inspect; try the next. */ }
             }
         }
 

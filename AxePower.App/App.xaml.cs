@@ -35,14 +35,14 @@ public partial class App : Application
         {
             System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] [STARTUP] Process ID: {Environment.ProcessId}, Args: '{string.Join(" ", e.Args)}'\n");
         }
-        catch { }
+        catch { /* Best-effort startup trace; the app starts whether or not it can be written. */ }
 
         // Initialize smooth proportional touchpad & mouse wheel scrolling globally
         try
         {
             TouchpadScrollHelper.Initialize();
         }
-        catch { }
+        catch { /* Smooth scrolling is an enhancement; without it the default WPF scrolling applies. */ }
 
         // Handle CLI arguments early
         if (e.Args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
@@ -75,7 +75,7 @@ public partial class App : Application
                     {
                         System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] [SINGLE_INSTANCE_EXIT] Active interactive instance signaled successfully: {string.Join(", ", existingProcesses.Select(p => p.Id))}\n");
                     }
-                    catch { }
+                    catch { /* Best-effort trace before this second instance exits. */ }
                     Environment.Exit(0);
                     return;
                 }
@@ -84,7 +84,7 @@ public partial class App : Application
                     // Clean up headless/orphaned background instances
                     foreach (var proc in existingProcesses)
                     {
-                        try { proc.Kill(); } catch { }
+                        try { proc.Kill(); } catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Process(caught)) { /* The stale instance exited on its own. */ }
                     }
                 }
             }
@@ -102,7 +102,7 @@ public partial class App : Application
                 var log = Services?.GetService<LogService>();
                 log?.LogError($"[Unhandled UI Exception] {args.Exception.Message}", args.Exception);
             }
-            catch { }
+            catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
             args.Handled = true;
         };
 
@@ -115,7 +115,7 @@ public partial class App : Application
                     var log = Services?.GetService<LogService>();
                     log?.LogError($"[Unhandled AppDomain Exception] {ex.Message}", ex);
                 }
-                catch { }
+                catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
             }
         };
 
@@ -196,7 +196,7 @@ public partial class App : Application
                 var log = Services?.GetService<LogService>() ?? new LogService();
                 log.LogError($"[Startup Failure] {ex.Message}", ex);
             }
-            catch { }
+            catch { /* Broad on purpose: the startup-failure path must still show its message box. */ }
 
             MessageBox.Show($"AxePower failed to start:\n\n{ex.Message}\n\n{ex.StackTrace}", "AxePower Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -267,7 +267,19 @@ public partial class App : Application
         services.AddSingleton<IDnsOptimizerService, DnsOptimizerService>();
         services.AddSingleton<ISystemDoctorService, SystemDoctorService>();
         services.AddSingleton<IWindowsUpdateShieldService, WindowsUpdateShieldService>();
-        services.AddSingleton<IWinGetHubService, WinGetHubService>();
+        // Software Hub: allow-listed programs, launches as the signed-in user, catalog, installs
+        services.AddSingleton(_ => AxePower.Core.Services.Processes.ExecutableAllowList.Windows());
+        services.AddSingleton<AxePower.Core.Services.Processes.IProcessRunner, AxePower.Core.Services.Processes.AllowListedProcessRunner>();
+        services.AddSingleton<AxePower.Core.Services.Processes.IUserShellLauncher>(sp => new AxePower.Core.Services.Processes.UserShellLauncher(
+            sp.GetRequiredService<LogService>(), sp.GetRequiredService<AxePower.Core.Services.Processes.ExecutableAllowList>()));
+        services.AddSingleton(sp => AxePower.Core.Services.SoftwareHub.SoftwareCatalog.CreateDefault(sp.GetRequiredService<LogService>()));
+        services.AddSingleton<AxePower.Core.Services.SoftwareHub.IPortableToolDownloader>(sp => new AxePower.Core.Services.SoftwareHub.GitHubPortableToolDownloader(sp.GetRequiredService<LogService>()));
+        services.AddSingleton<IWinGetHubService>(sp => new WinGetHubService(
+            sp.GetRequiredService<LogService>(),
+            sp.GetRequiredService<AxePower.Core.Services.SoftwareHub.SoftwareCatalog>(),
+            sp.GetRequiredService<AxePower.Core.Services.Processes.IProcessRunner>(),
+            sp.GetRequiredService<AxePower.Core.Services.Processes.IUserShellLauncher>(),
+            sp.GetRequiredService<AxePower.Core.Services.SoftwareHub.IPortableToolDownloader>()));
         services.AddSingleton<IServiceThrottlerService, ServiceThrottlerService>();
         services.AddSingleton<IMemoryOptimizerService, MemoryOptimizerService>();
         services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
@@ -494,6 +506,12 @@ public partial class App : Application
         Console.WriteLine(
             $"Phone portal: token {(sp.GetRequiredService<PortalAccessToken>().Value.Length)} chars, " +
             $"music remote {sp.GetRequiredService<MusicRemote>().GetType().Name} ready.");
+        // Static calls only: constructing LanDropService would create its download folder.
+        var lanDropIp = LanDropService.GetLocalIpAddresses().FirstOrDefault();
+        var lanDropNetwork = AxePower.Core.Services.LanDrop.NetworkProfileClassifier.ClassifyCurrentNetwork(lanDropIp);
+        Console.WriteLine(
+            $"LAN Drop network: {lanDropIp} is {lanDropNetwork.Category} ('{lanDropNetwork.NetworkName}'), " +
+            $"{(lanDropNetwork.IsPublicOrUnclassified ? "start refused without a session override" : "start allowed")}.");
 
         // Reported without opening it: the library is created on first use, and a self-test
         // should not be the thing that brings it into existence.
@@ -510,6 +528,16 @@ public partial class App : Application
         sp.GetRequiredService<ToolsViewModel>();
         Console.WriteLine("Tools: " + string.Join(", ", ToolsService.Tools.Select(t =>
             $"{t.Name} {(toolsService.FindExe(t) is { } exe ? "installed at " + exe : "not installed")}")) + ".");
+        // Read-only: validates the catalog and resolves allow-listed programs; runs and opens nothing
+        var hubCatalog = sp.GetRequiredService<AxePower.Core.Services.SoftwareHub.SoftwareCatalog>();
+        var allowList = sp.GetRequiredService<AxePower.Core.Services.Processes.ExecutableAllowList>();
+        sp.GetRequiredService<IWinGetHubService>();
+        var elevatedNow = TerminalService.IsProcessElevated();
+        Console.WriteLine(
+            $"Software Hub: {hubCatalog.Items.Count} catalog entries, {hubCatalog.Rejected.Count} rejected; " +
+            $"winget {allowList.Resolve(AxePower.Core.Services.Processes.AllowedTool.WinGet) ?? "not found at an allowed location"}; " +
+            $"PowerShell {(allowList.Resolve(AxePower.Core.Services.Processes.AllowedTool.PowerShell) != null ? "found" : "missing")}; " +
+            $"{(elevatedNow ? "elevated, so pages and apps open through Explorer as the signed-in user" : "not elevated, so pages and apps open directly")}.");
         // Read-only: reads saved routines and the PC's state; the engine is not started, so nothing runs
         var routineSettings = sp.GetRequiredService<SettingsService>().GetSettings().Routines ?? new();
         sp.GetRequiredService<AxePower.Core.Services.Routines.RoutineEngine>();
@@ -674,7 +702,7 @@ public partial class App : Application
                 if (friends is { IsActive: true }) Task.Run(() => friends.GoOfflineAsync(TimeSpan.FromSeconds(2))).Wait(TimeSpan.FromSeconds(3));
                 friends?.Dispose();
             }
-            catch { }
+            catch { /* Broad on purpose: shutdown must finish even if one service fails to stop. */ }
 
             var autoSwitchService = Services.GetService<AutoSwitchService>();
             autoSwitchService?.Stop();

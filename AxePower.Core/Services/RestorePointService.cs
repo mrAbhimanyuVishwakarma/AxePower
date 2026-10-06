@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AxePower.Core.Services.Processes;
 
 namespace AxePower.Core.Services;
 
@@ -14,10 +15,12 @@ public class RestorePointService
 {
     private static readonly TimeSpan CreationTimeout = TimeSpan.FromMinutes(3);
     private readonly LogService _log;
+    private readonly IProcessRunner _runner;
 
-    public RestorePointService(LogService log)
+    public RestorePointService(LogService log, IProcessRunner? runner = null)
     {
         _log = log;
+        _runner = runner ?? new AllowListedProcessRunner(ExecutableAllowList.Windows(), log);
     }
 
     public async Task<bool> CreateRestorePointAsync(string description, IProgress<string> progress)
@@ -28,63 +31,31 @@ public class RestorePointService
         progress.Report($"\n>>> Creating System Restore point \"{description}\"...");
         _log.LogInfo("[SystemRestore] Creating restore point...");
 
-        try
+        var command = new ProcessCommand(AllowedTool.PowerShell,
+            new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encodedScript },
+            CreationTimeout);
+        var result = await _runner.RunAsync(command, line =>
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            psi.ArgumentList.Add("-NoProfile");
-            psi.ArgumentList.Add("-NonInteractive");
-            psi.ArgumentList.Add("-ExecutionPolicy");
-            psi.ArgumentList.Add("Bypass");
-            psi.ArgumentList.Add("-EncodedCommand");
-            psi.ArgumentList.Add(encodedScript);
+            if (!string.IsNullOrWhiteSpace(line.Text)) progress.Report(line.IsError ? $"[ERROR] {line.Text}" : line.Text);
+        });
 
-            using var process = new Process { StartInfo = psi };
-            process.OutputDataReceived += (_, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data)) progress.Report(e.Data);
-            };
-            process.ErrorDataReceived += (_, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data)) progress.Report($"[ERROR] {e.Data}");
-            };
-
-            if (!process.Start())
-                throw new InvalidOperationException("PowerShell did not start.");
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            using var timeout = new CancellationTokenSource(CreationTimeout);
-            try
-            {
-                await process.WaitForExitAsync(timeout.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                try { process.Kill(entireProcessTree: true); } catch { }
+        switch (result.Outcome)
+        {
+            case ProcessRunOutcome.Exited:
+                bool ok = result.ExitCode == 0;
+                progress.Report(ok
+                    ? "[Restore Point] ✓ Restore point created successfully."
+                    : "[Restore Point] Finished with errors — see messages above.");
+                _log.LogInfo($"[SystemRestore] Restore point creation exit code {result.ExitCode}.");
+                return ok;
+            case ProcessRunOutcome.TimedOut:
                 progress.Report("[ERROR] Restore point creation timed out after three minutes.");
                 _log.LogError("[SystemRestore] Restore point creation timed out.");
                 return false;
-            }
-
-            bool ok = process.ExitCode == 0;
-            progress.Report(ok
-                ? "[Restore Point] ✓ Restore point created successfully."
-                : "[Restore Point] Finished with errors — see messages above.");
-            _log.LogInfo($"[SystemRestore] Restore point creation exit code {process.ExitCode}.");
-            return ok;
-        }
-        catch (Exception ex)
-        {
-            progress.Report($"[ERROR] {ex.Message}");
-            _log.LogError("[SystemRestore] Restore point creation failed", ex);
-            return false;
+            default:
+                progress.Report($"[ERROR] {result.Error ?? result.Outcome.ToString()}");
+                _log.LogError($"[SystemRestore] Restore point creation failed: {result.Outcome} {result.Error}");
+                return false;
         }
     }
 

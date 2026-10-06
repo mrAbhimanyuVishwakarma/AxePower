@@ -366,40 +366,9 @@ public class SoftwareHubTests
         Assert.False(vm.HasSelectedPackages);
     }
 
-    [Fact]
-    public void SoftwareHubViewModel_InstallSelectedViaTerminal_NavigatesAndSendsScript()
-    {
-        var vm = new SoftwareHubViewModel(
-            _hubService,
-            _updateShieldService,
-            _driverUpdateService,
-            _firmwareUpdateService,
-            _notificationService,
-            _logService,
-            _graphicsDriverService,
-            _terminalService,
-            _restorePointService);
-
-        bool navigationRequested = false;
-        _terminalService.NavigateToTerminalRequested += () => navigationRequested = true;
-
-        // Select CamStudio
-        var cam = vm.AllPackages.FirstOrDefault(p => p.Id == "camstudio");
-        Assert.NotNull(cam);
-        cam.IsSelected = true;
-
-        vm.InstallSelectedViaTerminalCommand.Execute(null);
-
-        Assert.True(navigationRequested, "Terminal navigation should be triggered for batch install");
-        var script = Assert.Single(_terminalService.Commands);
-        // CamStudio has no WinGet manifest, so the script goes straight to its download page
-        Assert.DoesNotContain("CamStudio.CamStudio", script);
-        Assert.Contains("https://camstudio.org/", script);
-    }
-
     /// <summary>
-    /// Captures what would be typed into the Terminal. The real service runs it in PowerShell,
-    /// which from a test would install software and open browser windows on the machine.
+    /// Stands in for the Terminal page. The Software Hub no longer types scripts into it (see
+    /// SoftwareHub/SoftwareHubViewModelTests), but the view model still needs one.
     /// </summary>
     private sealed class RecordingTerminalService : TerminalService
     {
