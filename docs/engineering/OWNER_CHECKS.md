@@ -140,8 +140,9 @@ Without it, Windows SmartScreen warns on the installer and the release gate refu
 listed in `docs/security/CODE_SIGNING.md` §1 (or the Trusted Signing settings). Tell me which
 route you chose, and I wire up the release workflow for it.
 
-### D2. Update-signing key (Prompt 9): **tooling ready; your step**
-Updates stay off until the app has a pinned public key. The tooling is in place
+### D2. Update-signing key (Prompt 9): **done 2026-10-06**
+The public key is pinned in `UpdateSigningKey.cs` and committed; a test signature made with the
+private key verified against it. Builds before that commit cannot check updates. The tooling is in place
 (`scripts/new-update-signing-key.ps1`, `scripts/sign-update-manifest.ps1`). While releases are
 unsigned, an update is accepted only when its manifest is signed with your key and the download
 matches the signed size and SHA-256.
@@ -185,6 +186,6 @@ choices.
 | C1 Share Screen, two PCs | second PC | waiting |
 | C2 Tailscale HTTPS | second PC, Tailscale | waiting |
 | D1 Code signing | decision | decided: unsigned for now |
-| D2 Update key | run one script | tooling ready, waiting for you |
+| D2 Update key | run one script | done 2026-10-06 (key pinned and committed) |
 | D3 Commit branch | your answer | answered: `2.1.2-industry-standards-followup` |
 | D4 LAN HTTPS | decision (later) | waiting |

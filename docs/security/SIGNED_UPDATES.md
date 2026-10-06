@@ -81,8 +81,8 @@ graph TD
 
 ## Owner setup: the update-signing key (2026-10-06)
 
-The pinned key lives in `AxePower.Core/Services/Update/UpdateSigningKey.cs`. Until one is
-generated it is empty, and updates fail closed.
+The pinned key lives in `AxePower.Core/Services/Update/UpdateSigningKey.cs`. It was generated
+and pinned on 2026-10-06. A build with an empty key fails closed: it accepts no update.
 
 **Once:**
 1. `powershell -ExecutionPolicy Bypass -File scripts\new-update-signing-key.ps1`

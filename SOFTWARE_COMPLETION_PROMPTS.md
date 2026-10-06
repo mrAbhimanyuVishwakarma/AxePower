@@ -769,7 +769,7 @@ Maintain this table as prompts are completed. Link each result to the relevant c
 - **Next:** 22, complete nullable correctness.
 - **Owner decisions made on 2026-10-06:**
   - Releases stay unsigned for now.
-  - The update-signing key is set up (tooling ready: run `scripts/new-update-signing-key.ps1` once).
+  - The update-signing key is set up and its public key is pinned (2026-10-06).
   - Updates are trusted on the signed manifest plus the signed size and SHA-256 until releases are
     code-signed.
   - The stale Share Screen encryption text is fixed.
@@ -777,7 +777,6 @@ Maintain this table as prompts are completed. Link each result to the relevant c
   - A1–A3: on this PC
   - B1–B2: phone, installer
   - C1–C2: second PC, Tailscale
-  - D2: run the key script once
 - **Commits:** prompts 1–21 are committed locally on `2.1.2-industry-standards-followup` (not
   pushed). The branch also contains commit `385b0d9`, which adds `CloudBridgeService`
   (remote control over Supabase Realtime). It needs a security review: see
@@ -793,7 +792,7 @@ Maintain this table as prompts are completed. Link each result to the relevant c
 | 6 | Complete | `packages.lock.json` in all projects, `Directory.Build.props`, `.github/dependabot.yml`, `scripts/audit-dependencies.ps1`, `docs/engineering/DEPENDENCIES.md`, `AxePower.Tests/DependencyPolicyTests.cs` (2026-10-04) | Full major-version modernization is intentionally deferred to dedicated feature tasks |
 | 7 | Complete | `Directory.Build.props`, `.editorconfig`, `docs/engineering/WARNINGS_DEBT.md`, `PowerTimerControl.xaml.cs`, `SettingsViewModel.cs`, `AxePower.Tests/AnalyzerPolicyTests.cs` (2026-10-04) | CS8600/CS8602/CS8604 in AxePower.Core remain tracked for true nullable resolution in Prompt 22 |
 | 8 | Complete | `Installer/AxePower.iss`, `scripts/sign-file.ps1`, `scripts/verify-signature.ps1`, `scripts/release-gate.ps1`, `docs/security/CODE_SIGNING.md`, `AxePower.Tests/CodeSigningPolicyTests.cs` (2026-10-04) | Awaiting external owner acquisition of production Authenticode certificate or Azure Trusted Signing credentials |
-| 9 | Complete | `AxePower.Core/Services/Update/`, `UpdateService.cs`, `AboutViewModel.cs`, `MainViewModel.cs`, `docs/security/SIGNED_UPDATES.md`, `AxePower.Tests/UpdateSecurityTests.cs` (2026-10-04) | Production updates fail closed until release pipeline publishes signed update-manifest.json with pinned public key |
+| 9 | Complete | `AxePower.Core/Services/Update/`, `UpdateService.cs`, `AboutViewModel.cs`, `MainViewModel.cs`, `docs/security/SIGNED_UPDATES.md`, `AxePower.Tests/UpdateSecurityTests.cs` (2026-10-04) | Public key pinned 2026-10-06 (D2). Each release still needs `scripts/sign-update-manifest.ps1` run and `update-manifest.json` uploaded next to the installer; no release has done that yet |
 | 10 | Complete | `Installer/install-dotnet.ps1`, `Installer/AxePower.iss`, `docs/security/RUNTIME_BOOTSTRAP.md`, `AxePower.Tests/DotNetBootstrapTests.cs` (2026-10-04) | Runtime bootstrap enforces HTTPS, Microsoft domain allow-list, Authenticode validation, and fails closed without bypass |
 | 11 | Complete | `.github/workflows/release-candidate.yml`, `scripts/package-release.ps1`, `scripts/generate-sbom.ps1`, `scripts/generate-provenance.ps1`, `scripts/generate-release-notes.ps1`, `CHANGELOG.md`, `docs/engineering/RELEASE_PIPELINE.md`, `AxePower.Tests/ReleasePipelineTests.cs` (2026-10-04) | Release candidates produce verified artifacts, CycloneDX SBOM, checksums, and provenance; public releases remain manual |
 | 12 | Complete | `AxePower.Core/Services/LanDrop/`, `LanDropService.cs`, `AxePower.Tests/LanDropSecurityTests.cs` (2026-10-04) | Hardened against memory/disk exhaustion, slow clients, malformed headers/Content-Length, traversal names, and concurrency limits |

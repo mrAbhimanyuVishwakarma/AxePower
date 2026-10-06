@@ -13,7 +13,7 @@ namespace AxePower.Core.Services.Update;
 public static class UpdateSigningKey
 {
     // BEGIN GENERATED PUBLIC KEY (scripts/new-update-signing-key.ps1)
-    public const string PublicKeyPem = "";
+    public const string PublicKeyPem = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEjALCgqh/gA/YMfvMSsZvc6kyoPBG\nOWr5cdkZBgPm9oKnv32AEoEG0YtBrz5YcbYv+S5Inxyp2QOdzTDRoKb0ow==\n-----END PUBLIC KEY-----\n";
     // END GENERATED PUBLIC KEY
 
     /// <summary>
