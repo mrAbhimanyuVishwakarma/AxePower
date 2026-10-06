@@ -87,6 +87,21 @@ public sealed class RecentSearchesService
         }
     }
 
+    /// <summary>Forgets every recent search and its results, in memory and on disk.</summary>
+    public void Clear()
+    {
+        lock (_lock)
+        {
+            _searches = new List<RecentSearch>();
+            try { if (File.Exists(_paths.RecentSearchesFile)) File.Delete(_paths.RecentSearchesFile); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // The empty list is saved instead, so the history is gone either way.
+                Save(_searches);
+            }
+        }
+    }
+
     public void Remove(string query)
     {
         string key = Normalize(query);

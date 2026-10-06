@@ -1,0 +1,73 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:AxePower.App.Converters">
+    <conv:NullToVisibilityConverter x:Key="OperationNotNullToVis" Invert="True"/>
+
+    <!-- Reversibility badges for the change preview and Settings › Change history.
+         Bound to a ReversibilityKey of "Fully", "Partially" or "Irreversible". -->
+    <Style x:Key="ReversibilityBadgeBorder" TargetType="Border">
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ReversibilityKey}" Value="Fully">
+                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ReversibilityKey}" Value="Partially">
+                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ReversibilityBadgeText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ReversibilityKey}" Value="Fully">
+                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ReversibilityKey}" Value="Partially">
+                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- One step: what changes (before → after), its own reversibility, and any note or result. -->
+    <DataTemplate x:Key="OperationStepTemplate">
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                <TextBlock Text="{Binding Description}" FontSize="12" FontFamily="Cascadia Mono, Consolas" TextWrapping="Wrap"
+                           Foreground="{DynamicResource PrimaryTextBrush}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                    <Setter Property="Opacity" Value="0.6"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <TextBlock Text="{Binding Note}" FontSize="11" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" Margin="0,2,0,0"
+                           Visibility="{Binding Note, Converter={StaticResource OperationNotNullToVis}}"/>
+                <TextBlock Text="{Binding Message}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"
+                           Visibility="{Binding Message, Converter={StaticResource OperationNotNullToVis}}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                <Border Style="{StaticResource ReversibilityBadgeBorder}" HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding ReversibilityLabel}" Style="{StaticResource ReversibilityBadgeText}"/>
+                </Border>
+                <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Right" Margin="0,3,0,0" Visibility="{Binding Status, Converter={StaticResource OperationNotNullToVis}}"/>
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+</ResourceDictionary>

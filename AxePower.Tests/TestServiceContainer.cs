@@ -96,7 +96,9 @@ internal static class TestServiceContainer
         services.AddSingleton<IProtectionService, ProtectionService>();
         services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
         services.AddSingleton<SystemRestoreService>();
-        services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
+        services.AddSingleton<IUninstallerPrompts, DialogUninstallerPrompts>();
+        // Tests never see a dialog, and nothing destructive is ever confirmed by accident.
+        services.AddSingleton<AxePower.App.Services.IConfirmationPrompts>(new DeclineAllConfirmations());
 
         // ViewModels
         services.AddTransient<DashboardViewModel>();
@@ -122,4 +124,10 @@ internal static class TestServiceContainer
 
     public static string NewSettingsDirectory() =>
         Path.Combine(Path.GetTempPath(), "AxePower.Tests", "di-" + Guid.NewGuid().ToString("N"));
+}
+
+/// <summary>Declines every standard confirmation, so a test cannot run a destructive action without saying so.</summary>
+internal sealed class DeclineAllConfirmations : AxePower.App.Services.IConfirmationPrompts
+{
+    public bool Confirm(AxePower.Core.Services.Operations.ActionConfirmation confirmation) => false;
 }

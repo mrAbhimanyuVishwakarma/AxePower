@@ -83,6 +83,21 @@ public sealed class RecentlyPlayedService : IPlayerIntegration
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Forgets every recent play, in memory and on disk (Trust & Permissions › delete history).</summary>
+    public void Clear()
+    {
+        lock (_lock)
+        {
+            _plays = new List<RecentPlay>();
+            try { if (File.Exists(_paths.RecentlyPlayedFile)) File.Delete(_paths.RecentlyPlayedFile); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // The empty list is saved instead, so the history is gone either way.
+                Save(_plays);
+            }
+        }
+    }
+
     private List<RecentPlay> Plays() => _plays ??= Load();
 
     private List<RecentPlay> Load()

@@ -20,6 +20,9 @@
     <DataTemplate DataType="{x:Type viewmodels:SettingsViewModel}">
         <views:SettingsView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type viewmodels:TrustViewModel}">
+        <views:TrustView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type viewmodels:LogsViewModel}">
         <views:LogsView />
     </DataTemplate>

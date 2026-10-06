@@ -67,6 +67,60 @@ Network & internet → your Wi-Fi → Properties.
 
 **Tell me:** pass, or a screenshot of what is off.
 
+### A5. Change preview and Settings › Change history (Prompt 24)
+**Need:** this PC. AxePower running as administrator (as usual).
+**Do:**
+1. System Optimizer: turn on **Disable Sticky Keys Shortcut**. A preview window should list one
+   registry change with its current value → new value and a green **Fully reversible** badge.
+   Click **Cancel**: nothing changes. Turn it on again and click **Apply**.
+2. Turn it off again: the preview should say **Review the rollback** and show the value going back
+   to what you had (not a Windows default).
+3. Game Mode: tick **Print Spooler** (or any service you don't need for an hour), choose to pause
+   it. The preview should show "Automatic, running → Manual, stopped" and an amber **Partially
+   reversible** badge with the reason. Apply.
+4. Settings → **Change history**: all three changes are listed, newest first. Click **Details** on
+   each. On the Print Spooler one, click **Roll back…**, approve: the service should be Automatic
+   and running again (check in services.msc).
+5. The rolled-back entry should no longer offer Roll back, and say why.
+6. Look at the preview and the history in Dark and Light.
+
+**Tell me:** pass, or a screenshot of what is off.
+
+### A6. Trust & Permissions page (Prompt 25)
+**Need:** this PC; your phone for step 2.
+**Do:**
+1. Sidebar → **Trust & Permissions** (above Settings). Check "Administrator rights" and "Start with
+   Windows" match what you set.
+2. Start LAN Drop and open its page on your phone. Within a few seconds the Phone Hub entry should
+   say "Open · 1 device(s) connected" with your phone listed. Click **Disconnect all and rotate
+   access link**: a confirmation lists your phone; confirm; the phone's page stops working.
+3. In "Data on this PC", click **Open folder** on two entries: File Explorer opens (not as
+   administrator). Click **Delete…** on Music history, read the confirmation, choose **Cancel**.
+4. Signed in: check the account section shows your @username, and that **Delete my account…**
+   shows the high-risk confirmation with the tick box and a disabled button until ticked (do not
+   confirm unless you mean it).
+5. "Updates and this build" shows version 2.1.0, a build commit, and "Not code-signed".
+6. Use only the keyboard (Tab, Shift+Tab, Enter) and then the controller's D-pad to reach every
+   button on the page. Look at it in Dark and Light.
+
+**Tell me:** pass, or a screenshot of what is off.
+
+### A7. The new confirmations (Prompt 27)
+**Need:** this PC. Choose **Cancel** in every dialog unless you really want the action.
+**Do:**
+1. Uninstaller Pro: select an app you don't need, Uninstall. The dialog lists it, says "High risk"
+   and "Not reversible", and **Uninstall …** stays disabled until you tick the box. Cancel.
+2. Debloat: click Win11Debloat's launch button: high risk, restart needed, the exact command
+   shown. Cancel.
+3. System Doctor › DNS: choose a provider. The dialog shows your adapter's DNS now and after, and
+   (if you typed DNS servers in yourself) warns that "Automatic" will not bring them back. Cancel.
+4. Software Hub: select two apps and install. Both are listed. Cancel. Then Update all apps and
+   the Windows Update cache reset: check what each lists. Cancel.
+5. In each dialog, press Enter straight away: it must cancel, not run.
+6. Look at a dialog in Dark and Light.
+
+**Tell me:** pass, or a screenshot of what is off.
+
 ---
 
 ## B. Checks that need a phone (about 20 minutes)
@@ -202,6 +256,9 @@ choices.
 | A2 Chat ended | this PC | waiting |
 | A3 Public-network banners | this PC on a Public network | waiting |
 | A4 Diagnostics & Privacy | this PC | waiting |
+| A5 Change preview and history | this PC | waiting |
+| A6 Trust & Permissions | this PC, phone | waiting |
+| A7 New confirmations | this PC | waiting |
 | B1 LAN Drop on a phone | phone | waiting |
 | B2 Firewall rule | installer build | waiting |
 | C1 Share Screen, two PCs | second PC | waiting |

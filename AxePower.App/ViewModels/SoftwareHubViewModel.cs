@@ -10,6 +10,8 @@ using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
 using AxePower.Core.Services.SoftwareHub;
+using AxePower.App.Services;
+using AxePower.Core.Services.Operations;
 
 namespace AxePower.App.ViewModels;
 
@@ -231,6 +233,7 @@ public partial class PackageCardViewModel : ObservableObject
 
 public partial class SoftwareHubViewModel : ObservableObject
 {
+    private readonly IConfirmationPrompts _confirm;
     private readonly IWinGetHubService _hubService;
     private readonly IWindowsUpdateShieldService _updateShieldService;
     private readonly DriverUpdateService _driverUpdateService;
@@ -364,8 +367,10 @@ public partial class SoftwareHubViewModel : ObservableObject
         LogService logService,
         GraphicsDriverService graphicsDriverService,
         TerminalService terminalService,
-        RestorePointService systemRestoreService)
+        RestorePointService systemRestoreService,
+        IConfirmationPrompts? confirm = null)
     {
+        _confirm = confirm ?? new ConfirmationPrompts();
         _hubService = hubService;
         _updateShieldService = updateShieldService;
         _driverUpdateService = driverUpdateService;
@@ -715,6 +720,7 @@ public partial class SoftwareHubViewModel : ObservableObject
             Notify(showTerminal ? "No uninstalled packages selected for terminal installation." : "No uninstalled packages selected for installation.");
             return;
         }
+        if (!_confirm.Confirm(ConfirmationCatalog.InstallPackages(toInstall.Select(c => c.Name).ToList()))) return;
 
         IsBatchInstalling = true;
         using var batch = new CancellationTokenSource();
@@ -834,6 +840,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     public async Task UpgradeAllAppsAsync()
     {
         if (IsUpgradingAll) return;
+        if (!_confirm.Confirm(ConfirmationCatalog.UpgradeAllPackages(Array.Empty<string>()))) return;
 
         IsUpgradingAll = true;
         try
@@ -958,6 +965,7 @@ public partial class SoftwareHubViewModel : ObservableObject
             AppendLog("\n[Update Cache Reset] Skipped: administrator rights are required.");
             return;
         }
+        if (!_confirm.Confirm(ConfirmationCatalog.ResetWindowsUpdateCache(WindowsUpdateShieldService.UpdateServices))) return;
 
         IsResettingUpdateCache = true;
         try

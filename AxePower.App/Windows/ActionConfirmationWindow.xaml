@@ -1,0 +1,76 @@
+<Window x:Class="AxePower.App.Windows.ActionConfirmationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding Action}" Width="620" SizeToContent="Height" MaxHeight="760" MinWidth="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        WindowStyle="ToolWindow" ResizeMode="NoResize"
+        AutomationProperties.Name="{Binding Action, StringFormat=Confirm: {0}}">
+    <!-- The standard confirmation (Prompt 27): what, scope, affected, admin, risk, backup, restart,
+         reversibility. Cancel is the default; high risk needs the tick box before the named button works. -->
+    <Grid Background="{DynamicResource WindowBackgroundBrush}">
+        <StackPanel Margin="24">
+            <TextBlock Text="{Binding Action}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+            <TextBlock FontSize="12" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14">
+                <Run Text="{Binding Source, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding RiskText, Mode=OneWay}"/>
+            </TextBlock>
+
+            <!-- Facts, one per line -->
+            <Border Background="{DynamicResource WindowSecondaryBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="14,12" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="{Binding ReversibilityText}" FontSize="12.5" TextWrapping="Wrap" Margin="0,0,0,6">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ReversibilityKey}" Value="Fully">
+                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ReversibilityKey}" Value="Partially">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6">
+                        <Run Text="Backup: " FontWeight="SemiBold"/><Run Text="{Binding Backup, Mode=OneWay}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding RestartText}" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                    <TextBlock Text="{Binding AdministratorText}" FontSize="12.5" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Everything affected -->
+            <StackPanel Visibility="{Binding HasAffected, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
+                <TextBlock Text="{Binding AffectedHeader}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,6"/>
+                <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" CornerRadius="8" MaxHeight="220">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="True" AutomationProperties.Name="Everything this action affects">
+                        <ItemsControl ItemsSource="{Binding Affected}" Margin="10,8" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontSize="12" FontFamily="Cascadia Mono, Consolas" TextWrapping="Wrap" Margin="0,0,0,4"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+
+            <!-- High risk: never pre-ticked -->
+            <CheckBox IsChecked="{Binding IsAcknowledged}" Content="{Binding Acknowledgement}" Margin="0,0,0,14"
+                      Foreground="{DynamicResource PrimaryTextBrush}" Visibility="{Binding RequiresAcknowledgement, Converter={StaticResource BoolToVis}}"
+                      AutomationProperties.Name="{Binding Acknowledgement}"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" Style="{DynamicResource SecondaryButtonStyle}" Content="Cancel" IsDefault="True" IsCancel="True"
+                        Click="Cancel_Click" Padding="22,8" Margin="0,0,12,0" AutomationProperties.Name="Cancel, change nothing"/>
+                <Button Style="{DynamicResource PrimaryButtonStyle}" Content="{Binding ConfirmLabel}" IsEnabled="{Binding CanConfirm}"
+                        Click="Confirm_Click" Padding="22,8" AutomationProperties.Name="{Binding ConfirmLabel}"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

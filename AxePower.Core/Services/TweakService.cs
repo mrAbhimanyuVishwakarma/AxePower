@@ -1,23 +1,44 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using AxePower.Core.Models;
+using AxePower.Core.Services.Operations;
 
 namespace AxePower.Core.Services;
 
+/// <summary>
+/// System Optimizer's registry tweaks. Every apply and revert is an operation (see
+/// <see cref="OperationRunner"/>): it can be previewed, it is recorded with a snapshot of each value
+/// it touches, and reverting restores exactly what was there before, not a guessed default.
+/// Tweaks applied before Prompt 24 have no snapshot; reverting those writes Windows' defaults,
+/// and the preview says so.
+/// </summary>
 public class TweakService : ITweakService
 {
+    public const string SourceFeature = "System Optimizer › Tweaks";
+
+    private const string ClassicMenuClsid = @"HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}";
+
     private readonly LogService _log;
     private readonly List<SystemTweakItem> _tweaks = new();
+    private readonly Func<RegistryHive, RegistryKey> _root;
+    private readonly Lazy<OperationRunner> _runner;
 
-    public TweakService(LogService log)
+    /// <param name="runner">Where changes are executed and recorded. Null: the app's journal, created on first use.</param>
+    /// <param name="root">Base key per hive. Tests map hives to a scratch key so they never touch the real registry.</param>
+    public TweakService(LogService log, OperationRunner? runner = null, Func<RegistryHive, RegistryKey>? root = null)
     {
         _log = log;
+        _root = root ?? (hive => hive == RegistryHive.LocalMachine ? Registry.LocalMachine : Registry.CurrentUser);
+        _runner = new Lazy<OperationRunner>(() => runner ?? new OperationRunner(
+            new OperationJournal(OperationJournal.DefaultDirectory, log), log, new IChangeHandler[] { new RegistryChangeHandler(_root) }));
         InitializeTweaksList();
     }
+
+    public OperationJournal Journal => _runner.Value.Journal;
 
     public IReadOnlyList<SystemTweakItem> GetAllTweaks() => _tweaks.AsReadOnly();
 
@@ -132,7 +153,7 @@ public class TweakService : ITweakService
                 {
                     tweak.IsApplied = IsTweakApplied(tweak.Id);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
                 {
                     _log.LogWarning($"[TweakService] Failed to read status for tweak '{tweak.Id}': {ex.Message}");
                     tweak.IsApplied = false;
@@ -141,65 +162,68 @@ public class TweakService : ITweakService
         });
     }
 
-    public async Task<bool> ApplyTweakAsync(string tweakId)
-    {
-        return await Task.Run(() =>
-        {
-            var tweak = _tweaks.FirstOrDefault(t => t.Id.Equals(tweakId, StringComparison.OrdinalIgnoreCase));
-            if (tweak == null) return false;
+    // -- Plans ----------------------------------------------------------------------
 
-            try
-            {
-                bool success = ExecuteApply(tweak.Id);
-                if (success)
-                {
-                    tweak.IsApplied = true;
-                    _log.LogInfo($"[TweakService] Successfully applied tweak '{tweak.Title}'");
-                }
-                return success;
-            }
-            catch (Exception ex)
-            {
-                _log.LogError($"[TweakService] Error applying tweak '{tweak.Title}'", ex);
-                return false;
-            }
-        });
+    public static string SubjectFor(string tweakId) => "tweak:" + tweakId.ToLowerInvariant();
+
+    /// <summary>What applying the tweak would change, with today's values. Changes nothing.</summary>
+    public OperationRecord PlanApply(string tweakId)
+    {
+        var tweak = Find(tweakId);
+        return _runner.Value.Plan($"Apply tweak: {tweak.Title}", SourceFeature, SubjectFor(tweak.Id), ApplyRequests(tweak.Id));
     }
 
-    public async Task<bool> RevertTweakAsync(string tweakId)
+    /// <summary>
+    /// What reverting would change. With a recorded apply, the rollback of it (exactly what was there
+    /// before). Without one, Windows' defaults, and the plan says that it is not a restore.
+    /// </summary>
+    public OperationRecord PlanRevert(string tweakId)
     {
-        return await Task.Run(() =>
-        {
-            var tweak = _tweaks.FirstOrDefault(t => t.Id.Equals(tweakId, StringComparison.OrdinalIgnoreCase));
-            if (tweak == null) return false;
+        var tweak = Find(tweakId);
+        if (_runner.Value.Journal.LatestActive(SubjectFor(tweak.Id)) is { } applied && OperationRunner.CanRollBack(applied))
+            return _runner.Value.PlanRollback(applied);
 
-            try
-            {
-                bool success = ExecuteRevert(tweak.Id);
-                if (success)
-                {
-                    tweak.IsApplied = false;
-                    _log.LogInfo($"[TweakService] Successfully reverted tweak '{tweak.Title}'");
-                }
-                return success;
-            }
-            catch (Exception ex)
-            {
-                _log.LogError($"[TweakService] Error reverting tweak '{tweak.Title}'", ex);
-                return false;
-            }
-        });
+        return _runner.Value.Plan($"Restore Windows defaults: {tweak.Title}", SourceFeature, SubjectFor(tweak.Id), DefaultRequests(tweak.Id),
+            notice: "AxePower has no record of what was set before this tweak was applied, so this writes Windows' defaults instead of restoring your earlier values.");
     }
+
+    public IReadOnlyList<OperationRecord> PlanApplyRecommended() =>
+        _tweaks.Where(t => t.IsRecommended && !t.IsApplied).Select(t => PlanApply(t.Id)).ToList();
+
+    public IReadOnlyList<OperationRecord> PlanRevertAll() =>
+        _tweaks.Where(t => t.IsApplied).Select(t => PlanRevert(t.Id)).ToList();
+
+    /// <summary>Runs an approved plan. The tweak's values only make sense together, so a failure undoes the rest.</summary>
+    public async Task<OperationRecord> ExecuteAsync(OperationRecord plan)
+    {
+        var record = await _runner.Value.ExecuteAsync(plan, FailurePolicy.UndoCompleted).ConfigureAwait(false);
+        var tweak = _tweaks.FirstOrDefault(t => SubjectFor(t.Id) == record.Subject);
+        if (tweak is not null)
+        {
+            try { tweak.IsApplied = IsTweakApplied(tweak.Id); }
+            catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
+            {
+                // Status unknown: the record still says what happened.
+                tweak.IsApplied = false;
+            }
+        }
+        return record;
+    }
+
+    // -- The older calls, now through operations (no preview) --------------------------
+
+    public async Task<bool> ApplyTweakAsync(string tweakId) =>
+        (await ExecuteAsync(PlanApply(tweakId)).ConfigureAwait(false)).Status == OperationStatus.Succeeded;
+
+    public async Task<bool> RevertTweakAsync(string tweakId) =>
+        (await ExecuteAsync(PlanRevert(tweakId)).ConfigureAwait(false)).Status == OperationStatus.Succeeded;
 
     public async Task<int> ApplyAllRecommendedAsync()
     {
         int count = 0;
-        foreach (var tweak in _tweaks.Where(t => t.IsRecommended && !t.IsApplied))
+        foreach (var plan in PlanApplyRecommended())
         {
-            if (await ApplyTweakAsync(tweak.Id))
-            {
-                count++;
-            }
+            if ((await ExecuteAsync(plan).ConfigureAwait(false)).Status == OperationStatus.Succeeded) count++;
         }
         return count;
     }
@@ -207,148 +231,122 @@ public class TweakService : ITweakService
     public async Task<int> RevertAllAsync()
     {
         int count = 0;
-        foreach (var tweak in _tweaks.Where(t => t.IsApplied))
+        foreach (var plan in PlanRevertAll())
         {
-            if (await RevertTweakAsync(tweak.Id))
-            {
-                count++;
-            }
+            if ((await ExecuteAsync(plan).ConfigureAwait(false)).Status == OperationStatus.Succeeded) count++;
         }
         return count;
     }
 
-    #region Internal Registry Mechanics
+    private SystemTweakItem Find(string tweakId) =>
+        _tweaks.FirstOrDefault(t => t.Id.Equals(tweakId, StringComparison.OrdinalIgnoreCase))
+        ?? throw new ArgumentException($"Unknown tweak '{tweakId}'.", nameof(tweakId));
+
+    // -- What each tweak changes ---------------------------------------------------------
+
+    /// <summary>The exact registry changes that apply a tweak.</summary>
+    public static IReadOnlyList<ChangeRequest> ApplyRequests(string tweakId) => tweakId.ToLowerInvariant() switch
+    {
+        "telemetry-disable" => new[] { RegistryChangeHandler.SetDword(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry", 0) },
+        "bing-search-disable" => new[]
+        {
+            RegistryChangeHandler.SetDword(@"HKCU\SOFTWARE\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1),
+            RegistryChangeHandler.SetDword(@"HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0),
+        },
+        "copilot-disable" => new[]
+        {
+            RegistryChangeHandler.SetDword(@"HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", 1),
+            RegistryChangeHandler.SetDword(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", 1),
+        },
+        "activity-feed-disable" => new[] { RegistryChangeHandler.SetDword(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\System", "EnableActivityFeed", 0) },
+        "gamedvr-disable" => new[]
+        {
+            RegistryChangeHandler.SetDword(@"HKCU\System\GameConfigStore", "GameDVR_Enabled", 0),
+            RegistryChangeHandler.SetDword(@"HKCU\System\GameConfigStore", "GameDVR_FSEBehaviorMode", 2),
+            RegistryChangeHandler.SetDword(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR", 0),
+        },
+        "mouse-accel-disable" => new[]
+        {
+            RegistryChangeHandler.SetString(@"HKCU\Control Panel\Mouse", "MouseSpeed", "0"),
+            RegistryChangeHandler.SetString(@"HKCU\Control Panel\Mouse", "MouseThreshold1", "0"),
+            RegistryChangeHandler.SetString(@"HKCU\Control Panel\Mouse", "MouseThreshold2", "0"),
+        },
+        "classic-context-menu" => new[]
+        {
+            RegistryChangeHandler.EnsureKey(ClassicMenuClsid + @"\InprocServer32"),
+            RegistryChangeHandler.SetString(ClassicMenuClsid + @"\InprocServer32", "", ""),
+        },
+        "sticky-keys-disable" => new[] { RegistryChangeHandler.SetString(@"HKCU\Control Panel\Accessibility\StickyKeys", "Flags", "506") },
+        _ => throw new ArgumentException($"Unknown tweak '{tweakId}'.", nameof(tweakId)),
+    };
+
+    /// <summary>Windows' defaults, used only when there is no recorded apply to roll back.</summary>
+    public static IReadOnlyList<ChangeRequest> DefaultRequests(string tweakId) => tweakId.ToLowerInvariant() switch
+    {
+        "telemetry-disable" => new[] { RegistryChangeHandler.DeleteValue(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry") },
+        "bing-search-disable" => new[]
+        {
+            RegistryChangeHandler.DeleteValue(@"HKCU\SOFTWARE\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions"),
+            RegistryChangeHandler.DeleteValue(@"HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled"),
+        },
+        "copilot-disable" => new[]
+        {
+            RegistryChangeHandler.DeleteValue(@"HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot"),
+            RegistryChangeHandler.DeleteValue(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot"),
+        },
+        "activity-feed-disable" => new[] { RegistryChangeHandler.DeleteValue(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\System", "EnableActivityFeed") },
+        "gamedvr-disable" => new[]
+        {
+            RegistryChangeHandler.SetDword(@"HKCU\System\GameConfigStore", "GameDVR_Enabled", 1),
+            RegistryChangeHandler.DeleteValue(@"HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR"),
+        },
+        "mouse-accel-disable" => new[]
+        {
+            RegistryChangeHandler.SetString(@"HKCU\Control Panel\Mouse", "MouseSpeed", "1"),
+            RegistryChangeHandler.SetString(@"HKCU\Control Panel\Mouse", "MouseThreshold1", "6"),
+            RegistryChangeHandler.SetString(@"HKCU\Control Panel\Mouse", "MouseThreshold2", "10"),
+        },
+        "classic-context-menu" => new[] { RegistryChangeHandler.RemoveKey(ClassicMenuClsid) },
+        "sticky-keys-disable" => new[] { RegistryChangeHandler.SetString(@"HKCU\Control Panel\Accessibility\StickyKeys", "Flags", "510") },
+        _ => throw new ArgumentException($"Unknown tweak '{tweakId}'.", nameof(tweakId)),
+    };
+
+    // -- Reading status --------------------------------------------------------------
 
     private bool IsTweakApplied(string tweakId)
     {
+        var machine = _root(RegistryHive.LocalMachine);
+        var user = _root(RegistryHive.CurrentUser);
         return tweakId.ToLowerInvariant() switch
         {
             "telemetry-disable" =>
-                GetDword(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry") == 0,
+                GetDword(machine, @"SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry") == 0,
 
             "bing-search-disable" =>
-                GetDword(Registry.CurrentUser, @"SOFTWARE\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions") == 1 ||
-                GetDword(Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled") == 0,
+                GetDword(user, @"SOFTWARE\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions") == 1 ||
+                GetDword(user, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled") == 0,
 
             "copilot-disable" =>
-                GetDword(Registry.CurrentUser, @"Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot") == 1 ||
-                GetDword(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot") == 1,
+                GetDword(user, @"Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot") == 1 ||
+                GetDword(machine, @"SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot") == 1,
 
             "activity-feed-disable" =>
-                GetDword(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\System", "EnableActivityFeed") == 0,
+                GetDword(machine, @"SOFTWARE\Policies\Microsoft\Windows\System", "EnableActivityFeed") == 0,
 
             "gamedvr-disable" =>
-                GetDword(Registry.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled") == 0,
+                GetDword(user, @"System\GameConfigStore", "GameDVR_Enabled") == 0,
 
             "mouse-accel-disable" =>
-                GetString(Registry.CurrentUser, @"Control Panel\Mouse", "MouseSpeed") == "0",
+                GetString(user, @"Control Panel\Mouse", "MouseSpeed") == "0",
 
             "classic-context-menu" =>
-                KeyExists(Registry.CurrentUser, @"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"),
+                KeyExists(user, @"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"),
 
             "sticky-keys-disable" =>
-                GetString(Registry.CurrentUser, @"Control Panel\Accessibility\StickyKeys", "Flags") == "506",
+                GetString(user, @"Control Panel\Accessibility\StickyKeys", "Flags") == "506",
 
             _ => false
         };
-    }
-
-    private bool ExecuteApply(string tweakId)
-    {
-        switch (tweakId.ToLowerInvariant())
-        {
-            case "telemetry-disable":
-                SetDword(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry", 0);
-                return true;
-
-            case "bing-search-disable":
-                SetDword(Registry.CurrentUser, @"SOFTWARE\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions", 1);
-                SetDword(Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled", 0);
-                return true;
-
-            case "copilot-disable":
-                SetDword(Registry.CurrentUser, @"Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", 1);
-                SetDword(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", 1);
-                return true;
-
-            case "activity-feed-disable":
-                SetDword(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\System", "EnableActivityFeed", 0);
-                return true;
-
-            case "gamedvr-disable":
-                SetDword(Registry.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled", 0);
-                SetDword(Registry.CurrentUser, @"System\GameConfigStore", "GameDVR_FSEBehaviorMode", 2);
-                SetDword(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR", 0);
-                return true;
-
-            case "mouse-accel-disable":
-                SetString(Registry.CurrentUser, @"Control Panel\Mouse", "MouseSpeed", "0");
-                SetString(Registry.CurrentUser, @"Control Panel\Mouse", "MouseThreshold1", "0");
-                SetString(Registry.CurrentUser, @"Control Panel\Mouse", "MouseThreshold2", "0");
-                return true;
-
-            case "classic-context-menu":
-                using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"))
-                {
-                    key?.SetValue("", "");
-                }
-                return true;
-
-            case "sticky-keys-disable":
-                SetString(Registry.CurrentUser, @"Control Panel\Accessibility\StickyKeys", "Flags", "506");
-                return true;
-
-            default:
-                return false;
-        }
-    }
-
-    private bool ExecuteRevert(string tweakId)
-    {
-        switch (tweakId.ToLowerInvariant())
-        {
-            case "telemetry-disable":
-                DeleteValue(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry");
-                return true;
-
-            case "bing-search-disable":
-                DeleteValue(Registry.CurrentUser, @"SOFTWARE\Policies\Microsoft\Windows\Explorer", "DisableSearchBoxSuggestions");
-                DeleteValue(Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "BingSearchEnabled");
-                return true;
-
-            case "copilot-disable":
-                DeleteValue(Registry.CurrentUser, @"Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot");
-                DeleteValue(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot");
-                return true;
-
-            case "activity-feed-disable":
-                DeleteValue(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\System", "EnableActivityFeed");
-                return true;
-
-            case "gamedvr-disable":
-                SetDword(Registry.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled", 1);
-                DeleteValue(Registry.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR");
-                return true;
-
-            case "mouse-accel-disable":
-                SetString(Registry.CurrentUser, @"Control Panel\Mouse", "MouseSpeed", "1");
-                SetString(Registry.CurrentUser, @"Control Panel\Mouse", "MouseThreshold1", "6");
-                SetString(Registry.CurrentUser, @"Control Panel\Mouse", "MouseThreshold2", "10");
-                return true;
-
-            case "classic-context-menu":
-                // A missing key is fine (throwOnMissing: false); access denied reaches RevertTweakAsync,
-                // which logs it and reports the revert as failed instead of done.
-                Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}", false);
-                return true;
-
-            case "sticky-keys-disable":
-                SetString(Registry.CurrentUser, @"Control Panel\Accessibility\StickyKeys", "Flags", "510");
-                return true;
-
-            default:
-                return false;
-        }
     }
 
     private static int? GetDword(RegistryKey root, string subKeyPath, string valueName)
@@ -396,26 +394,4 @@ public class TweakService : ITweakService
             return false;
         }
     }
-
-    private static void SetDword(RegistryKey root, string subKeyPath, string valueName, int value)
-    {
-        using var key = root.CreateSubKey(subKeyPath);
-        key?.SetValue(valueName, value, RegistryValueKind.DWord);
-    }
-
-    private static void SetString(RegistryKey root, string subKeyPath, string valueName, string value)
-    {
-        using var key = root.CreateSubKey(subKeyPath);
-        key?.SetValue(valueName, value, RegistryValueKind.String);
-    }
-
-    private static void DeleteValue(RegistryKey root, string subKeyPath, string valueName)
-    {
-        // Not swallowed: if the value cannot be removed, the tweak was not reverted, and the caller
-        // (Apply/RevertTweakAsync) logs it and reports failure.
-        using var key = root.OpenSubKey(subKeyPath, true);
-        key?.DeleteValue(valueName, false);
-    }
-
-    #endregion
 }

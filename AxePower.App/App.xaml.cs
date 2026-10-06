@@ -348,7 +348,7 @@ public partial class App : Application
         services.AddSingleton<IProtectionService, ProtectionService>();
         services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
         services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
-        services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
+        services.AddSingleton<IUninstallerPrompts, DialogUninstallerPrompts>();
 
         // Power timer: shut down / restart / sleep after a set time (in-process only)
         services.AddSingleton<ITouchpadPlatform, WindowsTouchpadPlatform>();
@@ -439,6 +439,26 @@ public partial class App : Application
         services.AddTransient<AutoSwitchViewModel>();
         services.AddTransient<GameModeViewModel>();
         services.AddTransient<BatteryViewModel>();
+        // Every change to Windows state goes through one runner and one journal (Prompt 24).
+        services.AddSingleton(sp => new AxePower.Core.Services.Operations.OperationJournal(
+            AxePower.Core.Services.Operations.OperationJournal.DefaultDirectory, sp.GetRequiredService<LogService>()));
+        services.AddSingleton(sp => new AxePower.Core.Services.Operations.OperationRunner(
+            sp.GetRequiredService<AxePower.Core.Services.Operations.OperationJournal>(), sp.GetRequiredService<LogService>(),
+            new AxePower.Core.Services.Operations.IChangeHandler[]
+            {
+                new AxePower.Core.Services.Operations.RegistryChangeHandler(),
+                new AxePower.Core.Services.Operations.ServiceChangeHandler(),
+            }));
+        services.AddSingleton<IOperationPrompts, OperationPrompts>();
+        services.AddTransient<ChangeHistoryViewModel>();
+        services.AddSingleton<IConfirmationPrompts, ConfirmationPrompts>();
+        services.AddSingleton<TrustViewModel>(sp => new TrustViewModel(
+            sp.GetRequiredService<SettingsService>(), sp.GetRequiredService<LogService>(), sp.GetRequiredService<IConfirmationPrompts>(),
+            sp.GetService<ElevationService>(), sp.GetService<LanDropService>(), sp.GetService<IShareScreenService>(),
+            sp.GetService<ShareViewerHost>(), sp.GetService<MediaMtxServer>(), sp.GetService<AccountService>(),
+            sp.GetService<FriendsService>(), sp.GetService<RecentlyPlayedService>(), sp.GetService<RecentSearchesService>(),
+            sp.GetService<StreamCache>(), sp.GetService<ShareChatStore>(), sp.GetService<BatteryService>(),
+            sp.GetService<AxePower.Core.Services.Processes.IUserShellLauncher>()));
         services.AddSingleton<IDiagnosticsPrompts, DiagnosticsPrompts>();
         services.AddTransient<DiagnosticsViewModel>(sp => new DiagnosticsViewModel(
             sp.GetRequiredService<LogService>(), sp.GetRequiredService<SettingsService>(), sp.GetRequiredService<IDiagnosticsPrompts>()));
@@ -604,6 +624,16 @@ public partial class App : Application
                 : savedAccount.Profile is { } accountProfile ? $"@{accountProfile.Username} (saved session, not refreshed)"
                 : "signed in, no username yet (saved session)") +
             $"; backend {sp.GetRequiredService<SupabaseProject>().Url.Host}.");
+
+        var operations = sp.GetRequiredService<AxePower.Core.Services.Operations.OperationRunner>().Journal.All();
+        Console.WriteLine(
+            $"Change history: {operations.Count} operation(s) recorded, {operations.Count(o => AxePower.Core.Services.Operations.OperationRunner.CanRollBack(o))} can be rolled back; " +
+            $"tweaks {sp.GetRequiredService<ITweakService>().GetAllTweaks().Count} on the framework, Game Mode services {SystemServiceOptimizer.OptimizableServices.Count}.");
+
+        Console.WriteLine(
+            $"Trust & Permissions: {AxePower.Core.Services.Trust.TrustInventory.DataStores.Count} data stores, {AxePower.Core.Services.Trust.TrustInventory.Connections.Count} connections, " +
+            $"{AxePower.Core.Services.Trust.TrustInventory.Listeners.Count} listeners listed; remote access {(CloudBridgeService.IsAvailable ? "available" : "off in this version")}; " +
+            $"build {AxePower.Core.Services.Trust.BuildInfo.Version} commit {AxePower.Core.Services.Trust.BuildInfo.Commit ?? "not recorded"}.");
 
         // Read-only: summarising never creates the folder, and this run's log is in memory only.
         var diagnostics = new DiagnosticsStore(DiagnosticsStore.DefaultDirectory);

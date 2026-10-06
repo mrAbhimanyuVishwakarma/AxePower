@@ -22,6 +22,7 @@ public partial class GameModeViewModel : ObservableObject
     private readonly GameScannerService _gameScannerService;
     private readonly AppKillerService _appKillerService;
     private readonly SystemServiceOptimizer _systemServiceOptimizer;
+    private readonly IOperationPrompts _operationPrompts;
     private readonly PowerPlanService _powerPlanService;
     private readonly ControllerNavigationService? _controllerService;
     private readonly IDynamicModeAutomationService? _automationService;
@@ -217,9 +218,11 @@ public partial class GameModeViewModel : ObservableObject
         IMemoryOptimizerService? memoryOptimizer = null,
         SystemTelemetryService? telemetryService = null,
         MsiAfterburnerService? msiAfterburnerService = null,
-        IGameModePrompts? gameModePrompts = null)
+        IGameModePrompts? gameModePrompts = null,
+        IOperationPrompts? operationPrompts = null)
     {
         _gameModePrompts = gameModePrompts;
+        _operationPrompts = operationPrompts ?? new OperationPrompts();
 
         // Both lists show two groups, safe first and caution below; the rows arrive already sorted
         System.Windows.Data.CollectionViewSource.GetDefaultView(RunningBackgroundApps).GroupDescriptions
@@ -1004,23 +1007,28 @@ public partial class GameModeViewModel : ObservableObject
         var toStop = ConfirmCaution(AvailableServices.Where(s => s.IsSelected).ToList(),
             s => s.IsCaution, s => s.DisplayName, "stop");
         var selectedServices = toStop.Select(s => s.ServiceName).ToList();
-        if (selectedServices.Any())
+        if (!selectedServices.Any()) return;
+
+        // Preview first: each service's startup type and state now, and what it will become.
+        var plan = _systemServiceOptimizer.PlanPause(selectedServices);
+        if (!_operationPrompts.Approve(new[] { plan })) return;
+
+        _ = PauseServicesAsync(plan);
+    }
+
+    private async Task PauseServicesAsync(AxePower.Core.Services.Operations.OperationRecord plan)
+    {
+        var result = await _systemServiceOptimizer.ExecuteAsync(plan);
+        foreach (var step in result.Steps.Where(s => s.Status == AxePower.Core.Services.Operations.StepStatus.Succeeded))
         {
-            Task.Run(() =>
+            if (AvailableServices.FirstOrDefault(s => s.ServiceName.Equals(step.Target, StringComparison.OrdinalIgnoreCase)) is { } row)
             {
-                _systemServiceOptimizer.OptimizeServices(selectedServices);
-                App.Current?.Dispatcher?.BeginInvoke(() =>
-                {
-                    foreach (var s in toStop)
-                    {
-                        s.IsPaused = true;
-                        s.IsRunning = false;
-                    }
-                    _notificationService.Show($"⚡ Paused & set {selectedServices.Count} Windows service(s) to manual.");
-                    RefreshServices();
-                });
-            });
+                row.IsPaused = true;
+                row.IsRunning = false;
+            }
         }
+        _notificationService.Show(ReversibilityText.Outcome(result));
+        RefreshServices();
     }
 
     [RelayCommand]

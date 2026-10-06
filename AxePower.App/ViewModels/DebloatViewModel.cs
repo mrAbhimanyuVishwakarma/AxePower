@@ -7,11 +7,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxePower.App.Models;
 using AxePower.Core.Services;
+using AxePower.App.Services;
+using AxePower.Core.Services.Operations;
 
 namespace AxePower.App.ViewModels;
 
 public partial class DebloatViewModel : ObservableObject
 {
+    private readonly IConfirmationPrompts _confirm;
     private readonly DebloatService _debloatService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
@@ -31,8 +34,10 @@ public partial class DebloatViewModel : ObservableObject
         DebloatService debloatService,
         NotificationService notificationService,
         LogService logService,
-        RestorePointService restorePointService)
+        RestorePointService restorePointService,
+        IConfirmationPrompts? confirm = null)
     {
+        _confirm = confirm ?? new ConfirmationPrompts();
         _debloatService = debloatService;
         _notificationService = notificationService;
         _logService = logService;
@@ -94,6 +99,10 @@ public partial class DebloatViewModel : ObservableObject
     public void LaunchTool(DebloatToolItem? tool)
     {
         if (tool == null) return;
+
+        // A third-party script AxePower cannot see into: high risk, irreversible, and said so.
+        var highlights = tool.Highlights.Count > 0 ? tool.Highlights : new List<string> { tool.Description };
+        if (!_confirm.Confirm(ConfirmationCatalog.RunDebloatScript(tool.Name, tool.Author, highlights, tool.CommandPreview))) return;
 
         _notificationService.Show($"Opening {tool.Name} by {tool.Author}...");
 

@@ -22,6 +22,20 @@ namespace AxePower.Core.Services;
 /// </summary>
 public sealed class CloudBridgeService : IDisposable
 {
+    /// <summary>
+    /// False until the bridge uses private, token-authorised channels. Until then it never connects,
+    /// whatever settings.json says (owner's decision, 2026-10-06; see docs/security/REMOTE_ACCESS.md).
+    /// The channels it used were public broadcast topics named after the user's id, @username and
+    /// email prefix, joined with only the publishable key: anyone who knew the username could read
+    /// this PC's telemetry and send it set_mode, set_battery_tuning and update_settings commands.
+    /// </summary>
+    public static bool IsAvailable => false;
+
+    public const string UnavailableReason =
+        "Remote access over the cloud is turned off in this version. Its connection was not private to your account, " +
+        "so someone who knew your username could have seen this PC's status and changed its settings. " +
+        "It comes back once the connection is locked to your sign-in.";
+
     private static readonly Uri SupabaseRealtimeEndpoint = new(
         "wss://kjnqsgdlcytpooueymdt.supabase.co/realtime/v1/websocket?apikey=sb_publishable__WFKuy8jF5iwSMH0dgTikw_Hv864_Pp&vsn=1.0.0");
 
@@ -125,7 +139,8 @@ public sealed class CloudBridgeService : IDisposable
             var accountState = _accountService.State;
             var settings = _settingsService.GetSettings();
 
-            if (accountState.Status != AccountStatus.SignedIn ||
+            if (!IsAvailable ||
+                accountState.Status != AccountStatus.SignedIn ||
                 string.IsNullOrEmpty(accountState.UserId) ||
                 !settings.RemoteAccess.Enabled)
             {

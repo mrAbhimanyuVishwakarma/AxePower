@@ -28,15 +28,48 @@ public class SoftwareHubViewModelTests
         public override void SendCommand(string command) => Commands.Add(command);
     }
 
-    private static (SoftwareHubViewModel Vm, RecordingTerminalService Terminal) Build(HubRig rig)
+    /// <summary>Answers the standard confirmation (Prompt 27) and records what it was asked.</summary>
+    internal sealed class Confirmations : AxePower.App.Services.IConfirmationPrompts
+    {
+        public bool Answer { get; set; } = true;
+        public List<AxePower.Core.Services.Operations.ActionConfirmation> Asked { get; } = new();
+
+        public bool Confirm(AxePower.Core.Services.Operations.ActionConfirmation confirmation)
+        {
+            Asked.Add(confirmation);
+            return Answer;
+        }
+    }
+
+    private static (SoftwareHubViewModel Vm, RecordingTerminalService Terminal) Build(HubRig rig, Confirmations? confirm = null)
     {
         var log = new LogService();
         var terminal = new RecordingTerminalService();
         var vm = new SoftwareHubViewModel(rig.Hub, new WindowsUpdateShieldService(log), new DriverUpdateService(log),
             new FirmwareUpdateService(log, new FakeLauncher(), new FakeRunner()), new NotificationService(), log,
-            new GraphicsDriverService(log, new FakeLauncher()), terminal, new RestorePointService(log, new FakeRunner()));
+            new GraphicsDriverService(log, new FakeLauncher()), terminal, new RestorePointService(log, new FakeRunner()),
+            confirm ?? new Confirmations());
         return (vm, terminal);
     }
+
+    [Fact]
+    public Task BulkInstall_AsksFirst_NamingEveryApp_AndDecliningInstallsNothing() => _wpf.RunAsync(async () =>
+    {
+        using var rig = new HubRig();
+        var confirm = new Confirmations { Answer = false };
+        var (vm, _) = Build(rig, confirm);
+        Card(vm, "vlc").IsSelected = true;
+        Card(vm, "7zip").IsSelected = true;
+
+        await vm.InstallSelectedDirectCommand.ExecuteAsync(null);
+
+        Assert.Empty(rig.Runner.Commands);
+        var asked = Assert.Single(confirm.Asked);
+        Assert.Equal("Install 2 apps with WinGet", asked.Action);
+        Assert.Equal("Install 2 apps", asked.ConfirmLabel);
+        Assert.Equal(2, asked.Affected.Count);
+        Assert.False(Card(vm, "vlc").IsInstalled);
+    });
 
     private static PackageCardViewModel Card(SoftwareHubViewModel vm, string id) => vm.AllPackages.Single(p => p.Id == id);
 

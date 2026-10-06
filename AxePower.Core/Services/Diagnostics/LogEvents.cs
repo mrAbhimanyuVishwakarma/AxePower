@@ -13,7 +13,7 @@ public readonly record struct LogEventId(int Id, string Name);
 
 /// <summary>
 /// Events with fixed IDs. Older call sites log without one (ID 0) and are identified by their call
-/// site instead. Ranges: 1xxx app lifetime, 2xxx diagnostics itself, 3xxx security-relevant refusals.
+/// site instead. Ranges: 1xxx app lifetime, 2xxx diagnostics itself, 3xxx security-relevant refusals, 4xxx changes to Windows (see Operations).
 /// Never reuse or renumber an ID.
 /// </summary>
 public static class LogEvents
@@ -29,4 +29,8 @@ public static class LogEvents
 
     public static readonly LogEventId LanDropAccessRefused = new(3000, "LanDrop.AccessRefused");
     public static readonly LogEventId UpdateVerificationFailed = new(3001, "Update.VerificationFailed");
+
+    public static readonly LogEventId OperationCompleted = new(4000, "Operation.Completed");
+    public static readonly LogEventId OperationFailed = new(4001, "Operation.Failed");
+    public static readonly LogEventId OperationRolledBack = new(4002, "Operation.RolledBack");
 }

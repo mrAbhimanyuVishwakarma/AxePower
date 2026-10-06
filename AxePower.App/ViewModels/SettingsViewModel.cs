@@ -375,7 +375,14 @@ public partial class SettingsViewModel : ObservableObject
     // ── AxePower Mobile Remote Access ──────────────────────────────────────
 
     [ObservableProperty]
-    private bool _mobileRemoteAccessEnabled = true;
+    private bool _mobileRemoteAccessEnabled;
+
+    /// <summary>False while the cloud bridge is switched off in code; the toggle is then disabled and explained.</summary>
+    public bool RemoteAccessAvailable => CloudBridgeService.IsAvailable;
+
+    public string RemoteAccessNotice => CloudBridgeService.IsAvailable
+        ? "Sign in with the same AxePower account on phone and PC to connect anywhere in the world."
+        : CloudBridgeService.UnavailableReason;
 
     partial void OnMobileRemoteAccessEnabledChanged(bool value)
     {
@@ -473,6 +480,9 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>Settings › Diagnostics & Privacy: inspect, export and delete what AxePower has logged.</summary>
     public DiagnosticsViewModel? Diagnostics { get; }
 
+    /// <summary>Settings › Change history: what AxePower changed in Windows, and rolling it back.</summary>
+    public ChangeHistoryViewModel? ChangeHistory { get; }
+
     // ── Categories (the collapsible list beside the settings) ───────────────
 
     /// <summary>One entry per settings card; "About" opens the About page instead.</summary>
@@ -488,6 +498,7 @@ public partial class SettingsViewModel : ObservableObject
         new SettingsCategoryItem("Music", "Music & Playlists", "\uE8D6"),
         new SettingsCategoryItem("Updates", "Updates & Maintenance", "\uE777"),
         new SettingsCategoryItem("Diagnostics", "Diagnostics & Privacy", "\uE9D9"),
+        new SettingsCategoryItem("ChangeHistory", "Change history", "\uE81C"),
     };
 
     [ObservableProperty]
@@ -579,10 +590,12 @@ public partial class SettingsViewModel : ObservableObject
         IGpuDisplayModeController? displayModeController = null,
         AxePower.App.Services.IGameModePrompts? gameModePrompts = null,
         TouchpadService? touchpad = null,
-        DiagnosticsViewModel? diagnostics = null)
+        DiagnosticsViewModel? diagnostics = null,
+        ChangeHistoryViewModel? changeHistory = null)
     {
         _touchpad = touchpad;
         Diagnostics = diagnostics;
+        ChangeHistory = changeHistory;
         Music = music;
         ShareScreen = shareScreen;
         _settingsService = settingsService;
@@ -612,7 +625,7 @@ public partial class SettingsViewModel : ObservableObject
         _isTouchpadAvailable = _touchpad?.IsEnabled() is not null;
         _autoCheckUpdates = _currentSettings.AutoCheckUpdates;
         _autoDownloadUpdates = _currentSettings.AutoDownloadUpdates;
-        _mobileRemoteAccessEnabled = _currentSettings.RemoteAccess?.Enabled ?? true;
+        _mobileRemoteAccessEnabled = CloudBridgeService.IsAvailable && (_currentSettings.RemoteAccess?.Enabled ?? false);
         _mobileAllowTelemetry = _currentSettings.RemoteAccess?.AllowTelemetry ?? true;
         _mobileAllowBatterySync = _currentSettings.RemoteAccess?.AllowBatterySync ?? true;
         _mobileAllowPowerModeControl = _currentSettings.RemoteAccess?.AllowPowerModeControl ?? true;

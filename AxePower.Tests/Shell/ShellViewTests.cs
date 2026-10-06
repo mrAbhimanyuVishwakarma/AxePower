@@ -181,7 +181,7 @@ public class ShellViewTests
         // Sidebar: Up and Down walk every entry in order and wrap, as the D-pad does.
         var sidebar = ShellTestHost.Descendants(shell.Root).OfType<ShellSidebar>().Single();
         var entries = ShellTestHost.TabStops(sidebar);
-        Assert.Equal(18, entries.Count);
+        Assert.Equal(19, entries.Count); // 18 + Trust & Permissions (Prompt 25)
         for (int i = 0; i < entries.Count; i++)
         {
             Assert.Same(entries[(i + 1) % entries.Count], entries[i].PredictFocus(FocusNavigationDirection.Down));
@@ -191,7 +191,7 @@ public class ShellViewTests
         // The navigation entries keep their order (and so their tab order).
         var navigation = entries.OfType<Button>().Where(b => b.CommandParameter is string).Select(b => (string)b.CommandParameter).ToList();
         Assert.Equal(new[] { "Dashboard", "GameMode", "Battery", "Music", "Friends", "PhoneHub", "SecondMonitor", "UpdatePc",
-                             "SystemCare", "Uninstaller", "Debloat", "Terminal", "Tools", "Settings", "Profile" }, navigation);
+                             "SystemCare", "Uninstaller", "Debloat", "Terminal", "Tools", "Trust", "Settings", "Profile" }, navigation);
 
         // Title bar: Left and Right step across the window buttons.
         var controls = (Panel)shell.Window.FindName("WindowControls");

@@ -189,7 +189,7 @@ public sealed partial class UninstallerViewModel
             return;
         }
 
-        if (!_prompts.ConfirmCleanLeftovers(toDelete.Count, 0, _settings.DryRunMode, _settings.MoveToRecycleBin))
+        if (!_prompts.ConfirmCleanLeftovers(toDelete.Select(i => $"{i.TypeLabel}: {i.Path}").ToList(), _settings.DryRunMode, _settings.MoveToRecycleBin))
             return;
 
         var session = _reviewSession ?? new UninstallSession { IsStandaloneScan = true };

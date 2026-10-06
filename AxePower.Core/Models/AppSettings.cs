@@ -256,8 +256,9 @@ public class AppSettings
 
 public class RemoteAccessSettings
 {
+    /// <summary>Off by default: the cloud bridge is unavailable until its channels are private (see CloudBridgeService.IsAvailable).</summary>
     [JsonPropertyName("enabled")]
-    public bool Enabled { get; set; } = true;
+    public bool Enabled { get; set; } = false;
 
     [JsonPropertyName("allowTelemetry")]
     public bool AllowTelemetry { get; set; } = true;

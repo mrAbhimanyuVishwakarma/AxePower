@@ -472,7 +472,7 @@
                                 </Style>
                             </StackPanel.Resources>
 
-                            <TextBlock Text="Last updated: 26 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
+                            <TextBlock Text="Last updated: 6 October 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="1. Privacy at a glance"/>
                             <TextBlock Style="{StaticResource PolicyText}"
@@ -481,20 +481,22 @@
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="2. What stays on your computer"/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Your settings, power profiles, themes and automations."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Music data: library folders, playlists, what you played last, recent searches and the saved queue."/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Activity logs used to diagnose problems, and backups some tools make before changing your system."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Diagnostics logs, with tokens, links, email addresses and your user and computer names removed, kept 14 days or 20 MB; the history of changes AxePower made to Windows; and backups some tools make before changing your system."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• If you sign in: your sign-in, encrypted so only your Windows user can read it."/>
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="All of this is kept in the app-data folders of your Windows user profile and never leaves your computer on its own. Deleting those folders removes it."/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="3. Online features"/>
                             <TextBlock Style="{StaticResource PolicyText}" Margin="0,0,0,8"
-                                       Text="Some features need the internet and contact third-party services directly from your computer, only when you use them:"/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Searching and streaming music, which sends your search text and the song being played."/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Finding lyrics, which sends the song's title, artist and length."/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Checking for AxePower updates, and updating software or drivers when you ask it to."/>
+                                       Text="Some features contact other services directly from your computer. One happens on its own: while &quot;Check for updates automatically&quot; is on (the default), AxePower asks GitHub for a newer version when it starts. The rest happen only when you use the feature:"/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Signing in, your profile and Friends, with Supabase, only if you have an account."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Searching and streaming music on YouTube, which sends your search text and the song being played."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Finding lyrics (LRCLIB, KuGou), which sends the song's title, artist, album and length."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Posters for your installed games, from Steam's image servers."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Downloading updates, graphics drivers, Share Screen tools and portable apps, and installing software through WinGet, when you ask."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Links, downloads and help pages, which open in your web browser."/>
                             <TextBlock Style="{StaticResource PolicyText}"
-                                       Text="Like any website, these services also see your IP address and the request itself. Their own privacy policies and terms apply to what they receive. AxePower does not route this traffic through any server of its own."/>
+                                       Text="Like any website, these services also see your IP address and the request itself. Their own privacy policies and terms apply to what they receive. AxePower does not route this traffic through any server of its own. Trust &amp; Permissions (in the sidebar) lists every connection, what triggers it and what it sends."/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="4. Your AxePower account (optional)"/>
                             <TextBlock Style="{StaticResource PolicyText}" Margin="0,0,0,8"
@@ -516,7 +518,7 @@
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="6. System access"/>
                             <TextBlock Style="{StaticResource PolicyText}"
-                                       Text="AxePower runs with administrator rights so it can change power, performance and system settings. It changes your system only when you choose an action or set up an automation. Some changes, such as removing apps, updating drivers or tuning Windows, cannot always be fully undone, so read each prompt before confirming."/>
+                                       Text="By default AxePower runs with administrator rights (Settings › Startup &amp; Elevation) so it can change power, performance and system settings. It changes your system only when you choose an action or set up an automation. Before a change it shows what will change and whether it is fully, partly or not reversible; changes it can undo are listed in Settings › Change history. Third-party uninstallers and debloat scripts cannot be undone by AxePower."/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="7. Open-source components and third-party tools"/>
                             <TextBlock Style="{StaticResource PolicyText}"
@@ -580,7 +582,7 @@
                                 </Style>
                             </StackPanel.Resources>
 
-                            <TextBlock Text="Last updated: 26 September 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
+                            <TextBlock Text="Last updated: 6 October 2026" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,14"/>
 
                             <TextBlock Style="{StaticResource TermsHeading}" Text="1. What these terms cover"/>
 

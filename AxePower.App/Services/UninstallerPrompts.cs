@@ -1,6 +1,6 @@
-using System.Text;
 using System.Windows;
 using AxePower.Core.Models.Uninstaller;
+using AxePower.Core.Services.Operations;
 using AxePower.Core.Services.Uninstaller;
 
 namespace AxePower.App.Services;
@@ -32,50 +32,40 @@ public interface IUninstallerPrompts
 
     bool AskStopStalledUninstaller(InstalledApplication app, TimeSpan elapsed);
 
-    bool ConfirmCleanLeftovers(int count, int needsAdmin, bool dryRun, bool recycle);
+    /// <param name="items">One line per leftover: its type and path, as the review list shows it.</param>
+    bool ConfirmCleanLeftovers(IReadOnlyList<string> items, bool dryRun, bool recycle);
 
     bool ConfirmRestore(string sessionDescription);
 
     bool ConfirmRelaunchAsAdmin(int itemsNeedingAdmin);
 }
 
-/// <summary>Message-box prompts, matching the rest of AxePower.</summary>
-public sealed class MessageBoxUninstallerPrompts : IUninstallerPrompts
+/// <summary>
+/// Uninstaller Pro's questions. Uninstalling, cleaning leftovers and restoring use the standard
+/// confirmation (Prompt 27, <see cref="ConfirmationCatalog"/>); the questions asked while an
+/// uninstaller is running stay simple message boxes.
+/// </summary>
+public sealed class DialogUninstallerPrompts : IUninstallerPrompts
 {
     private const string Title = "Uninstaller";
+    private readonly IConfirmationPrompts _confirm;
+
+    public DialogUninstallerPrompts(IConfirmationPrompts confirm)
+    {
+        _confirm = confirm;
+    }
 
     public bool ConfirmBatch(IReadOnlyList<(InstalledApplication App, UninstallPlan Plan)> plans,
-        IReadOnlyList<(InstalledApplication App, string Reason)> skipped, bool restorePoint, bool dryRun)
-    {
-        var text = new StringBuilder();
-        text.AppendLine(dryRun
-            ? "Dry run: nothing will be uninstalled. These commands would run:"
-            : plans.Count == 1 ? "This will run:" : $"These {plans.Count} uninstallers will run one after another:");
-        text.AppendLine();
-        foreach (var (app, plan) in plans.Take(15))
-            text.AppendLine($"•  {app.DisplayName}: {plan.Description}");
-        if (plans.Count > 15) text.AppendLine($"   …and {plans.Count - 15} more");
+        IReadOnlyList<(InstalledApplication App, string Reason)> skipped, bool restorePoint, bool dryRun) =>
+        _confirm.Confirm(ConfirmationCatalog.UninstallApps(
+            plans.Select(p => (p.App.DisplayName, p.Plan.Description)).ToList(),
+            skipped.Select(s => s.App.DisplayName).ToList(), restorePoint, dryRun));
 
-        if (skipped.Count > 0)
-        {
-            text.AppendLine();
-            text.AppendLine("Skipped (protected):");
-            foreach (var (app, reason) in skipped.Take(5))
-                text.AppendLine($"•  {app.DisplayName}");
-        }
+    public bool ConfirmCleanLeftovers(IReadOnlyList<string> items, bool dryRun, bool recycle) =>
+        _confirm.Confirm(ConfirmationCatalog.CleanLeftovers(items, dryRun, recycle));
 
-        if (!dryRun)
-        {
-            text.AppendLine();
-            text.AppendLine(restorePoint
-                ? "A System Restore point is created first (when Windows allows it)."
-                : "No System Restore point will be created.");
-            text.AppendLine("Each app is checked afterwards; leftovers are only offered once it is really gone.");
-        }
-
-        return MessageBox.Show(text.ToString(), Title, MessageBoxButton.OKCancel, MessageBoxImage.Question,
-            MessageBoxResult.Cancel) == MessageBoxResult.OK;
-    }
+    public bool ConfirmRestore(string sessionDescription) =>
+        _confirm.Confirm(ConfirmationCatalog.RestoreUninstallBackup(sessionDescription));
 
     public RunningAppDecision AskRunningApp(InstalledApplication app, IReadOnlyList<RunningProcessInfo> processes, bool closeAttemptFailed)
     {
@@ -116,26 +106,6 @@ public sealed class MessageBoxUninstallerPrompts : IUninstallerPrompts
             $"The silent uninstaller for {app.DisplayName} has been running for {elapsed.TotalMinutes:F0} minutes.\n\n" +
             "Yes: stop the uninstaller.\nNo: keep waiting.",
             Title, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
-
-    public bool ConfirmCleanLeftovers(int count, int needsAdmin, bool dryRun, bool recycle)
-    {
-        var text = dryRun
-            ? $"Dry run: check {count} item(s) without deleting anything?"
-            : $"Delete {count} leftover item(s)?\n\n" +
-              "Registry items are exported to .reg backups first; if a backup fails the item is kept.\n" +
-              (recycle ? "Files and folders go to the Recycle Bin." : "Files and folders are deleted permanently.");
-        if (needsAdmin > 0)
-            text += $"\n\n{needsAdmin} item(s) need administrator rights and will be skipped.";
-        return MessageBox.Show(text, Title, MessageBoxButton.OKCancel, MessageBoxImage.Question,
-            MessageBoxResult.Cancel) == MessageBoxResult.OK;
-    }
-
-    public bool ConfirmRestore(string sessionDescription) =>
-        MessageBox.Show(
-            $"Restore the registry backups from {sessionDescription}?\n\n" +
-            "Keys and values are written back; HKLM items need administrator rights. " +
-            "Files and folders are restored from the Recycle Bin, not here.",
-            Title, MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel) == MessageBoxResult.OK;
 
     public bool ConfirmRelaunchAsAdmin(int itemsNeedingAdmin) =>
         MessageBox.Show(

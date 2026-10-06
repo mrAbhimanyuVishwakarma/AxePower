@@ -321,7 +321,7 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🔄 **Update PC Utility**: Elevated one-click driver and Windows update management via Windows Package Manager / USOClient.
 - 🗔 **System Tray & Minimize-to-Tray**: Custom dark tray menu with quick mode switching and title bar minimize-to-tray button.
 - 🛡️ **Clean Upgrades**: The installer automatically terminates running instances and uninstalls older versions cleanly before updating.
-- 🔒 **100% Local Privacy**: Zero telemetry, zero analytics tracking, and zero remote data collection.
+- 🔒 **Private by Default**: No ads and no usage analytics. Accounts are optional; without one, nothing about you is stored in AxePower's cloud. The in-app **Trust & Permissions** page lists every connection, what triggers it and what it sends.
 
 ---
 

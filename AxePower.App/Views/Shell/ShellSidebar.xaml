@@ -246,6 +246,15 @@
                 <!-- Divider -->
                 <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="20,0,20,6" Opacity="0.4"/>
 
+                <!-- Trust & Permissions (Prompt 25): permissions, listeners, data and connections in one place -->
+                <Button Style="{Binding TrustActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Trust"
+                        ToolTip="Trust &amp; Permissions: what AxePower can do, listens on, keeps and sends" AutomationProperties.Name="Trust and Permissions">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Trust &amp; Permissions" Style="{StaticResource SidebarLabelStyle}"/>
+                    </StackPanel>
+                </Button>
+
                 <!-- Settings (above Profile) -->
                 <Button Style="{Binding SettingsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings" ToolTip="Settings" AutomationProperties.Name="Settings">
                     <StackPanel Orientation="Horizontal">

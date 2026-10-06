@@ -61,6 +61,9 @@ public partial class MainViewModel : ObservableObject
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
     public ToolsViewModel? ToolsVm { get; }
+
+    /// <summary>Trust & Permissions (Prompt 25).</summary>
+    public TrustViewModel? TrustVm { get; }
     public RoutinesViewModel? RoutinesVm { get; }
     public MusicViewModel? MusicVm { get; }
     public ShareScreenViewModel? ShareScreenVm { get; }
@@ -98,6 +101,7 @@ public partial class MainViewModel : ObservableObject
     public Style? LogsActiveStyle => GetStyleForView(LogsVm);
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
     public Style? AboutActiveStyle => GetStyleForView(AboutVm);
+    public Style? TrustActiveStyle => GetStyleForView((object?)TrustVm ?? new object());
     public Style? UninstallerActiveStyle => GetSubItemStyleForView(UninstallerVm);
     public Style? SystemCareActiveStyle => GetSubItemStyleForView(SystemCareVm);
     public Style? DebloatActiveStyle => GetSubItemStyleForView(DebloatVm);
@@ -177,8 +181,10 @@ public partial class MainViewModel : ObservableObject
         ShareScreenViewModel? shareScreenVm = null,
         ToolsViewModel? toolsVm = null,
         AccountViewModel? accountVm = null,
-        RoutinesViewModel? routinesVm = null)
+        RoutinesViewModel? routinesVm = null,
+        TrustViewModel? trustVm = null)
     {
+        TrustVm = trustVm;
         ToolsVm = toolsVm;
         if (ToolsVm != null) ToolsVm.NavigateTo = target => Navigate(target);
         RoutinesVm = routinesVm;
@@ -369,6 +375,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(LogsActiveStyle));
         OnPropertyChanged(nameof(SettingsActiveStyle));
         OnPropertyChanged(nameof(AboutActiveStyle));
+        OnPropertyChanged(nameof(TrustActiveStyle));
         OnPropertyChanged(nameof(UninstallerActiveStyle));
         OnPropertyChanged(nameof(SystemCareActiveStyle));
         OnPropertyChanged(nameof(DebloatActiveStyle));
@@ -423,6 +430,7 @@ public partial class MainViewModel : ObservableObject
             "Music"       => (object?)MusicVm ?? DashboardVm,
             "Settings"    => ShowSettingsSection(arg1),
             "Logs"        => LogsVm,
+            "Trust"       => (object?)TrustVm ?? DashboardVm,
             "About"       => AboutVm,   // older links; the page is Profile now
             "Profile"     => AboutVm,
             "Uninstaller" => UninstallerVm,

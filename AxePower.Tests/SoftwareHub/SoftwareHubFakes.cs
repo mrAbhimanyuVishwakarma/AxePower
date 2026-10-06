@@ -52,6 +52,7 @@ internal sealed class FakeLauncher : IUserShellLauncher
     public ShellLaunchResult OpenUri(string target) { Launches.Add(("uri", target)); return new ShellLaunchResult(ShellLaunchStatus.Started, "ok"); }
     public ShellLaunchResult OpenProgram(string path) { Launches.Add(("program", path)); return new ShellLaunchResult(ShellLaunchStatus.Started, "ok"); }
     public ShellLaunchResult RunInstaller(string path) { Launches.Add(("installer", path)); return new ShellLaunchResult(ShellLaunchStatus.Started, "ok"); }
+    public ShellLaunchResult OpenFolder(string path) { Launches.Add(("folder", path)); return new ShellLaunchResult(ShellLaunchStatus.Started, "ok"); }
 }
 
 internal sealed class FakeDownloader : IPortableToolDownloader

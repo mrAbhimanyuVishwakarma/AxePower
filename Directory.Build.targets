@@ -64,4 +64,22 @@
     <Error Condition="'$(_AxePowerSetupIssHardcodedVersion)' != '' and '$(_AxePowerSetupIssHardcodedVersion)' != '$(ProductVersion)'"
            Text="Version mismatch detected! AxePowerSetup.iss specifies hardcoded AppVersion '$(_AxePowerSetupIssHardcodedVersion)', but Directory.Build.props specifies ProductVersion '$(ProductVersion)'." />
   </Target>
+
+  <!--
+    SetSourceRevisionId:
+    Records the commit a build was made from. The SDK appends it to InformationalVersion
+    ("2.1.0+0123abcd4567"), which Trust & Permissions shows as the build commit. A build outside a
+    git checkout (or without git) simply has no commit. CI may pass SourceRevisionId itself.
+  -->
+  <Target Name="SetSourceRevisionId" BeforeTargets="GetAssemblyVersion;GenerateAssemblyInfo;InitializeSourceControlInformation"
+          Condition="'$(SourceRevisionId)' == ''">
+    <Exec Command="git rev-parse --short=12 HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true"
+          StandardOutputImportance="low" StandardErrorImportance="low" WorkingDirectory="$(MSBuildThisFileDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_AxePowerGitCommit" />
+      <Output TaskParameter="ExitCode" PropertyName="_AxePowerGitExit" />
+    </Exec>
+    <PropertyGroup Condition="'$(_AxePowerGitExit)' == '0' and '$(_AxePowerGitCommit)' != ''">
+      <SourceRevisionId>$(_AxePowerGitCommit)</SourceRevisionId>
+    </PropertyGroup>
+  </Target>
 </Project>

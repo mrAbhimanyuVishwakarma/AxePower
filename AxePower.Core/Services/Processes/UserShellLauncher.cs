@@ -60,6 +60,9 @@ public interface IUserShellLauncher
 
     /// <summary>Starts an installer by its full path with AxePower's rights; installers elevate themselves when needed.</summary>
     ShellLaunchResult RunInstaller(string path);
+
+    /// <summary>Opens an existing local folder in File Explorer with the user's normal rights.</summary>
+    ShellLaunchResult OpenFolder(string path);
 }
 
 /// <summary>
@@ -104,6 +107,27 @@ public sealed class UserShellLauncher : IUserShellLauncher
     {
         if (!TryValidateProgram(path, out var reason)) return Refuse(path, reason);
         return Launch(path, RunAs.StandardUser, Path.GetDirectoryName(path));
+    }
+
+    public ShellLaunchResult OpenFolder(string path)
+    {
+        if (!TryValidateFolder(path, out var reason)) return Refuse(path, reason);
+        return Launch(path, RunAs.StandardUser, workingDirectory: null);
+    }
+
+    /// <summary>A fully qualified local folder that exists, with no character Explorer would read as a switch.</summary>
+    public static bool TryValidateFolder(string? path, out string reason)
+    {
+        if (string.IsNullOrWhiteSpace(path)) { reason = "no folder"; return false; }
+        if (path.Any(c => char.IsControl(c) || c is '"' or ',' or '*' or '?' or '<' or '>' or '|'))
+        {
+            reason = "the path contains characters that are not allowed";
+            return false;
+        }
+        if (!Path.IsPathFullyQualified(path) || path.StartsWith(@"\\", StringComparison.Ordinal)) { reason = "not a full local path"; return false; }
+        if (!Directory.Exists(path)) { reason = "the folder does not exist yet"; return false; }
+        reason = string.Empty;
+        return true;
     }
 
     public ShellLaunchResult RunInstaller(string path)

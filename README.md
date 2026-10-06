@@ -52,9 +52,9 @@
 - 📖 **Dedicated Help & Documentation Center**: Direct in-app `? Help` title bar button and "Learn More" links connecting to the official [AxePower Help Center](https://axepower.vercel.app/help.html).
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
 - 🔄 **Update PC Utility & BIOS Checks**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and BIOS/firmware version checks.
-- 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
+- 🧹 **Win11Debloat Integration**: Launches Raphire's Win11Debloat script with administrator rights after a confirmation that says plainly what it is: a third-party script whose changes AxePower cannot list or undo *(Credit to Raphire)*.
 - 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
-- 🔒 **100% Local & Privacy-First**: Zero telemetry, zero analytics tracking, and zero remote data collection.
+- 🔒 **Private by Default, Honest About the Network**: No ads and no usage analytics. Accounts are optional; without one, nothing about you is stored in AxePower's cloud. Every connection AxePower makes, what triggers it and what it sends is listed in [docs/security/PRIVACY.md](docs/security/PRIVACY.md) and on the in-app **Trust & Permissions** page.
 
 ---
 
