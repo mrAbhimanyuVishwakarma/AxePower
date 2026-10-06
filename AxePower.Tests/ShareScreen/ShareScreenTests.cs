@@ -446,6 +446,9 @@ public class FriendsPageViewModelTests
         public void SendChatMessage(ShareChatMessage message) { }
         public event System.EventHandler<byte[]>? VoicePacketReceived { add { } remove { } }
         public void SendVoicePacket(byte[] opusPacket) { }
+        public System.Collections.Generic.IReadOnlyList<ShareParticipant> GetParticipants() => System.Array.Empty<ShareParticipant>();
+        public event System.EventHandler? ParticipantsChanged { add { } remove { } }
+        public event System.EventHandler<PendingControlApproval>? ControlApprovalRequested { add { } remove { } }
     }
 
     private sealed class FakeRoomVoiceService : IRoomVoiceService

@@ -261,7 +261,7 @@ public sealed class ShareAudioPump : IDisposable
         {
             _capture.DataAvailable -= OnDataAvailable;
             _capture.RecordingStopped -= OnRecordingStopped;
-            try { _capture.Dispose(); } catch { }
+            try { _capture.Dispose(); } catch { /* Best-effort teardown of the audio capture we are discarding. */ }
             _capture = null;
         }
 

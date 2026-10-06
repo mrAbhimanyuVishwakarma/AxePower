@@ -52,7 +52,12 @@ public sealed class MediaMtxServer : IDisposable
     /// Writes a session-scoped config and starts the router. Throws when it cannot come up, since
     /// there is no point starting the encoder if there is nowhere to publish.
     /// </summary>
-    public async Task StartAsync(string mediaMtxExePath, ShareRoom room, ShareScreenSettings settings, CancellationToken ct)
+    /// <param name="authHttpAddress">
+    /// Where MediaMTX asks whether a publish or read may go ahead (the viewer host's auth endpoint).
+    /// </param>
+    /// <param name="tls">With a certificate, WHEP and WebRTC signaling are served over HTTPS, so an HTTPS viewer page can reach them.</param>
+    public async Task StartAsync(string mediaMtxExePath, ShareRoom room, ShareScreenSettings settings, string authHttpAddress, CancellationToken ct,
+        ShareTlsCertificate? tls = null)
     {
         Stop();
 
@@ -63,7 +68,7 @@ public sealed class MediaMtxServer : IDisposable
         Directory.CreateDirectory(sessionDir);
 
         _configPath = Path.Combine(sessionDir, "mediamtx.yml");
-        File.WriteAllText(_configPath, BuildConfig(room, settings, _apiPort), new UTF8Encoding(false));
+        File.WriteAllText(_configPath, BuildConfig(room, settings, _apiPort, authHttpAddress, tls), new UTF8Encoding(false));
 
         var startInfo = new ProcessStartInfo
         {
@@ -236,12 +241,18 @@ public sealed class MediaMtxServer : IDisposable
     }
 
     /// <summary>
-    /// Builds the router config. Only the one session path is defined and only the host may
-    /// publish to it; viewers read anonymously, because the unguessable path in their link is what
-    /// grants access and asking a friend to type a password would defeat the point.
+    /// Builds the router config. Only the one session path is defined. Every publish and read is
+    /// checked by the viewer host over loopback: only the host's encoder may publish, and a viewer
+    /// may read only with a single-use proof of the room's viewer token, so knowing the path (which
+    /// travels in plain HTTP) is not enough to watch. The API stays on loopback and unchecked.
     /// </summary>
-    private static string BuildConfig(ShareRoom room, ShareScreenSettings settings, int apiPort)
+    internal static string BuildConfig(ShareRoom room, ShareScreenSettings settings, int apiPort, string authHttpAddress,
+        ShareTlsCertificate? tls = null)
     {
+        // MediaMTX reads PEM files; YAML single quotes keep a Windows path literal.
+        var webrtcTls = tls == null
+            ? "webrtcEncryption: no"
+            : $"webrtcEncryption: yes\nwebrtcServerKey: '{tls.KeyPemPath.Replace("'", "''")}'\nwebrtcServerCert: '{tls.CertPemPath.Replace("'", "''")}'";
         var additionalHosts = string.Join(", ", LocalAddresses().Select(a => $"'{a}'"));
         if (!string.IsNullOrWhiteSpace(settings.ViewerHostOverride))
         {
@@ -277,31 +288,18 @@ public sealed class MediaMtxServer : IDisposable
                 # WebRTC is what viewers connect with: hardware decoding in the browser, no plugin.
                 webrtc: yes
                 webrtcAddress: :{settings.WebrtcPort}
-                webrtcEncryption: no
+                {webrtcTls}
                 webrtcAllowOrigins: ['*']
                 webrtcLocalUDPAddress: :{settings.WebrtcPort + 300}
                 webrtcIPsFromInterfaces: yes
                 webrtcAdditionalHosts: [{additionalHosts}]
 
-                authMethod: internal
-                authInternalUsers:
-                  - user: publisher
-                    pass: {room.PublisherToken}
-                    ips: ['127.0.0.1', '::1']
-                    permissions:
-                      - action: publish
-                        path: {room.PathName}
-                  - user: any
-                    pass:
-                    ips: []
-                    permissions:
-                      - action: read
-                        path: {room.PathName}
-                  - user: any
-                    pass:
-                    ips: ['127.0.0.1', '::1']
-                    permissions:
-                      - action: api
+                authMethod: http
+                authHTTPAddress: {authHttpAddress}
+                authHTTPExclude:
+                  - action: api
+                  - action: metrics
+                  - action: pprof
 
                 paths:
                   {room.PathName}:
@@ -339,6 +337,71 @@ public sealed class MediaMtxServer : IDisposable
         Stop();
         _httpClient.Dispose();
         _job.Dispose();
+    }
+
+    /// <summary>
+    /// The WebRTC viewers reading this room's path, so someone watching without chat or voice
+    /// still shows up for the host. Empty when the server is down or the API answers oddly.
+    /// </summary>
+    public async Task<IReadOnlyList<ShareParticipant>> GetWebRtcViewersAsync(string pathName, CancellationToken ct)
+    {
+        if (!IsRunning) return Array.Empty<ShareParticipant>();
+        try
+        {
+            var json = await _httpClient.GetStringAsync($"http://127.0.0.1:{_apiPort}/v3/webrtcsessions/list", ct);
+            return ParseWebRtcViewers(json, pathName);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            return Array.Empty<ShareParticipant>();
+        }
+    }
+
+    /// <summary>
+    /// Reads MediaMTX's <c>/v3/webrtcsessions/list</c> answer: an <c>items</c> array whose entries
+    /// carry <c>id</c>, <c>created</c>, <c>remoteAddr</c>, <c>state</c> and <c>path</c>.
+    /// </summary>
+    internal static IReadOnlyList<ShareParticipant> ParseWebRtcViewers(string json, string pathName)
+    {
+        var result = new List<ShareParticipant>();
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            // TryGetProperty throws on anything but an object, so check the kind first.
+            if (doc.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object ||
+                !doc.RootElement.TryGetProperty("items", out var items) ||
+                items.ValueKind != System.Text.Json.JsonValueKind.Array)
+                return result;
+
+            foreach (var item in items.EnumerateArray())
+            {
+                if (item.ValueKind != System.Text.Json.JsonValueKind.Object) continue;
+
+                string Text(string name) =>
+                    item.TryGetProperty(name, out var value) && value.ValueKind == System.Text.Json.JsonValueKind.String
+                        ? value.GetString() ?? string.Empty
+                        : string.Empty;
+
+                if (!string.Equals(Text("path"), pathName, StringComparison.Ordinal)) continue;
+                if (!string.Equals(Text("state"), "read", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var created = DateTime.TryParse(Text("created"), System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var at)
+                    ? at
+                    : DateTime.UtcNow;
+                var id = Text("id");
+                result.Add(new ShareParticipant(
+                    "video-" + (id.Length > 8 ? id[..8] : id),
+                    string.IsNullOrEmpty(Text("remoteAddr")) ? "unknown" : Text("remoteAddr"),
+                    "Video viewer",
+                    created));
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // An unexpected answer means no list, not a crash.
+        }
+        return result;
     }
 
     private sealed class PathInfo

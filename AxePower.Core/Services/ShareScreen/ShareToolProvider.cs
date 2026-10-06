@@ -124,7 +124,7 @@ public sealed class ShareToolProvider : IShareToolProvider
             var firstLine = process.StandardOutput.ReadLine() ?? string.Empty;
             if (!process.WaitForExit(8000))
             {
-                try { process.Kill(entireProcessTree: true); } catch { }
+                try { process.Kill(entireProcessTree: true); } catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* It exited as the timeout fired. */ }
                 return string.Empty;
             }
 
@@ -255,7 +255,7 @@ public sealed class ShareToolProvider : IShareToolProvider
         }
         finally
         {
-            try { if (File.Exists(tempZip)) File.Delete(tempZip); } catch { }
+            try { if (File.Exists(tempZip)) File.Delete(tempZip); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: a partial download in the temp folder is harmless and never run. */ }
         }
     }
 

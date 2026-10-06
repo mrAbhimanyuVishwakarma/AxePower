@@ -1,3 +1,5 @@
+using System;
+
 namespace AxePower.Core.Services.ShareScreen;
 
 /// <summary>
@@ -9,6 +11,18 @@ namespace AxePower.Core.Services.ShareScreen;
 /// </summary>
 internal static class ShareViewerPage
 {
+    private static readonly Lazy<string> NobleScript = new(() =>
+    {
+        using var stream = typeof(ShareViewerPage).Assembly.GetManifestResourceStream("AxePower.ShareScreen.noble.min.js")
+                           ?? throw new InvalidOperationException("The viewer page's crypto bundle is missing from the build.");
+        using var reader = new System.IO.StreamReader(stream);
+        // Inside an inline <script>, a literal "</script" would end the block early.
+        return reader.ReadToEnd().Replace("</script", @"<\/script", StringComparison.OrdinalIgnoreCase);
+    });
+
+    /// <summary>The page with its vendored scripts inlined; placeholders other than these are left for the host.</summary>
+    public static string WithScripts() => Html.Replace("__NOBLE__", NobleScript.Value);
+
     public const string Html = """
 <!doctype html>
 <html lang="en">
@@ -53,12 +67,64 @@ internal static class ShareViewerPage
   <button id="snd">Unmute</button>
 </div>
 <script>
+// AXE-CRYPTO-BEGIN
+// The page is served over http on the LAN, where browsers withhold crypto.subtle, so the audited
+// noble libraries do the work in script (see THIRD_PARTY_NOTICES.md). The control code and the
+// viewer token are never sent: the page proves it knows them, then seals every input event with
+// AES-256-GCM (docs/security/SHARE_SCREEN_THREAT_MODEL.md sections 4.2 and 7).
+__NOBLE__
+var AxeCrypto = (function () {
+  var N = globalThis.AxeNoble;
+  function utf8(s) { return new TextEncoder().encode(s); }
+  function hex(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) s += (bytes[i] < 16 ? '0' : '') + bytes[i].toString(16);
+    return s;
+  }
+  function b64(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+  function hkdf(ikm, salt, info) { return N.hkdf(N.sha256, ikm, salt && salt.length ? salt : undefined, info, 32); }
+  function hmac(key, msg) { return N.hmac(N.sha256, key, msg); }
+  // 12-byte GCM nonce: four zero bytes, then the sequence as a 64-bit big-endian number.
+  function nonceFor(seq) {
+    var n = new Uint8Array(12), v = new DataView(n.buffer);
+    v.setUint32(4, Math.floor(seq / 4294967296));
+    v.setUint32(8, seq >>> 0);
+    return n;
+  }
+  return {
+    utf8: utf8, hex: hex, hkdf: hkdf, hmac: hmac,
+    authKey: function (viewerToken) {
+      return hkdf(utf8(viewerToken), null, utf8('AxePower-ShareScreen-Auth-v1'));
+    },
+    controlKey: function (viewerToken, code) {
+      return hkdf(utf8(viewerToken), utf8(code), utf8('AxePower-ShareScreen-Control-v1'));
+    },
+    frameKey: function (controlKey, nonce) {
+      return hkdf(controlKey, utf8(nonce), utf8('AxePower-ShareScreen-ControlFrames-v2'));
+    },
+    proof: function (key, channel, nonce) {
+      return hex(hmac(key, utf8('axe-auth|' + channel + '|' + nonce)));
+    },
+    sealFrame: function (frameKey, seq, json) {
+      return seq + '|' + b64(N.gcm(frameKey, nonceFor(seq), utf8('axe-ctl|' + seq)).encrypt(utf8(json)));
+    }
+  };
+})();
+// AXE-CRYPTO-END
+</script>
+<script>
 (function () {
   var WHEP = "__WHEP__", WS = "__WS__";
   var v = document.getElementById('v'), msg = document.getElementById('msg'),
       msgtext = document.getElementById('msgtext'), bar = document.getElementById('bar'),
       ctl = document.getElementById('ctl'), warn = document.getElementById('warn');
-  var sock = null, controlling = false;
+  var sock = null, controlling = false, frameKey = null, frameSeq = 0;
+  // The viewer token rides in the fragment, which the browser never sends. It stays in this page.
+  var VIEWER = new URLSearchParams(location.hash.slice(1)).get('v') || '';
 
   function say(t) { msgtext.textContent = t; msg.style.display = t ? 'flex' : 'none'; }
 
@@ -88,7 +154,14 @@ internal static class ShareViewerPage
         };
       });
 
-      var r = await fetch(WHEP, {
+      // The media server lets a viewer in only with a fresh single-use proof of the link's
+      // token, so knowing the room path alone (it travels in plain HTTP) is not enough to watch.
+      if (!VIEWER) throw new Error('this link is incomplete; ask the host for the full link');
+      var nr = await fetch(location.pathname.replace(/\/+$/, '') + '/nonce', { cache: 'no-store' });
+      if (!nr.ok) throw new Error('host busy (' + nr.status + ')');
+      var watchNonce = (await nr.json()).n;
+      var watchProof = AxeCrypto.proof(AxeCrypto.authKey(VIEWER), 'whep', watchNonce);
+      var r = await fetch(WHEP + '?n=' + encodeURIComponent(watchNonce) + '&p=' + watchProof, {
         method: 'POST',
         headers: { 'Content-Type': 'application/sdp' },
         body: pc.localDescription.sdp
@@ -127,8 +200,25 @@ internal static class ShareViewerPage
     if (code) startControl(code.trim());
   };
 
-  function startControl(code) {
-    sock = new WebSocket(WS + '?k=' + encodeURIComponent(code));
+  // The code never leaves this page: the host hands out a single-use nonce, and the page answers
+  // it with an HMAC keyed by the viewer token and the code. Every input event is then encrypted
+  // under a key bound to that nonce and numbered, so nothing can be read, injected, replayed or
+  // reordered on the way.
+  async function startControl(code) {
+    if (!VIEWER) { alert('This link is incomplete, so control cannot be requested. Ask the host for the full link.'); return; }
+    var nonce;
+    try {
+      var r = await fetch(location.pathname.replace(/\/+$/, '') + '/nonce', { cache: 'no-store' });
+      if (!r.ok) throw new Error(String(r.status));
+      nonce = (await r.json()).n;
+    } catch (_) {
+      alert('The host is not answering. Try again in a moment.');
+      return;
+    }
+    var key = AxeCrypto.controlKey(VIEWER, code.toUpperCase());
+    frameKey = AxeCrypto.frameKey(key, nonce);
+    frameSeq = 0;
+    sock = new WebSocket(WS + '?n=' + encodeURIComponent(nonce) + '&p=' + AxeCrypto.proof(key, 'control', nonce));
     sock.onopen = function () {
       controlling = true;
       ctl.textContent = 'Release control';
@@ -137,7 +227,7 @@ internal static class ShareViewerPage
       attach();
     };
     sock.onclose = function (e) {
-      if (!controlling) alert('The host refused that code, or control is switched off.');
+      if (!controlling) alert('The host refused that code, control is switched off, or someone else is in control.');
       stopControl();
     };
     sock.onerror = function () { /* onclose reports it */ };
@@ -151,10 +241,14 @@ internal static class ShareViewerPage
     ctl.textContent = 'Request control';
     ctl.className = '';
     if (sock) { try { sock.close(); } catch (_) {} sock = null; }
+    frameKey = null;
   }
 
   function send(o) {
-    if (sock && sock.readyState === 1) sock.send(JSON.stringify(o));
+    if (!sock || sock.readyState !== 1 || !frameKey) return;
+    var json = JSON.stringify(o);
+    frameSeq++;
+    sock.send(AxeCrypto.sealFrame(frameKey, frameSeq, json));
   }
 
   // The video is letterboxed inside the element, so the pointer has to be measured against the

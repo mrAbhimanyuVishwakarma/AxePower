@@ -43,6 +43,13 @@ LGPL components (TagLib#) are shipped as separate, unmodified DLLs (`TagLibSharp
 
 The source code of the MPL-2.0 components is available at the source links above. AxePower does not modify them.
 
+### Share Screen viewer page (served to viewers' browsers)
+
+| Component | Version | License | Source | How it is used |
+|---|---|---|---|---|
+| @noble/ciphers (AES-GCM) | 2.4.0 | MIT | https://github.com/paulmillr/noble-ciphers | Bundled unmodified, with @noble/hashes, into `AxePower.Core/Services/ShareScreen/Vendor/noble.min.js` and served inside the viewer page to encrypt remote-control input. |
+| @noble/hashes (SHA-256, HMAC, HKDF) | 2.4.0 | MIT | https://github.com/paulmillr/noble-hashes | As above. |
+
 ### Brand icons (account sign-in)
 
 | Component | Version | License | Source | How it is used |
@@ -60,6 +67,7 @@ The source code of the MPL-2.0 components is available at the source links above
 ### MIT License
 
 Applies to:
+- @noble/ciphers, @noble/hashes: Copyright (c) 2022 Paul Miller (https://paulmillr.com)
 - NAudio.Core, NAudio.Wasapi: Copyright (c) Mark Heath
 - NAudio.Vorbis: Copyright (c) Andrew Ward
 - NVorbis: Copyright (c) 2020 Andrew Ward

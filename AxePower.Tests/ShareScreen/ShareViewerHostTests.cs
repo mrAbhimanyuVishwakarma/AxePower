@@ -27,7 +27,7 @@ public class ShareViewerHostTests : IDisposable
 
     public ShareViewerHostTests()
     {
-        _host = new ShareViewerHost(new LogService(), _input);
+        _host = new ShareViewerHost(new LogService(), _input) { ApproveControl = (_, _) => Task.FromResult(true) };
         // A high port well away from the defaults, so a test never collides with a real session.
         // The advertised friend address is deliberately not loopback. Requests made through
         // loopback must still receive loopback media URLs for a reliable host-side preview.
@@ -109,7 +109,12 @@ public class ShareViewerHostTests : IDisposable
         var code = _host.EnableControl(Screen);
         try
         {
-            Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/ws?k={code}"));
+            // The code itself is refused in the URL; only a proof over a fresh nonce is accepted.
+            Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/ws?k={code}"));
+            var nonce = await GetNonceAsync();
+            var key = ShareScreenCrypto.DeriveControlKey(_room.ViewerToken, code);
+            var proof = ShareScreenCrypto.ComputeProof(key, ShareScreenCrypto.ControlChannel, nonce);
+            Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/ws?n={nonce}&p={proof}"));
         }
         finally
         {
@@ -122,7 +127,9 @@ public class ShareViewerHostTests : IDisposable
     {
         Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/chat"));
         Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/chat?v=wrong"));
-        Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/chat?v={_room.ViewerToken}"));
+        // The old secret-in-the-URL form is refused even with the right token.
+        Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/chat?v={_room.ViewerToken}"));
+        Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/chat?{await ProofQueryAsync("chat")}"));
     }
 
     [Fact]
@@ -130,7 +137,8 @@ public class ShareViewerHostTests : IDisposable
     {
         Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/voice"));
         Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/voice?v=wrong"));
-        Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/voice?v={_room.ViewerToken}"));
+        Assert.Equal(403, await TryUpgradeAsync($"/{_room.PathName}/voice?v={_room.ViewerToken}"));
+        Assert.Equal(101, await TryUpgradeAsync($"/{_room.PathName}/voice?{await ProofQueryAsync("voice")}"));
     }
 
     [Fact]
@@ -192,6 +200,20 @@ public class ShareViewerHostTests : IDisposable
         _host.Stop();
 
         Assert.False(_input.IsAccepting);
+    }
+
+    private async Task<string> GetNonceAsync()
+    {
+        using var client = new HttpClient();
+        var json = await client.GetStringAsync($"{Base}/{_room.PathName}/nonce");
+        return System.Text.Json.JsonDocument.Parse(json).RootElement.GetProperty("n").GetString()!;
+    }
+
+    private async Task<string> ProofQueryAsync(string channel)
+    {
+        var nonce = await GetNonceAsync();
+        var proof = ShareScreenCrypto.ComputeProof(ShareScreenCrypto.DeriveAuthKey(_room.ViewerToken), channel, nonce);
+        return $"n={nonce}&p={proof}";
     }
 
     /// <summary>

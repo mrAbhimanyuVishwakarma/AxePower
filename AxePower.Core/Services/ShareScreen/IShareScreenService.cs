@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Models.ShareScreen;
@@ -15,7 +16,8 @@ public sealed record ShareSessionStatus(
     ShareEncoder? Encoder,
     ShareTelemetry Telemetry,
     RemoteControlState Control = RemoteControlState.Disabled,
-    string ControlCode = "")
+    string ControlCode = "",
+    bool UntrustedNetworkRefused = false)
 {
     public static ShareSessionStatus Idle { get; } = new(
         ShareSessionState.Idle, string.Empty, null, string.Empty,
@@ -61,4 +63,32 @@ public interface IShareScreenService
 
     /// <summary>Broadcasts one Opus voice packet to authenticated participants.</summary>
     void SendVoicePacket(byte[] opusPacket);
+
+    /// <summary>Everyone currently in the room, so the host can see who is watching, listening or in control.</summary>
+    IReadOnlyList<ShareParticipant> GetParticipants();
+
+    event EventHandler? ParticipantsChanged;
+
+    /// <summary>
+    /// A viewer with the right code wants control. The UI shows it and calls Allow or Deny; with
+    /// nobody listening, or no answer within the time limit, the request is refused.
+    /// </summary>
+    event EventHandler<PendingControlApproval>? ControlApprovalRequested;
+}
+
+/// <summary>One control request waiting for the host's answer.</summary>
+public sealed class PendingControlApproval
+{
+    private readonly TaskCompletionSource<bool> _answer = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    public PendingControlApproval(ControlApprovalRequest request) => Request = request;
+
+    public ControlApprovalRequest Request { get; }
+
+    /// <summary>Completes with the host's answer, or false when the request lapses.</summary>
+    public Task<bool> Answer => _answer.Task;
+
+    public void Allow() => _answer.TrySetResult(true);
+
+    public void Deny() => _answer.TrySetResult(false);
 }

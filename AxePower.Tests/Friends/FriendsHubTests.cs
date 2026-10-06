@@ -29,6 +29,9 @@ public class FriendsHubTests
         public void SendChatMessage(ShareChatMessage message) { }
         public event EventHandler<byte[]>? VoicePacketReceived { add { } remove { } }
         public void SendVoicePacket(byte[] opusPacket) { }
+        public IReadOnlyList<ShareParticipant> GetParticipants() => Array.Empty<ShareParticipant>();
+        public event EventHandler? ParticipantsChanged { add { } remove { } }
+        public event EventHandler<PendingControlApproval>? ControlApprovalRequested { add { } remove { } }
     }
 
     internal class FakeDeviceProvider : IShareDeviceProvider

@@ -213,14 +213,14 @@ public sealed class RoomVoiceService : IRoomVoiceService
     public void Stop()
     {
         IsRunning = false;
-        try { _capture?.StopRecording(); } catch { }
+        try { _capture?.StopRecording(); } catch { /* Best-effort teardown of the microphone; the device is released on dispose. */ }
         if (_capture != null)
         {
             _capture.DataAvailable -= OnDataAvailable;
             _capture.RecordingStopped -= OnRecordingStopped;
             _capture.Dispose();
         }
-        try { _output?.Stop(); } catch { }
+        try { _output?.Stop(); } catch { /* Best-effort teardown of the speakers; the device is released on dispose. */ }
         _output?.Dispose();
         _capture = null;
         _output = null;

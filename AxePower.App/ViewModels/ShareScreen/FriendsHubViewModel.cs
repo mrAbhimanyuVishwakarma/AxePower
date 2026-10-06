@@ -218,7 +218,7 @@ public partial class FriendsHubViewModel : ObservableObject
             var found = await _friends.SearchAsync(query, ct);
             if (!ct.IsCancellationRequested) OnUi(() => ShowSuggestions(found, searched: true));
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { /* Cancelled: the search text changed again. */ }
         catch (AccountException ex)
         {
             _log.LogInfo($"[Friends] Search failed ({ex.Error}).");
