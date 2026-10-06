@@ -84,7 +84,7 @@ public sealed class FileCleanupService : IFileCleanupService
         public IntPtr hwnd;
         public uint wFunc;
         public string pFrom;
-        public string pTo;
+        public string? pTo;
         public ushort fFlags;
         public bool fAnyOperationsAborted;
         public IntPtr hNameMappings;
@@ -113,7 +113,7 @@ public sealed class FileCleanupService : IFileCleanupService
                 hwnd = IntPtr.Zero,
                 wFunc = FO_DELETE,
                 pFrom = path + '\0' + '\0',
-                pTo = null!,
+                pTo = null,
                 fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_WANTNUKEWARNING,
             };
             int result = SHFileOperation(ref op);

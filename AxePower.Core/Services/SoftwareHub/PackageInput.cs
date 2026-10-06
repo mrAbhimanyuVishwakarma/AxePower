@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AxePower.Core.Services.SoftwareHub;
 
@@ -34,9 +35,9 @@ public static class PackageInput
     public static string WinGetSource(string id) => StoreIdPattern.IsMatch(id) ? "msstore" : "winget";
 
     /// <summary>An absolute https (or http) address with a host and no user info.</summary>
-    public static bool TryWebUrl(string? value, out Uri uri)
+    public static bool TryWebUrl(string? value, [NotNullWhen(true)] out Uri? uri)
     {
-        uri = null!;
+        uri = null;
         if (string.IsNullOrWhiteSpace(value) || value.Any(c => char.IsControl(c) || char.IsWhiteSpace(c) || c == '"')) return false;
         if (!Uri.TryCreate(value, UriKind.Absolute, out var parsed)) return false;
         if (parsed.Scheme is not ("https" or "http") || string.IsNullOrEmpty(parsed.Host) || !string.IsNullOrEmpty(parsed.UserInfo)) return false;
@@ -45,12 +46,12 @@ public static class PackageInput
     }
 
     /// <summary>An https address on one of <paramref name="allowedHosts"/> (or a subdomain of one).</summary>
-    public static bool TryDownloadUrl(string? value, IReadOnlyCollection<string> allowedHosts, out Uri uri)
+    public static bool TryDownloadUrl(string? value, IReadOnlyCollection<string> allowedHosts, [NotNullWhen(true)] out Uri? uri)
     {
         if (!TryWebUrl(value, out uri) || uri.Scheme != "https") return false;
         var host = uri.IdnHost;
         var allowed = allowedHosts.Any(h => host.Equals(h, StringComparison.OrdinalIgnoreCase) || host.EndsWith("." + h, StringComparison.OrdinalIgnoreCase));
-        if (!allowed) uri = null!;
+        if (!allowed) uri = null;
         return allowed;
     }
 

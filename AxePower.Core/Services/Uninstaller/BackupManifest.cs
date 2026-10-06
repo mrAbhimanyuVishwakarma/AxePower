@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AxePower.Core.Models.Uninstaller;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.Uninstaller;
 
@@ -104,8 +105,15 @@ public sealed class BackupManifestStore
             try
             {
                 if (File.Exists(path))
-                    return JsonSerializer.Deserialize<BackupManifest>(File.ReadAllText(path), JsonOptions)
-                           ?? new BackupManifest { SessionId = sessionId };
+                {
+                    var manifest = JsonSerializer.Deserialize<BackupManifest>(File.ReadAllText(path), JsonOptions)
+                                   ?? new BackupManifest { SessionId = sessionId };
+                    var repair = JsonNullRepair.Repair(manifest);
+                    if (repair.Changed) _log?.LogWarning($"[Uninstaller] The backup index for session {sessionId} had empty values ({repair.Describe()}).");
+                    // The folder name is the session id, so it is known even when the file lost it.
+                    if (manifest.SessionId.Length == 0) manifest.SessionId = sessionId;
+                    return manifest;
+                }
             }
             catch (JsonException ex)
             {

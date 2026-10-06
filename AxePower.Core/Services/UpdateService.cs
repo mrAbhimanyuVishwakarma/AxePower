@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Services.Update;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services;
 
@@ -202,6 +203,10 @@ public class UpdateService
             PropertyNameCaseInsensitive = true
         }) ?? throw new UpdateVerificationException("Failed to deserialize release manifest JSON.");
 
+        // Null fields become their empty defaults, which the signature check then refuses.
+        var repair = JsonNullRepair.Repair(manifest);
+        if (!repair.IsComplete)
+            throw new UpdateVerificationException($"The release manifest is incomplete ({repair.Describe()}).");
         return manifest;
     }
 

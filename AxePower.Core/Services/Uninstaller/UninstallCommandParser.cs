@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 namespace AxePower.Core.Services.Uninstaller;
 
 /// <summary>A registry uninstall command split into the program and its arguments.</summary>
@@ -24,9 +25,9 @@ public sealed record UninstallCommand(string Raw, string FileName, string Argume
 /// </summary>
 public static class UninstallCommandParser
 {
-    public static bool TryParse(string? raw, IFileSystemProbe fs, out UninstallCommand command)
+    public static bool TryParse(string? raw, IFileSystemProbe fs, [NotNullWhen(true)] out UninstallCommand? command)
     {
-        command = null!;
+        command = null;
         if (string.IsNullOrWhiteSpace(raw)) return false;
 
         var text = Environment.ExpandEnvironmentVariables(raw.Trim());

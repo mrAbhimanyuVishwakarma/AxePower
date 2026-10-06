@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AxePower.Core.Models.Music;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.Music;
 
@@ -105,12 +106,14 @@ public sealed class RecentSearchesService
         try
         {
             if (!File.Exists(_paths.RecentSearchesFile)) return new();
-            return JsonSerializer.Deserialize<List<RecentSearch>>(File.ReadAllText(_paths.RecentSearchesFile), Options)?
+            var loaded = JsonSerializer.Deserialize<List<RecentSearch>>(File.ReadAllText(_paths.RecentSearchesFile), Options);
+            if (loaded is null) return new();
+            JsonNullRepair.RepairItems(loaded);
+            return loaded
                 .Where(s => !string.IsNullOrWhiteSpace(s.Query))
-                .Select(s => { s.Results ??= new(); return s; })
                 .OrderByDescending(s => s.SearchedUtc)
                 .Take(Capacity)
-                .ToList() ?? new();
+                .ToList();
         }
         catch (Exception ex)
         {

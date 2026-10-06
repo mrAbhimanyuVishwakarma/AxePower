@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using AxePower.Core.Models.ShareScreen;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.ShareScreen;
 
@@ -78,7 +79,14 @@ public static class RoomMessageCrypto
 
             message = JsonSerializer.Deserialize<ShareChatMessage>(plain);
             sequence = envelope.Sequence;
-            return message != null;
+            // Every field of a chat message is required. A null one ("chunkData": null) would
+            // otherwise reach the chat loops, which read the fields without checking them.
+            if (message is null || !JsonNullRepair.Repair(message).IsComplete)
+            {
+                message = null;
+                return false;
+            }
+            return true;
         }
         catch (Exception ex) when (ex is JsonException or FormatException or CryptographicException or ArgumentException)
         {

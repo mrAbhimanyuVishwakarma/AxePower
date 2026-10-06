@@ -70,7 +70,14 @@ public sealed class GitHubPortableToolDownloader : IPortableToolDownloader
         {
             progress.Report($"{tag} The release points somewhere unexpected; using the known release instead.");
             _log?.LogWarning($"[SoftwareHub] Ignored release asset address for {spec.DisplayName}: {downloadUrl}");
-            PackageInput.TryDownloadUrl(spec.FallbackDownloadUrl, PortableTools.AllowedDownloadHosts, out uri);
+            if (!PackageInput.TryDownloadUrl(spec.FallbackDownloadUrl, PortableTools.AllowedDownloadHosts, out uri) || PackageInput.SafeDownloadFileName(uri, ".exe") is null)
+            {
+                // HttpClient accepts a null address, so this has to be refused here rather than
+                // left to fail somewhere less clear.
+                progress.Report($"\n[ERROR] {spec.DisplayName} has no trusted download address; nothing was downloaded.");
+                _log?.LogWarning($"[SoftwareHub] {spec.DisplayName}: the known release address is not on the allowed hosts either.");
+                return null;
+            }
             version = spec.FallbackVersion;
         }
 

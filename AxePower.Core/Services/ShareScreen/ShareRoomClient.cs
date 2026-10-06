@@ -28,8 +28,11 @@ public static class ShareRoomClient
         response.EnsureSuccessStatusCode();
         await using var body = await response.Content.ReadAsStreamAsync(ct);
         using var json = await JsonDocument.ParseAsync(body, cancellationToken: ct);
-        var nonce = json.RootElement.GetProperty("n").GetString()
-                    ?? throw new InvalidOperationException("The host returned no nonce.");
+        var nonce = json.RootElement.ValueKind == JsonValueKind.Object
+                    && json.RootElement.TryGetProperty("n", out var n) && n.ValueKind == JsonValueKind.String
+            ? n.GetString()
+            : null;
+        if (string.IsNullOrEmpty(nonce)) throw new InvalidOperationException("The host returned no nonce.");
 
         var proof = ShareScreenCrypto.ComputeProof(ShareScreenCrypto.DeriveAuthKey(viewerToken), channel, nonce);
         return new UriBuilder(roomUri)

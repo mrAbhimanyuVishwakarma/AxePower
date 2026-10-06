@@ -274,7 +274,7 @@ public class ParserPropertyFuzzTests : IDisposable
     }
 
     [Fact]
-    public void WebSocketFrames_RoundTripAtEveryLengthBoundary()
+    public async Task WebSocketFrames_RoundTripAtEveryLengthBoundary()
     {
         var scratch = new byte[4096];
         foreach (var length in new[] { 0, 1, 125, 126, 127, 4095, 4096, 4097, 65535, 65536, 70000 })
@@ -283,12 +283,12 @@ public class ParserPropertyFuzzTests : IDisposable
             {
                 var payload = Enumerable.Range(0, length).Select(i => (byte)(i * 31)).ToArray();
                 using var stream = new MemoryStream(Frame(0x2, payload, mask));
-                var frame = ShareViewerHost.ReadFrameAsync(stream, scratch, 80_000, CancellationToken.None).GetAwaiter().GetResult();
+                var frame = await ShareViewerHost.ReadFrameAsync(stream, scratch, 80_000, CancellationToken.None);
                 Assert.NotNull(frame);
                 Assert.Equal(payload, frame.Value.Payload);
 
                 using var tooBig = new MemoryStream(Frame(0x2, payload, mask));
-                if (length > 0) Assert.Null(ShareViewerHost.ReadFrameAsync(tooBig, scratch, length - 1, CancellationToken.None).GetAwaiter().GetResult());
+                if (length > 0) Assert.Null(await ShareViewerHost.ReadFrameAsync(tooBig, scratch, length - 1, CancellationToken.None));
             }
         }
     }

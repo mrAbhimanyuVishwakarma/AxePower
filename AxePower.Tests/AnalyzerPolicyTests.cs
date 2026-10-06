@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -72,14 +73,38 @@ public class AnalyzerPolicyTests
         var testsCsproj = File.ReadAllText(Path.Combine(repoRoot, "AxePower.Tests", "AxePower.Tests.csproj"));
         Assert.DoesNotContain("<NoWarn>", testsCsproj);
 
-        // 4. AxePower.Core has only the documented legacy suppression
+        // 4. AxePower.Core has none either: the CS8600/CS8602/CS8604 suppression was removed in Prompt 22
         var coreCsproj = File.ReadAllText(Path.Combine(repoRoot, "AxePower.Core", "AxePower.Core.csproj"));
-        var match = Regex.Match(coreCsproj, @"<NoWarn>([^<]+)</NoWarn>");
-        Assert.True(match.Success);
-        var noWarnValue = match.Groups[1].Value;
-        Assert.Contains("CS8600", noWarnValue);
-        Assert.Contains("CS8602", noWarnValue);
-        Assert.Contains("CS8604", noWarnValue);
+        Assert.DoesNotContain("<NoWarn>", coreCsproj);
+    }
+
+    [Fact]
+    public void Core_DoesNotSilenceNullabilityWithNullForgivingDefaults()
+    {
+        // Prompt 22 replaced every "null!" and "default!" with an honest annotation
+        // ([NotNullWhen], string?) or restructured control flow. Keep it that way.
+        var core = Path.Combine(FindRepoRoot(), "AxePower.Core");
+        var offenders = Directory.EnumerateFiles(core, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar)
+                        && !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar))
+            .SelectMany(f => File.ReadAllLines(f).Select((line, i) => (f, line, i)))
+            .Where(x => Regex.IsMatch(x.line, @"\b(null|default)!"))
+            .Select(x => $"{Path.GetRelativePath(core, x.f)}:{x.i + 1}")
+            .ToList();
+        Assert.True(offenders.Count == 0, "null!/default! in Core: " + string.Join(", ", offenders));
+    }
+
+    [Fact]
+    public void Core_HasNoNullablePragmasOrFileLevelOptOuts()
+    {
+        var core = Path.Combine(FindRepoRoot(), "AxePower.Core");
+        var offenders = Directory.EnumerateFiles(core, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar)
+                        && !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar))
+            .Where(f => Regex.IsMatch(File.ReadAllText(f), @"#nullable\s+disable|#pragma\s+warning\s+disable\s+CS86"))
+            .Select(f => Path.GetRelativePath(core, f))
+            .ToList();
+        Assert.True(offenders.Count == 0, "Nullable opt-outs in Core: " + string.Join(", ", offenders));
     }
 
     [Fact]

@@ -96,7 +96,7 @@ public class NetworkServerFuzzTests : IDisposable
     // -- LAN Drop ---------------------------------------------------------------
 
     [Fact]
-    public void LanDropServer_SurvivesMutatedRequests()
+    public async Task LanDropServer_SurvivesMutatedRequests()
     {
         var before = RealFolderSnapshot();
         var token = new PortalAccessToken();
@@ -118,7 +118,7 @@ public class NetworkServerFuzzTests : IDisposable
             downloadDirectory: _downloads);
 
         var port = FreePort();
-        Assert.True(service.StartServerAsync("127.0.0.1", port).GetAwaiter().GetResult());
+        Assert.True(await service.StartServerAsync("127.0.0.1", port));
         var t = token.Value;
 
         string Multipart(string b) =>

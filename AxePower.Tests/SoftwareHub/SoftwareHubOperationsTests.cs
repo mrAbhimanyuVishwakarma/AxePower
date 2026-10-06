@@ -417,6 +417,29 @@ public class SoftwareHubOperationsTests
     }
 
     [Fact]
+    public async Task Download_WhenTheKnownReleaseIsOffTheAllowedHostsToo_DownloadsNothing()
+    {
+        // HttpClient accepts a null address, so before Prompt 22 an off-list fallback reached
+        // GetAsync(null) and failed with an uncaught InvalidOperationException.
+        var http = new FakeHttp(); // the release lookup answers 404, so the fallback is used
+        var spec = PortableTools.Dlss5Swapper with { FallbackDownloadUrl = "https://evil.example/DLSS5-Swapper-portable.exe" };
+        var folder = Path.Combine(Path.GetTempPath(), "AxePower_Dl_" + Guid.NewGuid().ToString("N"));
+        var log = new LineSink();
+        try
+        {
+            var exe = await new GitHubPortableToolDownloader(null, http).DownloadAsync(spec, folder, log);
+
+            Assert.Null(exe);
+            Assert.DoesNotContain(http.Requests, u => u.Host.Contains("evil"));
+            Assert.False(Directory.Exists(folder));
+        }
+        finally
+        {
+            try { Directory.Delete(folder, true); } catch { }
+        }
+    }
+
+    [Fact]
     public async Task Download_ThatIsNotAProgram_IsDiscarded_AndKeepsTheWorkingCopy()
     {
         var http = new FakeHttp { Answer = r => r.RequestUri!.Host == "api.github.com"

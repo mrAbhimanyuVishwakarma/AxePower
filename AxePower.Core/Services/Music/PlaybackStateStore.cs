@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using AxePower.Core.Models.Music;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.Music;
 
@@ -56,7 +57,12 @@ public sealed class PlaybackStateStore
             var state = JsonSerializer.Deserialize<PersistedPlaybackState>(File.ReadAllText(_paths.PlaybackStateFile), Options);
             if (state == null || state.Version != PersistedPlaybackState.CurrentVersion) return null;
 
-            state.Queue ??= new();
+            var repair = JsonNullRepair.Repair(state);
+            if (!repair.IsComplete)
+            {
+                _log?.LogWarning($"[Music] Saved playback state was incomplete and was ignored ({repair.Describe()}).");
+                return null;
+            }
             return state;
         }
         catch (Exception ex)

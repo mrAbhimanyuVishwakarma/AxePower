@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Models.Music;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.Music;
 
@@ -89,10 +90,13 @@ public sealed class RecentlyPlayedService : IPlayerIntegration
         try
         {
             if (!File.Exists(_paths.RecentlyPlayedFile)) return new();
-            return JsonSerializer.Deserialize<List<RecentPlay>>(File.ReadAllText(_paths.RecentlyPlayedFile), Options)?
+            var loaded = JsonSerializer.Deserialize<List<RecentPlay>>(File.ReadAllText(_paths.RecentlyPlayedFile), Options);
+            if (loaded is null) return new();
+            JsonNullRepair.RepairItems(loaded);
+            return loaded
                 .Where(p => !string.IsNullOrWhiteSpace(p.Title))
                 .OrderByDescending(p => p.PlayedUtc)
-                .ToList() ?? new();
+                .ToList();
         }
         catch (Exception ex)
         {

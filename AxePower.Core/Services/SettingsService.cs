@@ -2,7 +2,9 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AxePower.Core.Helpers;
 using AxePower.Core.Models;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AxePower.Core.Services;
 
@@ -59,9 +61,9 @@ public class SettingsService
         SaveSettings(new AppSettings());
     }
 
-    private bool TryLoadFile(string path, out AppSettings settings)
+    private bool TryLoadFile(string path, [NotNullWhen(true)] out AppSettings? settings)
     {
-        settings = null!;
+        settings = null;
         try
         {
             if (File.Exists(path))
@@ -70,6 +72,17 @@ public class SettingsService
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json, new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } });
                 if (loaded != null)
                 {
+                    // A null in the file ("AppRules": null) would otherwise reach Clone() and every
+                    // GetSettings() call would throw.
+                    var repair = JsonNullRepair.Repair(loaded);
+                    if (!repair.IsComplete)
+                    {
+                        _logService.LogWarning($"Settings in {path} are incomplete ({repair.Describe()}).");
+                        return false;
+                    }
+                    if (repair.Changed)
+                        _logService.LogWarning($"Settings in {path} had empty values ({repair.Describe()}).");
+
                     settings = loaded;
                     return true;
                 }

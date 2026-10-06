@@ -36,21 +36,23 @@ public sealed class MsiUninstallExecutor : IUninstallExecutor
         if (settings.DryRunMode)
             return UninstallerLauncher.DryRun(UninstallCommandBuilder.Build(application, settings.PreferQuietUninstall, _fs), method);
 
-        UninstallExecution execution = null!;
-        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        for (var attempt = 1; ; attempt++)
         {
             var plan = UninstallCommandBuilder.Build(application, settings.PreferQuietUninstall, _fs, CreateLogPath(application));
             if (!plan.CanRun) return UninstallerLauncher.PlanError(plan, method);
 
-            execution = await UninstallerLauncher.RunAsync(plan, application, settings, _watcher, context, method, cancellationToken)
+            var execution = await UninstallerLauncher.RunAsync(plan, application, settings, _watcher, context, method, cancellationToken)
                 .ConfigureAwait(false);
 
             if (execution.Verdict != ExecutionVerdict.Busy) return execution;
-            if (attempt < MaxAttempts)
-                await Task.Delay(BusyRetryDelay, cancellationToken).ConfigureAwait(false);
+            if (attempt >= MaxAttempts) return StillBusy(execution, method);
+            await Task.Delay(BusyRetryDelay, cancellationToken).ConfigureAwait(false);
         }
+    }
 
-        return new UninstallExecution
+    /// <summary>The answer after the last attempt still found Windows Installer busy.</summary>
+    private static UninstallExecution StillBusy(UninstallExecution execution, string method) =>
+        new UninstallExecution
         {
             Verdict = ExecutionVerdict.Failed,
             ExitCode = execution.ExitCode,
@@ -61,7 +63,6 @@ public sealed class MsiUninstallExecutor : IUninstallExecutor
             LogPath = execution.LogPath,
             Duration = execution.Duration,
         };
-    }
 
     /// <summary>Validates MSI ProductCode format: {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}</summary>
     public static bool IsValidProductCode(string productCode) =>

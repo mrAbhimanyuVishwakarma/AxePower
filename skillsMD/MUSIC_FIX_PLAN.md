@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `ee25700` plus the uncommitted QR encoder replacement and full-link fix in the working tree
+> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `4f47dab` plus uncommitted Prompt 22 work (null-safe loading of playback state, recently played and recent searches) in the working tree
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and

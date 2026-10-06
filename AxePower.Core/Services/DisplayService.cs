@@ -68,10 +68,6 @@ public class DisplayService : IRefreshRateController
 
     #region Win32 CCD (Connecting and Configuring Displays) Structures & P/Invoke
     private const uint QDC_ONLY_ACTIVE_PATHS = 0x00000002;
-    private const uint SDC_APPLY = 0x00000080;
-    private const uint SDC_USE_SUPPLIED_DISPLAY_CONFIG = 0x00000020;
-    private const uint SDC_ALLOW_CHANGES = 0x00000400;
-    private const uint SDC_SAVE_TO_DATABASE = 0x00000200;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct LUID
@@ -187,14 +183,6 @@ public class DisplayService : IRefreshRateController
         [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray,
         IntPtr currentTopologyId);
 
-    [DllImport("user32.dll")]
-    private static extern int SetDisplayConfig(
-        uint numPathArrayElements,
-        DISPLAYCONFIG_PATH_INFO[] pathArray,
-        uint numModeInfoArrayElements,
-        DISPLAYCONFIG_MODE_INFO[] modeInfoArray,
-        uint flags);
-
     // HDR / wide-gamut state for a display target
     private const uint DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9;
 
@@ -251,7 +239,7 @@ public class DisplayService : IRefreshRateController
         {
             var mode = new DEVMODE();
             mode.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
-            if (EnumDisplaySettings(null!, ENUM_CURRENT_SETTINGS, ref mode))
+            if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref mode))
             {
                 info.Width = mode.dmPelsWidth;
                 info.Height = mode.dmPelsHeight;
@@ -406,8 +394,11 @@ public class DisplayService : IRefreshRateController
     }
 
     /// <summary>
-    /// Sets the primary display's refresh rate to a specific frequency in Hz.
-    /// Uses both modern Windows DisplayConfig (CCD) and GDI ChangeDisplaySettingsEx for maximum compatibility.
+    /// Sets the primary display's refresh rate to a specific frequency in Hz, through GDI
+    /// (ChangeDisplaySettingsEx on the primary display only). A DisplayConfig (CCD) path ran first
+    /// until 2026-10-06, but its first QueryDisplayConfig call passed null arrays and always failed
+    /// with ERROR_INVALID_PARAMETER, so every change in practice came from GDI. It was removed rather
+    /// than repaired, because repairing it would start rewriting the saved display configuration.
     /// </summary>
     public bool SetRefreshRate(int targetFrequency)
     {
@@ -415,17 +406,14 @@ public class DisplayService : IRefreshRateController
 
         _logService.LogInfo($"Attempting to set display refresh rate to {targetFrequency}Hz...");
 
-        bool ccdSuccess = TrySetRefreshRateCCD(targetFrequency);
-        bool gdiSuccess = TrySetRefreshRateGDI(targetFrequency);
-
-        bool success = ccdSuccess || gdiSuccess;
+        bool success = TrySetRefreshRateGDI(targetFrequency);
         if (success)
         {
-            _logService.LogInfo($"Successfully applied display refresh rate to {targetFrequency}Hz (CCD: {ccdSuccess}, GDI: {gdiSuccess}).");
+            _logService.LogInfo($"Successfully applied display refresh rate to {targetFrequency}Hz.");
         }
         else
         {
-            _logService.LogError($"Failed to change display refresh rate to {targetFrequency}Hz via both CCD and GDI.", null);
+            _logService.LogError($"Failed to change display refresh rate to {targetFrequency}Hz.", null);
         }
 
         return success;
@@ -477,71 +465,6 @@ public class DisplayService : IRefreshRateController
         catch (Exception ex)
         {
             _logService.LogError($"Error in TrySetRefreshRateGDI ({targetFrequency}Hz)", ex);
-            return false;
-        }
-    }
-
-    private bool TrySetRefreshRateCCD(int targetFrequency)
-    {
-        try
-        {
-            uint pathCount = 0;
-            uint modeCount = 0;
-
-            int queryResult = QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS, ref pathCount, null!, ref modeCount, null!, IntPtr.Zero);
-            if (queryResult != 0 || pathCount == 0 || modeCount == 0)
-            {
-                return false;
-            }
-
-            var paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
-            var modes = new DISPLAYCONFIG_MODE_INFO[modeCount];
-
-            queryResult = QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS, ref pathCount, paths, ref modeCount, modes, IntPtr.Zero);
-            if (queryResult != 0)
-            {
-                return false;
-            }
-
-            // Only the primary display (its source sits at the desktop origin). Writing the rate
-            // onto every path forced the laptop panel's Hz onto second screens and virtual
-            // displays such as spacedesk, and SDC_SAVE_TO_DATABASE then persisted whatever mode
-            // Windows fell back to — which is how their resolution/layout kept getting "reset".
-            int primary = Array.FindIndex(paths, p =>
-                p.sourceInfo.modeInfoIdx < modeCount &&
-                modes[p.sourceInfo.modeInfoIdx].infoType == 1 && // 1 = SOURCE
-                modes[p.sourceInfo.modeInfoIdx].modeInfo.sourceMode.position is { x: 0, y: 0 });
-            if (primary < 0)
-            {
-                return false;
-            }
-
-            paths[primary].targetInfo.refreshRate.Numerator = (uint)(targetFrequency * 1000);
-            paths[primary].targetInfo.refreshRate.Denominator = 1000;
-
-            uint targetModeIdx = paths[primary].targetInfo.modeInfoIdx;
-            if (targetModeIdx < modeCount && modes[targetModeIdx].infoType == 2) // 2 = TARGET
-            {
-                modes[targetModeIdx].modeInfo.targetMode.targetVideoSignalInfo.vSyncFreq.Numerator = (uint)(targetFrequency * 1000);
-                modes[targetModeIdx].modeInfo.targetMode.targetVideoSignalInfo.vSyncFreq.Denominator = 1000;
-            }
-
-            uint setFlags = SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_ALLOW_CHANGES | SDC_SAVE_TO_DATABASE;
-            int setResult = SetDisplayConfig(pathCount, paths, modeCount, modes, setFlags);
-
-            if (setResult == 0)
-            {
-                return true;
-            }
-
-            // Retry with simple SDC_APPLY | SDC_ALLOW_CHANGES | SDC_USE_SUPPLIED_DISPLAY_CONFIG
-            setFlags = SDC_APPLY | SDC_USE_SUPPLIED_DISPLAY_CONFIG | SDC_ALLOW_CHANGES;
-            setResult = SetDisplayConfig(pathCount, paths, modeCount, modes, setFlags);
-            return setResult == 0;
-        }
-        catch (Exception ex)
-        {
-            _logService.LogError($"Error in TrySetRefreshRateCCD ({targetFrequency}Hz)", ex);
             return false;
         }
     }

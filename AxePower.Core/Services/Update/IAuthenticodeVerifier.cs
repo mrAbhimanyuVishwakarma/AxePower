@@ -141,7 +141,7 @@ public sealed class WindowsAuthenticodeVerifier : IAuthenticodeVerifier
             wvtData.pFile = pFileInfo;
             wvtData.dwStateAction = 0; // WTD_STATEACTION_IGNORE
             wvtData.hWVTStateData = IntPtr.Zero;
-            wvtData.pwszURLReference = null!;
+            wvtData.pwszURLReference = null;
             wvtData.dwProvFlags = 0x00000040 | 0x00000080; // WTD_CACHE_ONLY_URL_RETRIEVAL | WTD_REVOCATION_CHECK_NONE
             wvtData.dwUIContext = 0;
 
@@ -192,7 +192,7 @@ public sealed class WindowsAuthenticodeVerifier : IAuthenticodeVerifier
         public uint dwStateAction;
         public IntPtr hWVTStateData;
         [MarshalAs(UnmanagedType.LPWStr)]
-        public string pwszURLReference;
+        public string? pwszURLReference;
         public uint dwProvFlags;
         public uint dwUIContext;
     }
