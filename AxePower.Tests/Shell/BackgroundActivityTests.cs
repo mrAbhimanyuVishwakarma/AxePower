@@ -135,8 +135,17 @@ public class BackgroundActivityTests
         Assert.False(shell.Telemetry.IsSampling);
         Assert.False(shell.Vm.DashboardVm.IsLive);
 
-        await Task.Delay(2000); // a sampler mid-tick finishes its last child process
-        Assert.DoesNotContain(ChildProcesses(), name => name is not ("conhost.exe" or "dotnet.exe"));
+        // A sample in flight at shutdown may still be finishing nvidia-smi (it can take seconds while
+        // the GPU wakes, and the sampler kills it on its own timeout). Anything still alive after
+        // 10 s is a real leftover.
+        string[] left = Array.Empty<string>();
+        for (int i = 0; i < 20; i++)
+        {
+            left = ChildProcesses().Where(name => name is not ("conhost.exe" or "dotnet.exe")).ToArray();
+            if (left.Length == 0) break;
+            await Task.Delay(500);
+        }
+        Assert.Empty(left);
         shell.Dispose(); // only deletes the temp settings folder now: everything else is released
     });
 

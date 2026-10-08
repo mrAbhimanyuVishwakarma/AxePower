@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "polar-night",
+  "name": "Polar Night",
+  "description": "Arctic blue-grey with frost accents. Quiet and low glare.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#242933",
+    "sidebar": "#2E3440",
+    "card": "#3B4252",
+    "cardElevated": "#434C5E",
+    "hover": "#4C566A",
+    "border": "#4C566A",
+    "divider": "#3B4252",
+    "textPrimary": "#ECEFF4",
+    "textSecondary": "#D8DEE9",
+    "textMuted": "#B5BDCC",
+    "textDisabled": "#6B7489",
+    "accent": "#91C5D3",
+    "success": "#ACC598",
+    "warning": "#EBCB8B",
+    "error": "#FAA6AE",
+    "eco": "#A3BE8C",
+    "smart": "#81A1C1",
+    "beast": "#D08770",
+    "buttonPrimary": "#88C0D0",
+    "buttonPrimaryText": "#2E3440"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#88C0D0, #81A1C1, #B48EAD"
+  }
+}

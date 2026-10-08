@@ -20,6 +20,11 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues"
 AppUpdatesURL="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases"
+; Version resource on Setup.exe itself, so its file version matches the app (Prompt 33)
+VersionInfoVersion={#AppVersion}
+VersionInfoProductVersion={#AppVersion}
+VersionInfoCompany={#AppPublisher}
+VersionInfoDescription={#AppName} Setup
 DefaultDirName={autopf}\{#AppName}
 UsePreviousAppDir=yes
 DisableProgramGroupPage=yes
@@ -57,6 +62,10 @@ Source: "install-dotnet.ps1"; Flags: dontcopy
 Source: "{#PublishDir}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion restartreplace
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
+; License, security policy and privacy policy ship with the app (Prompt 33)
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "..\SECURITY.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\security\PRIVACY.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [InstallDelete]
 ; v1.7 and earlier shipped the launcher as AxePower.App.exe — drop the stale files

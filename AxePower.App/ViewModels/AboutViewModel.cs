@@ -426,8 +426,13 @@ public partial class AboutViewModel : ObservableObject
     {
         if (!string.IsNullOrWhiteSpace(DownloadedInstallerPath) && File.Exists(DownloadedInstallerPath))
         {
-            _updateService?.ApplyUpdate(DownloadedInstallerPath);
-            Application.Current?.Shutdown();
+            // Close only once the installer is running: a refused installer (it changed after it
+            // was verified) must not take AxePower down with nothing installed
+            if (_updateService?.ApplyUpdate(DownloadedInstallerPath) == true)
+                Application.Current?.Shutdown();
+            else
+                _notificationService?.Show(new AxePower.Core.Services.Outcomes.UserMessage(
+                    "The update was not started: the downloaded file could not be verified again. Check for updates to download it afresh.", null, IsFailure: true));
         }
         else if (!string.IsNullOrWhiteSpace(DownloadUrl))
         {

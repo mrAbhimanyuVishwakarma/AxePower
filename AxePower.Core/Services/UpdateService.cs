@@ -301,6 +301,7 @@ public class UpdateService
             // If the destination file already exists and passes full Authenticode & hash checks, reuse it.
             if (File.Exists(destinationPath) && VerifyCompletedFile(destinationPath, manifest))
             {
+                RememberVerified(destinationPath, manifest.Sha256);
                 ReportDownloadProgress(progress, 100, "Update is ready to install.");
                 _logService.LogInfo($"Reusing existing verified update: {destinationPath}");
                 return destinationPath;
@@ -390,6 +391,7 @@ public class UpdateService
                 File.Delete(destinationPath);
             }
             File.Move(tempStagingPath, destinationPath);
+            RememberVerified(destinationPath, expectedHash);
 
             ReportDownloadProgress(progress, 100, "Update downloaded and cryptographically verified. Ready to install.");
             _logService.LogInfo($"Update downloaded and verified successfully: {destinationPath}");
@@ -416,6 +418,12 @@ public class UpdateService
         }
     }
 
+    /// <summary>SHA-256 of each installer this session downloaded and verified, by full path.</summary>
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _verifiedInstallers = new(StringComparer.OrdinalIgnoreCase);
+
+    internal void RememberVerified(string path, string sha256) =>
+        _verifiedInstallers[Path.GetFullPath(path)] = sha256.Trim().ToLowerInvariant();
+
     public bool ApplyUpdate(string installerPath)
     {
         try
@@ -423,6 +431,23 @@ public class UpdateService
             if (string.IsNullOrWhiteSpace(installerPath) || !File.Exists(installerPath))
             {
                 _logService.LogError($"Refusing to launch update: file does not exist '{installerPath}'");
+                return false;
+            }
+
+            // The installer waited in %TEMP% since it was verified; anything running as this user
+            // could have replaced it, and the user is about to approve it as administrator
+            // (FINAL_SECURITY_REVIEW M1). Hash it again under a lock that denies writes and
+            // deletes, and hold that lock until the installer process has started.
+            if (!_verifiedInstallers.TryGetValue(Path.GetFullPath(installerPath), out var verifiedHash))
+            {
+                _logService.LogError("Refusing to launch update: this installer was not downloaded and verified in this session.");
+                return false;
+            }
+            using var locked = new FileStream(installerPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            string currentHash = Convert.ToHexString(SHA256.HashData(locked)).ToLowerInvariant();
+            if (!string.Equals(currentHash, verifiedHash, StringComparison.Ordinal))
+            {
+                _logService.LogError("Refusing to launch update: the installer changed after it was verified.");
                 return false;
             }
 

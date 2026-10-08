@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "deep-ocean",
+  "name": "Deep Ocean",
+  "description": "The abyss, lit by bioluminescent cyan.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#03101C",
+    "sidebar": "#051726",
+    "card": "#082033",
+    "cardElevated": "#0C2A42",
+    "hover": "#103552",
+    "border": "#1A4A6E",
+    "divider": "#0C2A42",
+    "textPrimary": "#E6FBFF",
+    "textSecondary": "#A5E7F2",
+    "textMuted": "#5FA8C0",
+    "textDisabled": "#2F5F75",
+    "accent": "#22D3EE",
+    "success": "#2DD4BF",
+    "warning": "#FBBF24",
+    "error": "#F87171",
+    "eco": "#2DD4BF",
+    "smart": "#22D3EE",
+    "beast": "#FB923C",
+    "buttonPrimary": "#22D3EE",
+    "buttonPrimaryText": "#02121E"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 20,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#22D3EE, #2563EB, #2DD4BF"
+  }
+}

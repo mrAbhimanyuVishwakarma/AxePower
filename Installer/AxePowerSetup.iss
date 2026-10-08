@@ -35,7 +35,8 @@ Name: "{autodesktop}\AxePower"; Filename: "{app}\AxePower.exe"; Tasks: desktopic
 ; Public stays under Windows' default inbound block. Delete first so upgrades never duplicate it.
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""AxePower LAN Drop"" dir=in action=allow program=""{app}\AxePower.exe"" protocol=TCP localport=5050 profile=private,domain enable=yes"; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
-Filename: "{app}\AxePower.exe"; Description: "{cm:LaunchProgram,AxePower}"; Flags: nowait postinstall skipifsilent
+; runasoriginaluser: Setup is elevated, but AxePower must start as the normal user (FINAL_SECURITY_REVIEW L3)
+Filename: "{app}\AxePower.exe"; Description: "{cm:LaunchProgram,AxePower}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallRun]
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveLanDropFirewallRule"

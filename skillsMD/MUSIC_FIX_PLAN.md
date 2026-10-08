@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `26fb737` plus uncommitted Prompts 28–30 (accessibility; idle work and shutdown; plain error messages) in the working tree
+> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-08 · **Last commit covered:** `5167682` plus uncommitted Prompts 32–35 (security fixes, release-candidate packaging, review and release documents; no Music or portal change) in the working tree
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and

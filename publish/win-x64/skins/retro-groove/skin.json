@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "retro-groove",
+  "name": "Retro Groove",
+  "description": "Warm 70s browns with orange and mustard.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#1D2021",
+    "sidebar": "#282828",
+    "card": "#32302F",
+    "cardElevated": "#3C3836",
+    "hover": "#504945",
+    "border": "#504945",
+    "divider": "#3C3836",
+    "textPrimary": "#FBF1C7",
+    "textSecondary": "#EBDBB2",
+    "textMuted": "#BDAE93",
+    "textDisabled": "#7C6F64",
+    "accent": "#FE8019",
+    "success": "#B8BB26",
+    "warning": "#FABD2F",
+    "error": "#FC7D6E",
+    "eco": "#B8BB26",
+    "smart": "#83A598",
+    "beast": "#FB4934",
+    "buttonPrimary": "#FABD2F",
+    "buttonPrimaryText": "#1D2021"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#FE8019, #FABD2F, #B8BB26"
+  }
+}

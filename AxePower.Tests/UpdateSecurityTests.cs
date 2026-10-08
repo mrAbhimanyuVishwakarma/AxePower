@@ -409,6 +409,48 @@ public class UpdateSecurityTests
         }
     }
 
+    /// <summary>
+    /// FINAL_SECURITY_REVIEW M1: with Authenticode not required (unsigned releases), the installer
+    /// waiting in %TEMP% is hashed again under a no-write lock before launch. These never reach the
+    /// launch: a refused installer is never started.
+    /// </summary>
+    [Fact]
+    public void ApplyUpdate_RefusesAnInstallerItNeverVerified()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"axepower_unverified_{Guid.NewGuid():N}.exe");
+        try
+        {
+            File.WriteAllBytes(file, new byte[] { (byte)'M', (byte)'Z', 1, 2, 3 });
+            var service = new UpdateService(new LogService(), new UpdateSecurityOptions { RequireAuthenticode = false }, new WindowsAuthenticodeVerifier());
+            Assert.False(service.ApplyUpdate(file));
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public void ApplyUpdate_RefusesAnInstallerChangedAfterVerification()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"axepower_swapped_{Guid.NewGuid():N}.exe");
+        try
+        {
+            var original = new byte[] { (byte)'M', (byte)'Z', 1, 2, 3 };
+            File.WriteAllBytes(file, original);
+            var service = new UpdateService(new LogService(), new UpdateSecurityOptions { RequireAuthenticode = false }, new WindowsAuthenticodeVerifier());
+            service.RememberVerified(file, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(original)));
+
+            File.WriteAllBytes(file, new byte[] { (byte)'M', (byte)'Z', 6, 6, 6 }); // swapped after verification
+
+            Assert.False(service.ApplyUpdate(file));
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
     [Fact]
     public void MzOnlyHeader_WithoutAuthenticodeOrManifest_IsRejected()
     {

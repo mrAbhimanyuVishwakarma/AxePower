@@ -1,0 +1,779 @@
+﻿{
+    "serialNumber":  "urn:uuid:4f868489-8bae-4b37-84d0-197a0e18187a",
+    "version":  1,
+    "bomFormat":  "CycloneDX",
+    "metadata":  {
+                     "tools":  [
+                                   {
+                                       "vendor":  "AxePower",
+                                       "version":  "1.0.0",
+                                       "name":  "generate-sbom"
+                                   }
+                               ],
+                     "timestamp":  "2026-10-06T11:04:33.6946673Z",
+                     "component":  {
+                                       "description":  "Windows Power Optimization \u0026 Management Suite",
+                                       "name":  "AxePower",
+                                       "version":  "2.1.2",
+                                       "type":  "application"
+                                   }
+                 },
+    "components":  [
+                       {
+                           "type":  "library",
+                           "version":  "8.2.2",
+                           "purl":  "pkg:nuget/CommunityToolkit.Mvvm@8.2.2",
+                           "name":  "CommunityToolkit.Mvvm",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "af483493db4661dae7cfc47b4f7c79522a240df7de7afccaff63fff5204be9fa8b80df01d79ecc222fdb554588d4a033e99a2b66b2bd01d00109651e5d966cbc"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.0.1",
+                           "purl":  "pkg:nuget/Hardcodet.NotifyIcon.Wpf@2.0.1",
+                           "name":  "Hardcodet.NotifyIcon.Wpf",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "76dc667995f35761b34a6f75699de1ab3828795a004529033d50987e1554372c8a056631320342d0470b8926310f851ce1a96aff6a9bdd2995f0380010d2d12d"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "8.0.0",
+                           "purl":  "pkg:nuget/Microsoft.Extensions.DependencyInjection@8.0.0",
+                           "name":  "Microsoft.Extensions.DependencyInjection",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "57c4b76ec9b9d2283a252cab6dc249f1b5b66fd40b1a8bb3f86d6688add44da39698cb45c0d34dcd47f80257b20d65264eb58c2cd9c548b110b719b180d42735"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.0.3485.44",
+                           "purl":  "pkg:nuget/Microsoft.Web.WebView2@1.0.3485.44",
+                           "name":  "Microsoft.Web.WebView2",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "e2193e30325c5ba1dcbed7dbd2abf4cdb6bd9a9045c4cd863bd809fbc36aff3a0077015a9e6b7b8f3bccd3b34f07f51cb90fe36692a1f485032ff795384161d8"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.0.7",
+                           "purl":  "pkg:nuget/BlackSharp.Core@1.0.7",
+                           "name":  "BlackSharp.Core",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "2db11ce30d2867bc38a7afbc3a33d9830b095b8ef469046e619819f5a30dd8f5bd47bf695b73a7650df6015571ff6d6bb2d5fd98a6d768e2d6a52031a00358c5"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.2.2",
+                           "purl":  "pkg:nuget/Concentus@2.2.2",
+                           "name":  "Concentus",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "d81f589873ca3be93b6290009ea9a25f088c2677e37e3d42f3af11b333a597689958b9c64c0882d6adb52ff77b0af4da9fb4fe872a94f1d4740dccb77298d57d"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.0.7",
+                           "purl":  "pkg:nuget/Concentus.Oggfile@1.0.7",
+                           "name":  "Concentus.Oggfile",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "aca5ad239a224d6a8ada8975696bc84f50514cf8b4ed4a358407add32b10a1942a168fe6c41470afe111c3cf5f21d90bded6cc7f79dca16edbdc70c6c7c4a4e2"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.1.2",
+                           "purl":  "pkg:nuget/DiskInfoToolkit@1.1.2",
+                           "name":  "DiskInfoToolkit",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "bcde3ab2fb758500e49b6ebda7a0b37f00e96ff7dbca9f28350b9e3dcbe3352af23cb7ecc4825953c6a61218abfb1e5bb0a774ca63974f24b33f014ef28d1da7"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.6.4",
+                           "purl":  "pkg:nuget/HidSharp@2.6.4",
+                           "name":  "HidSharp",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "51c1afb675c571ab701c15ebf9e8bc1845ef83fff08c6983190e97bdbfbb338bc78d44408522c827e75266fd019c08501293651fc1b83fb271627307f00a61e2"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "0.9.6",
+                           "purl":  "pkg:nuget/LibreHardwareMonitorLib@0.9.6",
+                           "name":  "LibreHardwareMonitorLib",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "5b8850e496b9d7fd5c10366787d906e541c50708e3636fa8229494852b207985ca44a7b3ae4c37b0416b85092b3aea39df1917c9f595f1912b32a42e1aa58831"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "8.0.31",
+                           "purl":  "pkg:nuget/Microsoft.Data.Sqlite@8.0.31",
+                           "name":  "Microsoft.Data.Sqlite",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "58133ed2505c50a788b4a080741b936ab898a15dad0080b1138152cc50f19595f1f663b5612afd3410fbbd7dad62b2821ca3a1a5dc1524f6bb7cc0facd51c38f"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "8.0.31",
+                           "purl":  "pkg:nuget/Microsoft.Data.Sqlite.Core@8.0.31",
+                           "name":  "Microsoft.Data.Sqlite.Core",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "a3a9ae0fa54b3bf12de429a2e54192be3e5cc234e9736ebf38feb3f7afb868ae1884298a9521e415310a0a247f2730c323a13faab91f12df726eef49d2d88aad"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "8.0.0",
+                           "purl":  "pkg:nuget/Microsoft.Extensions.DependencyInjection.Abstractions@8.0.0",
+                           "name":  "Microsoft.Extensions.DependencyInjection.Abstractions",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "7235ab2e42572b4aece33a1fb0ae1b49d83e8e10cb4dac6b917bb8812e98ecc0250af47234d83063f9498b94439503a7499c1e1eaa32be0bdb76f42c4485be86"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "3.0.0",
+                           "purl":  "pkg:nuget/Microsoft.Management.Infrastructure@3.0.0",
+                           "name":  "Microsoft.Management.Infrastructure",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "706662d2ae48ba30935582a8f61db63f0f94c1f64357cd875cef074f1306d87aa7b4f953dcbb3c8d8ea9ba72e9e18cc2ca924da5f080bb691a7b74c8cae02227"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "3.0.0",
+                           "purl":  "pkg:nuget/Microsoft.Management.Infrastructure.Runtime.Unix@3.0.0",
+                           "name":  "Microsoft.Management.Infrastructure.Runtime.Unix",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "419137b840ef6749bb2da6d0bdc98d3981e9eefd503c154ca41fe295dd16104f33a945403f9cbdad1239c1edfb2262356d0996e6967edc7342ef43ce3e6d2305"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "3.0.0",
+                           "purl":  "pkg:nuget/Microsoft.Management.Infrastructure.Runtime.Win@3.0.0",
+                           "name":  "Microsoft.Management.Infrastructure.Runtime.Win",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "bb033258ddf7fa243c5a6fe7d72a0f5e016889835dd07cc9ca8a9256169067225f690ac9477b9d81c2078ea6b5a9b737952ea4bdfb9430de13ac5e14e2b79f09"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.10",
+                           "purl":  "pkg:nuget/Microsoft.Win32.SystemEvents@10.0.10",
+                           "name":  "Microsoft.Win32.SystemEvents",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "218d254df0b6b95c138b38ed1a0434dd58b0c97190f653036e5cc1f3cf7f1f282e01927627ca51ae33e8c27f21d9e25ef1615cf2787e05412c10f92c8738b361"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.0.0",
+                           "purl":  "pkg:nuget/Mono.Posix.NETStandard@1.0.0",
+                           "name":  "Mono.Posix.NETStandard",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "bd237f2f5b9a5702ac88b6bde5b62ed921a4174898df131b9537f173c6a54b388fb957c9a63de0795a8718003be49edc66432e2a91558a4cfcd8ba3acba2cb74"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.4.0",
+                           "purl":  "pkg:nuget/NAudio.Core@2.4.0",
+                           "name":  "NAudio.Core",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "5435e2d56a75094160331632c9a8da1bcb0cf5cf6fe4c7f601d2646149e4b2ac04352a9596b5ec3def65fe61b9e69348bfd78c617187888c55ba14bbf9adc142"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.5.0",
+                           "purl":  "pkg:nuget/NAudio.Vorbis@1.5.0",
+                           "name":  "NAudio.Vorbis",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "96524c9949c57f41467f81b514a35fb71b7e55cd42bc1092ba5d1481bbff45a8466e9285da9fae8d21091f26cf8e5f5be058db2bc3b6bd114871119c55f028a0"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.4.0",
+                           "purl":  "pkg:nuget/NAudio.Wasapi@2.4.0",
+                           "name":  "NAudio.Wasapi",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "0cac291738099149207b8b11fb9b7f0cd0f549bb873895d05f7041aa799dd27ff38ccfc2a81a9b280d7031728829d3764753ed113543bb90bd3833e27f7ee187"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "0.10.4",
+                           "purl":  "pkg:nuget/NVorbis@0.10.4",
+                           "name":  "NVorbis",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "5989e29770e1407ce3098d1d33d236077af5bd68a9f7400eb90776e4a13836b8cf401834b4124596e44b9b960f9cee592c39b0adfa2c63c8c240641199623f3e"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.8.0",
+                           "purl":  "pkg:nuget/QRCoder@1.8.0",
+                           "name":  "QRCoder",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "46ebd7dcf11753aa5b63f23922d024f34d239badabf989e83cb8324b6593830c643a71a439f53d3918a2a47505d0b90bcaa33cae5ae8502037d7d2634587d115"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "1.4.2",
+                           "purl":  "pkg:nuget/RAMSPDToolkit-NDD@1.4.2",
+                           "name":  "RAMSPDToolkit-NDD",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "a6a2309ff1ea5c59d6e0554ac9baba81987760ad7838e2c65a4819cc375ec230089c23aef3a10ed8bf85090a3c8f5fefd6c2b0bfebe05f9a677a1c72ae525827"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.android-arm.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.android-arm.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "e96e2a657d17ec517e3c733d29a6b966c4cb706240cc253b141e138f2d6f4e0dab5081230ea8a3593b69cfcbd8ea007365a1beb43d3f10a5321a77eae9dfddfd"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.android-arm64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.android-arm64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "e0e74d8360eed64be6d1be2d484ae4038c1f1f7d989a052a7922f37a493a35d091eb56eb0a9e2fb6d4c99747a964cc1b469a57bb2fe363ba55d16b4fe329a77d"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.android-x64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.android-x64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "9cfef12520d2a9192d57890477492be27d31873245b908e1ecbfc082b281dc2e102b94c0ffc362989993975a209e0be75e7daf8a51f61e4fa478122fba819608"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.android-x86.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.android-x86.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "7ff9deaa28e8569825fcf72b5d878b35f082dadef85d821c687bed49a177cda21d27785fe70af0442f60cd82d71d12e0fe3e0346c087130f2b96ec7f74d87b5c"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-arm.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-arm.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "7308909b2f7965de362b890ccc3b7c1a45cd2875839116482326f732d791ae024ab9b1f60cc03a558dc9885791fb5850ee2df50a4f9d632b7cc14904959fcdad"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-arm64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-arm64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "704c7e5e6d1934fb2ea184c5c1767aa91b2dc1743bbc98db6f78d6ce8e6ce7121e120a530dd7e25234e02b71a5eb5f265a06fbf869fa56de694f4ed1c450b6f1"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-bionic-arm64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-bionic-arm64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "901db5b0dce52a04e3dd5fcb6619d32c5b958a218ab648941b619d116fb3de375e52d468c6a0415ebcb332acb4a143b2e627415b6a40e9b87e88b19a8fe19384"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-bionic-x64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-bionic-x64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "fd477b1187699c1189ff1ec376a545109390b4471ff6bb03ebfd62c9404935f861b3c2658d92dec091e9d5c5ebd4354269659cf6349621ce20f90a4c72dff6d8"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-musl-arm.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-musl-arm.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "a41b9bba49265c3f5ee09bb4d386c41cbdd31399986a138d095c2b2796feeff723f2c9926361f9b0a4f251189517511f5f9e723912b24f24377402c0e724d396"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-musl-arm64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-musl-arm64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "f8547a4afa59c9aeba5afdba31510ae25da09e37d99c1554cfaef979a4dc310fca580cbe18c68fca145a0483274097f981fbaedf1d6a81e033a6678590e3c607"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-musl-x64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-musl-x64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "11ed579ce48a81e24605c9ddecb2cb9325c46c4fc9729437a5495b3d7aae825d180f9e6356e6e961e6f319823e8a5ae704b091895d0147cdb66f65e67ab20a1b"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.linux-x64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.linux-x64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "53e66bd4ab810c8230811da04cc15b040b64af85a729d117c669273dadd7f10cbaa028b8f8c4d19aadb399387bc315d05d376685f5e0dadcb2ec3b951ed07ec5"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.maccatalyst-arm64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.maccatalyst-arm64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "f724e087764a0814c610ee184bbea0fcad79b36a9275e1190ea5ad7a2c543de46c113b2e054c143c5dfd164dfd38f95183086a12e86d1f2d477fa0523844df02"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.maccatalyst-x64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.maccatalyst-x64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "d20c6a519610d53d68e55ce0c8430a8923ca26d3db95e1769db8d96b940a650bcf81296b6452fe16b5b82f2c08936b1c3a95eef9577932ff0018657bb2585858"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "ed4dc75b427301e83d3d669805cc962c532ad9149ec6027cb95091dc4d9054927f2199d14f4c18461c84c77cc149b298ccddca13a30389177a08de2147b624a8"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.osx-arm64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.osx-arm64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "aa71235e521acf169102105eb7412ea56a0943d3cab178d386930a18ffd9b028d980711bfb3b3dc1fb7cdb0636ece6a0c8f38283d0f88491d62ade4b4db24d66"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/runtime.osx-x64.runtime.native.System.IO.Ports@10.0.3",
+                           "name":  "runtime.osx-x64.runtime.native.System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "2f581c38be6471f79eba32906ea266a5e4cbb13d1ce8379a27dc3a3d8f6867efd6112cb26be663ed2b4a82e5d1e63f77a37a3ce858dc374e72b9fa680b3ed1da"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.1.12",
+                           "purl":  "pkg:nuget/SQLitePCLRaw.bundle_e_sqlite3@2.1.12",
+                           "name":  "SQLitePCLRaw.bundle_e_sqlite3",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "98082c72940c2f0e7f9df035439a095404f6f7244e528d627d919b6d3a71fe5c19a52c4c506a186ca7e6bdd9bca17111f91cf1a819a643378111529f787bf69f"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.1.12",
+                           "purl":  "pkg:nuget/SQLitePCLRaw.core@2.1.12",
+                           "name":  "SQLitePCLRaw.core",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "113a4dc3d0d8ddc9162e045101e0878fe18a3ae3e2eb569e7339178601dec54beaa19040620f11604484d89eced4cefea3a41b752119c2bc3d6dfab3b545565e"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.1.12",
+                           "purl":  "pkg:nuget/SQLitePCLRaw.lib.e_sqlite3@2.1.12",
+                           "name":  "SQLitePCLRaw.lib.e_sqlite3",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "7d68bc0db927ba1820ef67d68a721d8d755aa8ed611cbe18041c152e7afb7b573d4c0670274404dfc8fdb325b5870c7a1daa84553c08f8ed3b58f7599fc469d3"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.1.12",
+                           "purl":  "pkg:nuget/SQLitePCLRaw.provider.e_sqlite3@2.1.12",
+                           "name":  "SQLitePCLRaw.provider.e_sqlite3",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "5b7a07e1721f0b316b81448328784de8df9d833039607391d95c57f0607a432ec2cab2498313c41bc362ae061694f402e4fda3cf69274ac7b15aee2d0d42f7de"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.10",
+                           "purl":  "pkg:nuget/System.CodeDom@10.0.10",
+                           "name":  "System.CodeDom",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "96bbb98a02b1b383a058a7cc78ea4c018a5f075b4d4925c7936cf28920cefe1d2ef1154084de8aa96f5ddc03726c307e78f20783a1ccfcd944f079693a4e24e4"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.10",
+                           "purl":  "pkg:nuget/System.Diagnostics.EventLog@10.0.10",
+                           "name":  "System.Diagnostics.EventLog",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "3af1b3dcfaf3b8023f4a3ecb4dc5dc09edc50a5448d48c913198cd38d719b4587e5b0ee702d4a1e24874f2bf0a55eff1c645c93e34746358c5ec7f8de36778c5"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "6.0.0",
+                           "purl":  "pkg:nuget/System.Drawing.Common@6.0.0",
+                           "name":  "System.Drawing.Common",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "35fba829488fda7516c0a64deadc06a978a821ed73543d11223dadf7be80f9cccb1ebda7638e78470c17b3a254f47b5cea6c2a2fa0e7fe710bddda557f68ce86"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/System.IO.Ports@10.0.3",
+                           "name":  "System.IO.Ports",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "66cd38999fdd42d68543e86940d0ed8a306cfba68cf63d9f40fa7cccd6537e1f036e854d36fed2c3a807d34853f8f55c021128ce57d3fa7e7d4af9ba520f1138"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.10",
+                           "purl":  "pkg:nuget/System.Management@10.0.10",
+                           "name":  "System.Management",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "535de4b1d5df42517658376edd2e193d5a62905b361e057775b24964b799a41210e33ff10a6427c047fa2ec104202db349a99555ad5a700f51755859c2758a78"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "4.5.4",
+                           "purl":  "pkg:nuget/System.Memory@4.5.4",
+                           "name":  "System.Memory",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "d4c6c94c74b5959e1b4b8166b098e7b8624ebbcf19cd34f6acbbeb856ed882273ea42d0d580fb786001e9f41d176ca1cb905c29144dd167f721c9261b228c35f"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "4.5.0",
+                           "purl":  "pkg:nuget/System.Numerics.Vectors@4.5.0",
+                           "name":  "System.Numerics.Vectors",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "4104e53d3974e89fe28836c90a27a96781fffc156b691794e0ee04a11c35534d87e532d4213ef19f71a70e9f405cf4a52540f216ce2e5a359a7cd5fa5ab0288d"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "8.0.0",
+                           "purl":  "pkg:nuget/System.Security.Cryptography.ProtectedData@8.0.0",
+                           "name":  "System.Security.Cryptography.ProtectedData",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "f9350520d576ab689fc976ae417470cb80a2061aaf0c40d9795254eea7f1c9ae1a45838acd506937ee1a731db955c3c1f72c1437a0b49fc76b5a5d75d0f85912"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.10",
+                           "purl":  "pkg:nuget/System.ServiceProcess.ServiceController@10.0.10",
+                           "name":  "System.ServiceProcess.ServiceController",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "f6d23f12d94c8a6c099fd104b5ba85ad5a86083f7c55f55d9d6e947a40bbfd81cee4acbf2cc51f5e26c1bfdf8057c83dbbbba29b6d281e088eab369e116021aa"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "10.0.3",
+                           "purl":  "pkg:nuget/System.Threading.AccessControl@10.0.3",
+                           "name":  "System.Threading.AccessControl",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "3cedc83366573894e3bae14360c3fada2dbdd09e35cbcf750becad4dad47083528e45772c0afd1a3a8df9561e66e0676b73eb61214436bc5884f6bd5257e3901"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "4.5.0",
+                           "purl":  "pkg:nuget/System.ValueTuple@4.5.0",
+                           "name":  "System.ValueTuple",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "a24bab4093ba35113f6a90c83f6dda8c9d21a6236627e7f40703a507f712a932d0970e6ea647fee7ef7afa21b6270e341b57c2542c8fcff1612000548cc47e45"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "2.3.0",
+                           "purl":  "pkg:nuget/TagLibSharp@2.3.0",
+                           "name":  "TagLibSharp",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "428e33e998e721f6d1dd4b3565ae4cdaf43dece5993e6383bd599ea7167c5d6d142152c674ed93eb7fcdddbdb79027328b0b887b44d0bcc1101bcc140820f598"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       },
+                       {
+                           "type":  "library",
+                           "version":  "6.6.2",
+                           "purl":  "pkg:nuget/YoutubeExplode@6.6.2",
+                           "name":  "YoutubeExplode",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "04dd768a939e4d7d75e7b271daebc5646851e9dc879e38bef28337ecda97caeee708bd2bad2af1aee79af254d295419ec28c72bdd0b5a30cd12d38412395a3f5"
+                                          }
+                                      ],
+                           "scope":  "required"
+                       }
+                   ],
+    "specVersion":  "1.5",
+    "$schema":  "http://cyclonedx.org/schema/bom-1.5.schema.json"
+}

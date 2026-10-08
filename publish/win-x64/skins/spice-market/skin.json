@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "spice-market",
+  "name": "Spice Market",
+  "description": "Olive-black with spicy pink, lime and orange.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#1E1F1C",
+    "sidebar": "#232420",
+    "card": "#272822",
+    "cardElevated": "#33342C",
+    "hover": "#3E3D32",
+    "border": "#49483E",
+    "divider": "#33342C",
+    "textPrimary": "#F8F8F2",
+    "textSecondary": "#E0E0D6",
+    "textMuted": "#A59F85",
+    "textDisabled": "#75715E",
+    "accent": "#A6E22E",
+    "success": "#A6E22E",
+    "warning": "#E6DB74",
+    "error": "#FB699E",
+    "eco": "#A6E22E",
+    "smart": "#66D9EF",
+    "beast": "#FD971F",
+    "buttonPrimary": "#F92672",
+    "buttonPrimaryText": "#0A0A08"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#F92672, #FD971F, #A6E22E"
+  }
+}

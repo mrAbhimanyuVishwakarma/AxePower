@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <!-- The release pipeline publishes for win-x64; listing it here puts that runtime in the lock
+         file, so locked-mode restore (CI and release builds) can publish it (Prompt 33) -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
 
 

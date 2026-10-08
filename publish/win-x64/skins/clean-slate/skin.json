@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "clean-slate",
+  "name": "Clean Slate",
+  "description": "Crisp white and cool grey with blue links. Plain and professional.",
+  "author": "AxePower",
+  "base": "light",
+  "colors": {
+    "window": "#F6F8FA",
+    "sidebar": "#FFFFFF",
+    "card": "#FFFFFF",
+    "cardElevated": "#F6F8FA",
+    "hover": "#EAEEF2",
+    "border": "#D0D7DE",
+    "divider": "#D8DEE4",
+    "textPrimary": "#1F2328",
+    "textSecondary": "#3D444D",
+    "textMuted": "#59636E",
+    "textDisabled": "#8C959F",
+    "accent": "#0969DA",
+    "success": "#1A7F37",
+    "warning": "#9A6700",
+    "error": "#CF222E",
+    "eco": "#1A7F37",
+    "smart": "#0969DA",
+    "beast": "#BC4C00",
+    "buttonPrimary": "#1F883D",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#0969DA, #8250DF, #1A7F37"
+  }
+}

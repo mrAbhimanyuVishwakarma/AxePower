@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "arcade",
+  "name": "Arcade",
+  "description": "Arcade cabinet purple with cyan and magenta.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0E0B1A",
+    "sidebar": "#130F24",
+    "card": "#1A1530",
+    "cardElevated": "#221B3D",
+    "hover": "#2D2450",
+    "border": "#45397A",
+    "divider": "#221B3D",
+    "textPrimary": "#F5F3FF",
+    "textSecondary": "#D8D2FF",
+    "textMuted": "#9A8FD0",
+    "textDisabled": "#5A5190",
+    "accent": "#00E5FF",
+    "success": "#39FF14",
+    "warning": "#FFE600",
+    "error": "#FF2E63",
+    "eco": "#39FF14",
+    "smart": "#00E5FF",
+    "beast": "#FF2E63",
+    "buttonPrimary": "#00E5FF",
+    "buttonPrimaryText": "#0E0B1A"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 20,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#00E5FF, #B026FF, #FF2E63"
+  }
+}

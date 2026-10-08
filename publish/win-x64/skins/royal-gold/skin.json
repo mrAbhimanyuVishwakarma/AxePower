@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "royal-gold",
+  "name": "Royal Gold",
+  "description": "Black lacquer and gold leaf.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0A0907",
+    "sidebar": "#0F0D0A",
+    "card": "#16130E",
+    "cardElevated": "#1E1A13",
+    "hover": "#29231A",
+    "border": "#3F3522",
+    "divider": "#1E1A13",
+    "textPrimary": "#FFFAEB",
+    "textSecondary": "#EADBB0",
+    "textMuted": "#AE9A6A",
+    "textDisabled": "#62563B",
+    "accent": "#E3B341",
+    "success": "#7FB069",
+    "warning": "#E3B341",
+    "error": "#D65B6B",
+    "eco": "#7FB069",
+    "smart": "#C9A227",
+    "beast": "#D1495B",
+    "buttonPrimary": "#E3B341",
+    "buttonPrimaryText": "#0A0907"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 55,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#E3B341, #FFF3C4, #9C7A1E"
+  }
+}

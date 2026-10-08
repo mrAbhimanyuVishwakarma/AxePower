@@ -173,6 +173,14 @@ public partial class ShareScreenView : UserControl
             core.Settings.AreDefaultContextMenusEnabled = false;
             core.Settings.IsStatusBarEnabled = false;
             core.Settings.AreDevToolsEnabled = false;
+            core.Settings.AreDefaultScriptDialogsEnabled = false;
+            // The page is the room host's: it stays within that origin and opens no windows
+            // (FINAL_SECURITY_REVIEW M2)
+            core.NavigationStarting += (_, args) =>
+            {
+                if (!AxePower.Core.Services.ShareScreen.WebViewNavigationPolicy.IsAllowed(args.Uri, _shownUrl)) args.Cancel = true;
+            };
+            core.NewWindowRequested += (_, args) => args.Handled = true;
             core.NavigationCompleted += OnNavigationCompleted;
 
             _browserReady = true;

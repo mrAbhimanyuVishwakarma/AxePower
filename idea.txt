@@ -1,26 +1,16 @@
-# 🚀 AxePower - Feature Ideas, Product Roadmap & Completed Changelog 💡
+# 💡 AxePower - Feature Ideas & Product Roadmap 🚀
 
-> **Status:** Updated to Version 1.6.0 (September 2026)  
+> **Status:** Active Roadmap for Future Releases (v2.2+)  
 > **Repository:** [AxePower](https://github.com/mrAbhimanyuVishwakarma/AxePower)  
-> **Official Site:** [axepower.vercel.app](https://axepower.vercel.app/)
+> **Official Site:** [axepower.vercel.app](https://axepower.vercel.app/)  
+> **Completed Features:** See [implimented_ideas.txt](file:///d:/Projects/AxePower/implimented_ideas.txt) for full shipped feature matrix.
 
 ---
 
-## ⚡ Active & Upcoming Feature Roadmap (v1.7 - v2.0)
+## ⚡ Active & Upcoming Feature Roadmap (v2.2 - v3.0)
 
-### 1. ☕ Keep Awake / Caffeine Mode (PowerToys Awake Style)
-* **Status:** ⏳ *Planned for v1.7*
-* **Description:** 1-click temporary sleep & display timeout inhibitor in the System Tray and Title Bar.
-* **Key Capabilities:**
-  * Preset durations: `30 mins`, `1 hour`, `2 hours`, `Indefinite`, or `Until active process finishes` (e.g. large downloads, video rendering, exports).
-  * Implemented using native Win32 `SetThreadExecutionState` (`ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED`) without altering permanent Windows Power Plan configurations.
-  * System tray quick toggle with coffee cup icon state change and tooltip remaining timer.
-* **Reference:** [Microsoft PowerToys Awake](https://github.com/microsoft/PowerToys)
-
----
-
-### 2. 🎯 Floating Hardware HUD & Compact In-Game Overlay
-* **Status:** ⏳ *Planned for v1.7*
+### 1. 🎯 Floating Hardware HUD & Compact In-Game Overlay
+* **Status:** ⏳ *Planned for v2.2*
 * **Description:** Minimalist, semi-transparent hardware vitals pill/overlay for desktop and gaming.
 * **Key Capabilities:**
   * Real-time metrics: CPU/GPU temps, clock speeds, active Wattage draw (e.g., `18.5W`), battery drain rate, and active Power Mode.
@@ -30,8 +20,8 @@
 
 ---
 
-### 3. ⌨️ Global Hotkeys & Screen OSD Mode Flyout
-* **Status:** ⏳ *Planned for v1.7*
+### 2. ⌨️ Global Hotkeys & Screen OSD Mode Flyout
+* **Status:** ⏳ *Planned for v2.2*
 * **Description:** Keyboard shortcuts to cycle power modes on the fly with a modern Windows 11 Fluent On-Screen Display (OSD) notification.
 * **Key Capabilities:**
   * Configurable hotkey (e.g., `Win + Shift + P` or `Fn + Q` on supported laptops).
@@ -40,236 +30,40 @@
 
 ---
 
-### 4. 🌙 Modern Standby Fix & Deep Sleep Auto-Hibernate
-* **Status:** ⏳ *Planned for v1.8*
-* **Description:** Prevents laptop battery drain and backpack overheating caused by Windows 11 Modern Standby (S0) bugs.
-* **Key Capabilities:**
-  * Auto-transition from Sleep to Hibernate after a user-defined period on battery (e.g. 15 or 30 minutes).
-  * Auto-disables network connectivity during Modern Standby to eliminate battery drain while asleep.
-  * Sleep battery drain diagnostics tool (analyzing Windows SleepStudy logs via `powercfg /sleepstudy`).
-
----
-
-### 5. 🔊 Quick Per-App Audio Mixer & Output Device Switcher
-* **Status:** ⏳ *Planned for v1.8*
-* **Description:** Streamlined volume mixer and audio output switcher integrated into AxePower Tray / Dashboard.
-* **Key Capabilities:**
-  * 1-click switch between Headset, Speakers, Display Audio, and Bluetooth.
-  * Independent volume sliders for foreground game vs Discord / Spotify.
-  * Auto-switch audio profile to Dolby Atmos 3D spatial sound or Peace Equalizer competitive EQ presets in Game Mode.
-
----
-
-### 6. 🕹️ Lossless Scaling & Game Optimizers Companion
-* **Status:** ⏳ *Planned for v1.8*
-* **Description:** Quick profile launcher and config integration with modern gaming scaling utilities.
-* **Key Capabilities:**
-  * Integration with [Lossless Scaling](https://store.steampowered.com/app/993090/Lossless_Scaling/) (LSFG Frame Generation / AMD FSR / Integer Scaling).
-  * Pre-configured resolution scaling profiles for battery-powered gaming.
-
----
-
-### 7. ⏱️ Next-Gen Game Mode Latency Engine (Deep System Tuning)
-* **Status:** ⏳ *Planned for v1.8 - v2.0*
-* **Description:** Advanced esports-tier system latency optimizations for the Game Mode engine.
+### 3. ⏱️ Next-Gen Game Mode Latency Engine (Deep System & Razer Cortex Enhancements)
+* **Status:** ⏳ *Planned for v2.3*
+* **Description:** Advanced esports-tier system latency optimizations for the Game Mode engine inspired by Razer Cortex / Synapse.
 * **Key Capabilities:**
   * **0.5ms System Timer Resolution:** Temporarily call native `NtSetTimerResolution` to force ultra-low input latency for competitive FPS titles.
   * **CPU Core Pinning & Affinity:** Bind game threads strictly to Performance cores (Intel 12th-14th Gen P-Cores) or cache-heavy CCD (AMD Ryzen 7000/9000X3D CPUs).
   * **DirectX GPU Scheduling & Priority:** Set foreground game process scheduling priority to `High` / `Real-Time` with DirectX GPU preemption.
+  * **Deep Memory Defragmentation:** Clean not just standby RAM cache, but defragment physical memory space before game launch.
   * **Windows Focus Assist & DND Auto-Trigger:** Automatically silence Windows 11 notifications, banners, and suppress background driver installs during active gameplay.
 
 ---
 
-### 8. 🪟 Advanced Winhance Deep Integrations (memstechtips Blueprint)
-* **Status:** ⏳ *Planned for v1.8 - v2.0*
-* **Description:** Advanced system enhancement, transparency, unattended deployment, and persistent update protection inspired by [Winhance](https://github.com/memstechtips/Winhance).
-* **Key Capabilities:**
-  * **VBS & Core Isolation Gaming Switcher:** 1-click toggle for Hypervisor-Enforced Code Integrity (HVCI) and Virtualization-Based Security (VBS) for esports FPS boosts in Beast/Game Mode.
-  * **Interactive Technical Inspector Drawer:** Expandable flyout displaying exact Registry Key Paths, Property Names, Old vs New values, and PowerShell equivalents for every tweak.
-  * **File Explorer Studio:** 1-click "Take Ownership" context menu installer, file extension toggles, and shell refresh.
-  * **AxePower Fresh-Start Builder:** Export configured settings and power plans into a standardized `autounattend.xml` answer file for zero-touch clean Windows installations.
-  * **Dynamic DWM Visual Scaling:** Auto-disable window animations and acrylic blurs on Eco Mode, restore Fluent aesthetics on Smart/Beast Mode.
-* **Reference:** [Winhance (memstechtips/Winhance)](https://github.com/memstechtips/Winhance) & [winhance.net](https://winhance.net)
-
----
-
-### 9. 🐱 Animated Taskbar & System Tray Performance Runner (RunCat365 Style)
-* **Status:** ⏳ *Planned for v1.7*
+### 4. 🐱 Animated Taskbar & System Tray Performance Runner (RunCat365 Style)
+* **Status:** ⏳ *Planned for v2.3*
 * **Description:** Delightful, lightweight animated runner icon in the Windows Taskbar / System Tray whose animation speed dynamically scales with CPU load, GPU utilization, or power consumption.
 * **Key Capabilities & Synergies with AxePower:**
   * **Dynamic Speed Scaling:** Runner animation frame rate increases proportionally with real-time CPU/GPU load (e.g. idle = slow walk or nap, 50% = trot, 100% = full sprint with fire particles).
-  * **Power Mode Visual Sync:** Runner theme adapts to active AxePower mode:
-    * 🍃 **Eco Mode:** Sleeping or slow-walking cat / battery saver icon.
-    * ⚡ **Smart Mode:** Standard brisk walking runner.
-    * 🚀 **Beast / 🎮 Game Mode:** Turbo sprint with neon/cyber flame trail.
-  * **Custom Runners & Mascots:** Support for custom sprite sheets (Cat, Dog, Axe/Gears, Pixel Runner, Cyber Dragon) or user-imported animated GIFs / frames.
-  * **Tray Quick Metrics Flyout:** Clicking the runner opens a sleek Fluent flyout displaying CPU & GPU temp/wattage, RAM usage, battery drain rate, and 1-click power mode switchers.
-  * **Software Hub Entry:** Can also be offered as a recommended 1-click install companion app in Software Hub.
+  * **Power Mode Visual Sync:** Runner theme adapts to active AxePower mode (Eco: sleeping cat, Smart: brisk walk, Beast/Game: turbo sprint with fire trail).
+  * **Custom Runners & Mascots:** Support for custom sprite sheets (Cat, Dog, Gears, Pixel Runner, Cyber Dragon) or user-imported animated GIFs.
 * **Reference:** [RunCat365 (runcat-dev/RunCat365)](https://github.com/runcat-dev/RunCat365)
 
 ---
 
-### 10. 🎵 Compact Music Player & Universal Media HUD (Spotify / Apple Music / Hi-Res Lossless / Local)
-* **Status:** ⏳ *Planned for v1.8*
-* **Description:** Ultra-lightweight background music player, universal media controller widget, and audiophile-grade lossless streaming hub built directly into the AxePower Tray, Floating HUD, and Remote Phone Dashboard.
-* **Key Capabilities & Synergies with AxePower:**
-  * **Direct Streaming Account Integrations (Spotify, Apple Music & YouTube Music):**
-    * **Spotify Connect & Web API (OAuth2 PKCE):** Sign in to Spotify account to browse personal playlists, Liked Songs, Daily Mixes, and gaming playlists directly in AxePower. Seamless device target switching via Spotify Connect (transfer playback between PC, phone, or smart speakers) without needing the resource-heavy Spotify desktop app open.
-    * **Apple Music (MusicKit Integration):** Connect Apple Music account to access personal iCloud Music Library, curated playlists, Apple Music 1 live radio, and high-fidelity audio streams.
-    * **YouTube Music & Tidal:** Connect accounts to fetch user playlists, artist radios, and personal libraries.
-    * **Discord Rich Presence & Last.fm Scrobbler:** Dynamic "Listening to [Track] by [Artist]" Discord activity status with album cover art and automatic track scrobbling to Last.fm.
-    * **Synchronized Live Lyrics:** On-screen timed karaoke lyrics in the in-game overlay or mobile dashboard.
-  * **Audiophile-Grade Hi-Res Lossless Audio Engine:**
-    * **Bit-Perfect Playback (WASAPI Exclusive & ASIO):** Direct hardware-level audio streaming bypassing the Windows audio mixer (DWM/AudioSrv resampling and DSP) directly to external USB DACs, gaming soundcards, and high-end headphone amps for pristine audio fidelity.
-    * **Comprehensive Lossless Codec Support:** Native bit-perfect playback for **FLAC**, **ALAC** (Apple Lossless), **DSD** (DSF/DFF via DoP), **WAV**, **AIFF**, **APE** (Monkey's Audio), and high-bitrate Opus/OGG up to 24-bit/192kHz and 32-bit/384kHz.
-    * **Lossless Cloud Streaming Quality:** Native support for Apple Music Lossless / Hi-Res Lossless (ALAC), Tidal HiFi / Max (FLAC 24-bit/192kHz), and Spotify Lossless ready.
-    * **Live Audio Stream Badge:** HUD badge displaying real-time audio quality (e.g. `[Hi-Res Lossless 24-bit/96kHz FLAC]`, `[Bit-Perfect WASAPI Exclusive]`, `[Apple Lossless ALAC]`).
-    * **Automatic DAC Sample Rate Switching:** Matches external DAC hardware clock frequency to source audio sample rate to eliminate software re-sampling jitter.
-  * **Universal Windows SMTC Integration:** Hooks into Windows 10/11 `GlobalSystemMediaTransportControlsSessionManager` as a universal fallback to detect and control any active media playing on the PC (Spotify app, Apple Music, YouTube in browsers, VLC, Foobar2000, Tidal).
-  * **Floating / In-Game Mini Player Widget:**
-    * Sleek Fluent translucent pill or compact corner overlay showing live album art, track title, artist, lossless quality badge, animated audio visualizer bar, seekbar, playlist picker, and volume wheel.
-    * Transparent click-through or hotkey-toggled (`Ctrl + Shift + M`) in-game HUD overlay that doesn't steal focus from fullscreen games.
-  * **Built-in Low-Overhead Local & Ambient Audio Player:**
-    * Embedded lightweight audio engine (`NAudio` or `ManagedBass`) for playing local lossless audio with <15 MB RAM footprint—avoiding heavy Electron apps or browser tabs.
-    * Curated gamer & focus soundboard: Built-in Lo-Fi chill streams, synthwave radio, rain/storm, and pink/white noise generators for gaming and productivity sessions.
-  * **Smart Game & Power Automation:**
-    * **Auto-Pause / Duck on Game Launch:** Automatically pause or duck background music volume when entering competitive games or active voice calls (Discord).
-    * **Eco-Friendly Playback:** Hardware-accelerated audio offloading (`WASAPI`) to minimize CPU wakeups and preserve laptop battery during extended playback.
-  * **Seamless Phone Remote & Tray Integration:** Full account playlist browsing, playback controls, live track info, lossless bitrate indicators, and volume controls mirrored directly onto the mobile browser dashboard (`http://<local-ip>:5050`) and the Steam-style tray menu.
-* **Reference:** [Spotify Web API / Spotify Connect](https://developer.spotify.com/documentation/web-api), [Apple MusicKit](https://developer.apple.com/musickit/), [NAudio WASAPI Exclusive](https://github.com/naudio/NAudio), [Windows Media SMTC API](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssessionmanager)
+## 💎 Monetization & AxePower Pro Feature Concepts
 
----
+Ideas for premium / pro tier enhancements to support continuous project development:
 
-## 🏆 Completed & Implemented Features Matrix
-
-### ✅ [DONE - v1.6] 🎮 NVIDIA Curated Driver Version Selector & Rollback Engine
-* **Implemented In:** `AxePower.Core/Services/GraphicsDriverService.cs`, `AxePower.App/ViewModels/SoftwareHubViewModel.cs`
-* **Features Delivered:**
-  * Curated catalog of battle-tested stable and rollback driver releases:
-    * `572.70` (Latest Game Ready / RTX 50 series & DLSS 4)
-    * `566.36` (Recommended Rock-Solid Stable)
-    * `566.14` (Previous Stable / MSFS 2024 & STALKER 2)
-    * `561.09` (Milestone Build / FFXVI & God of War Ragnarok)
-    * `560.94` (Popular Rollback / Black Myth: Wukong)
-    * `552.22` (Low DPC Latency Classic / VR)
-    * `537.58` (Legendary Esports Benchmark / CS2 & Valorant 1% lows)
-  * Dynamic Laptop/Notebook vs Desktop installer URL resolution directly from official NVIDIA CDNs.
-  * Built-in streaming download engine with live percentage progress bar (`MB / Total MB`) and SHA/PE verification.
-  * 1-Click launcher directly executes installer without third-party adware.
-  * Direct shortcut to official NVIDIA Advanced Driver Search.
-
----
-
-### ✅ [DONE - v1.6] 🔋 Battery Conservation Mode & Charge Limiter (80% Cap)
-* **Implemented In:** `AxePower.Core/Services/BatteryService.cs`, `AxePower.App/ViewModels/BatteryViewModel.cs`, `AxePower.App/Views/BatteryView.xaml`
-* **Features Delivered:**
-  * **Conservation Mode Toggle:** 80% / 75% AC charge threshold limiting to protect battery chemistry and prevent battery swelling during continuous AC power.
-  * **Rapid Charge Toggle:** Hardware-accelerated fast charging for quick turnaround.
-  * **Overnight Battery Charging:** Adaptive charging curve with interactive visual timeline diagram.
-  * OEM Registry & ACPI hooks (`PWRMTRV` & `VantageService` interfaces) with real-time hardware status synchronization.
-
----
-
-### ✅ [DONE - v1.6] 🧹 Intelligent Standby List Cleaner (RAM Cache Auto-Purge)
-* **Implemented In:** `AxePower.Core/Services/MemoryOptimizerService.cs`, `AxePower.Core/Services/DynamicModeAutomationService.cs`
-* **Features Delivered:**
-  * Win32 `GlobalMemoryStatusEx` and `EmptyWorkingSet` memory engine.
-  * Automatic standby RAM cache flushing when launching games or switching into Beast/Game Mode.
-  * Dynamic notification reporting exact freed memory (e.g. `🧹 Memory Tuned: Cleared ~1420 MB of standby RAM cache`).
-
----
-
-### ✅ [DONE - v1.5 - v1.6] 📱 Remote Phone Web Dashboard & Quick PC Actions
-* **Implemented In:** `AxePower.Core/Services/LanDropService.cs`, `AxePower.App/Views/LanDropView.xaml`
-* **Features Delivered:**
-  * Zero-install local HTTP companion server running on local port `5050` with high-resolution QR code generator.
-  * Live PC battery percentage, charging state, and host diagnostics streamed to any smartphone browser over local Wi-Fi.
-  * Remote PC quick actions: Lock Workstation, Volume Up / Down / Mute, and Media Play / Pause / Next / Prev track.
-  * High-speed bi-directional LAN Drop file transfer & instant clipboard text sync.
-
----
-
-### ✅ [DONE - v1.6] 📈 24-Hour Rolling Battery History & Health Telemetry
-* **Implemented In:** `AxePower.App/Views/BatteryView.xaml`, `AxePower.App/ViewModels/BatteryViewModel.cs`, `AxePower.Core/Services/BatteryService.cs`
-* **Features Delivered:**
-  * 24-hour continuous rolling battery percentage graph seeded from native Windows battery reports.
-  * Complete hardware telemetry grid: Battery Health %, Cycle Count, Chemistry (Li-Ion), Current Power Usage (Watts), Voltage, Temperature, Design vs Full Charge Capacity, Manufacturer, and Serial Number.
-  * 3x scaled vector battery status pill in application header with live dynamic fill and charging accents.
-
----
-
-### ✅ [DONE - v1.6] 🎨 Creative, Media & Power-User Software Suite (Software Hub Expansion)
-* **Implemented In:** `AxePower.Core/Services/WinGetHubService.cs`, `AxePower.App/Views/SoftwareHubView.xaml`
-* **Features Delivered:**
-  * **Audio Equalization & Spatial Sound:** SteelSeries GG (Sonar Audio parametric EQ), Peace Equalizer (Equalizer APO), Dolby Access (Dolby Atmos 3D Spatial Sound).
-  * **Audio Recording & Virtual Audio:** Audacity multi-track audio workstation.
-  * **Video Editing & Compression:** DaVinci Resolve (Hollywood-grade NLE & color grading), HandBrake (AV1 / HEVC video encoder).
-  * **Streaming & Capture:** OBS Studio, ShareX screenshot & GIF recorder.
-  * **Graphic Design & 3D:** Canva Desktop, GIMP photo retouching, Blender 3D creation suite.
-  * **Productivity & Tuning:** Microsoft PowerToys (Awake, FancyZones, ColorPicker), DLSS 5 Swapper, WeMod, 7-Zip, VLC, Notepad++, CPU-Z, GPU-Z, HWiNFO, CrystalDiskInfo, Ninite.
-
----
-
-### ✅ [DONE - v1.6] 🦆 Advanced Windows Tweaks & Reversible Optimizer Engine
-* **Implemented In:** `AxePower.Core/Services/TweakService.cs`, `AxePower.Core/Services/RestorePointService.cs`, `AxePower.Core/Services/WindowsUpdateShieldService.cs`, `AxePower.App/Views/SystemOptimizerView.xaml`
-* **Features Delivered:**
-  * Safe, 1-click reversible system tweaks with granular state detection:
-    * Disable Diagnostic Telemetry & background reporting
-    * Disable Bing Web Search in Start Menu (instant local app search)
-    * Disable Windows Copilot & background AI agent overheads
-    * Disable Activity Feed & cloud timeline
-    * Disable GameDVR background capture (eliminates stuttering)
-    * Disable Mouse Acceleration (1:1 raw linear gaming input)
-    * Classic Windows 10 Full Context Menu (no "Show more options" delay)
-    * Disable Sticky Keys 5x Shift popup
-  * **System Restore Point Prompt:** 1-Click creation of Windows System Restore point before applying tweaks.
-  * **Windows Update Shield:** Deferred quality/feature updates for 365 days, disabled forced reboots with logged-on users, and 1-click Windows Update corrupted cache reset.
-
----
-
-### ✅ [DONE - v1.6] 🛑 Dynamic Background Service Throttling & Game Booster
-* **Implemented In:** `AxePower.Core/Services/ServiceThrottlerService.cs`, `AxePower.Core/Services/AppKillerService.cs`, `AxePower.Core/Services/DynamicModeAutomationService.cs`
-* **Features Delivered:**
-  * Automatic pause/suspension of non-essential background Windows services (`wuauserv`, `SysMain`, `DiagTrack`, `Spooler`) during Game Mode / Beast Mode.
-  * Automatic seamless service restoration upon returning to Eco or Balanced mode.
-  * Configurable background app killer with auto-restart on game exit.
-
----
-
-### ✅ [DONE - v1.6] 📊 Task Manager-Style 2x2 Live Performance Telemetry Grid
-* **Implemented In:** `AxePower.App/Views/DashboardView.xaml`, `AxePower.Core/Services/SystemTelemetryService.cs`
-* **Features Delivered:**
-  * High-precision live hardware performance cards:
-    * **CPU:** Win32 `GetSystemTimes` utilization % & real-time clock frequency (GHz).
-    * **GPU:** Dedicated Windows WDDM 3D engine utilization % & active GPU temperature (°C).
-    * **RAM:** Physical memory load %, used GB, and total GB.
-    * **Internet:** IPv4/IPv6 live delta send/receive bandwidth throughput.
-  * Zero-baseline pinned glowing gradient sparklines with `Viewbox` auto-scaling.
-
----
-
-### ✅ [DONE - v1.6] 🎮 Steam-Style Tray Context Menu & Background Auto-Updater
-* **Implemented In:** `AxePower.App/MainWindow.xaml`, `AxePower.Core/Services/UpdateService.cs`, `AxePower.App/ViewModels/MainViewModel.cs`
-* **Features Delivered:**
-  * Modern `#171A21` Steam-styled right-click system tray menu with grouped sections and mode selectors.
-  * Silent background update checker and installer downloader to `%TEMP%\AxePower_Update\`.
-  * Interactive scrollable patch notes changelog modal with community reactions and 1-click "Restart & Install".
-
----
-
-## 🏛️ Completed Core Features Archive (v1.0 - v1.4)
-
-* ✅ **Smart Power Modes (Eco, Smart, Beast, Game Mode)** with dynamic AC/DC rules.
-* ✅ **Intelligent Auto-Switch Engine** (Plugged In: Smart, Unplugged: Eco, Low Battery <30%: Eco).
-* ✅ **Display Refresh Rate Auto-Scaling** (60Hz on Battery &harr; 144Hz/165Hz/240Hz on AC via `ChangeDisplaySettingsEx`).
-* ✅ **Controller Navigation (Gopher360)**: Full gamepad-to-mouse & keyboard living-room navigation.
-* ✅ **Phone Control Suite**:
-  * 📱 **scrcpy**: Ultra-low latency Android screen mirroring, stay-awake, and APK installer.
-  * 🖥️ **SpaceDesk**: Wireless phone/tablet secondary display integration.
-  * 📂 **LAN Drop**: Instant offline local Wi-Fi file sharing & clipboard drop.
-* ✅ **Software Hub**: 1-click installer and launcher for 25+ top storefronts, monitors, and runtimes.
-* ✅ **System Optimizer (WinUtil-style)**: Safe debloat, telemetry removal, and update shield.
-* ✅ **System Doctor**: SFC/DISM health repairs, shader & cache cleaner, low-latency DNS optimizer.
-* ✅ **Uninstaller Pro**: Deep app discovery, batch removal, and verified leftover registry cleaning.
-* ✅ **Modern Dark Fluent WPF UI** with responsive layout and collapsible sidebar navigation.
-* ✅ **Native GitHub Auto-Updater** & Inno Setup 6 packaging with clean upgrade engine.
+1. **🎵 YouTube Music & Hi-Res Streaming Integration:**
+   * Direct YouTube Music account sync, curated gamer radio, and background ad-free streaming player without opening heavy browser tabs.
+2. **🩺 Automated Autonomous System Doctor:**
+   * Scheduled background health audits, automatic SFC/DISM maintenance on system corruption, and proactive registry cleanup.
+3. **📁 LAN Drop Cloud & Unlimited Remote Sync:**
+   * Encrypted remote file transfer beyond the local network, device-to-device remote clipboard sharing, and cross-PC sync.
+4. **🎨 Custom UI Skins & Theme Engine:**
+   * Dynamic skinning architecture (Cyberpunk Neon, Stealth Obsidian, Retro Synthwave, Minimalist Pure White, Custom Accent color palettes).
+5. **🎯 Esports Latency & Micro-Stutter Profiler:**
+   * In-depth frame-time consistency graphing, DPC latency analyzer, and per-game driver profile optimization.

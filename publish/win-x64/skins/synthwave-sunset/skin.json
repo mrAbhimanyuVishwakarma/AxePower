@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "synthwave-sunset",
+  "name": "Synthwave Sunset",
+  "description": "80s night drive: indigo sky, hot pink and a sunset orange.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0F0A1F",
+    "sidebar": "#140D29",
+    "card": "#1B1235",
+    "cardElevated": "#241845",
+    "hover": "#2E1F57",
+    "border": "#4C2F85",
+    "divider": "#261A4A",
+    "textPrimary": "#FFF5FB",
+    "textSecondary": "#E9D5FF",
+    "textMuted": "#A78BDA",
+    "textDisabled": "#5B4A85",
+    "accent": "#FF3D9A",
+    "success": "#2EF2C4",
+    "warning": "#FF9F1C",
+    "error": "#FF4D6D",
+    "eco": "#2EF2C4",
+    "smart": "#FF3D9A",
+    "beast": "#FF9F1C",
+    "buttonPrimary": "#FF6A3D",
+    "buttonPrimaryText": "#1A0B24"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 70,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#FF3D9A, #FF9F1C, #7B2FF7"
+  }
+}

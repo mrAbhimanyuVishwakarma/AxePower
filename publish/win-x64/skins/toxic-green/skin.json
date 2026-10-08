@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "toxic-green",
+  "name": "Toxic Green",
+  "description": "Hazard black with acid lime.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#080A06",
+    "sidebar": "#0C0F08",
+    "card": "#12160C",
+    "cardElevated": "#181E10",
+    "hover": "#212A16",
+    "border": "#2F3D1C",
+    "divider": "#181E10",
+    "textPrimary": "#F4FFE6",
+    "textSecondary": "#CFF5A3",
+    "textMuted": "#8FB86A",
+    "textDisabled": "#4F6B38",
+    "accent": "#A3FF12",
+    "success": "#A3FF12",
+    "warning": "#FFD60A",
+    "error": "#FF4D6D",
+    "eco": "#A3FF12",
+    "smart": "#39FFB6",
+    "beast": "#FF7A1A",
+    "buttonPrimary": "#A3FF12",
+    "buttonPrimaryText": "#080A06"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 25,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#A3FF12, #FFD60A, #39FFB6"
+  }
+}

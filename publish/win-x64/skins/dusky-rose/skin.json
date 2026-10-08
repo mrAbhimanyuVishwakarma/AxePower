@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "dusky-rose",
+  "name": "Dusky Rose",
+  "description": "Tinted glass at dusk: muted rose and lavender over the blur.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#B3191724",
+    "sidebar": "#401F1D2E",
+    "card": "#8026233A",
+    "cardElevated": "#992A273F",
+    "hover": "#B3393552",
+    "border": "#66403D52",
+    "divider": "#402A273F",
+    "textPrimary": "#E0DEF4",
+    "textSecondary": "#C4C0E0",
+    "textMuted": "#908CAA",
+    "textDisabled": "#6E6A86",
+    "accent": "#EBBCBA",
+    "success": "#9CCFD8",
+    "warning": "#F6C177",
+    "error": "#EB6F92",
+    "eco": "#9CCFD8",
+    "smart": "#C4A7E7",
+    "beast": "#F6C177",
+    "buttonPrimary": "#EBBCBA",
+    "buttonPrimaryText": "#191724"
+  },
+  "glass": {
+    "backdrop": "acrylic",
+    "sheen": 75,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "WindowSecondaryBackgroundColor": "#40191724",
+    "WindowSecondaryBackgroundBrush": "#40191724",
+    "MusicPlaceholderArtBrush": "#EBBCBA, #C4A7E7, #9CCFD8"
+  }
+}

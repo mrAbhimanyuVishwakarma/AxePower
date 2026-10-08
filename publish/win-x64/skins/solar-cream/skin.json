@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "solar-cream",
+  "name": "Solar Cream",
+  "description": "Warm cream with calm blue, in the style of classic light editor themes.",
+  "author": "AxePower",
+  "base": "light",
+  "colors": {
+    "window": "#EEE8D5",
+    "sidebar": "#FDF6E3",
+    "card": "#FDF6E3",
+    "cardElevated": "#FFFBF0",
+    "hover": "#E6DFC8",
+    "border": "#D3CBB4",
+    "divider": "#E6DFC8",
+    "textPrimary": "#073642",
+    "textSecondary": "#34535C",
+    "textMuted": "#556B72",
+    "textDisabled": "#93A1A1",
+    "accent": "#1C6CA7",
+    "success": "#606E00",
+    "warning": "#826200",
+    "error": "#C72421",
+    "eco": "#859900",
+    "smart": "#1F77B8",
+    "beast": "#CB4B16",
+    "buttonPrimary": "#1E6FAE",
+    "buttonPrimaryText": "#FDF6E3"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#268BD2, #2AA198, #B58900"
+  }
+}
