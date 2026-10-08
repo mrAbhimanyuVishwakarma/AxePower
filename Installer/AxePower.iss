@@ -1,5 +1,10 @@
 #define AppName "AxePower"
 #include "AppVersion.iss"
+; The published app. scripts\package-release.ps1 passes the folder it just published to
+; (/DPublishDir=...), so the installer can never pick up an older build left in bin\.
+#ifndef PublishDir
+  #define PublishDir "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
+#endif
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
 #define AppExeName "AxePower.exe"
@@ -49,8 +54,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 ; Prerequisite helper — extracted to {tmp} at run time, never installed with the app
 Source: "install-dotnet.ps1"; Flags: dontcopy
-Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion restartreplace
-Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
+Source: "{#PublishDir}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion restartreplace
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [InstallDelete]

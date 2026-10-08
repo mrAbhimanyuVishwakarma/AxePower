@@ -1,4 +1,9 @@
 #include "AppVersion.iss"
+; The published app. scripts\package-release.ps1 passes the folder it just published to
+; (/DPublishDir=...), so the installer can never pick up an older build left in bin\.
+#ifndef PublishDir
+  #define PublishDir "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
+#endif
 
 [Setup]
 AppName=AxePower
@@ -15,8 +20,8 @@ ArchitecturesInstallIn64BitMode=x64
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\AxePower.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#PublishDir}\AxePower.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 ; Exclude PDB files if any
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

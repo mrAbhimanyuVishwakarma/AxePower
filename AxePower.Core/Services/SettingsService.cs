@@ -44,6 +44,8 @@ public class SettingsService
     {
         if (TryLoadFile(_settingsFilePath, out var settings))
         {
+            // A file from before the welcome screen: an existing user, settings kept as they are
+            settings.FirstRunCompleted ??= true;
             _currentSettings = settings;
             _logService.LogInfo("Settings loaded successfully.");
             return;
@@ -51,14 +53,17 @@ public class SettingsService
 
         if (TryLoadFile(_settingsBackupFilePath, out var backupSettings))
         {
+            backupSettings.FirstRunCompleted ??= true;
             _currentSettings = backupSettings;
             _logService.LogWarning("Settings loaded from backup.");
             SaveSettings(_currentSettings);
             return;
         }
 
-        _logService.LogInfo("Settings file not found or invalid. Using default settings.");
-        SaveSettings(new AppSettings());
+        // A fresh install (or settings that could not be read at all): safe values until the
+        // user chooses on the welcome screen (Prompt 31)
+        _logService.LogInfo("Settings file not found or invalid. Using first-run settings.");
+        SaveSettings(AppSettings.CreateForNewInstall());
     }
 
     private bool TryLoadFile(string path, [NotNullWhen(true)] out AppSettings? settings)

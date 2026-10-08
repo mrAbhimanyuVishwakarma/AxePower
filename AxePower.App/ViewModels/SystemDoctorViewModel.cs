@@ -184,8 +184,8 @@ public partial class SystemDoctorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ConsoleLogs += $"[EXCEPTION] {ex.Message}\n";
-            _notificationService.Show($"Error running {taskName}: {ex.Message}");
+            ConsoleLogs += $"[EXCEPTION] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}\n";
+            _notificationService.ShowFailure($"Run {taskName}", ex);
         }
         finally
         {

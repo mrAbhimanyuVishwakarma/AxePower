@@ -5,7 +5,9 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False"
-        IsHitTestVisible="False">
+        IsHitTestVisible="False"
+        xmlns:a11y="clr-namespace:AxePower.App.Helpers"
+        a11y:AccessibleNames.Enabled="True">
     <!-- Click-through on purpose: it only informs, and must never steal a click or a keystroke.
          The one clickable part, the "Extend time" line, is a separate small window laid over LinkSlot. -->
     <Border Margin="16" Padding="20,16" CornerRadius="14" MinWidth="320"

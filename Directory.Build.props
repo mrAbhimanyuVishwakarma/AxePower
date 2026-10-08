@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Authoritative product version across all .NET projects and installer scripts -->
-    <ProductVersion>2.1.0</ProductVersion>
+    <ProductVersion>2.1.2</ProductVersion>
     <Version>$(ProductVersion)</Version>
     <AssemblyVersion>$(ProductVersion).0</AssemblyVersion>
     <FileVersion>$(ProductVersion).0</FileVersion>

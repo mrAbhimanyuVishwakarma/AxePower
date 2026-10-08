@@ -9,7 +9,9 @@
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource WindowBackgroundBrush}"
         Foreground="{DynamicResource PrimaryTextBrush}"
-        WindowStyle="ToolWindow" ResizeMode="NoResize">
+        WindowStyle="ToolWindow" ResizeMode="NoResize"
+        xmlns:a11y="clr-namespace:AxePower.App.Helpers"
+        a11y:AccessibleNames.Enabled="True">
     
     <Grid Margin="24">
         <Grid.RowDefinitions>

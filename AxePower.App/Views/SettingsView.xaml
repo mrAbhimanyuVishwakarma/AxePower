@@ -169,6 +169,9 @@
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
                                     <TextBlock Text="Theme" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
                                     <TextBlock Text="System follows Windows. Add your own skins in the skins folder." Foreground="{DynamicResource MutedTextBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Windows High Contrast is on, so AxePower is using its High Contrast skin. Your choice comes back when you turn it off."
+                                               Foreground="{DynamicResource WarningBrush}" FontSize="11.5" TextWrapping="Wrap" Margin="0,4,0,0"
+                                               Visibility="{Binding IsHighContrastActive, Converter={StaticResource BoolToVis}}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding OpenSkinsFolderCommand}"

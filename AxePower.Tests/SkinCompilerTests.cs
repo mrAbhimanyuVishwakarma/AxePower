@@ -34,10 +34,16 @@ public class SkinCompilerTests : IDisposable
             ["PopupBackgroundBrush"] = "Solid #FFFFFFFF",
             // 2026-09-27: text on accent buttons comes from the skin; the light blue accent keeps white
             ["AccentForegroundBrush"] = "Solid #FFFFFFFF",
+            // 2026-10-06 (Prompt 28): status text darkened to 4.5:1 on window and cards
+            ["SuccessBrush"] = "Solid #FF047E58",
+            ["WarningBrush"] = "Solid #FFA75C05",
+            ["ErrorBrush"] = "Solid #FFD72323",
         },
         // 2026-09-25: an opaque surface for dropdowns, which on glass showed the page through them
         // 2026-09-27: tray menu text is pure white on dark skins (owner's request)
-        ["dark"] = new() { ["PopupBackgroundBrush"] = "Solid #FF1A1C23", ["TrayMenuForegroundBrush"] = "Solid #FFFFFFFF", ["AccentForegroundBrush"] = "Solid #FF000000" },
+        // 2026-10-06 (Prompt 28): muted text lightened to 4.5:1 on window and cards
+        ["dark"] = new() { ["PopupBackgroundBrush"] = "Solid #FF1A1C23", ["TrayMenuForegroundBrush"] = "Solid #FFFFFFFF", ["AccentForegroundBrush"] = "Solid #FF000000",
+                           ["MutedTextBrush"] = "Solid #FF7E8593" },
         ["glass"] = new() { ["PopupBackgroundBrush"] = "Solid #FF030405", ["TrayMenuForegroundBrush"] = "Solid #FFFFFFFF", ["AccentForegroundBrush"] = "Solid #FF000000" },
     };
 

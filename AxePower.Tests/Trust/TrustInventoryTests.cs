@@ -32,7 +32,7 @@ public class TrustInventoryTests
     [Fact]
     public void EveryFileThatTalksToTheNetwork_IsDisclosed()
     {
-        var networking = new Regex(@"\bnew HttpClient\b|\bHttpClient\s+_|\bClientWebSocket\b|\bYoutubeClient\b|\bTcpListener\b|\bHttpListener\b|\bnew TcpClient\b|\bUdpClient\b");
+        var networking = new Regex(@"\bnew HttpClient\b|\bHttpClient\s+_|\bClientWebSocket\b|\bYoutubeClient\b|\bTcpListener\b|\bHttpListener\b|\bnew TcpClient\b|\bUdpClient\b|\bnew Ping\(|\bnew WebClient\b|\bWebRequest\.Create\b|\bnew Socket\(");
         var disclosed = TrustInventory.Connections.SelectMany(c => c.CodeFiles).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var undisclosed = SourceFiles()

@@ -167,6 +167,7 @@
         <Border Grid.Row="2" Margin="40,0,40,14" Background="#0F172A" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
             <ScrollViewer x:Name="OutputScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <TextBox Text="{Binding OutputText, Mode=OneWay}"
+                         AutomationProperties.Name="Terminal output"
                          IsReadOnly="True"
                          Background="Transparent"
                          BorderThickness="0"

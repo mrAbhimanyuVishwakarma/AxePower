@@ -119,7 +119,7 @@ public class WinGetHubService : IWinGetHubService
         outputProgress.Report("\n=== Starting Batch Upgrade (winget upgrade --all) ===");
         _log.LogInfo("[WinGetHub] Upgrading all installed packages...");
 
-        var (outcome, ok) = await RunWinGetAsync(InstallPlanner.WinGetUpgradeAll(), outputProgress, cancellationToken).ConfigureAwait(false);
+        var (outcome, ok, _) = await RunWinGetAsync(InstallPlanner.WinGetUpgradeAll(), outputProgress, cancellationToken).ConfigureAwait(false);
 
         outputProgress.Report("\n=== Batch Upgrade Completed ===");
         if (outcome != ProcessRunOutcome.Cancelled)
@@ -169,6 +169,8 @@ public class WinGetHubService : IWinGetHubService
 
         bool succeeded = false;
         PackageOperationResult? early = null;
+        var wingetFailure = Outcomes.FailureKind.None;
+        string? failureReason = null;
         foreach (var step in plan.Steps)
         {
             if (step.When == StepCondition.IfNotYetSucceeded && succeeded) continue;
@@ -178,9 +180,17 @@ public class WinGetHubService : IWinGetHubService
             {
                 case WinGetStep winget:
                     if (winget.Notice != null) progress.Report(winget.Notice);
-                    var (outcome, ok) = await RunWinGetAsync(winget.Command, progress, cancellationToken).ConfigureAwait(false);
+                    var (outcome, ok, exitCode) = await RunWinGetAsync(winget.Command, progress, cancellationToken).ConfigureAwait(false);
                     if (outcome == ProcessRunOutcome.Cancelled) throw new OperationCanceledException(cancellationToken);
                     succeeded |= ok;
+                    if (!ok)
+                    {
+                        (wingetFailure, failureReason) = outcome == ProcessRunOutcome.TimedOut
+                            ? (Outcomes.FailureKind.TimedOut, "WinGet did not finish in time")
+                            : Outcomes.OutcomeClassifier.ClassifyWinGet(exitCode ?? -1);
+                        if (wingetFailure == Outcomes.FailureKind.None && failureReason != null) succeeded = true; // already installed / up to date
+                        if (failureReason != null) progress.Report($"[WinGet] {failureReason}.");
+                    }
                     break;
 
                 case CheckInstalledStep check:
@@ -232,11 +242,13 @@ public class WinGetHubService : IWinGetHubService
 
         if (succeeded && pkg != null) pkg.IsInstalled = plan.Action != PackageAction.Uninstall;
         if (early != null) return early;
-        return new PackageOperationResult(succeeded ? PackageOutcome.Succeeded : PackageOutcome.Failed);
+        return succeeded
+            ? new PackageOperationResult(PackageOutcome.Succeeded)
+            : new PackageOperationResult(PackageOutcome.Failed, failureReason, Failure: wingetFailure == Outcomes.FailureKind.None ? Outcomes.FailureKind.PackageManagerFailed : wingetFailure);
     }
 
-    /// <summary>Runs winget and reports its output. Ok is true for a success exit code.</summary>
-    private async Task<(ProcessRunOutcome Outcome, bool Ok)> RunWinGetAsync(ProcessCommand command, IProgress<string> progress, CancellationToken cancellationToken)
+    /// <summary>Runs winget and reports its output. Ok is true for a success exit code; ExitCode is null when it did not exit.</summary>
+    private async Task<(ProcessRunOutcome Outcome, bool Ok, int? ExitCode)> RunWinGetAsync(ProcessCommand command, IProgress<string> progress, CancellationToken cancellationToken)
     {
         bool ok = false;
         var result = await _runner.RunAsync(command, line =>
@@ -261,7 +273,7 @@ public class WinGetHubService : IWinGetHubService
                 progress.Report($"[EXCEPTION] Failed to run winget: {result.Error}");
                 break;
         }
-        return (result.Outcome, ok);
+        return (result.Outcome, ok, result.Outcome == ProcessRunOutcome.Exited ? result.ExitCode : null);
     }
 
     private PackageOperationResult RunLocalInstaller(LocalInstallerStep step, string displayName, IProgress<string> progress)

@@ -266,7 +266,8 @@
                 <!-- Profile (bottom of the list; replaced About in 2.0.8): avatar, name and @username.
                      Signed out it reads "Sign in"; the rail shows only the avatar. -->
                 <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Profile"
-                        Height="52" ToolTip="{Binding AccountVm.SidebarTitle}" AutomationProperties.Name="Profile">
+                        Height="52" ToolTip="{Binding AccountVm.SidebarTitle}" AutomationProperties.Name="Profile"
+                        AutomationProperties.HelpText="{Binding AccountVm.SidebarStatus}">
                     <StackPanel Orientation="Horizontal">
                         <Grid Width="30" Height="30" VerticalAlignment="Center">
                             <Grid.Style>
@@ -292,16 +293,19 @@
                                     <ImageBrush ImageSource="{Binding AccountVm.AvatarUrl}" Stretch="UniformToFill"/>
                                 </Ellipse.Fill>
                             </Ellipse>
-                            <!-- Online dot: green when signed in and reachable -->
+                            <!-- Online dot: solid green when signed in and reachable; a hollow ring when offline,
+                                 so the state is a shape as well as a colour -->
                             <Ellipse Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-1,-1"
-                                     Stroke="{DynamicResource SidebarBackgroundBrush}" StrokeThickness="2"
+                                     StrokeThickness="2" ToolTip="{Binding AccountVm.StatusLine}"
                                      Visibility="{Binding AccountVm.IsSignedIn, Converter={StaticResource BoolToVis}}">
                                 <Ellipse.Style>
                                     <Style TargetType="Ellipse">
                                         <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                        <Setter Property="Stroke" Value="{DynamicResource SidebarBackgroundBrush}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding AccountVm.IsOffline}" Value="True">
-                                                <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}"/>
+                                                <Setter Property="Fill" Value="{DynamicResource SidebarBackgroundBrush}"/>
+                                                <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>

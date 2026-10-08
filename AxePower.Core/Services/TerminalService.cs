@@ -57,6 +57,12 @@ public class TerminalService
 
     public void RequestNavigateToTerminal() => NavigateToTerminalRequested?.Invoke();
 
+    /// <summary>True while a shell session is running.</summary>
+    public bool HasSession
+    {
+        get { lock (_lock) return _process is { HasExited: false }; }
+    }
+
     /// <summary>Kills any existing session and starts a fresh shell of the requested kind.</summary>
     public void StartSession(TerminalShell shell)
     {

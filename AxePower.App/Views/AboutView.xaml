@@ -493,6 +493,7 @@
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Searching and streaming music on YouTube, which sends your search text and the song being played."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Finding lyrics (LRCLIB, KuGou), which sends the song's title, artist, album and length."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Posters for your installed games, from Steam's image servers."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Pings: to 1.1.1.1 (Cloudflare) every 5 seconds while the Dashboard is on screen, for its latency reading; and to four public DNS servers when you run the DNS benchmark."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Downloading updates, graphics drivers, Share Screen tools and portable apps, and installing software through WinGet, when you ask."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Links, downloads and help pages, which open in your web browser."/>
                             <TextBlock Style="{StaticResource PolicyText}"

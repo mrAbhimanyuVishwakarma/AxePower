@@ -8,8 +8,19 @@ namespace AxePower.Tests;
 
 public class TrayMenuPreferencesTests
 {
-    private static string MainWindowXaml([CallerFilePath] string thisFile = "") =>
-        File.ReadAllText(Path.Combine(Path.GetDirectoryName(thisFile)!, "..", "AxePower.App", "MainWindow.xaml"));
+    /// <summary>
+    /// The repository root, found by walking up from the test binaries to AxePower.sln. Not
+    /// [CallerFilePath]: deterministic CI builds rewrite source paths to /_/, so it would point nowhere.
+    /// </summary>
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "AxePower.sln"))) dir = dir.Parent;
+        return dir?.FullName ?? throw new DirectoryNotFoundException("AxePower.sln not found above " + AppContext.BaseDirectory);
+    }
+
+    private static string MainWindowXaml() =>
+        File.ReadAllText(Path.Combine(RepoRoot(), "AxePower.App", "MainWindow.xaml"));
 
     [Fact]
     public void EveryCatalogEntry_IsANamedItemInTheTrayMenu()

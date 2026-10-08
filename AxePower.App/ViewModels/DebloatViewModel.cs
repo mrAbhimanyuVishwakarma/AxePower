@@ -134,7 +134,7 @@ public partial class DebloatViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open repository link: " + ex.Message);
+            _notificationService.ShowFailure("Open the repository page", ex);
         }
     }
 
@@ -150,7 +150,7 @@ public partial class DebloatViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Could not copy to clipboard: " + ex.Message);
+            _notificationService.ShowFailure("Copy to the clipboard", ex);
         }
     }
 
@@ -182,7 +182,7 @@ public partial class DebloatViewModel : ObservableObject
         catch (Exception ex)
         {
             RestorePointStatus = "Error creating checkpoint.";
-            _notificationService.Show("Restore Point error: " + ex.Message);
+            _notificationService.ShowFailure("Create a restore point", ex);
         }
         finally
         {

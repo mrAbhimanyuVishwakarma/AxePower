@@ -62,6 +62,14 @@ public class AutoSwitchService : IDisposable
         _lastPluggedInState = status.IsPluggedIn;
         _inLowBatteryState = settings.LowBatteryRuleEnabled && status.BatteryPercentage <= settings.LowBatteryThresholdPercent;
         _inLowBatteryAlertState = !status.IsPluggedIn && status.BatteryPercentage <= settings.LowBatteryThresholdPercent;
+        // Only with the user's agreement (Prompt 31): the first mode change creates AxePower's
+        // power plans and removes other custom plans. Existing users have this on; a fresh
+        // install sets it on the welcome screen.
+        if (!settings.ApplyExpectedModeOnStartup)
+        {
+            _logService.LogInfo("Startup: no mode applied (not agreed on the welcome screen).");
+            return;
+        }
         _logService.LogInfo("Startup: applying Smart mode.");
         _ = _powerPlanService.ApplyModeAsync(PowerMode.Smart);
     }

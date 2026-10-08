@@ -448,7 +448,7 @@ public partial class PhoneHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Could not open file: " + ex.Message);
+            _notificationService.ShowFailure("Open the file", ex);
         }
     }
 
@@ -489,7 +489,7 @@ public partial class PhoneHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Error deleting file: " + ex.Message);
+            _notificationService.ShowFailure("Delete the file", ex);
         }
     }
 
@@ -520,7 +520,7 @@ public partial class PhoneHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Could not open folder: " + ex.Message);
+            _notificationService.ShowFailure("Open the folder", ex);
         }
     }
 
@@ -565,7 +565,7 @@ public partial class PhoneHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open browser: " + ex.Message);
+            _notificationService.ShowFailure("Open the browser", ex);
         }
     }
 
@@ -779,7 +779,7 @@ public partial class PhoneHubViewModel : ObservableObject
                 }
                 catch (Exception ex)
                 {
-                    _notificationService.Show($"Error opening SpaceDesk: {ex.Message}");
+                    _notificationService.ShowFailure("Open SpaceDesk", ex);
                 }
                 return;
             }
@@ -840,7 +840,7 @@ public partial class PhoneHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show($"SpaceDesk: {ex.Message}");
+            _notificationService.ShowFailure("Start SpaceDesk", ex);
             try
             {
                 Process.Start(new ProcessStartInfo { FileName = "https://www.spacedesk.net/", UseShellExecute = true });
@@ -941,7 +941,7 @@ public partial class PhoneHubViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                _notificationService.Show("Could not launch Phone Link: " + ex.Message);
+                _notificationService.ShowFailure("Open Phone Link", ex);
                 try
                 {
                     Process.Start(new ProcessStartInfo

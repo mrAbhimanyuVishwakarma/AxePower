@@ -478,7 +478,7 @@ public partial class MusicViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            NowPlaying.ErrorMessage = $"Failed to create playlist: {ex.Message}";
+            NowPlaying.ErrorMessage = AxePower.Core.Services.Outcomes.UserMessages.Failed("Create the playlist", ex).Text;
         }
     }
 
@@ -602,7 +602,7 @@ public partial class MusicViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            NowPlaying.ErrorMessage = provider.Info.Name + " search failed: " + ex.Message;
+            NowPlaying.ErrorMessage = AxePower.Core.Services.Outcomes.UserMessages.Failed("Search " + provider.Info.Name, ex).Text;
         }
         finally
         {

@@ -208,10 +208,28 @@ public partial class BatteryViewModel : ObservableObject
             Interval = TimeSpan.FromSeconds(3)
         };
         _timer.Tick += async (s, e) => await RefreshStatusAsync();
-        _timer.Start();
+        // Started by SetLive while the Battery page is on screen
 
         _ = RefreshStatusAsync();
         _ = LoadCapacityHistoryAsync();
+    }
+
+    /// <summary>Runs the 3-second refresh only while the Battery page is on screen (Prompt 29).</summary>
+    /// <summary>True while the periodic refresh runs (Battery page on screen).</summary>
+    public bool IsLive => _timer.IsEnabled;
+
+    public void SetLive(bool live)
+    {
+        if (live == _timer.IsEnabled) return;
+        if (live)
+        {
+            _timer.Start();
+            _ = RefreshStatusAsync();
+        }
+        else
+        {
+            _timer.Stop();
+        }
     }
 
     // ── Capacity over time ──────────────────────────────────────────────────
@@ -324,7 +342,7 @@ public partial class BatteryViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService?.Show("Could not open the battery report: " + ex.Message);
+            _notificationService?.ShowFailure("Open the battery report", ex);
         }
         finally
         {

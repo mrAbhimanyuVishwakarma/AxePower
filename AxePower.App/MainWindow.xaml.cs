@@ -25,13 +25,11 @@ public partial class MainWindow : Window
         _settingsService = settingsService;
         _telemetryService = telemetryService;
 
-        // No per-second WMI/disk/network sampling while hidden in the tray
-        IsVisibleChanged += (s, e) =>
-        {
-            if (_telemetryService == null) return;
-            if (IsVisible) _telemetryService.Resume();
-            else _telemetryService.Pause();
-        };
+        // Periodic work runs only while its page is on screen: not in the tray, not minimised
+        viewModel.AttachTelemetry(_telemetryService);
+        void ReportOnScreen() => viewModel.IsOnScreen = IsVisible && WindowState != WindowState.Minimized;
+        IsVisibleChanged += (s, e) => ReportOnScreen();
+        StateChanged += (s, e) => ReportOnScreen();
 
         // Shrink/expand the window to match the dashboard's compact monitor widget
         _expandedMinWidth = MinWidth;
@@ -438,8 +436,15 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>Removes the tray icon now, so no dead icon is left in the notification area. Safe to repeat.</summary>
+    public void DisposeTrayIcon()
+    {
+        try { AppTrayIcon?.Dispose(); } catch (Exception) { /* Best-effort: the icon may already be gone. */ }
+    }
+
     protected override void OnClosed(EventArgs e)
     {
+        DisposeTrayIcon();
         _themeService.ThemeChanged -= OnThemeChanged;
         try
         {

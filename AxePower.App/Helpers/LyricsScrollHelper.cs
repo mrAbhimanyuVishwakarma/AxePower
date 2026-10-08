@@ -29,7 +29,7 @@ public static class LyricsScrollHelper
                 0,
                 viewer.ScrollableHeight);
 
-            if (!SystemParameters.ClientAreaAnimation)
+            if (Motion.IsReduced)
             {
                 viewer.ScrollToVerticalOffset(target);
                 return;

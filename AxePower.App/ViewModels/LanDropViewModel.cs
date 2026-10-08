@@ -332,7 +332,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Could not open file: " + ex.Message);
+            _notificationService.ShowFailure("Open the file", ex);
         }
     }
 
@@ -373,7 +373,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Error deleting file: " + ex.Message);
+            _notificationService.ShowFailure("Delete the file", ex);
         }
     }
 
@@ -404,7 +404,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Could not open folder: " + ex.Message);
+            _notificationService.ShowFailure("Open the folder", ex);
         }
     }
 
@@ -449,7 +449,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open browser: " + ex.Message);
+            _notificationService.ShowFailure("Open the browser", ex);
         }
     }
 

@@ -131,15 +131,27 @@ public partial class App : Application
             var settingsService = Services.GetRequiredService<SettingsService>();
             settingsService.LoadSettings();
 
+            var themeService = Services.GetRequiredService<ThemeService>();
+
+            // A fresh install asks first (Prompt 31): until the welcome's Continue, nothing starts
+            // with Windows, nothing is elevated, no power plan is touched and nothing is checked online
+            bool firstRun = settingsService.GetSettings().FirstRunCompleted == false;
+            if (firstRun)
+            {
+                themeService.ApplyTheme(settingsService.GetSettings().Theme, settingsService.GetSettings().SkinId);
+                firstRun = !ShowWelcome(settingsService);
+            }
+
             // Elevation is decided before anything else is constructed: on success this process
             // is replaced outright, so there is no point building services or showing a window.
             if (TryElevateAndExit(settingsService, e.Args)) return;
 
-            var themeService = Services.GetRequiredService<ThemeService>();
             themeService.ApplyTheme(settingsService.GetSettings().Theme, settingsService.GetSettings().SkinId);
+            themeService.FollowSystemHighContrast();
 
+            // "Not now" on the welcome: the startup task is neither created nor touched
             var startupService = Services.GetRequiredService<StartupService>();
-            startupService.Initialize();
+            if (!firstRun) startupService.Initialize();
 
             var batteryService = Services.GetRequiredService<BatteryService>();
             batteryService.StartHistoryCollection();
@@ -202,7 +214,10 @@ public partial class App : Application
             }
             catch { /* Broad on purpose: the startup-failure path must still show its message box. */ }
 
-            MessageBox.Show($"AxePower failed to start:\n\n{ex.Message}\n\n{ex.StackTrace}", "AxePower Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            // No stack trace on screen (Prompt 30): it is in the diagnostics log, written just above
+            var why = AxePower.Core.Services.Outcomes.UserMessages.Failed("Start AxePower", ex);
+            MessageBox.Show($"{why.Text}\n\nTechnical detail: {why.Details}\n\nThe full report is in %LOCALAPPDATA%\\AxePower\\Diagnostics.",
+                "AxePower could not start", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -213,6 +228,28 @@ public partial class App : Application
     /// A refused UAC prompt is not an error: AxePower keeps running as a standard user, with the
     /// sentinel argument on the relaunched command line making sure a denial cannot loop.
     /// </summary>
+    /// <summary>
+    /// Shows the first-run welcome before any other window. True when the user chose Continue.
+    /// The app is kept alive while it is open: it is not the main window.
+    /// </summary>
+    private bool ShowWelcome(SettingsService settingsService)
+    {
+        var mode = ShutdownMode;
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        try
+        {
+            var welcome = new AxePower.App.Windows.WelcomeWindow(new WelcomeViewModel(settingsService));
+            bool chose = welcome.ShowDialog() == true;
+            Services?.GetService<LogService>()?.LogInfo(chose ? "First run: welcome completed." : "First run: welcome postponed; nothing applied.");
+            return chose;
+        }
+        finally
+        {
+            MainWindow = null;
+            ShutdownMode = mode;
+        }
+    }
+
     private bool TryElevateAndExit(SettingsService settingsService, string[] args)
     {
         var elevation = Services.GetRequiredService<ElevationService>();
@@ -508,6 +545,12 @@ public partial class App : Application
             $"Skins: {skins.Skins.Count} ({string.Join(", ", skins.Skins.Select(k => k.Id))}); " +
             $"{skins.Errors.Count} skipped{(skins.Errors.Count > 0 ? ": " + string.Join(" | ", skins.Errors) : "")}.");
 
+        // Read-only: what Windows asks for, and whether the skin High Contrast switches to is here
+        Console.WriteLine(
+            $"Accessibility: Windows High Contrast {(SystemParameters.HighContrast ? "on" : "off")}, " +
+            $"High Contrast skin {(skins.Find(ThemeService.HighContrastSkinId) != null ? "present" : "MISSING")}, " +
+            $"animation effects {(AxePower.App.Helpers.Motion.IsReduced ? "off (reduced motion)" : "on")}.");
+
         // Read-only: asks the firmware whether a MUX exists, changes nothing
         var gameModeSettings = sp.GetRequiredService<SettingsService>().GetSettings();
         sp.GetRequiredService<GameModeGpuService>();
@@ -746,33 +789,13 @@ public partial class App : Application
 
     private void Application_Exit(object sender, ExitEventArgs e)
     {
-        if (Services != null)
-        {
-            try
-            {
-                // Saves the queue and position, then releases the audio device. Run off the UI
-                // thread so its awaits cannot wait on this (blocked) dispatcher.
-                var player = Services.GetService<IMusicPlayerService>();
-                if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
-                Services.GetService<PlayerIntegrationHost>()?.Dispose();
-                Services.GetService<AmbientWindowService>()?.Dispose();
-                // Running routines are undone (previous mode, reopened apps) before the timer goes
-                var routines = Services.GetService<AxePower.Core.Services.Routines.RoutineEngine>();
-                if (routines != null) Task.Run(routines.StopAsync).Wait(TimeSpan.FromSeconds(5));
-                Services.GetService<PowerTimerService>()?.Dispose();   // closing AxePower cancels the timer
+        if (Services == null) return;
 
-                // Friends see you leave straight away instead of when the heartbeat runs out
-                var friends = Services.GetService<FriendsService>();
-                if (friends is { IsActive: true }) Task.Run(() => friends.GoOfflineAsync(TimeSpan.FromSeconds(2))).Wait(TimeSpan.FromSeconds(3));
-                friends?.Dispose();
-            }
-            catch { /* Broad on purpose: shutdown must finish even if one service fails to stop. */ }
-
-            var autoSwitchService = Services.GetService<AutoSwitchService>();
-            autoSwitchService?.Stop();
-
-            var appMonitorService = Services.GetService<AppMonitorService>();
-            appMonitorService?.Stop();
-        }
+        // The tray icon is the window's; without this a dead icon stays until hovered
+        (MainWindow as MainWindow)?.DisposeTrayIcon();
+        var steps = AppShutdown.Run(Services, (MainWindow as MainWindow)?.DataContext as MainViewModel,
+            hardExit: () => Environment.Exit(e.ApplicationExitCode));
+        Services.GetService<LogService>()?.LogInfo("[Shutdown] " + string.Join(", ",
+            steps.Select(s => $"{s.Name} {s.Took.TotalMilliseconds:0} ms{(s.Error != null ? " (failed)" : "")}")));
     }
 }

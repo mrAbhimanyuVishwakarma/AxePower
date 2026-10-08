@@ -51,3 +51,10 @@ Tests: `TrustInventoryTests.RemoteAccess_StaysOff_UntilItsChannelIsPrivate`.
    client can neither read nor send on another user's topic.
 
 AxePower Mobile has to change at the same time (steps 1–3), so ship both together.
+
+## Note from Prompt 29 (2026-10-08)
+
+The 1-second telemetry sampler now runs only while the Dashboard or Game Mode is on screen
+(`MainViewModel.UpdateBackgroundActivity`). When remote access returns, it must ask for sampling
+explicitly while a phone is connected (for example a second reason to keep `SystemTelemetryService`
+running); otherwise the phone sees stale numbers whenever AxePower is in the tray.

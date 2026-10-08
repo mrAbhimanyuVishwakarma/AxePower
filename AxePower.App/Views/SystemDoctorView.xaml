@@ -287,7 +287,8 @@
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Selection Checkbox -->
-                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,16,0"
+                                                  AutomationProperties.Name="{Binding Name, StringFormat='Select {0}'}"/>
 
                                         <!-- Details -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">

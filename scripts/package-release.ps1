@@ -90,7 +90,11 @@ $publishDir = Join-Path $repoRoot "publish/win-x64"
 if (Test-Path $publishDir) {
     Remove-Item -LiteralPath $publishDir -Recurse -Force -ErrorAction SilentlyContinue
 }
-& dotnet publish (Join-Path $repoRoot "AxePower.App/AxePower.App.csproj") -c Release -r win-x64 --no-build -o $publishDir
+# Framework-dependent publish targeting win-x64 so only Windows native binaries are included.
+# Without -r win-x64 the output bundles ~47 MB of Linux/macOS/ARM/WASM SQLite and Mono natives.
+# --no-build is omitted here because the solution build step targets AnyCPU; the publish step
+# needs to resolve win-x64 assets itself. The compile is already cached so this adds only seconds.
+& dotnet publish (Join-Path $repoRoot "AxePower.App/AxePower.App.csproj") -c Release -r win-x64 --self-contained false -p:ContinuousIntegrationBuild=true -p:Deterministic=true -o $publishDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed." }
 
 # 7. Sign Application Binaries
@@ -110,15 +114,22 @@ foreach ($bin in $binariesToSign) {
 $installerOutput = Join-Path $repoRoot "Installer/Output/AxePower-v$Version-Setup.exe"
 $iscc = Get-Command "ISCC.exe" -ErrorAction SilentlyContinue
 if (-not $iscc) {
-    $defaultIscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-    if (Test-Path $defaultIscc) {
-        $iscc = Get-Item $defaultIscc
+    # Machine-wide installs, and the per-user install Inno Setup offers by default.
+    $candidates = @(
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+        "C:\Program Files\Inno Setup 6\ISCC.exe",
+        (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe")
+    )
+    $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($found) {
+        $iscc = Get-Item $found
     }
 }
 
 if ($iscc) {
     Write-Host "`nCompiling Inno Setup installer using $iscc..." -ForegroundColor Yellow
-    & $iscc (Join-Path $repoRoot "Installer/AxePower.iss")
+    # Package exactly what step 6 published, never an older build left under bin\.
+    & $iscc "/DPublishDir=$publishDir" (Join-Path $repoRoot "Installer/AxePower.iss")
     if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
 
     # Sign the installer executable

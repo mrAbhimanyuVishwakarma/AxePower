@@ -2,7 +2,7 @@
 
 **For:** the owner. These items cannot be finished by code alone: they need a real phone, a second
 PC, the elevated app on screen, an installer run, or something only you can buy or decide.
-**Last updated:** 2026-10-06 (after Prompt 21).
+**Last updated:** 2026-10-08 (after Prompt 31).
 
 Work through them in any order. For each one, tell me the item number and either "pass" or what
 you saw (a screenshot helps). I then close it in `SOFTWARE_COMPLETION_PROMPTS.md` and
@@ -120,6 +120,55 @@ Network & internet → your Wi-Fi → Properties.
 6. Look at a dialog in Dark and Light.
 
 **Tell me:** pass, or a screenshot of what is off.
+
+### A8. Accessibility: Narrator, keyboard, scaling, High Contrast, motion, controller (Prompt 28)
+**Need:** this PC; a controller for M-9. About 30 minutes.
+**Do:** the ten rows of the manual test matrix in `docs/engineering/ACCESSIBILITY.md` (M-1 to
+M-10). Each row says what to set up, what to do and what passing looks like.
+**Tell me:** "A8" with pass or what you saw for each row number, e.g. "M-5: Settings text clipped
+at 200%".
+
+### A9. Idle cost of the real app (Prompt 29)
+**Need:** this PC, this build installed or run from `bin\Release`. About 10 minutes.
+**Do:**
+1. Start AxePower. Open the Dashboard and leave it for a minute. In a normal (not admin)
+   PowerShell in the repo folder run:
+   `powershell -ExecutionPolicy Bypass -File scripts\measure-axepower.ps1 -Label Dashboard`
+2. Open Settings, wait a minute, run it again with `-Label Settings`.
+3. Close the window to the tray, wait a minute, run it with `-Label Tray`.
+4. Open Game Mode, Settings, Game Mode again: the second Game Mode visit should feel instant.
+5. Exit from the tray menu. The tray icon should vanish at once, and Task Manager should show no
+   AxePower or leftover `powershell.exe`.
+
+**Tell me:** the three lines the script printed, and anything odd in steps 4 and 5.
+
+### A10. Error messages (Prompt 30)
+**Need:** this PC. About 10 minutes.
+**Do:**
+1. Turn Wi-Fi off. Settings › Updates › Check for updates: a banner says it could not check, that
+   you appear to be offline, with **Details** and **Close**. Click Details: a short technical line
+   (no long stack of "at …" lines), and **Copy details** works.
+2. Settings › Notifications: turn notifications off, then repeat step 1: the error still shows.
+3. Software Hub: select two apps, start installing, then Cancel: the banner says what was done
+   and what was cancelled, and does not call it an error. Turn Wi-Fi back on.
+4. Look at the banner in Dark and Light.
+
+**Tell me:** pass, or a screenshot of what is off.
+
+### A11. First run (Prompt 31)
+**Need:** this PC, this build. About 10 minutes. Your settings are put back at the end.
+**Do:**
+1. Exit AxePower. Rename `%LOCALAPPDATA%\AxePower\settings.json` to `settings.json.mine`.
+2. Start this build. Before anything else, the **Welcome to AxePower** window appears: no Windows
+   permission prompt, no power plan change (check Control Panel › Power Options stays as it was).
+3. Click **Not now**. AxePower opens without asking for administrator rights.
+4. Exit, start again: the welcome is back. Choose Continue with the recommended choices. Windows now
+   asks for permission (Run as administrator), and Power Options shows AxePower's plans.
+5. Look at the welcome window in Dark and Light (Settings › Theme, then repeat from step 1).
+6. Exit. Delete the new `settings.json` and rename `settings.json.mine` back. Start AxePower: no
+   welcome, everything as before.
+
+**Tell me:** pass, or what happened at the step that differed.
 
 ---
 
@@ -259,6 +308,10 @@ choices.
 | A5 Change preview and history | this PC | waiting |
 | A6 Trust & Permissions | this PC, phone | waiting |
 | A7 New confirmations | this PC | waiting |
+| A8 Accessibility matrix | this PC, controller | waiting |
+| A9 Idle cost (real app) | this PC | waiting |
+| A10 Error messages | this PC | waiting |
+| A11 First run | this PC | waiting |
 | B1 LAN Drop on a phone | phone | waiting |
 | B2 Firewall rule | installer build | waiting |
 | C1 Share Screen, two PCs | second PC | waiting |

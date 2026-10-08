@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `e9611d9` plus uncommitted Prompt 24–27 work (change history; Trust & Permissions, which can stop the LAN Drop server, disconnect devices, rotate its access link and clear music history; privacy claims; the confirmation standard) in the working tree
+> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-06 · **Last commit covered:** `26fb737` plus uncommitted Prompts 28–30 (accessibility; idle work and shutdown; plain error messages) in the working tree
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and
@@ -153,7 +153,12 @@ volume percentage label removed — volume shows in the tooltip), the YT Music /
 buttons that replaced the lower tabs, the icon-only Ambient button, the Local-only Create Playlist /
 Add Folder toolbar, the Last played list, and the new Ambient Mode section in Music Settings.
 Binding errors and layout breakage would not show up in any test; XAML compiles fine with a
-misspelled binding path.
+misspelled binding path. Prompt 28 (2026-10-06) added a keyboard-focus border (the skin's focus
+colour) to the YT Music button and to song-list rows, which hid the focus rectangle and showed
+nothing in its place, and Enter on a focused song row now plays it, as a click does. A test
+enforces the focus states, but neither border has been seen and Enter-to-play has not been pressed.
+Prompt 30 (2026-10-08) replaced the raw exception text in "create playlist" and provider-search
+failures with a plain reason and what to do (`UserMessages`); the new wording has not been seen.
 **How to verify:** Launch the app (it relaunches elevated, so this has to be done by the owner),
 open Music → settings, scroll the whole dialog, right-click a streamed queue row,
 enter Ambient Mode with F11, and check the Dashboard's What's New dropdown. Switch between the YT

@@ -428,7 +428,7 @@ public partial class TrustViewModel : ObservableObject, IDisposable
         }
         catch (AccountException ex)
         {
-            StatusText = $"The account was not deleted: {ex.Message}";
+            StatusText = "The account was not deleted. " + AxePower.Core.Services.Outcomes.UserMessages.Advice(AxePower.Core.Services.Outcomes.OutcomeClassifier.Classify(ex) ?? AxePower.Core.Services.Outcomes.FailureKind.Unexpected);
         }
         RefreshAccount();
     }

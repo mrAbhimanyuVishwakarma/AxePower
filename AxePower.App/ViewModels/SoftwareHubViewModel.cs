@@ -190,7 +190,7 @@ public partial class PackageCardViewModel : ObservableObject
         {
             _parent.Notify(Id == "camstudio"
                 ? "CamStudio isn't on WinGet. Download it from the page that just opened, then Refresh."
-                : $"Installation of {Name} did not complete. Opening website...");
+                : $"{Name} was not installed: {result.Message ?? AxePower.Core.Services.Outcomes.UserMessages.Short(result.Failure)}. Opening its website...");
         }
     }
 
@@ -422,8 +422,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Graphics driver update failed: {ex.Message}");
-            AppendLog($"[Graphics Drivers Error] {ex.Message}");
+            NotifyFailure("Update the graphics driver", ex);
+            AppendLog($"[Graphics Drivers Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -512,8 +512,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Download failed: {ex.Message}");
-            AppendLog($"\n[ERROR] NVIDIA Driver Install failed: {ex.Message}");
+            NotifyFailure("Download the NVIDIA driver", ex);
+            AppendLog($"\n[ERROR] NVIDIA Driver Install failed: {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -751,9 +751,8 @@ public partial class SoftwareHubViewModel : ObservableObject
                 if (item.Result.Succeeded) card.IsInstalled = true;
             }
 
-            Notify(result.WasCancelled
-                ? $"Batch installation cancelled: {result.SucceededCount}/{toInstall.Count} installed."
-                : $"✓ Batch installation complete: {result.SucceededCount}/{toInstall.Count} installed.");
+            // Names exactly what was installed, what was not and why, and what a cancel skipped (Prompt 30)
+            _notificationService.Show(AxePower.Core.Services.Outcomes.UserMessages.For(result.ToOutcome("Install apps")));
             AppendLog("\n=======================================================");
             AppendLog($"  Batch Installation {(result.WasCancelled ? "Cancelled" : "Complete")}: {result.SucceededCount}/{toInstall.Count} succeeded");
             AppendLog("=======================================================\n");
@@ -898,8 +897,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         catch (Exception ex)
         {
             LoadShieldSettings();
-            Notify($"Windows Update policy change failed: {ex.Message}");
-            AppendLog($"[Update Policy Error] {ex.Message}");
+            NotifyFailure("Change the Windows Update policy", ex);
+            AppendLog($"[Update Policy Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -944,8 +943,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         catch (Exception ex)
         {
             LoadShieldSettings();
-            Notify($"Windows restart-policy change failed: {ex.Message}");
-            AppendLog($"[Update Policy Error] {ex.Message}");
+            NotifyFailure("Change Windows Update's restart policy", ex);
+            AppendLog($"[Update Policy Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -980,8 +979,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Windows Update cache reset failed: {ex.Message}");
-            AppendLog($"[Update Cache Reset Error] {ex.Message}");
+            NotifyFailure("Reset the Windows Update cache", ex);
+            AppendLog($"[Update Cache Reset Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1034,8 +1033,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            FirmwareCheckStatus = $"Firmware scan error: {ex.Message}";
-            AppendLog($"[BIOS & Firmware Error] {ex.Message}");
+            FirmwareCheckStatus = AxePower.Core.Services.Outcomes.UserMessages.Failed("Scan for BIOS and firmware updates", ex).Text;
+            AppendLog($"[BIOS & Firmware Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1082,8 +1081,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Update check error: {ex.Message}");
-            AppendLog($"[System Update Error] {ex.Message}");
+            NotifyFailure("Check for system updates", ex);
+            AppendLog($"[System Update Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1113,8 +1112,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"System Restore point failed: {ex.Message}");
-            AppendLog($"[Restore Point Error] {ex.Message}");
+            NotifyFailure("Create a restore point", ex);
+            AppendLog($"[Restore Point Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1141,4 +1140,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     {
         _notificationService.Show(message);
     }
+
+    /// <summary>"Could not <paramref name="action"/>" with what to do about it (Prompt 30).</summary>
+    public void NotifyFailure(string action, Exception error) => _notificationService.ShowFailure(action, error);
 }

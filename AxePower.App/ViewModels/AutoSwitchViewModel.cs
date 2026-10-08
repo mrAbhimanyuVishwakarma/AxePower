@@ -219,7 +219,7 @@ public partial class AutoSwitchViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to check for updates: " + ex.Message);
+            _notificationService.ShowFailure("Check for updates", ex);
         }
     }
 }

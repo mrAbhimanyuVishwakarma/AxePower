@@ -172,7 +172,7 @@ public partial class DiagnosticsBundleViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
         {
-            StatusText = $"Could not save the bundle: {ex.Message}";
+            StatusText = AxePower.Core.Services.Outcomes.UserMessages.Failed("Save the bundle", ex).Text;
             _log.LogWarning("[Diagnostics] Saving a diagnostic bundle failed", ex);
         }
     }

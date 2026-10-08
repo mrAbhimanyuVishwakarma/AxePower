@@ -16,7 +16,7 @@ appears in the code.
 | **No ads.** | No ad SDK or ad host in the code or packages (`PrivacyClaimsTests.NoAnalyticsOrAdLibraries`). |
 | **No usage analytics sent to the developers.** | No analytics or crash-reporting SDK (Google Analytics, Firebase, App Center, Sentry, Mixpanel, Segment, Amplitude, PostHog) in the code or packages, and no AxePower-run server receives usage data. Diagnostics stay on the PC; a bundle exists only when the user saves one ([DIAGNOSTICS.md](../engineering/DIAGNOSTICS.md)). |
 | **Accounts are optional.** | Every feature except Friends works signed out; without an account, nothing about the user is stored in Supabase. |
-| **Online features contact other services only for that feature,** with one exception at start-up: the update check, while "Check for updates automatically" is on (it is on by default). | The connections table below, which lists every file that opens a connection (enforced by `TrustInventoryTests`). |
+| **Online features contact other services only for that feature,** with one exception at start-up: the update check, while "Check for updates automatically" is on. A new install asks on its welcome screen (recommended on) and checks nothing before then; existing installs keep their setting. | The connections table below, which lists every file that opens a connection (enforced by `TrustInventoryTests`). |
 | **The website is separate.** It uses Google Analytics only after "Accept" in its cookie banner. | `AppWebsite/consent.js`; nothing on the website affects the desktop app, and the desktop app contains no analytics. |
 
 Claims AxePower no longer makes, because they were not accurate: "100% local", "zero remote data
@@ -73,7 +73,7 @@ each service sees under its own privacy policy. AxePower runs no server of its o
 
 | Connection | Hosts | Purpose and trigger | Data sent | User control |
 |---|---|---|---|---|
-| AxePower updates (GitHub) | api.github.com, github.com, objects.githubusercontent.com | Find and download AxePower updates. At start-up when "Check for updates automatically" is on (default), and on Check for updates; downloads only when installing | AxePower's version | Settings › Updates & Maintenance |
+| AxePower updates (GitHub) | api.github.com, github.com, objects.githubusercontent.com | Find and download AxePower updates. At start-up when "Check for updates automatically" is on (chosen on the welcome screen), and on Check for updates; downloads only when installing | AxePower's version | Settings › Updates & Maintenance |
 | AxePower account (Supabase) | kjnqsgdlcytpooueymdt.supabase.co | Sign in, refresh the session, save the profile, delete the account; only when signed in | Email and password or the provider's result; username, display name, avatar link | Don't sign in, or sign out |
 | Friends and presence (Supabase Realtime) | kjnqsgdlcytpooueymdt.supabase.co | Live friend requests, presence and invites while signed in | Online/away, activity if shared, requests, invites | Appear offline, stop sharing activity, or sign out |
 | Google, GitHub, Discord or Steam sign-in | accounts.google.com, github.com, discord.com, steamcommunity.com (in the browser) | Sign in with that provider, only when chosen | What the user approves on the provider's page; AxePower receives a sign-in code on 127.0.0.1 | Use email or no account |
@@ -81,6 +81,8 @@ each service sees under its own privacy policy. AxePower runs no server of its o
 | YouTube Music | youtube.com, music.youtube.com, googlevideo.com, i.ytimg.com | Search, play or save a song from YouTube; captions as lyrics; artwork | Search words and played songs | Use only This PC as the music source |
 | Lyrics (LRCLIB, KuGou) | lrclib.net, lyrics.kugou.com | Find lyrics while the lyrics panel is open | Title, artist, album, length | Keep the panel closed |
 | Game artwork (Steam CDN) | cdn.cloudflare.steamstatic.com, shared.cloudflare.steamstatic.com, steamcdn-a.akamaihd.net, store.steampowered.com | Posters for installed games in Game Mode, once per game | The game's Steam ID or name | Delete game artwork |
+| Network latency on the Dashboard (ping) | 1.1.1.1 (Cloudflare) | Latency on the Dashboard's network tile: every 5 seconds, only while the Dashboard is on screen | An empty echo request (the IP address) | Leave the Dashboard |
+| DNS benchmark (ping) | 1.1.1.1, 9.9.9.9, 8.8.8.8, 208.67.222.222 | Compare DNS providers, only when the benchmark is run in System Doctor | An empty echo request (the IP address), three per provider | Don't run the benchmark |
 | Graphics drivers (NVIDIA, AMD) | nvidia.com, us.download.nvidia.com, amd.com | Check for or download a driver, when asked | Graphics card model, driver version | Don't use the driver check |
 | Share Screen tools (FFmpeg, MediaMTX) | api.github.com, github.com, www.gyan.dev | Download the tools on first use of Share Screen, and updates | A download request | Don't use Share Screen |
 | Portable tools and Android control (GitHub) | api.github.com, github.com | Install a portable tool or set up Android control (scrcpy) | A download request | Don't install them |

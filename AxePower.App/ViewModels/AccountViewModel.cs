@@ -85,6 +85,9 @@ public partial class AccountViewModel : ObservableObject
 
     public string StatusLine => IsOffline ? "Offline: showing your saved profile" : "Online";
 
+    /// <summary>The sidebar profile button's status for screen readers: what its coloured dot shows.</summary>
+    public string SidebarStatus => IsSignedIn ? StatusLine : SidebarSubtitle;
+
     public string MachineName => string.IsNullOrWhiteSpace(Environment.MachineName) ? "This PC" : Environment.MachineName;
 
     /// <summary>Empty when the username may be changed now; otherwise when it can be.</summary>

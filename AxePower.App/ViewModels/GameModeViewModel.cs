@@ -1107,7 +1107,7 @@ public partial class GameModeViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show($"Controller Navigation Error: {ex.Message}");
+            _notificationService.ShowFailure("Start controller navigation", ex);
         }
         finally
         {

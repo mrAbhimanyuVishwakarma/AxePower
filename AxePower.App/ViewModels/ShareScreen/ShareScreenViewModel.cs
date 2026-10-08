@@ -553,7 +553,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             _logService.LogError("[ShareScreen] Start failed", ex);
-            StatusMessage = ex.Message;
+            StatusMessage = AxePower.Core.Services.Outcomes.UserMessages.Failed("Start sharing", ex).Text;
         }
         finally
         {
@@ -587,7 +587,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
             catch (Exception ex)
             {
                 _logService.LogError("[Friends] Could not open private room", ex);
-                StatusMessage = ex.Message;
+                StatusMessage = AxePower.Core.Services.Outcomes.UserMessages.Failed("Open the private room", ex).Text;
                 return;
             }
             finally
@@ -1042,7 +1042,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             _logService.LogError("[Friends] Could not share attachment", ex);
-            _notificationService.Show(ex.Message);
+            _notificationService.ShowFailure("Share the file", ex);
         }
     }
 

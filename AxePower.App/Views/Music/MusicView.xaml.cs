@@ -169,6 +169,16 @@ public partial class MusicView : UserControl
         }
     }
 
+    /// <summary>Enter plays the focused song, as a click does (Prompt 28: no mouse needed).</summary>
+    private void SongsList_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && SongItemAt(Keyboard.FocusedElement as DependencyObject) is { } song)
+        {
+            ViewModel?.PlaySongCommand.Execute(song);
+            e.Handled = true;
+        }
+    }
+
     // ── Recent searches dropdown ────────────────────────────────────────────
     //
     // The popup is StaysOpen="True" and closed here instead of by WPF: a self-closing popup eats

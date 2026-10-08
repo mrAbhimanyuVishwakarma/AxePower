@@ -337,7 +337,7 @@ public partial class AboutViewModel : ObservableObject
         {
             IsCheckingForUpdate = false;
             CheckButtonText = "Check for updates";
-            _notificationService?.Show("Failed to check for updates: " + ex.Message);
+            _notificationService?.ShowFailure("Check for updates", ex);
         }
     }
 
@@ -505,14 +505,16 @@ public partial class AboutViewModel : ObservableObject
         catch (UpdateVerificationException ex)
         {
             IsDownloadingUpdate = false;
-            DownloadStatusText = "Update rejected: " + ex.Message;
-            _notificationService?.Show("Security verification failed: " + ex.Message);
+            DownloadStatusText = "Update rejected: it failed the security check, so nothing was installed.";
+            _notificationService?.Show(new AxePower.Core.Services.Outcomes.UserMessage(
+                "The update was rejected: it failed AxePower's security check, so nothing was installed. Try again later, or download it from the GitHub releases page.",
+                AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex), IsFailure: true));
         }
         catch (Exception ex)
         {
             IsDownloadingUpdate = false;
             DownloadStatusText = "Download failed. Try again or open the release page.";
-            _notificationService?.Show("Download failed: " + ex.Message);
+            _notificationService?.ShowFailure("Download the update", ex);
         }
     }
 
@@ -602,7 +604,7 @@ public partial class AboutViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService?.Show("Failed to open link: " + ex.Message);
+            _notificationService?.ShowFailure("Open the link", ex);
         }
     }
 }

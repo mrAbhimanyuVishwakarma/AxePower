@@ -6,7 +6,9 @@
         Background="{DynamicResource WindowBackgroundBrush}"
         Foreground="{DynamicResource PrimaryTextBrush}"
         WindowStyle="ToolWindow" ResizeMode="NoResize"
-        AutomationProperties.Name="{Binding Action, StringFormat=Confirm: {0}}">
+        AutomationProperties.Name="{Binding Action, StringFormat=Confirm: {0}}"
+        xmlns:a11y="clr-namespace:AxePower.App.Helpers"
+        a11y:AccessibleNames.Enabled="True">
     <!-- The standard confirmation (Prompt 27): what, scope, affected, admin, risk, backup, restart,
          reversibility. Cancel is the default; high risk needs the tick box before the named button works. -->
     <Grid Background="{DynamicResource WindowBackgroundBrush}">

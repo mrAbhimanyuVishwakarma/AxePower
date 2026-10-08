@@ -704,7 +704,8 @@
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                                  VirtualizingPanel.ScrollUnit="Pixel"
-                                 PreviewMouseLeftButtonUp="SongsList_MouseLeftButtonUp">
+                                 PreviewMouseLeftButtonUp="SongsList_MouseLeftButtonUp"
+                                 PreviewKeyDown="SongsList_PreviewKeyDown">
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="Padding" Value="0" />
@@ -722,6 +723,9 @@
                                                     </Trigger>
                                                     <Trigger Property="IsSelected" Value="True">
                                                         <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                                        <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>

@@ -5,7 +5,9 @@
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource WindowBackgroundBrush}"
         Foreground="{DynamicResource PrimaryTextBrush}"
-        WindowStyle="ToolWindow" ResizeMode="CanResize">
+        WindowStyle="ToolWindow" ResizeMode="CanResize"
+        xmlns:a11y="clr-namespace:AxePower.App.Helpers"
+        a11y:AccessibleNames.Enabled="True">
     <!-- Nothing is changed until Approve. Every step shows its value now and the value it will get. -->
     <Grid Background="{DynamicResource WindowBackgroundBrush}">
         <Grid Margin="24">
