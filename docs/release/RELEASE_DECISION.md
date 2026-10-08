@@ -41,8 +41,11 @@ NO-GO.
 
 ## Conditions for GO
 
-Each condition belongs to the project owner. The deadlines are proposals for the owner to confirm
-or change.
+Each condition belongs to the project owner. The owner confirmed the deadlines on 2026-10-08.
+
+**Owner's note on C1 (2026-10-08):** no budget for a certificate yet; one will be bought once
+AxePower earns. Until then any release is unsigned. By this document's rules that stays NO-GO
+for a public release, and users will see Windows' "Unknown publisher" warning.
 
 | # | Condition | Proposed deadline |
 |---|---|---|

@@ -12,7 +12,10 @@ public sealed class UpdateSecurityOptions
         "github.com",
         "api.github.com",
         "objects.githubusercontent.com",
-        "github-releases.githubusercontent.com"
+        "github-releases.githubusercontent.com",
+        // Where GitHub now redirects release downloads (seen 2026-10-08: without it every update
+        // was refused). The file is still checked against the signed manifest's size and SHA-256.
+        "release-assets.githubusercontent.com"
     };
 
     /// <summary>

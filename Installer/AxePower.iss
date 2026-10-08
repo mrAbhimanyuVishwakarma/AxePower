@@ -54,7 +54,8 @@ SignedUninstallerDir=Output
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Asked on the "Select Additional Tasks" page, ticked by default (owner, 2026-10-08)
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 ; Prerequisite helper — extracted to {tmp} at run time, never installed with the app

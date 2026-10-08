@@ -422,6 +422,9 @@
                     <Grid Grid.Row="2">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Style="{DynamicResource SecondaryButtonStyle}" Content="Remind Later" Command="{Binding DismissUpdateModalCommand}" Margin="0,0,10,0" Padding="18,8" IsEnabled="{Binding IsDownloadingUpdate, Converter={StaticResource InverseBool}}"/>
+                            <!-- If Update Now fails: get the installer from the release page and run it by hand -->
+                            <Button Style="{DynamicResource SecondaryButtonStyle}" Content="Download from GitHub" Command="{Binding OpenReleasePageCommand}" Margin="0,0,10,0" Padding="18,8"
+                                    ToolTip="If Update Now doesn't work, download the installer from the release page and run it"/>
                             <Button Style="{DynamicResource PrimaryButtonStyle}" Content="Update Now" Command="{Binding DownloadAndApplyUpdateCommand}" Padding="24,8" IsEnabled="{Binding IsDownloadingUpdate, Converter={StaticResource InverseBool}}"/>
                         </StackPanel>
                     </Grid>

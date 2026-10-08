@@ -103,6 +103,25 @@ public partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSteamUpdateBannerOpen;
 
+    /// <summary>How long the blue update bar stays before closing itself (owner, 2026-10-08).</summary>
+    public static readonly TimeSpan UpdateBannerDuration = TimeSpan.FromSeconds(10);
+
+    private int _bannerShown;
+
+    partial void OnIsSteamUpdateBannerOpenChanged(bool value)
+    {
+        if (!value) return;
+        int shown = ++_bannerShown;
+        _ = CloseBannerLaterAsync(shown);
+    }
+
+    /// <summary>Closes the bar after <see cref="UpdateBannerDuration"/>, unless it was reopened since.</summary>
+    private async Task CloseBannerLaterAsync(int shown)
+    {
+        await Task.Delay(UpdateBannerDuration);
+        if (shown == _bannerShown) IsSteamUpdateBannerOpen = false;
+    }
+
     [ObservableProperty]
     private string _steamUpdateBannerMessage = "Your AxePower is already up to date - ";
 
@@ -246,6 +265,15 @@ public partial class AboutViewModel : ObservableObject
     {
         OpenUrl(MobileAppDownloadUrl);
     }
+
+    /// <summary>
+    /// The way out when the in-app update cannot run (an older AxePower that does not trust a new
+    /// GitHub download host, a blocked network): opens the release page to download the installer
+    /// and run it by hand.
+    /// </summary>
+    [RelayCommand]
+    private void OpenReleasePage() =>
+        OpenUrl(string.IsNullOrWhiteSpace(ReleaseUrl) ? "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest" : ReleaseUrl);
 
     [RelayCommand]
     private void VisitWebsite()

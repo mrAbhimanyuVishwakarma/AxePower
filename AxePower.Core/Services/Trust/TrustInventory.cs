@@ -85,7 +85,7 @@ public static class TrustInventory
 
     public static IReadOnlyList<NetworkConnection> Connections { get; } = new NetworkConnection[]
     {
-        new("updates", "AxePower updates (GitHub)", "api.github.com, github.com, objects.githubusercontent.com",
+        new("updates", "AxePower updates (GitHub)", "api.github.com, github.com, objects.githubusercontent.com, release-assets.githubusercontent.com",
             "At start-up when \"Check for updates automatically\" is on, and when you click Check for updates. The installer is downloaded only when you choose to install.",
             "A standard web request (your IP address and AxePower's version). Nothing about you or your PC.",
             Optional: true, "Settings › Updates & Maintenance: turn off automatic checks.", new[] { "UpdateService.cs" }),

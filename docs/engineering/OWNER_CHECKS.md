@@ -316,7 +316,7 @@ choices.
 | B2 Firewall rule | installer build | waiting |
 | C1 Share Screen, two PCs | second PC | waiting |
 | C2 Tailscale HTTPS | second PC, Tailscale | waiting |
-| D1 Code signing | decision | decided: unsigned for now |
+| D1 Code signing | decision | decided: unsigned for now; buy a certificate once AxePower earns (2026-10-08) |
 | D2 Update key | run one script | done 2026-10-06 (key pinned and committed) |
 | D3 Commit branch | your answer | answered: `2.1.2-industry-standards-followup` |
-| D4 LAN HTTPS | decision (later) | waiting |
+| D4 LAN HTTPS | decision (later) | decided 2026-10-08: later, not before this release |

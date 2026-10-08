@@ -414,6 +414,13 @@ public class UpdateSecurityTests
     /// waiting in %TEMP% is hashed again under a no-write lock before launch. These never reach the
     /// launch: a refused installer is never started.
     /// </summary>
+    /// <summary>GitHub redirects release downloads to these hosts; refusing one blocks every update.</summary>
+    [Theory]
+    [InlineData("objects.githubusercontent.com")]
+    [InlineData("release-assets.githubusercontent.com")]
+    public void GitHubsReleaseDownloadHosts_AreTrusted(string host) =>
+        Assert.Contains(host, new UpdateSecurityOptions().AllowedHosts);
+
     [Fact]
     public void ApplyUpdate_RefusesAnInstallerItNeverVerified()
     {

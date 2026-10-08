@@ -7,9 +7,9 @@
   "targets": {
     ".NETCoreApp,Version=v8.0": {},
     ".NETCoreApp,Version=v8.0/win-x64": {
-      "AxePower/2.1.2": {
+      "AxePower/2.1.3": {
         "dependencies": {
-          "AxePower.Core": "2.1.2",
+          "AxePower.Core": "2.1.3",
           "CommunityToolkit.Mvvm": "8.2.2",
           "Hardcodet.NotifyIcon.Wpf": "2.0.1",
           "Microsoft.Extensions.DependencyInjection": "8.0.0",
@@ -438,7 +438,7 @@
           }
         }
       },
-      "AxePower.Core/2.1.2": {
+      "AxePower.Core/2.1.3": {
         "dependencies": {
           "Concentus": "2.2.2",
           "Concentus.Oggfile": "1.0.7",
@@ -458,8 +458,8 @@
         },
         "runtime": {
           "AxePower.Core.dll": {
-            "assemblyVersion": "2.1.2",
-            "fileVersion": "2.1.2.0"
+            "assemblyVersion": "2.1.3",
+            "fileVersion": "2.1.3.0"
           }
         }
       },
@@ -490,7 +490,7 @@
     }
   },
   "libraries": {
-    "AxePower/2.1.2": {
+    "AxePower/2.1.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -906,7 +906,7 @@
       "path": "youtubeexplode/6.6.2",
       "hashPath": "youtubeexplode.6.6.2.nupkg.sha512"
     },
-    "AxePower.Core/2.1.2": {
+    "AxePower.Core/2.1.3": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

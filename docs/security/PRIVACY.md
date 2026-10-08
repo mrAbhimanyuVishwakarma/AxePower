@@ -73,7 +73,7 @@ each service sees under its own privacy policy. AxePower runs no server of its o
 
 | Connection | Hosts | Purpose and trigger | Data sent | User control |
 |---|---|---|---|---|
-| AxePower updates (GitHub) | api.github.com, github.com, objects.githubusercontent.com | Find and download AxePower updates. At start-up when "Check for updates automatically" is on (chosen on the welcome screen), and on Check for updates; downloads only when installing | AxePower's version | Settings › Updates & Maintenance |
+| AxePower updates (GitHub) | api.github.com, github.com, objects.githubusercontent.com, release-assets.githubusercontent.com | Find and download AxePower updates. At start-up when "Check for updates automatically" is on (chosen on the welcome screen), and on Check for updates; downloads only when installing | AxePower's version | Settings › Updates & Maintenance |
 | AxePower account (Supabase) | kjnqsgdlcytpooueymdt.supabase.co | Sign in, refresh the session, save the profile, delete the account; only when signed in | Email and password or the provider's result; username, display name, avatar link | Don't sign in, or sign out |
 | Friends and presence (Supabase Realtime) | kjnqsgdlcytpooueymdt.supabase.co | Live friend requests, presence and invites while signed in | Online/away, activity if shared, requests, invites | Appear offline, stop sharing activity, or sign out |
 | Google, GitHub, Discord or Steam sign-in | accounts.google.com, github.com, discord.com, steamcommunity.com (in the browser) | Sign in with that provider, only when chosen | What the user approves on the provider's page; AxePower receives a sign-in code on 127.0.0.1 | Use email or no account |

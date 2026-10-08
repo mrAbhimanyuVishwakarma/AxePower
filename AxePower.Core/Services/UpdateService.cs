@@ -40,7 +40,7 @@ public class UpdateService
     };
 
     /// <summary>Single fallback when no assembly version is available; the assembly version is the source of truth.</summary>
-    public const string FallbackVersion = "2.1.2";
+    public const string FallbackVersion = "2.1.3";
 
     public UpdateService(
         LogService logService,
