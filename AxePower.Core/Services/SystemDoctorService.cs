@@ -109,7 +109,11 @@ public class SystemDoctorService : ISystemDoctorService
                             process.Kill(true);
                             outputProgress.Report($"[ABORTED] {operationName} was cancelled by user.");
                         }
-                        catch { }
+                        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+                        {
+                            // The user asked to stop: tell them if it could not be stopped.
+                            outputProgress.Report($"[ABORTED] {operationName} could not be stopped; it may already have finished.");
+                        }
                         return false;
                     }
                 }

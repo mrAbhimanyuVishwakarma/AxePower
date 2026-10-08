@@ -39,7 +39,7 @@ public class UninstallerViewBindingTests
         public RunningAppDecision AskRunningApp(InstalledApplication app, IReadOnlyList<RunningProcessInfo> processes, bool closeAttemptFailed) => RunningAppDecision.Skip;
         public StopWaitingChoice AskStopWaiting(string applicationName, bool isQuiet) => StopWaitingChoice.KeepWaiting;
         public bool AskStopStalledUninstaller(InstalledApplication app, TimeSpan elapsed) => false;
-        public bool ConfirmCleanLeftovers(int count, int needsAdmin, bool dryRun, bool recycle) => false;
+        public bool ConfirmCleanLeftovers(IReadOnlyList<string> items, bool dryRun, bool recycle) => false;
         public bool ConfirmRestore(string sessionDescription) => false;
         public bool ConfirmRelaunchAsAdmin(int itemsNeedingAdmin) => false;
     }

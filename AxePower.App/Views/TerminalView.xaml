@@ -153,7 +153,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding StopCommand}" Padding="14,8" FontSize="12.5" Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center" Foreground="{DynamicResource DangerBrush}"/>
+                        <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center" Foreground="{DynamicResource ErrorBrush}"/>
                         <TextBlock Text="Stop" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
@@ -167,6 +167,7 @@
         <Border Grid.Row="2" Margin="40,0,40,14" Background="#0F172A" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
             <ScrollViewer x:Name="OutputScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <TextBox Text="{Binding OutputText, Mode=OneWay}"
+                         AutomationProperties.Name="Terminal output"
                          IsReadOnly="True"
                          Background="Transparent"
                          BorderThickness="0"

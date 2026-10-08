@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "mrAbhimanyuVishwakarma"
+    commit-message:
+      prefix: "chore(deps)"
+    # Do not auto-merge; all dependency changes require review and testing
+    allow:
+      - dependency-type: "direct"
+        dependency-type: "indirect"

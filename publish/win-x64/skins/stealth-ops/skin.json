@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "stealth-ops",
+  "name": "Stealth Ops",
+  "description": "Matte black and olive drab. No shine, no glare.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0B0C0A",
+    "sidebar": "#10120E",
+    "card": "#161913",
+    "cardElevated": "#1D2119",
+    "hover": "#262B20",
+    "border": "#353C2C",
+    "divider": "#1D2119",
+    "textPrimary": "#E8EBE0",
+    "textSecondary": "#BEC4AE",
+    "textMuted": "#8A9277",
+    "textDisabled": "#555C47",
+    "accent": "#9BB25A",
+    "success": "#9BB25A",
+    "warning": "#D4A93A",
+    "error": "#CF6A55",
+    "eco": "#9BB25A",
+    "smart": "#7F9C6B",
+    "beast": "#C8553D",
+    "buttonPrimary": "#9BB25A",
+    "buttonPrimaryText": "#0B0C0A"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#9BB25A, #4B5320, #D4A93A"
+  }
+}

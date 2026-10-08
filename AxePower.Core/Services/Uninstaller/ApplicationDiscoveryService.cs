@@ -371,7 +371,7 @@ public sealed partial class ApplicationDiscoveryService : IApplicationDiscoveryS
                 publisher = Resolve(properties?.Elements().FirstOrDefault(e => e.Name.LocalName == "PublisherDisplayName")?.Value);
             }
         }
-        catch { }
+        catch { /* No readable manifest: the package keeps its own name and publisher. */ }
 
         return (display.Length > 0 ? display : FormatPackageName(packageName), publisher);
 
@@ -410,7 +410,7 @@ public sealed partial class ApplicationDiscoveryService : IApplicationDiscoveryS
                     buffer.Length > 0 && !buffer.ToString().StartsWith("ms-resource", StringComparison.OrdinalIgnoreCase))
                     return buffer.ToString();
             }
-            catch { }
+            catch { /* Best-effort: an unresolvable resource string falls back to the next candidate, then to the raw name. */ }
         }
         return null;
     }

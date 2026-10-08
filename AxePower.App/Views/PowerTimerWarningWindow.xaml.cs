@@ -128,6 +128,8 @@ public partial class PowerTimerWarningWindow : Window
             Content = hit,
             ToolTip = "Open the power timer to add time or cancel"
         };
+
+        AxePower.App.Helpers.AccessibleNames.SetEnabled(_link, true);
         AutomationProperties.SetName(_link, "Extend time in AxePower");
         _link.SourceInitialized += (_, _) => SetExtendedStyle(_link, WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
         _link.Show();

@@ -6,8 +6,10 @@
 ![Framework](https://img.shields.io/badge/Framework-.NET%208%20WPF-512BD4?logo=dotnet&logoColor=white)
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 ![Version](https://img.shields.io/badge/Version-2.1.0-blueviolet)
+
+[Security Policy](SECURITY.md) | [Contributing](CONTRIBUTING.md) | [Third-Party Notices](THIRD_PARTY_NOTICES.md)
 
 **Intelligently optimizes your system's power usage, display refresh rates, and background processes to deliver the perfect balance between performance, battery life, and cooling—automatically.**
 
@@ -50,9 +52,9 @@
 - 📖 **Dedicated Help & Documentation Center**: Direct in-app `? Help` title bar button and "Learn More" links connecting to the official [AxePower Help Center](https://axepower.vercel.app/help.html).
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
 - 🔄 **Update PC Utility & BIOS Checks**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and BIOS/firmware version checks.
-- 🧹 **Win11Debloat Integration**: One-click elevated execution of Windows optimization and telemetry removal scripts *(Credit to Raphire)*.
+- 🧹 **Win11Debloat Integration**: Launches Raphire's Win11Debloat script with administrator rights after a confirmation that says plainly what it is: a third-party script whose changes AxePower cannot list or undo *(Credit to Raphire)*.
 - 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
-- 🔒 **100% Local & Privacy-First**: Zero telemetry, zero analytics tracking, and zero remote data collection.
+- 🔒 **Private by Default, Honest About the Network**: No ads and no usage analytics. Accounts are optional; without one, nothing about you is stored in AxePower's cloud. Every connection AxePower makes, what triggers it and what it sends is listed in [docs/security/PRIVACY.md](docs/security/PRIVACY.md) and on the in-app **Trust & Permissions** page.
 
 ---
 
@@ -205,7 +207,8 @@ git clone https://github.com/mrAbhimanyuVishwakarma/AxePower.git
 cd AxePower
 
 # Restore and build the solution
-dotnet build
+dotnet restore AxePower.sln
+dotnet build AxePower.sln -c Release --no-restore
 
 # Run the WPF application
 dotnet run --project AxePower.App/AxePower.App.csproj
@@ -213,7 +216,7 @@ dotnet run --project AxePower.App/AxePower.App.csproj
 
 ### Running Unit Tests
 ```bash
-dotnet test
+dotnet test AxePower.sln -c Release --no-build
 ```
 
 ### Publishing a Release Build
@@ -245,6 +248,8 @@ AxePower proudly integrates with and acknowledges tools created by the open-sour
 - **[Bulk Crap Uninstaller](https://github.com/BCUninstaller/Bulk-Crap-Uninstaller)**: Uninstaller Pro adapts parts of its uninstaller detection, process-tree waiting and leftover-evidence model, by **Marcin Szeniak** (Apache-2.0).
 
 Full license texts and notices for bundled and adapted components are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+AxePower itself is distributed under the [MIT License](LICENSE). Please read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change. Report suspected vulnerabilities privately according to [SECURITY.md](SECURITY.md), not through a public issue.
 
 > *Notice: All trademarks, product names, and brand logos belong to their respective owners. AxePower functions as an independent, open-source orchestration companion. If you are an author or copyright holder of any included component and have questions, concerns, or requests for modification/removal, please open an issue and we will gladly accommodate.*
 

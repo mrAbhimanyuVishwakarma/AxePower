@@ -7,6 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
+using AxePower.Core.Services.Operations;
+using AxePower.App.Services;
 
 namespace AxePower.App.ViewModels;
 
@@ -44,27 +46,16 @@ public partial class TweakCardViewModel : ObservableObject
     {
         if (IsBusy) return;
 
+        // Preview first: nothing changes unless the user approves the exact changes.
+        var plan = IsApplied ? _tweakService.PlanRevert(Id) : _tweakService.PlanApply(Id);
+        if (!_parent.Prompts.Approve(new[] { plan })) return;
+
         IsBusy = true;
         try
         {
-            if (IsApplied)
-            {
-                bool success = await _tweakService.RevertTweakAsync(Id);
-                if (success)
-                {
-                    IsApplied = false;
-                    _parent.NotifyStatusChange($"Reverted '{Title}' to default");
-                }
-            }
-            else
-            {
-                bool success = await _tweakService.ApplyTweakAsync(Id);
-                if (success)
-                {
-                    IsApplied = true;
-                    _parent.NotifyStatusChange($"Applied '{Title}' optimization");
-                }
-            }
+            var result = await _tweakService.ExecuteAsync(plan);
+            IsApplied = Item.IsApplied;
+            _parent.NotifyStatusChange(ReversibilityText.Outcome(result));
         }
         finally
         {
@@ -85,6 +76,9 @@ public partial class SystemOptimizerViewModel : ObservableObject
     private readonly SystemRestoreService _systemRestoreService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
+
+    /// <summary>The preview every change goes through before it is applied.</summary>
+    public IOperationPrompts Prompts { get; }
 
     public ObservableCollection<TweakCardViewModel> AllTweaks { get; } = new();
     public ObservableCollection<TweakCardViewModel> FilteredTweaks { get; } = new();
@@ -114,8 +108,10 @@ public partial class SystemOptimizerViewModel : ObservableObject
         ITweakService tweakService,
         SystemRestoreService systemRestoreService,
         NotificationService notificationService,
-        LogService logService)
+        LogService logService,
+        IOperationPrompts? prompts = null)
     {
+        Prompts = prompts ?? new OperationPrompts();
         _tweakService = tweakService;
         _systemRestoreService = systemRestoreService;
         _notificationService = notificationService;
@@ -168,11 +164,19 @@ public partial class SystemOptimizerViewModel : ObservableObject
     {
         if (IsBusy) return;
 
+        var plans = _tweakService.PlanApplyRecommended();
+        if (plans.Count == 0)
+        {
+            _notificationService.ShowNotification("All recommended optimizations are already applied.");
+            return;
+        }
+        if (!Prompts.Approve(plans)) return;
+
         IsBusy = true;
         BusyStatusText = "Creating System Restore Point...";
         try
         {
-            // Always create a restore point first for safety
+            // A restore point as well, for safety beyond what the change history can undo
             bool restoreCreated = await _systemRestoreService.TryCreateRestorePointAsync("AxePower_PreOptimization");
             if (restoreCreated)
             {
@@ -180,7 +184,11 @@ public partial class SystemOptimizerViewModel : ObservableObject
             }
 
             BusyStatusText = "Applying recommended optimizations...";
-            int applied = await _tweakService.ApplyAllRecommendedAsync();
+            int applied = 0;
+            foreach (var plan in plans)
+            {
+                if ((await _tweakService.ExecuteAsync(plan)).Status == OperationStatus.Succeeded) applied++;
+            }
             await _tweakService.RefreshAllTweakStatusesAsync();
 
             foreach (var card in AllTweaks)
@@ -189,7 +197,9 @@ public partial class SystemOptimizerViewModel : ObservableObject
             }
             UpdateCounts();
 
-            _notificationService.ShowNotification($"Applied {applied} recommended optimizations!");
+            _notificationService.ShowNotification(applied == plans.Count
+                ? $"Applied {applied} recommended optimizations. Undo them from Settings › Change history."
+                : $"Applied {applied} of {plans.Count} recommended optimizations; see Settings › Change history for the rest.");
         }
         finally
         {
@@ -203,11 +213,19 @@ public partial class SystemOptimizerViewModel : ObservableObject
     {
         if (IsBusy) return;
 
+        var plans = _tweakService.PlanRevertAll();
+        if (plans.Count == 0) return;
+        if (!Prompts.Approve(plans)) return;
+
         IsBusy = true;
-        BusyStatusText = "Reverting optimizations to Windows defaults...";
+        BusyStatusText = "Reverting optimizations...";
         try
         {
-            int reverted = await _tweakService.RevertAllAsync();
+            int reverted = 0;
+            foreach (var plan in plans)
+            {
+                if ((await _tweakService.ExecuteAsync(plan)).Status == OperationStatus.Succeeded) reverted++;
+            }
             await _tweakService.RefreshAllTweakStatusesAsync();
 
             foreach (var card in AllTweaks)
@@ -216,7 +234,7 @@ public partial class SystemOptimizerViewModel : ObservableObject
             }
             UpdateCounts();
 
-            _notificationService.ShowNotification($"Reverted {reverted} tweaks to default.");
+            _notificationService.ShowNotification($"Reverted {reverted} of {plans.Count} tweak(s).");
         }
         finally
         {

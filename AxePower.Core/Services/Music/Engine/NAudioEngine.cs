@@ -518,8 +518,8 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
     {
         if (_output == null) return;
         _output.PlaybackStopped -= OnPlaybackStopped;
-        try { _output.Stop(); } catch { }
-        try { _output.Dispose(); } catch { }
+        try { _output.Stop(); } catch { /* Best-effort: the output device may already have gone (unplugged). */ }
+        try { _output.Dispose(); } catch { /* Best-effort: the output device may already have gone (unplugged). */ }
         _output = null;
     }
 
@@ -582,7 +582,7 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
     {
         foreach (var source in sources)
         {
-            try { source.Decoder.Dispose(); } catch { }
+            try { source.Decoder.Dispose(); } catch { /* Best-effort dispose of a decoder we are discarding. */ }
         }
     }
 
@@ -610,7 +610,7 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
     void IChainListener.OnNearEnd(Guid key) => _worker.Post(PrepareNext);
 
     void IChainListener.OnRetired(ChainSource source) =>
-        _worker.Post(() => { try { source.Decoder.Dispose(); } catch { } });
+        _worker.Post(() => { try { source.Decoder.Dispose(); } catch { /* Best-effort dispose of a decoder we are discarding. */ } });
 
     // ── Lifetime ────────────────────────────────────────────────────────────
 
@@ -630,7 +630,7 @@ public sealed class NAudioEngine : IAudioEngine, IChainListener
                 }
                 if (_deviceWatcher != null)
                 {
-                    try { _enumerator?.UnregisterEndpointNotificationCallback(_deviceWatcher); } catch { }
+                    try { _enumerator?.UnregisterEndpointNotificationCallback(_deviceWatcher); } catch { /* Best-effort teardown of the device watcher at shutdown. */ }
                 }
                 _device?.Dispose();
                 _enumerator?.Dispose();

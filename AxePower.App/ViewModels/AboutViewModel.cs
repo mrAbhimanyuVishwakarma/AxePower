@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using AxePower.Core.Helpers;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Update;
 
 namespace AxePower.App.ViewModels;
 
@@ -24,6 +25,9 @@ public partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReleaseVersionWithDate))]
     private string _version = "1.4.0";
+
+    [ObservableProperty]
+    private UpdateManifest? _manifest;
 
     [ObservableProperty]
     private string _runtime = ".NET 8.0";
@@ -98,6 +102,25 @@ public partial class AboutViewModel : ObservableObject
     // Steam-Style Update & Patch Notes Dialog State
     [ObservableProperty]
     private bool _isSteamUpdateBannerOpen;
+
+    /// <summary>How long the blue update bar stays before closing itself (owner, 2026-10-08).</summary>
+    public static readonly TimeSpan UpdateBannerDuration = TimeSpan.FromSeconds(10);
+
+    private int _bannerShown;
+
+    partial void OnIsSteamUpdateBannerOpenChanged(bool value)
+    {
+        if (!value) return;
+        int shown = ++_bannerShown;
+        _ = CloseBannerLaterAsync(shown);
+    }
+
+    /// <summary>Closes the bar after <see cref="UpdateBannerDuration"/>, unless it was reopened since.</summary>
+    private async Task CloseBannerLaterAsync(int shown)
+    {
+        await Task.Delay(UpdateBannerDuration);
+        if (shown == _bannerShown) IsSteamUpdateBannerOpen = false;
+    }
 
     [ObservableProperty]
     private string _steamUpdateBannerMessage = "Your AxePower is already up to date - ";
@@ -214,13 +237,13 @@ public partial class AboutViewModel : ObservableObject
     [ObservableProperty]
     private ImageSource? _mobileDownloadQrCode;
 
-    public string MobileAppDownloadUrl => "https://axepower.vercel.app/mobile";
+    public string MobileAppDownloadUrl => "https://github.com/mrAbhimanyuVishwakarma/Axepower-Mobile-Download/releases";
 
     public void GenerateMobileDownloadQr()
     {
         try
         {
-            byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(MobileAppDownloadUrl, 8, 3, 0x00000000, 0x00FFFFFF);
+            byte[] bmpBytes = QrCodeGenerator.GenerateBmpBytes(MobileAppDownloadUrl, 8, 4, 0x00000000, 0x00FFFFFF);
             using var ms = new MemoryStream(bmpBytes);
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
@@ -230,8 +253,9 @@ public partial class AboutViewModel : ObservableObject
             bitmap.Freeze();
             MobileDownloadQrCode = bitmap;
         }
-        catch
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException or IOException)
         {
+            // No QR image: the download link is still shown as text.
             MobileDownloadQrCode = null;
         }
     }
@@ -241,6 +265,15 @@ public partial class AboutViewModel : ObservableObject
     {
         OpenUrl(MobileAppDownloadUrl);
     }
+
+    /// <summary>
+    /// The way out when the in-app update cannot run (an older AxePower that does not trust a new
+    /// GitHub download host, a blocked network): opens the release page to download the installer
+    /// and run it by hand.
+    /// </summary>
+    [RelayCommand]
+    private void OpenReleasePage() =>
+        OpenUrl(string.IsNullOrWhiteSpace(ReleaseUrl) ? "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest" : ReleaseUrl);
 
     [RelayCommand]
     private void VisitWebsite()
@@ -313,6 +346,7 @@ public partial class AboutViewModel : ObservableObject
                 DownloadUrl = result.DownloadUrl;
                 AssetName = result.AssetName;
                 ReleaseUrl = result.ReleaseUrl;
+                Manifest = result.Manifest;
                 IsUpdateModalOpen = true;
                 _notificationService?.Show($"🚀 New update available: v{result.LatestVersion}!");
             }
@@ -331,7 +365,7 @@ public partial class AboutViewModel : ObservableObject
         {
             IsCheckingForUpdate = false;
             CheckButtonText = "Check for updates";
-            _notificationService?.Show("Failed to check for updates: " + ex.Message);
+            _notificationService?.ShowFailure("Check for updates", ex);
         }
     }
 
@@ -363,7 +397,7 @@ public partial class AboutViewModel : ObservableObject
                 PatchNotesComments = stats.DiscussionsCount;
             });
         }
-        catch { }
+        catch { /* Offline: the like and comment counts stay hidden. */ }
     }
 
     [RelayCommand]
@@ -409,7 +443,10 @@ public partial class AboutViewModel : ObservableObject
             Clipboard.SetText("https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases");
             _notificationService?.Show("🔗 Release link copied to clipboard!");
         }
-        catch { }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            _notificationService?.Show("Could not copy: another app is using the clipboard. Try again.");
+        }
     }
 
     [RelayCommand]
@@ -417,8 +454,13 @@ public partial class AboutViewModel : ObservableObject
     {
         if (!string.IsNullOrWhiteSpace(DownloadedInstallerPath) && File.Exists(DownloadedInstallerPath))
         {
-            _updateService?.ApplyUpdate(DownloadedInstallerPath);
-            Application.Current?.Shutdown();
+            // Close only once the installer is running: a refused installer (it changed after it
+            // was verified) must not take AxePower down with nothing installed
+            if (_updateService?.ApplyUpdate(DownloadedInstallerPath) == true)
+                Application.Current?.Shutdown();
+            else
+                _notificationService?.Show(new AxePower.Core.Services.Outcomes.UserMessage(
+                    "The update was not started: the downloaded file could not be verified again. Check for updates to download it afresh.", null, IsFailure: true));
         }
         else if (!string.IsNullOrWhiteSpace(DownloadUrl))
         {
@@ -470,7 +512,7 @@ public partial class AboutViewModel : ObservableObject
                 DownloadStatusText = $"Downloading update... {p:0}%";
             });
 
-            var installerPath = await _updateService.DownloadUpdateAsync(DownloadUrl, progress, _downloadCts.Token);
+            var installerPath = await _updateService.DownloadUpdateAsync(DownloadUrl, progress, _downloadCts.Token, Manifest);
             DownloadedInstallerPath = installerPath;
             IsUpdateDownloaded = true;
 
@@ -493,11 +535,19 @@ public partial class AboutViewModel : ObservableObject
             IsDownloadingUpdate = false;
             DownloadStatusText = "Download cancelled.";
         }
+        catch (UpdateVerificationException ex)
+        {
+            IsDownloadingUpdate = false;
+            DownloadStatusText = "Update rejected: it failed the security check, so nothing was installed.";
+            _notificationService?.Show(new AxePower.Core.Services.Outcomes.UserMessage(
+                "The update was rejected: it failed AxePower's security check, so nothing was installed. Try again later, or download it from the GitHub releases page.",
+                AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex), IsFailure: true));
+        }
         catch (Exception ex)
         {
             IsDownloadingUpdate = false;
             DownloadStatusText = "Download failed. Try again or open the release page.";
-            _notificationService?.Show("Download failed: " + ex.Message);
+            _notificationService?.ShowFailure("Download the update", ex);
         }
     }
 
@@ -587,7 +637,7 @@ public partial class AboutViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService?.Show("Failed to open link: " + ex.Message);
+            _notificationService?.ShowFailure("Open the link", ex);
         }
     }
 }

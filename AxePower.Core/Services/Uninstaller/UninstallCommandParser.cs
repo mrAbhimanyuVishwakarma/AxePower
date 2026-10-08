@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 namespace AxePower.Core.Services.Uninstaller;
 
 /// <summary>A registry uninstall command split into the program and its arguments.</summary>
@@ -24,9 +25,9 @@ public sealed record UninstallCommand(string Raw, string FileName, string Argume
 /// </summary>
 public static class UninstallCommandParser
 {
-    public static bool TryParse(string? raw, IFileSystemProbe fs, out UninstallCommand command)
+    public static bool TryParse(string? raw, IFileSystemProbe fs, [NotNullWhen(true)] out UninstallCommand? command)
     {
-        command = null!;
+        command = null;
         if (string.IsNullOrWhiteSpace(raw)) return false;
 
         var text = Environment.ExpandEnvironmentVariables(raw.Trim());
@@ -67,7 +68,7 @@ public static class UninstallCommandParser
             {
                 string full;
                 try { full = Path.Combine(dir, candidate); }
-                catch { continue; }
+                catch (Exception caught) when (ExpectedFailures.Path(caught)) { /* A malformed PATH entry is skipped. */ continue; }
                 if (fs.FileExists(full)) return full;
             }
         }
@@ -188,6 +189,6 @@ public static class UninstallCommandParser
     private static string Normalize(string path)
     {
         try { return Path.IsPathFullyQualified(path) ? Path.GetFullPath(path) : path; }
-        catch { return path; }
+        catch (Exception caught) when (ExpectedFailures.Path(caught)) { /* Kept as written when it cannot be normalised. */ return path; }
     }
 }

@@ -35,7 +35,7 @@ public sealed class AppPathsFinder : ILeftoverFinder
                     target = RegistryPath.GetString(key, string.Empty).Trim().Trim('"');
                     if (target.Length == 0) target = RegistryPath.GetString(key, "Path").Trim().Trim('"');
                 }
-                catch
+                catch (Exception caught) when (ExpectedFailures.Registry(caught))
                 {
                     continue;
                 }
@@ -84,8 +84,9 @@ public sealed class AppCompatFinder : ILeftoverFinder
             using var key = RegistryPath.OpenKey(keyPath);
             return key?.GetValueNames() ?? [];
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Registry(caught))
         {
+            // Unreadable key: no values to inspect.
             return [];
         }
     }
@@ -157,7 +158,7 @@ public sealed class ComFinder : ILeftoverFinder
                         servers.Add(server.StartsWith('"') ? server.Trim('"').Split('"')[0] : server.Split(" /", 2)[0].Split(" -", 2)[0]);
                     }
                 }
-                catch
+                catch (Exception caught) when (ExpectedFailures.Registry(caught))
                 {
                     continue;
                 }
@@ -218,7 +219,7 @@ public sealed class ServiceInfoFinder : ILeftoverFinder
                 if (key is null) continue;
                 imagePath = RegistryPath.GetString(key, "ImagePath");
             }
-            catch
+            catch (Exception caught) when (ExpectedFailures.Registry(caught))
             {
                 continue;
             }
@@ -265,7 +266,7 @@ public sealed class FirewallRuleFinder : ILeftoverFinder
             }
         }
         catch (OperationCanceledException) { throw; }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* Windows Firewall automation unavailable: no firewall rules are offered. */ }
         finally
         {
             if (policy is not null && Marshal.IsComObject(policy)) Marshal.FinalReleaseComObject(policy);

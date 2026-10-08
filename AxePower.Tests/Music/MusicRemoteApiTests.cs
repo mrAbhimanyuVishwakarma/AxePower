@@ -34,7 +34,7 @@ public sealed class MusicRemoteApiTests : IDisposable
         _remote = new MusicRemote(_player, log);
         _remote.Start();
 
-        _portal = new LanDropService(log, _token, _remote);
+        _portal = new LanDropService(log, _token, _remote, downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
         _portal.StartServerAsync("127.0.0.1", Port).GetAwaiter().GetResult();
     }
 

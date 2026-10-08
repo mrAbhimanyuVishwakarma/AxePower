@@ -84,6 +84,7 @@ public sealed class BatchUninstallService : IBatchUninstallService
         UninstallBatchControl? control = null,
         CancellationToken cancellationToken = default)
     {
+        using var correlation = LogService.BeginCorrelation();
         control ??= new UninstallBatchControl();
         var session = new UninstallSession
         {
@@ -160,7 +161,7 @@ public sealed class BatchUninstallService : IBatchUninstallService
                     session.LeftoverItems.AddRange(leftovers);
                     _log.LogInfo($"[Uninstaller] {app.DisplayName} — {leftovers.Count} leftover items found.");
                 }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { /* The user cancelled the leftover scan; the uninstall result stands. */ }
                 catch (Exception ex)
                 {
                     _log.LogError($"[Uninstaller] Leftover scan failed for {app.DisplayName}: {ex.Message}");

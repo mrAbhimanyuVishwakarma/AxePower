@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AxePower.Core.Models;
+using AxePower.Core.Services.Processes;
 using Microsoft.Win32;
 
 namespace AxePower.Core.Services;
@@ -15,12 +16,16 @@ namespace AxePower.Core.Services;
 public class FirmwareUpdateService
 {
     private readonly LogService _logService;
+    private readonly IUserShellLauncher _launcher;
+    private readonly IProcessRunner _runner;
     private FirmwareInfo? _cachedInfo;
     private DateTime _lastScanTime = DateTime.MinValue;
 
-    public FirmwareUpdateService(LogService logService)
+    public FirmwareUpdateService(LogService logService, IUserShellLauncher? launcher = null, IProcessRunner? runner = null)
     {
         _logService = logService;
+        _launcher = launcher ?? new UserShellLauncher(logService);
+        _runner = runner ?? new AllowListedProcessRunner(ExecutableAllowList.Windows(), logService);
     }
 
     public async Task<FirmwareInfo> GetFirmwareInfoAsync(bool forceRefresh = false)
@@ -192,13 +197,9 @@ public class FirmwareUpdateService
                 url = "https://www.google.com/search?q=" + Uri.EscapeDataString($"{info.Manufacturer} {info.SystemModel} BIOS update download");
             }
 
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = url,
-                UseShellExecute = true
-            });
-
-            _logService.LogInfo($"[FirmwareUpdate] Opened vendor support portal: {url}");
+            var result = _launcher.OpenUri(url);
+            if (result.Started) _logService.LogInfo($"[FirmwareUpdate] Opened vendor support portal: {url}");
+            else _logService.LogWarning($"[FirmwareUpdate] Vendor portal not opened: {result.Message}");
         }
         catch (Exception ex)
         {
@@ -208,21 +209,13 @@ public class FirmwareUpdateService
 
     public void TriggerInteractiveScan()
     {
-        try
-        {
-            Process.Start(new ProcessStartInfo
+        // Fire and forget: the scan runs inside Windows Update; usoclient only hands it over.
+        _ = _runner.RunAsync(new ProcessCommand(AllowedTool.UsoClient, new[] { "StartInteractiveScan" }, TimeSpan.FromMinutes(1)))
+            .ContinueWith(t =>
             {
-                FileName = "usoclient.exe",
-                Arguments = "StartInteractiveScan",
-                UseShellExecute = true,
-                CreateNoWindow = true
-            });
-            _logService.LogInfo("[FirmwareUpdate] Triggered USOClient interactive scan.");
-        }
-        catch (Exception ex)
-        {
-            _logService.LogError("Failed to trigger USOClient scan.", ex);
-        }
+                if (t.Result.Outcome == ProcessRunOutcome.Exited) _logService.LogInfo("[FirmwareUpdate] Triggered USOClient interactive scan.");
+                else _logService.LogWarning($"[FirmwareUpdate] USOClient scan not triggered: {t.Result.Outcome} {t.Result.Error}");
+            }, TaskScheduler.Default);
     }
 
     private string DetectSecureBoot()
@@ -239,7 +232,7 @@ public class FirmwareUpdateService
                 }
             }
         }
-        catch { }
+        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException) { /* Unreadable: reported as unknown below. */ }
 
         return "Standard";
     }
@@ -255,7 +248,7 @@ public class FirmwareUpdateService
                 return "UEFI Native";
             }
         }
-        catch { }
+        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException) { /* Unreadable: reported as unknown below. */ }
 
         return "UEFI";
     }

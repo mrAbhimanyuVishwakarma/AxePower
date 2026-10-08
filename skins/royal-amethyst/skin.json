@@ -17,14 +17,14 @@
     "textSecondary": "#D8B4FE",
     "textMuted": "#C084FC",
     "textDisabled": "#6B21A8",
-    "accent": "#A855F7",
+    "accent": "#AC5DF7",
     "success": "#10B981",
     "warning": "#F59E0B",
     "error": "#EF4444",
     "eco": "#10B981",
     "smart": "#A855F7",
     "beast": "#EC4899",
-    "buttonPrimary": "#A855F7",
+    "buttonPrimary": "#9938F6",
     "buttonPrimaryText": "#FAF5FF"
   },
   "glass": {

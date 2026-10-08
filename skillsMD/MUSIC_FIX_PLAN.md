@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `v2.0.8` · **Last updated:** 2026-09-26 · **Last commit covered:** the v2.0.8 release commit (Music itself unchanged: only the version in the cover-art and lyrics user agents; the LAN portal untouched; nothing new found, nothing closed)
+> **Branch:** `2.1.2-industry-standards-followup` · **Last updated:** 2026-10-08 · **Last commit covered:** `5167682` plus uncommitted Prompts 32–35 (security fixes, release-candidate packaging, review and release documents; no Music or portal change) in the working tree
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and
@@ -62,6 +62,85 @@ Ids are `M<n>` for Music, `P<n>` for the portal, and are never reused.
 
 ## Open
 
+### P4 — On a plain LAN, the LAN Drop portal and the Share Screen page are still HTTP
+**Where:** [LanDropService.cs](../AxePower.Core/Services/LanDropService.cs), [ShareViewerHost.cs](../AxePower.Core/Services/ShareScreen/ShareViewerHost.cs), [threat model](../docs/security/SHARE_SCREEN_THREAT_MODEL.md) §5–6
+**Why it matters:** Share Screen no longer sends any secret, encrypts chat, voice and control, and
+needs a fresh proof to watch, and over Tailscale it is now HTTPS. But on an ordinary LAN an
+active attacker can still alter the plain-HTTP viewer page (R6) and LAN Drop's traffic and cookie
+are readable. Both features refuse Public networks by default.
+**How to verify:** Pick a browser-trusted option for plain LANs (threat model §5 step 3, or the
+Plex-style per-device certificate researched on 2026-10-04), then confirm with a packet capture
+that page, cookie and uploads are not readable.
+**Found:** 2026-10-03 / baseline at `b68f001`
+
+### P6 — LAN Drop's network warning, override and connected-devices card have never been rendered
+**Where:** LAN Drop tab of [PhoneHubView.xaml](../AxePower.App/Views/PhoneHubView.xaml), [PhoneHubViewModel.cs](../AxePower.App/ViewModels/PhoneHubViewModel.cs)
+**Why it matters:** These are how a user sees that LAN Drop refused an untrusted network, starts
+it anyway for one session, sees which devices are connected, and cuts them all off. An earlier
+pass put the same controls only in `LanDropView`, which no navigation reaches, so before
+2026-10-04 none of it was visible. The Phone Hub copies are bound and build, but nobody has looked
+at them, and the left column is now taller than it was.
+**How to verify:** Open Phone Hub → LAN Drop on a Public network: the red banner shows the
+network name and "Start anyway for this session" starts the server. Connect a phone: it appears
+under Connected Devices; "Disconnect All & Rotate Access" empties the list and changes the QR.
+Check the layout against `ui reference/` in every skin. Prompt 20 (2026-10-05) replaced this
+view's references to `SurfaceBrush` (a key no skin defines) with `Transparent`, which is how they
+already drew, so nothing should change. Look anyway in the same pass.
+**Found:** 2026-10-04 / working tree after `b68f001`
+
+### P7 — The installer's private-only firewall rule has never been installed
+**Where:** `[Run]` / `[UninstallRun]` in [AxePower.iss](../Installer/AxePower.iss) and [AxePowerSetup.iss](../Installer/AxePowerSetup.iss)
+**Why it matters:** The rule (inbound TCP 5050 for AxePower.exe, Private and Domain only) is
+only checked as text by a policy test. A quoting mistake would leave no rule and Windows would
+prompt instead. It also does not remove an "allow on Public" rule Windows may already have
+created from an earlier firewall prompt, and a custom port is not covered by it.
+**How to verify:** Install, then `netsh advfirewall firewall show rule name="AxePower LAN Drop"`
+shows one rule with `Profiles: Domain,Private`; upgrade and confirm there is still exactly one;
+uninstall and confirm it is gone. Decide whether older per-program rules should be cleaned up.
+**Found:** 2026-10-04 / working tree after `b68f001`
+
+### P9 — The new Share Screen admission protocol has never run between two real machines
+**Where:** [ShareViewerPage.cs](../AxePower.Core/Services/ShareScreen/ShareViewerPage.cs) (browser control), [ShareRoomClient.cs](../AxePower.Core/Services/ShareScreen/ShareRoomClient.cs) and `JoinChat`/`JoinVoice` in [ShareRoomSession.cs](../AxePower.Core/Services/ShareScreen/ShareRoomSession.cs) (moved out of the view model in Prompt 18), `GetWebRtcViewersAsync` in [MediaMtxServer.cs](../AxePower.Core/Services/ShareScreen/MediaMtxServer.cs)
+**Why it matters:** Tests drive the host over loopback, and the page's crypto (now the vendored
+noble bundle) matches .NET byte for byte under Node, and MediaMTX's WHEP auth was run for real
+with FFmpeg. But no real browser has yet played the stream with a WHEP proof, taken control
+through the host's Allow prompt, or sent encrypted control frames, and no second AxePower has
+joined chat and voice with the new handshake and envelope formats. If any step is wrong, control,
+chat or voice silently stop working between friends. The MediaMTX session list is parsed from a
+sample built from the API docs, not from a live MediaMTX (threat model R8).
+**How to verify:** On two PCs on a Private network: share, open the link in Chrome and in Edge,
+watch the stream, then take control with the code (try typing it in lowercase), click Allow on
+the host, move the mouse and type; also click Deny once and check the browser is refused; join from a
+second AxePower and exchange chat, a file and voice both ways; confirm the host's "In your room"
+list shows the browser as "Video viewer" and the controller highlighted. Prompt 21 added a
+"chat ended" reason on the joining side: open a stale link (a closed room) and check the Friends
+page says the room refused it, and that leaving a room shows nothing.
+**Found:** 2026-10-04 / working tree after `b68f001`
+
+### P10 — The Friends page's untrusted-network banner and room list have never been rendered
+**Where:** stage header of [ShareScreenView.xaml](../AxePower.App/Views/ShareScreen/ShareScreenView.xaml)
+**Why it matters:** This is how a host learns the room was refused on a Public network, allows it
+for one session, answers a control request (Allow/Deny), and sees every viewer, listener and
+controller. It builds and binds, but nobody
+has looked at it, and it adds height above the participant tiles.
+**How to verify:** On a Public network, click Invite: the banner appears and "Share anyway for
+this session" opens the room. Connect a viewer and a controller: both appear under "In your room",
+and the controller's chip has the danger border. Check against `ui reference/` in every skin.
+**Found:** 2026-10-04 / working tree after `b68f001`
+
+### P11 — HTTPS over Tailscale has never run on a real tailnet
+**Where:** [TailscaleCertificates.cs](../AxePower.Core/Services/ShareScreen/TailscaleCertificates.cs), TLS paths in [ShareViewerHost.cs](../AxePower.Core/Services/ShareScreen/ShareViewerHost.cs) and [MediaMtxServer.cs](../AxePower.Core/Services/ShareScreen/MediaMtxServer.cs)
+**Why it matters:** Tailscale is not installed on the build machine. The provider is tested with a
+fake `tailscale`, and the viewer host and the real MediaMTX were run over TLS with a self-signed
+certificate, but `tailscale cert` has never issued AxePower a certificate, and the elevated app's
+permission to run it, the PEM files it writes, and renewal are unproven. The host also listens on
+IPv4 only, so clients that try a Tailscale IPv6 address first see a short delay (threat model R10).
+**How to verify:** On two PCs in one tailnet with MagicDNS and HTTPS certificates switched on,
+set the viewer address to the host's `.ts.net` name, open a room and confirm the link is `https://`,
+the browser shows no certificate warning, and watching, chat, voice and control work. Turn HTTPS
+off in the admin console and confirm the room falls back to HTTP with a log line.
+**Found:** 2026-10-04 / working tree after `b68f001`
+
 ### M1 — No part of the Music UI has ever been rendered
 **Where:** [MusicView.xaml](../AxePower.App/Views/Music/MusicView.xaml), [AmbientModeOverlay.xaml](../AxePower.App/Views/Music/AmbientModeOverlay.xaml), [DashboardViewModel.cs](../AxePower.App/ViewModels/DashboardViewModel.cs)
 **Why it matters:** This is the largest untested surface in the feature. The Music Settings
@@ -74,7 +153,12 @@ volume percentage label removed — volume shows in the tooltip), the YT Music /
 buttons that replaced the lower tabs, the icon-only Ambient button, the Local-only Create Playlist /
 Add Folder toolbar, the Last played list, and the new Ambient Mode section in Music Settings.
 Binding errors and layout breakage would not show up in any test; XAML compiles fine with a
-misspelled binding path.
+misspelled binding path. Prompt 28 (2026-10-06) added a keyboard-focus border (the skin's focus
+colour) to the YT Music button and to song-list rows, which hid the focus rectangle and showed
+nothing in its place, and Enter on a focused song row now plays it, as a click does. A test
+enforces the focus states, but neither border has been seen and Enter-to-play has not been pressed.
+Prompt 30 (2026-10-08) replaced the raw exception text in "create playlist" and provider-search
+failures with a plain reason and what to do (`UserMessages`); the new wording has not been seen.
 **How to verify:** Launch the app (it relaunches elevated, so this has to be done by the owner),
 open Music → settings, scroll the whole dialog, right-click a streamed queue row,
 enter Ambient Mode with F11, and check the Dashboard's What's New dropdown. Switch between the YT
@@ -232,19 +316,31 @@ network traffic accurately either way.
 **Found:** 2026-09-25 / working tree after `d574fd8`
 
 ### P1 — The phone remote has never been opened on a phone
-**Where:** [LanDropService.cs](../AxePower.Core/Services/LanDropService.cs) (embedded portal HTML), [MusicRemote.cs](../AxePower.Core/Services/Music/Providers/MusicRemote.cs)
+**Where:** [LanDropPortalPage.cs](../AxePower.Core/Services/LanDrop/LanDropPortalPage.cs) (portal HTML), [MusicRemote.cs](../AxePower.Core/Services/Music/Providers/MusicRemote.cs)
 **Why it matters:** Everything is verified over loopback with `HttpClient`, which does not
-exercise the actual browser path: the QR code now carries the access token, and the portal's
-own scripts were changed to append it to every request (`axeFetch`, `axeUrl`). A mistake there
-means the page loads and then every button returns 401. Upload, clipboard and download were all
-touched by that change and are existing shipping features.
+exercise the actual browser path. Since 2026-10-04 the QR link's token is exchanged on first
+load for an HttpOnly, SameSite=Strict session cookie, the page removes `?t=` from the address
+bar with `history.replaceState`, and every later request (fetch, upload XHR, download link)
+relies on the browser sending that cookie. A mobile browser that drops or blocks the cookie
+would load the page and then get 401 on every button. Upload, clipboard and download are
+existing shipping features.
 **How to verify:** Start the portal, scan the QR from a phone on the same network, and confirm
-the page loads and that file upload, clipboard send, download and the media buttons all work.
-Then confirm the music controls drive AxePower's own player and stay in sync with the desktop.
+the page loads, the address bar no longer shows `t=`, and file upload, clipboard send, download
+and the media buttons all work, including after a pull-to-refresh. Test Safari on iOS and
+Chrome on Android. Then confirm the music controls drive AxePower's own player and stay in sync
+with the desktop.
+**Partly fixed 2026-10-06 (uncommitted):** the owner reported that neither the QR nor the link
+worked from a phone. Three causes, all fixed: the hand-written QR encoder made codes no scanner
+could read (replaced by QRCoder; ZXing now decodes every generated code in the tests); the
+portal's own `/qr` SVG was light-on-dark with a 2-module margin (now dark-on-light, 4 modules);
+and Phone Hub and LAN Drop showed the plain address, which is a 401 without the token (the box now
+shows the full link, the same one the QR and Copy use, and the plain address in a browser gets a
+short "Access link needed" page instead of a bare 401). A test decodes the QR image and opens the
+portal with the link inside it. None of this has been scanned on a real phone yet.
 **Found:** 2026-09-23 / `9708096`
 
 ### P2 — `/api/remote` still drives Windows media keys, not AxePower's player
-**Where:** `HandleRemoteActionAsync` in [LanDropService.cs](../AxePower.Core/Services/LanDropService.cs)
+**Where:** `LanDropEndpoints.RemoteAsync` and `WindowsRemoteMediaActions` in [Services/LanDrop/](../AxePower.Core/Services/LanDrop/)
 **Why it matters:** This route predates the music work and sends global media keys, so it
 controls whatever application currently owns the Windows media session — which may not be
 AxePower. The portal now has `/api/music/command` for the real player, so there are two remotes
@@ -271,10 +367,37 @@ it instead of re-scanning folders on each visit.
 
 Delete each line once it has shipped and been mentioned in release notes.
 
+- **AxePower.log is gone.** Diagnostics now live in `%LOCALAPPDATA%\AxePower\Diagnostics` as
+  structured, redacted files kept 14 days or 20 MB, with Settings › Diagnostics & Privacy to
+  inspect, export or delete them. The old `AxePower.log` files are deleted on the first start.
+  LAN Drop's log no longer names the files sent between phone and PC (only kind and size).
+  (Prompt 23, 2026-10-06)
 - **Old LAN portal links stop working.** The portal now requires an access token, carried by the
-  QR link. A bookmark of the plain `http://<ip>:5050/` address returns 401. Covered by a What's
+  QR link. A bookmark of the plain `http://<ip>:5050/` address returns 401 (since 2026-10-06 with a
+  short "Access link needed" page). Covered by a What's
   New card badged "SECURITY FIX"; still needs a line in the release notes.
   (`9708096`, 2026-09-23)
+- **LAN Drop no longer starts on Public or unclassified networks by default.** Phone Hub shows a
+  warning with "Start anyway for this session"; the override ends when the server stops. The
+  owner's own Wi-Fi is classified Public by Windows, so this will be hit immediately. Switching
+  the network to Private in Windows settings removes the prompt. (working tree, 2026-10-04)
+- **Share Screen no longer opens a room on Public or unclassified networks by default.** The
+  Friends page shows a banner with "Share anyway for this session". (working tree, 2026-10-04)
+- **Older AxePower versions can no longer join chat or voice.** The room admission handshake and
+  the chat/voice packet formats changed (threat model §7), so both sides need this version.
+  Watching in a browser is unaffected. A second controller is now refused while someone holds
+  control, instead of taking over. (working tree, 2026-10-04)
+- **Remote control now needs the host to click Allow.** A viewer with the right code gets an
+  Allow/Deny prompt on the host's Friends page; with no answer in 30 seconds it is refused. Watching
+  in a browser now also needs the full link (with its `#v=` part); a link without it no longer
+  plays. (working tree, 2026-10-04)
+- **Disconnecting one LAN Drop device now works and sticks.** The per-device button never matched
+  a device before (it removed by session id from a list keyed by address). Now the device is
+  removed and stays out until access is rotated. (working tree, 2026-10-04)
+- **LAN Drop listens only on the chosen adapter.** It is no longer reachable through another
+  adapter's address or `localhost`, and it stops itself if that address disappears or the
+  network turns Public. Old portal links stop working on every restart, network change, rotation
+  and after four hours. (working tree, 2026-10-04)
 
 ---
 
@@ -306,5 +429,7 @@ does not need to re-prove them. Add to this list only what was checked end to en
 | Portal rejects requests without the token | Real loopback sockets, including `/api/remote` and the SSE stream | 2026-09-23 |
 | Portal responses grant no other origin | Asserted over a real response | 2026-09-23 |
 | DI hands the portal its token and music remote | Resolved from the app's real container | 2026-09-23 |
+| LAN Drop uploads stay bounded and contained under fuzzing | 1,500 mutated multipart bodies, 400 mutated raw requests over a real loopback socket: no hang over 3–6 s, allocation within budget, no staging file left, nothing written outside the upload folder (`AxePower.Tests/Fuzzing/`) | 2026-10-04 |
+| LAN Drop reads the live adapter's Windows network profile | Network List Manager result for 192.168.1.5 matched `Get-NetConnectionProfile` (Public, same network name); `--self-test` prints it | 2026-10-04 |
 | Library survives a corrupt database | Real SQLite file replaced with junk, then rebuilt; damaged file kept | 2026-09-23 |
 | Tests do not touch the real machine | `settings.json` byte-identical after a full run; no `library.db` created in `%LOCALAPPDATA%` | 2026-09-23 |

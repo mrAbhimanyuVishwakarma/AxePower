@@ -107,6 +107,7 @@ public partial class AmbientModeViewModel : ObservableObject, IDisposable
         }
         catch (OperationCanceledException)
         {
+            // Superseded by the next track.
         }
         catch
         {

@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using AxePower.Core.Services.Processes;
+using AxePower.Core.Services.SoftwareHub;
 
 namespace AxePower.Core.Services;
 
@@ -111,11 +113,17 @@ public class GraphicsDriverService
     // The auto-detect installer is ~48 MB, so allow a generous transfer window
     private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromMinutes(15) };
 
-    private readonly LogService _logService;
+    /// <summary>Driver installers may only be fetched from the vendors' own download hosts.</summary>
+    internal static readonly string[] NvidiaDownloadHosts = { "download.nvidia.com" };
+    internal static readonly string[] AmdDownloadHosts = { "drivers.amd.com" };
 
-    public GraphicsDriverService(LogService logService)
+    private readonly LogService _logService;
+    private readonly IUserShellLauncher _launcher;
+
+    public GraphicsDriverService(LogService logService, IUserShellLauncher? launcher = null)
     {
         _logService = logService;
+        _launcher = launcher ?? new UserShellLauncher(logService);
     }
 
     /// <summary>
@@ -253,7 +261,7 @@ public class GraphicsDriverService
                 if (legacy is int dword && dword > 0) return (uint)dword;
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Unreadable: the adapter's memory is shown as unknown. */ }
 
         return 0;
     }
@@ -405,7 +413,10 @@ public class GraphicsDriverService
             _logService.LogWarning($"[GraphicsDriver] AMD installer lookup failed: {ex.Message}");
         }
 
-        if (string.IsNullOrEmpty(installerUrl))
+        // The page is untrusted input: only an https installer on AMD's driver host, with a plain
+        // .exe file name, is downloaded.
+        if (!PackageInput.TryDownloadUrl(installerUrl, AmdDownloadHosts, out var installerUri) ||
+            PackageInput.SafeDownloadFileName(installerUri, ".exe") is not string fileName)
         {
             OpenUrl(adapter.OfficialUrl, adapter.VendorName);
             return (true, "Could not read AMD's download page. Opened the official AMD driver site instead.");
@@ -413,12 +424,11 @@ public class GraphicsDriverService
 
         try
         {
-            string fileName = Path.GetFileName(new Uri(installerUrl).LocalPath);
             string targetPath = Path.Combine(Path.GetTempPath(), fileName);
 
             progress?.Report($"[Graphics Drivers] Downloading {fileName} from AMD...");
 
-            using (var response = await SendAmdRequestAsync(installerUrl, ct))
+            using (var response = await SendAmdRequestAsync(installerUri.AbsoluteUri, ct))
             {
                 response.EnsureSuccessStatusCode();
                 await using var source = await response.Content.ReadAsStreamAsync(ct);
@@ -430,13 +440,18 @@ public class GraphicsDriverService
             // this really is a Windows executable before running anything
             if (!IsWindowsExecutable(targetPath))
             {
-                try { File.Delete(targetPath); } catch { }
+                try { File.Delete(targetPath); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: the rejected download stays in the temp folder. */ }
                 OpenUrl(adapter.OfficialUrl, adapter.VendorName);
                 return (false, "AMD returned an unexpected file. Opened the official AMD driver page instead.");
             }
 
             progress?.Report($"[Graphics Drivers] Launching the AMD Auto-Detect and Install tool...");
-            Process.Start(new ProcessStartInfo { FileName = targetPath, UseShellExecute = true });
+            var launched = _launcher.RunInstaller(targetPath);
+            if (!launched.Started)
+            {
+                OpenUrl(adapter.OfficialUrl, adapter.VendorName);
+                return (false, $"The AMD tool did not start ({launched.Message}). Opened the official AMD driver page instead.");
+            }
 
             _logService.LogInfo($"[GraphicsDriver] Launched AMD auto-detect installer: {installerUrl}");
             return (true, "AMD Auto-Detect and Install tool launched — it will fetch the latest driver for your GPU.");
@@ -500,23 +515,16 @@ public class GraphicsDriverService
 
     private bool OpenStore(string productId, string label)
     {
-        if (string.IsNullOrWhiteSpace(productId)) return false;
-        try
+        if (string.IsNullOrWhiteSpace(productId) || !Regex.IsMatch(productId, "^[A-Za-z0-9]{12}$")) return false;
+        var result = _launcher.OpenUri($"ms-windows-store://pdp/?ProductId={productId}");
+        if (result.Started)
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = $"ms-windows-store://pdp/?ProductId={productId}",
-                UseShellExecute = true
-            });
             _logService.LogInfo($"[GraphicsDriver] Opened Microsoft Store for {label} ({productId}).");
             return true;
         }
-        catch (Exception ex)
-        {
-            // Store app missing (LTSC/Server) or protocol not registered
-            _logService.LogWarning($"[GraphicsDriver] Microsoft Store unavailable for {label}: {ex.Message}");
-            return false;
-        }
+        // Store app missing (LTSC/Server) or protocol not registered
+        _logService.LogWarning($"[GraphicsDriver] Microsoft Store unavailable for {label}: {result.Message}");
+        return false;
     }
 
     private bool OpenUrl(string url, string label)
@@ -524,9 +532,10 @@ public class GraphicsDriverService
         if (string.IsNullOrWhiteSpace(url)) return false;
         try
         {
-            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            _logService.LogInfo($"[GraphicsDriver] Opened {label}: {url}");
-            return true;
+            var result = _launcher.OpenUri(url);
+            if (!result.Started) _logService.LogWarning($"[GraphicsDriver] Could not open {label}: {result.Message}");
+            else _logService.LogInfo($"[GraphicsDriver] Opened {label}: {url}");
+            return result.Started;
         }
         catch (Exception ex)
         {
@@ -629,10 +638,11 @@ public class GraphicsDriverService
     public async Task<(bool Success, string Message)> DownloadAndRunNvidiaDriverAsync(
         string downloadUrl, string version, IProgress<string>? progress = null, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(downloadUrl))
+        if (!PackageInput.TryDownloadUrl(downloadUrl, NvidiaDownloadHosts, out var downloadUri) ||
+            PackageInput.SafeDownloadFileName(downloadUri, ".exe") is not string fileName)
             return (false, "Invalid download URL.");
+        downloadUrl = downloadUri.AbsoluteUri;
 
-        string fileName = Path.GetFileName(new Uri(downloadUrl).LocalPath);
         string downloadDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AxePower", "Downloads");
         Directory.CreateDirectory(downloadDir);
         string targetPath = Path.Combine(downloadDir, fileName);
@@ -643,8 +653,10 @@ public class GraphicsDriverService
             {
                 progress?.Report($"\n[NVIDIA Driver] Found already downloaded installer: {fileName}");
                 progress?.Report($"[NVIDIA Driver] Launching NVIDIA {version} installer...");
-                Process.Start(new ProcessStartInfo { FileName = targetPath, UseShellExecute = true });
-                return (true, $"Launched NVIDIA Driver {version} installer.");
+                var cached = _launcher.RunInstaller(targetPath);
+                return cached.Started
+                    ? (true, $"Launched NVIDIA Driver {version} installer.")
+                    : (false, $"The NVIDIA installer did not start: {cached.Message}");
             }
 
             progress?.Report($"\n[NVIDIA Driver] Initiating official download for NVIDIA {version} from NVIDIA CDN...");
@@ -688,13 +700,14 @@ public class GraphicsDriverService
 
             if (!IsWindowsExecutable(targetPath))
             {
-                try { File.Delete(targetPath); } catch { }
+                try { File.Delete(targetPath); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: the rejected download stays in AxePower's Downloads folder. */ }
                 return (false, "Downloaded file failed PE verification.");
             }
 
             progress?.Report($"\n[NVIDIA Driver] ✓ Download completed ({totalRead / (1024 * 1024)} MB).");
             progress?.Report($"[NVIDIA Driver] Launching NVIDIA {version} installer setup...");
-            Process.Start(new ProcessStartInfo { FileName = targetPath, UseShellExecute = true });
+            var launched = _launcher.RunInstaller(targetPath);
+            if (!launched.Started) return (false, $"Downloaded, but the NVIDIA installer did not start: {launched.Message}");
 
             _logService.LogInfo($"[GraphicsDriver] Launched NVIDIA driver installer: {targetPath}");
             return (true, $"Downloaded and launched NVIDIA Driver {version} installer.");

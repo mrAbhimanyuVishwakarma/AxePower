@@ -1,14 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
+using AxePower.Core.Services.SoftwareHub;
+using AxePower.App.Services;
+using AxePower.Core.Services.Operations;
 
 namespace AxePower.App.ViewModels;
 
@@ -16,6 +19,7 @@ public partial class PackageCardViewModel : ObservableObject
 {
     private readonly IWinGetHubService _hubService;
     private readonly SoftwareHubViewModel _parent;
+    private CancellationTokenSource? _operation;
 
     public SoftwarePackageItem Item { get; }
 
@@ -54,9 +58,9 @@ public partial class PackageCardViewModel : ObservableObject
     public bool ShowCustomInstallerButtons => HasCustomInstaller;
 
     public string InstallButtonText => Id == "dlss5swapper" ? "Download & Run" : "Install";
-    public string InstallButtonTooltip => Id == "dlss5swapper" ? "Download latest portable release from GitHub and run it" : "Install this software via PowerShell";
+    public string InstallButtonTooltip => Id == "dlss5swapper" ? "Download latest portable release from GitHub and run it" : "Install this software with WinGet";
     public string OpenButtonText => Id == "dlss5swapper" ? "Run" : "Open";
-    public string UpdateButtonTooltip => Id == "dlss5swapper" ? "Update to the newest portable release from GitHub" : "Update this software to the latest release via PowerShell";
+    public string UpdateButtonTooltip => Id == "dlss5swapper" ? "Update to the newest portable release from GitHub" : "Update this software to the latest release with WinGet";
 
     public PackageCardViewModel(SoftwarePackageItem item, IWinGetHubService hubService, SoftwareHubViewModel parent)
     {
@@ -79,26 +83,8 @@ public partial class PackageCardViewModel : ObservableObject
     public void OpenApp()
     {
         if (string.IsNullOrEmpty(LaunchProtocolOrExe)) return;
-        try
-        {
-            string target = LaunchProtocolOrExe;
-            if (!target.Contains("://") && !File.Exists(target))
-            {
-                string exeName = Path.GetFileName(target);
-                target = exeName;
-            }
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = target,
-                UseShellExecute = true
-            });
-            _parent.Notify($"Opening {Name}...");
-        }
-        catch (Exception ex)
-        {
-            _parent.Notify($"Could not open {Name}: {ex.Message}");
-        }
+        var result = _hubService.OpenInstalled(Item);
+        _parent.Notify(result.Started ? $"Opening {Name}..." : $"Could not open {Name}: {result.Message}");
     }
 
     [RelayCommand]
@@ -117,38 +103,21 @@ public partial class PackageCardViewModel : ObservableObject
     [RelayCommand]
     public void LaunchLocalInstaller()
     {
-        string[] candidatePaths = new[]
+        var result = _hubService.LaunchLocalInstaller(Item);
+        if (result.Succeeded)
         {
-            LocalInstallerPath,
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ninite Installer.exe"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "Ninite Installer.exe"),
-            Path.Combine(Directory.GetCurrentDirectory(), "Ninite Installer.exe")
-        };
-
-        string? foundPath = candidatePaths.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p) && File.Exists(p));
-
-        if (foundPath != null)
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = foundPath,
-                    UseShellExecute = true
-                });
-                _parent.Notify($"🚀 Launching {Name} Installer...");
-                _parent.AppendLog($"\n>>> Launched {Name} Installer: {foundPath}");
-            }
-            catch (Exception ex)
-            {
-                _parent.Notify($"Error launching installer: {ex.Message}");
-                _parent.AppendLog($"\n[ERROR] Could not start installer: {ex.Message}");
-            }
+            _parent.Notify($"🚀 Launching {Name} Installer...");
+            _parent.AppendLog($"\n>>> Launched {Name} Installer.");
         }
-        else
+        else if (result.OfferedWebUrl != null)
         {
             _parent.Notify($"Local installer file not found. Opening {Name} website...");
             OpenCustomWebUrl();
+        }
+        else
+        {
+            _parent.Notify($"Error launching installer: {result.Message}");
+            _parent.AppendLog($"\n[ERROR] Could not start installer: {result.Message}");
         }
     }
 
@@ -163,37 +132,65 @@ public partial class PackageCardViewModel : ObservableObject
         );
     }
 
+    /// <summary>
+    /// Stops the card's running install, update or uninstall, ending its process tree. While the
+    /// card is part of a batch, this stops the batch.
+    /// </summary>
+    [RelayCommand]
+    public void Cancel()
+    {
+        if (_operation != null) _operation.Cancel();
+        else _parent.CancelBatch();
+    }
+
+    /// <summary>Runs one action with a fresh cancellation source; the card is busy until it ends.</summary>
+    private async Task<PackageOperationResult?> RunOperationAsync(PackageAction action)
+    {
+        if (IsBusy) return null;
+
+        IsBusy = true;
+        using var operation = new CancellationTokenSource();
+        _operation = operation;
+        try
+        {
+            var progress = new Progress<string>(_parent.AppendLog);
+            var result = await _hubService.RunAsync(action, Id, progress, operation.Token);
+            if (result.Outcome == PackageOutcome.Cancelled)
+            {
+                _parent.Notify($"Cancelled {Name}.");
+                _parent.AppendLog($"\n[Cancelled] {Name}.");
+            }
+            return result;
+        }
+        finally
+        {
+            _operation = null;
+            // Release card busy lock quickly so user is never frozen
+            if (action != PackageAction.Uninstall) await Task.Delay(500);
+            IsBusy = false;
+        }
+    }
+
     [RelayCommand]
     public async Task InstallAsync()
     {
         if (IsBusy) return;
+        _parent.Notify($"🚀 1-Click Install started for {Name}!");
+        _parent.AppendLog($"\n>>> 1-Click Install: {Name} ({WinGetId})...");
 
-        IsBusy = true;
-        try
+        var result = await RunOperationAsync(PackageAction.Install);
+        if (result is null || result.Outcome == PackageOutcome.Cancelled) return;
+        if (result.Succeeded)
         {
-            _parent.Notify($"🚀 1-Click Install started for {Name}!");
-            _parent.AppendLog($"\n>>> 1-Click Install: {Name} ({WinGetId})...");
-            var progress = new Progress<string>(_parent.AppendLog);
-            bool success = await _hubService.InstallPackageAsync(WinGetId, progress);
-
-            if (success)
-            {
-                IsInstalled = true;
-                _parent.Notify($"✓ {Name} is now installed and ready!");
-                _parent.AppendLog($"\n[Success] {Name} is now installed.");
-            }
-            else
-            {
-                _parent.Notify(Id == "camstudio"
-                    ? "CamStudio isn't on WinGet. Download it from the page that just opened, then Refresh."
-                    : $"Installation of {Name} did not complete. Opening website...");
-            }
+            IsInstalled = true;
+            _parent.Notify($"✓ {Name} is now installed and ready!");
+            _parent.AppendLog($"\n[Success] {Name} is now installed.");
         }
-        finally
+        else
         {
-            // Release card busy lock quickly so user is never frozen
-            await Task.Delay(500);
-            IsBusy = false;
+            _parent.Notify(Id == "camstudio"
+                ? "CamStudio isn't on WinGet. Download it from the page that just opened, then Refresh."
+                : $"{Name} was not installed: {result.Message ?? AxePower.Core.Services.Outcomes.UserMessages.Short(result.Failure)}. Opening its website...");
         }
     }
 
@@ -201,54 +198,30 @@ public partial class PackageCardViewModel : ObservableObject
     public async Task UpdateAsync()
     {
         if (IsBusy) return;
+        _parent.Notify($"🚀 Update started for {Name}...");
+        _parent.AppendLog($"\n>>> [Update] Updating {Name} ({WinGetId})...");
 
-        IsBusy = true;
-        try
-        {
-            _parent.Notify($"🚀 Update started for {Name}...");
-            _parent.AppendLog($"\n>>> [Update] Updating {Name} ({WinGetId})...");
-            var progress = new Progress<string>(_parent.AppendLog);
-            bool success = await _hubService.UpgradePackageAsync(WinGetId, progress);
-            if (success)
-            {
-                _parent.Notify($"✓ {Name} updated successfully.");
-            }
-            else
-            {
-                _parent.Notify($"Could not update {Name}. Check logs.");
-            }
-        }
-        finally
-        {
-            await Task.Delay(500);
-            IsBusy = false;
-        }
+        var result = await RunOperationAsync(PackageAction.Upgrade);
+        if (result is null || result.Outcome == PackageOutcome.Cancelled) return;
+        _parent.Notify(result.Succeeded ? $"✓ {Name} updated successfully." : $"Could not update {Name}. Check logs.");
     }
 
     [RelayCommand]
     public async Task UninstallAsync()
     {
         if (IsBusy) return;
+        _parent.AppendLog($"\n>>> Uninstalling {Name} ({WinGetId})...");
 
-        IsBusy = true;
-        try
+        var result = await RunOperationAsync(PackageAction.Uninstall);
+        if (result is null || result.Outcome == PackageOutcome.Cancelled) return;
+        if (result.Succeeded)
         {
-            _parent.AppendLog($"\n>>> Uninstalling {Name} ({WinGetId})...");
-            var progress = new Progress<string>(_parent.AppendLog);
-            bool success = await _hubService.UninstallPackageAsync(WinGetId, progress);
-            if (success)
-            {
-                IsInstalled = false;
-                _parent.Notify($"✓ Uninstalled {Name}.");
-            }
-            else
-            {
-                _parent.Notify($"Uninstall of {Name} finished. Check logs.");
-            }
+            IsInstalled = false;
+            _parent.Notify($"✓ Uninstalled {Name}.");
         }
-        finally
+        else
         {
-            IsBusy = false;
+            _parent.Notify($"Uninstall of {Name} finished. Check logs.");
         }
     }
 
@@ -260,6 +233,7 @@ public partial class PackageCardViewModel : ObservableObject
 
 public partial class SoftwareHubViewModel : ObservableObject
 {
+    private readonly IConfirmationPrompts _confirm;
     private readonly IWinGetHubService _hubService;
     private readonly IWindowsUpdateShieldService _updateShieldService;
     private readonly DriverUpdateService _driverUpdateService;
@@ -382,6 +356,8 @@ public partial class SoftwareHubViewModel : ObservableObject
     [ObservableProperty]
     private string _batchInstallStatus = string.Empty;
 
+    private CancellationTokenSource? _batch;
+
     public SoftwareHubViewModel(
         IWinGetHubService hubService,
         IWindowsUpdateShieldService updateShieldService,
@@ -391,8 +367,10 @@ public partial class SoftwareHubViewModel : ObservableObject
         LogService logService,
         GraphicsDriverService graphicsDriverService,
         TerminalService terminalService,
-        RestorePointService systemRestoreService)
+        RestorePointService systemRestoreService,
+        IConfirmationPrompts? confirm = null)
     {
+        _confirm = confirm ?? new ConfirmationPrompts();
         _hubService = hubService;
         _updateShieldService = updateShieldService;
         _driverUpdateService = driverUpdateService;
@@ -444,8 +422,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Graphics driver update failed: {ex.Message}");
-            AppendLog($"[Graphics Drivers Error] {ex.Message}");
+            NotifyFailure("Update the graphics driver", ex);
+            AppendLog($"[Graphics Drivers Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -534,8 +512,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Download failed: {ex.Message}");
-            AppendLog($"\n[ERROR] NVIDIA Driver Install failed: {ex.Message}");
+            NotifyFailure("Download the NVIDIA driver", ex);
+            AppendLog($"\n[ERROR] NVIDIA Driver Install failed: {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -564,19 +542,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         IsWarningModalOpen = false;
         if (!string.IsNullOrEmpty(PendingWebUrl))
         {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = PendingWebUrl,
-                    UseShellExecute = true
-                });
-                Notify("Opening link in browser...");
-            }
-            catch (Exception ex)
-            {
-                Notify("Failed to open browser: " + ex.Message);
-            }
+            var result = _hubService.OpenWebPage(PendingWebUrl);
+            Notify(result.Started ? "Opening link in browser..." : "Failed to open browser: " + result.Message);
         }
     }
 
@@ -730,71 +697,73 @@ public partial class SoftwareHubViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task InstallSelectedDirectAsync()
+    public async Task InstallSelectedDirectAsync() => await RunBatchInstallAsync(showTerminal: false);
+
+    /// <summary>
+    /// The same safe installs as the direct batch, with the Terminal page showing the output live.
+    /// Nothing is typed into a shell.
+    /// </summary>
+    [RelayCommand]
+    public async Task InstallSelectedViaTerminalAsync() => await RunBatchInstallAsync(showTerminal: true);
+
+    /// <summary>Stops the running batch: the current install's process tree is ended and the rest are skipped.</summary>
+    [RelayCommand]
+    public void CancelBatch() => _batch?.Cancel();
+
+    private async Task RunBatchInstallAsync(bool showTerminal)
     {
         if (IsBatchInstalling) return;
 
         var toInstall = AllPackages.Where(p => p.IsSelected && !p.IsInstalled && !p.IsWebLinkOnly).ToList();
         if (toInstall.Count == 0)
         {
-            Notify("No uninstalled packages selected for installation.");
+            Notify(showTerminal ? "No uninstalled packages selected for terminal installation." : "No uninstalled packages selected for installation.");
             return;
         }
+        if (!_confirm.Confirm(ConfirmationCatalog.InstallPackages(toInstall.Select(c => c.Name).ToList()))) return;
 
         IsBatchInstalling = true;
+        using var batch = new CancellationTokenSource();
+        _batch = batch;
+        var cards = toInstall.ToDictionary(c => c.Id, StringComparer.OrdinalIgnoreCase);
         try
         {
-            Notify($"Starting batch installation of {toInstall.Count} selected packages...");
+            if (showTerminal)
+            {
+                Notify($"Switched to Terminal. Running installation of {toInstall.Count} packages...");
+                _terminalService.RequestNavigateToTerminal();
+            }
+            else
+            {
+                Notify($"Starting batch installation of {toInstall.Count} selected packages...");
+            }
             AppendLog("\n=======================================================");
             AppendLog($"  Starting Batch Installation ({toInstall.Count} packages)");
             AppendLog("=======================================================");
 
-            int current = 0;
-            int successful = 0;
+            var batchProgress = new Progress<PackageBatchProgress>(p => OnBatchProgress(p, cards));
+            var result = await _hubService.InstallManyAsync(toInstall.Select(c => c.Id).ToList(), new Progress<string>(AppendLog), batchProgress, batch.Token);
 
-            foreach (var card in toInstall)
+            foreach (var item in result.Items)
             {
-                current++;
-                BatchInstallStatus = $"Installing ({current}/{toInstall.Count}): {card.Name}...";
-                Notify($"[{current}/{toInstall.Count}] Installing {card.Name}...");
-                AppendLog($"\n>>> [{current}/{toInstall.Count}] Installing {card.Name} ({card.WinGetId})...");
-
-                var progress = new Progress<string>(AppendLog);
-                card.IsBusy = true;
-                bool ok = false;
-                try
-                {
-                    if (card.HasCustomInstaller)
-                    {
-                        card.LaunchLocalInstaller();
-                        ok = true;
-                    }
-                    else
-                    {
-                        ok = await _hubService.InstallPackageAsync(card.WinGetId, progress);
-                    }
-                }
-                finally
-                {
-                    card.IsBusy = false;
-                }
-
-                if (ok)
-                {
-                    card.IsInstalled = true;
-                    successful++;
-                    AppendLog($"[Success] ✓ {card.Name} installed.");
-                }
-                else
-                {
-                    AppendLog($"[Notice] Installation completed with notices for {card.Name}.");
-                }
+                if (!cards.TryGetValue(item.Id, out var card)) continue;
+                card.IsBusy = false;
+                if (item.Result.Succeeded) card.IsInstalled = true;
             }
 
-            Notify($"✓ Batch installation complete: {successful}/{toInstall.Count} installed.");
+            // Names exactly what was installed, what was not and why, and what a cancel skipped (Prompt 30)
+            _notificationService.Show(AxePower.Core.Services.Outcomes.UserMessages.For(result.ToOutcome("Install apps")));
             AppendLog("\n=======================================================");
-            AppendLog($"  Batch Installation Complete: {successful}/{toInstall.Count} succeeded");
+            AppendLog($"  Batch Installation {(result.WasCancelled ? "Cancelled" : "Complete")}: {result.SucceededCount}/{toInstall.Count} succeeded");
             AppendLog("=======================================================\n");
+
+            // A bundled installer that is missing offers its web page, as its card's button does.
+            var offer = result.Items.FirstOrDefault(i => i.Result.OfferedWebUrl != null);
+            if (offer != null && cards.TryGetValue(offer.Id, out var offerCard))
+            {
+                Notify($"Local installer file not found. Opening {offerCard.Name} website...");
+                offerCard.OpenCustomWebUrl();
+            }
 
             // Deselect successfully installed packages
             foreach (var card in toInstall.Where(c => c.IsInstalled))
@@ -805,60 +774,39 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         finally
         {
+            _batch = null;
+            foreach (var card in toInstall) card.IsBusy = false;
             IsBatchInstalling = false;
             BatchInstallStatus = string.Empty;
         }
     }
 
-    [RelayCommand]
-    public void InstallSelectedViaTerminal()
+    private void OnBatchProgress(PackageBatchProgress p, IReadOnlyDictionary<string, PackageCardViewModel> cards)
     {
-        var toInstall = AllPackages.Where(p => p.IsSelected && !p.IsInstalled && !p.IsWebLinkOnly).ToList();
-        if (toInstall.Count == 0)
+        cards.TryGetValue(p.Id, out var card);
+        if (p.Outcome is null)
         {
-            Notify("No uninstalled packages selected for terminal installation.");
+            BatchInstallStatus = $"Installing ({p.Index}/{p.Count}): {p.Name}...";
+            Notify($"[{p.Index}/{p.Count}] Installing {p.Name}...");
+            AppendLog($"\n>>> [{p.Index}/{p.Count}] Installing {p.Name} ({card?.WinGetId})...");
+            if (card != null) card.IsBusy = true;
             return;
         }
 
-        var sb = new StringBuilder();
-        sb.AppendLine("Write-Host '=======================================================' -ForegroundColor Cyan");
-        sb.AppendLine($"Write-Host '  AxePower Software Hub — Batch Installation ({toInstall.Count} packages)' -ForegroundColor Cyan");
-        sb.AppendLine("Write-Host '=======================================================' -ForegroundColor Cyan");
-
-        int index = 0;
-        foreach (var card in toInstall)
+        if (card != null) card.IsBusy = false;
+        switch (p.Outcome)
         {
-            index++;
-            sb.AppendLine($"Write-Host '`n[{index}/{toInstall.Count}] Installing {card.Name}...' -ForegroundColor Yellow");
-
-            if (card.Id == "dlss5swapper")
-            {
-                sb.AppendLine("Start-Process 'https://github.com/rakanki911/DLSS5-Swapper/releases'");
-            }
-            else if (card.Id == "camstudio")
-            {
-                // Not published on WinGet: go straight to the official download page
-                sb.AppendLine("Write-Host 'CamStudio is not on WinGet. Opening the official download page...' -ForegroundColor DarkYellow; Start-Process 'https://camstudio.org/'");
-            }
-            else if (!string.IsNullOrEmpty(card.WinGetId))
-            {
-                string source = System.Text.RegularExpressions.Regex.IsMatch(card.WinGetId, "^9[A-Z0-9]{11}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-                    ? "msstore" : "winget";
-                sb.AppendLine($"winget install --id '{card.WinGetId}' --exact --source {source} --accept-source-agreements --accept-package-agreements");
-            }
-            else if (!string.IsNullOrEmpty(card.WebUrl))
-            {
-                sb.AppendLine($"Start-Process '{card.WebUrl}'");
-            }
+            case PackageOutcome.Succeeded:
+                if (card != null) card.IsInstalled = true;
+                AppendLog($"[Success] ✓ {p.Name} installed.");
+                break;
+            case PackageOutcome.Cancelled:
+                AppendLog($"[Cancelled] {p.Name}: stopped.");
+                break;
+            default:
+                AppendLog($"[Notice] Installation completed with notices for {p.Name}.");
+                break;
         }
-
-        sb.AppendLine("Write-Host '`n=======================================================' -ForegroundColor Green");
-        sb.AppendLine("Write-Host '  All batch installation commands executed!' -ForegroundColor Green");
-        sb.AppendLine("Write-Host '=======================================================' -ForegroundColor Green");
-
-        Notify($"Switched to Terminal. Running installation of {toInstall.Count} packages...");
-        _terminalService.RequestNavigateToTerminal();
-        _terminalService.SendCommand(sb.ToString());
     }
 
     [RelayCommand]
@@ -891,6 +839,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     public async Task UpgradeAllAppsAsync()
     {
         if (IsUpgradingAll) return;
+        if (!_confirm.Confirm(ConfirmationCatalog.UpgradeAllPackages(Array.Empty<string>()))) return;
 
         IsUpgradingAll = true;
         try
@@ -948,8 +897,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         catch (Exception ex)
         {
             LoadShieldSettings();
-            Notify($"Windows Update policy change failed: {ex.Message}");
-            AppendLog($"[Update Policy Error] {ex.Message}");
+            NotifyFailure("Change the Windows Update policy", ex);
+            AppendLog($"[Update Policy Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -994,8 +943,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         catch (Exception ex)
         {
             LoadShieldSettings();
-            Notify($"Windows restart-policy change failed: {ex.Message}");
-            AppendLog($"[Update Policy Error] {ex.Message}");
+            NotifyFailure("Change Windows Update's restart policy", ex);
+            AppendLog($"[Update Policy Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1015,6 +964,7 @@ public partial class SoftwareHubViewModel : ObservableObject
             AppendLog("\n[Update Cache Reset] Skipped: administrator rights are required.");
             return;
         }
+        if (!_confirm.Confirm(ConfirmationCatalog.ResetWindowsUpdateCache(WindowsUpdateShieldService.UpdateServices))) return;
 
         IsResettingUpdateCache = true;
         try
@@ -1029,8 +979,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Windows Update cache reset failed: {ex.Message}");
-            AppendLog($"[Update Cache Reset Error] {ex.Message}");
+            NotifyFailure("Reset the Windows Update cache", ex);
+            AppendLog($"[Update Cache Reset Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1083,8 +1033,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            FirmwareCheckStatus = $"Firmware scan error: {ex.Message}";
-            AppendLog($"[BIOS & Firmware Error] {ex.Message}");
+            FirmwareCheckStatus = AxePower.Core.Services.Outcomes.UserMessages.Failed("Scan for BIOS and firmware updates", ex).Text;
+            AppendLog($"[BIOS & Firmware Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1131,8 +1081,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Update check error: {ex.Message}");
-            AppendLog($"[System Update Error] {ex.Message}");
+            NotifyFailure("Check for system updates", ex);
+            AppendLog($"[System Update Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1162,8 +1112,8 @@ public partial class SoftwareHubViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"System Restore point failed: {ex.Message}");
-            AppendLog($"[Restore Point Error] {ex.Message}");
+            NotifyFailure("Create a restore point", ex);
+            AppendLog($"[Restore Point Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
@@ -1190,4 +1140,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     {
         _notificationService.Show(message);
     }
+
+    /// <summary>"Could not <paramref name="action"/>" with what to do about it (Prompt 30).</summary>
+    public void NotifyFailure(string action, Exception error) => _notificationService.ShowFailure(action, error);
 }

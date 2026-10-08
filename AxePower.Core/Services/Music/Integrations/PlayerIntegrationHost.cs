@@ -77,7 +77,7 @@ public sealed class PlayerIntegrationHost : IDisposable
 
         foreach (var integration in _integrations)
         {
-            try { integration.Dispose(); } catch { }
+            try { integration.Dispose(); } catch { /* One integration failing to stop must not keep the others running. */ }
         }
     }
 }

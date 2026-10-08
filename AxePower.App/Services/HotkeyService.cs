@@ -166,7 +166,7 @@ public sealed class HotkeyService : IDisposable
     {
         foreach (int id in _registered.Keys.ToList())
         {
-            try { UnregisterHotKey(_handle, id); } catch { }
+            try { UnregisterHotKey(_handle, id); } catch { /* Best-effort: the hotkey is released anyway when the window closes. */ }
         }
         _registered.Clear();
     }

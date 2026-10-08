@@ -132,7 +132,7 @@ public sealed class CoverArtService : ICoverArtService
     private static HttpClient CreateArtworkClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("AxePower/2.1.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd($"AxePower/{UpdateService.FallbackVersion}");
         return client;
     }
 
@@ -243,7 +243,7 @@ public sealed class CoverArtService : ICoverArtService
         }
         catch
         {
-            try { File.Delete(temp); } catch { }
+            try { File.Delete(temp); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: a leftover temp cover is overwritten next time. */ }
             throw;
         }
     }

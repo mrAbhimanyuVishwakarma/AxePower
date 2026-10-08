@@ -167,8 +167,8 @@
                                 Visibility="{Binding IsDiagnosticRunning, Converter={StaticResource BoolToVis}}"
                                 Padding="14,9" FontSize="13" Margin="0,0,10,6">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource DangerBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Cancel Task" Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource ErrorBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Cancel Task" Foreground="{DynamicResource ErrorBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
@@ -287,7 +287,8 @@
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Selection Checkbox -->
-                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,16,0"
+                                                  AutomationProperties.Name="{Binding Name, StringFormat='Select {0}'}"/>
 
                                         <!-- Details -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">

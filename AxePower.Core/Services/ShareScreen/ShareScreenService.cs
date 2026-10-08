@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Models.ShareScreen;
+using AxePower.Core.Services.LanDrop;
 
 namespace AxePower.Core.Services.ShareScreen;
 
@@ -24,6 +28,14 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
     private readonly ShareEncodePipeline _pipeline;
     private readonly ShareAudioPump _audioPump;
     private readonly ShareViewerHost _viewerHost;
+    private readonly Func<string?, NetworkClassificationResult> _networkClassifier;
+    private readonly TailscaleCertificateProvider _tlsProvider;
+
+    /// <summary>The certificate the open room is served with, kept so a later screen share matches it.</summary>
+    private ShareTlsCertificate? _roomTls;
+
+    /// <summary>Video-only viewers, from the media server's WebRTC sessions on this room's path.</summary>
+    private IReadOnlyList<ShareParticipant> _videoViewers = Array.Empty<ShareParticipant>();
 
     private readonly SemaphoreSlim _transition = new(1, 1);
     private CancellationTokenSource? _monitorCts;
@@ -47,8 +59,12 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         MediaMtxServer server,
         ShareEncodePipeline pipeline,
         ShareAudioPump audioPump,
-        ShareViewerHost viewerHost)
+        ShareViewerHost viewerHost,
+        Func<string?, NetworkClassificationResult>? networkClassifier = null,
+        TailscaleCertificateProvider? tlsProvider = null)
     {
+        _tlsProvider = tlsProvider ?? new TailscaleCertificateProvider(logService);
+        _networkClassifier = networkClassifier ?? NetworkProfileClassifier.ClassifyCurrentNetwork;
         _logService = logService;
         _toolProvider = toolProvider;
         _deviceProvider = deviceProvider;
@@ -59,6 +75,9 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         _viewerHost = viewerHost;
 
         _viewerHost.ControlHolderChanged += OnControlHolderChanged;
+        _viewerHost.ControlDisabledAfterFailedAttempts += OnControlDisabledAfterFailedAttempts;
+        _viewerHost.ParticipantsChanged += OnHostParticipantsChanged;
+        _viewerHost.ApproveControl = AskHostToApproveAsync;
         _viewerHost.ChatMessageReceived += OnChatMessageReceived;
         _viewerHost.VoicePacketReceived += OnVoicePacketReceived;
         _pipeline.TelemetryUpdated += OnTelemetryUpdated;
@@ -74,12 +93,14 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         {
             if (Status.State is ShareSessionState.RoomOpen or ShareSessionState.Live) return Status;
             _activeSettings = settings.Clone();
+            if (RefuseUntrustedNetwork(_activeSettings) is { } refused) return refused;
             var room = ShareRoomFactory.Create();
             var viewerHostName = MediaMtxServer.ResolveViewerHost(_activeSettings.ViewerHostOverride);
-            _viewerHost.Start(room, viewerHostName, _activeSettings.WebrtcPort, _activeSettings.ViewerPort);
+            _roomTls = await _tlsProvider.TryGetAsync(viewerHostName, ct);
+            _viewerHost.Start(room, _roomTls?.HostName ?? viewerHostName, _activeSettings.WebrtcPort, _activeSettings.ViewerPort, _roomTls?.Certificate);
             Status = new ShareSessionStatus(
                 ShareSessionState.RoomOpen,
-                "Private room open",
+                _roomTls != null ? "Private room open (HTTPS over Tailscale)" : "Private room open",
                 room,
                 _viewerHost.ViewerUrl,
                 QualityPreset.For(_activeSettings.Quality),
@@ -113,6 +134,9 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
 
             _activeSettings = settings.Clone();
             _overloadedSamples = 0;
+
+            // An open room already passed this check; a fresh start has not.
+            if (!reuseOpenRoom && RefuseUntrustedNetwork(_activeSettings) is { } refused) return refused;
 
             Publish(ShareSessionState.Preparing, "Checking FFmpeg and the media server...");
 
@@ -164,19 +188,22 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
 
             Publish(ShareSessionState.Starting, "Starting the media server...", room, preset, encoder);
 
-            step?.Report("Starting the media server");
-            await _server.StartAsync(mediaMtx.Path, room, _activeSettings, ct);
-
-            step?.Report("Starting the encoder");
-            _pipeline.Start(_ffmpegPath, display, preset, encoder, _activeSettings, room, _audioPump);
-
             // Our own viewer page, not the media server's: control needs a channel back, and the
             // server has none. It also means the page can carry the warning a controller sees.
+            // It starts first because the media server asks it whether each publish and read
+            // may go ahead.
             if (!reuseOpenRoom)
             {
                 var viewerHostName = MediaMtxServer.ResolveViewerHost(_activeSettings.ViewerHostOverride);
-                _viewerHost.Start(room, viewerHostName, _activeSettings.WebrtcPort, _activeSettings.ViewerPort);
+                _roomTls = await _tlsProvider.TryGetAsync(viewerHostName, ct);
+                _viewerHost.Start(room, _roomTls?.HostName ?? viewerHostName, _activeSettings.WebrtcPort, _activeSettings.ViewerPort, _roomTls?.Certificate);
             }
+
+            step?.Report("Starting the media server");
+            await _server.StartAsync(mediaMtx.Path, room, _activeSettings, _viewerHost.MediaAuthAddress, ct, _roomTls);
+
+            step?.Report("Starting the encoder");
+            _pipeline.Start(_ffmpegPath, display, preset, encoder, _activeSettings, room, _audioPump);
             _controlTarget = display;
 
             var viewerUrl = _viewerHost.ViewerUrl;
@@ -248,6 +275,7 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
 
                     var stats = await _server.GetPathStatsAsync(room.PathName, token);
                     ApplyPathStats(stats);
+                    UpdateVideoViewers(await _server.GetWebRtcViewersAsync(room.PathName, token));
                 }
                 catch (OperationCanceledException)
                 {
@@ -442,6 +470,8 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         _viewerHost.Stop();      // also revokes control and releases anything held down
         _server.Stop();
         _controlTarget = null;
+        UpdateVideoViewers(Array.Empty<ShareParticipant>());
+        _roomTls = null;
 
         // Give the OS a moment to release the ports before a restart tries to bind them again.
         await Task.Delay(150);
@@ -540,12 +570,102 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
         return code;
     }
 
+    private void OnControlDisabledAfterFailedAttempts(object? sender, EventArgs e)
+    {
+        Status = Status with
+        {
+            Control = RemoteControlState.Disabled,
+            ControlCode = string.Empty,
+            Message = "Remote control was switched off after repeated wrong codes."
+        };
+        RaiseStatusChanged();
+    }
+
     private void OnControlHolderChanged(object? sender, bool taken)
     {
         if (Status.Control == RemoteControlState.Disabled) return;
 
         Status = Status with { Control = taken ? RemoteControlState.Active : RemoteControlState.Offered };
         RaiseStatusChanged();
+    }
+
+    // -- Control approval ----------------------------------------------------
+
+    public event EventHandler<PendingControlApproval>? ControlApprovalRequested;
+
+    private async Task<bool> AskHostToApproveAsync(ControlApprovalRequest request, CancellationToken ct)
+    {
+        var handler = ControlApprovalRequested;
+        if (handler == null) return false;
+
+        var pending = new PendingControlApproval(request);
+        await using var lapse = ct.Register(pending.Deny);
+        handler(this, pending);
+        return await pending.Answer;
+    }
+
+    // -- Untrusted networks --------------------------------------------------
+
+    /// <summary>
+    /// Refuses to open the room on a network Windows calls Public or cannot classify, unless the
+    /// user allowed it for this session. Returns the refused status, or null to go ahead.
+    /// </summary>
+    private ShareSessionStatus? RefuseUntrustedNetwork(ShareScreenSettings settings)
+    {
+        var viewerHost = MediaMtxServer.ResolveViewerHost(settings.ViewerHostOverride);
+        var classification = _networkClassifier(ResolveToLocalAddress(viewerHost));
+        if (!classification.IsPublicOrUnclassified) return null;
+
+        if (settings.AllowUntrustedNetwork)
+        {
+            _logService.LogWarning($"[ShareScreen] Opening the room on an untrusted network because the user allowed it for this session: {classification.WarningMessage}");
+            return null;
+        }
+
+        _logService.LogWarning($"[ShareScreen] Refusing to open the room on an untrusted network: {classification.WarningMessage}");
+        Status = ShareSessionStatus.Idle with
+        {
+            Message = classification.WarningMessage ?? "This network is Public or could not be classified.",
+            UntrustedNetworkRefused = true
+        };
+        RaiseStatusChanged();
+        return Status;
+    }
+
+    /// <summary>A host name (such as a Tailscale MagicDNS name) mapped to this PC's address for it.</summary>
+    private static string ResolveToLocalAddress(string host)
+    {
+        if (IPAddress.TryParse(host, out _)) return host;
+        try
+        {
+            return Dns.GetHostAddresses(host)
+                       .FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork && NetworkProfileClassifier.IsLocalAddress(a))
+                       ?.ToString()
+                   ?? host;
+        }
+        catch
+        {
+            // Name lookup failed: the host is used as written, and the trust check then judges it.
+            return host;
+        }
+    }
+
+    // -- Participants --------------------------------------------------------
+
+    public event EventHandler? ParticipantsChanged;
+
+    /// <summary>Everyone in the room: chat, voice and control connections, and video-only viewers.</summary>
+    public IReadOnlyList<ShareParticipant> GetParticipants() =>
+        _viewerHost.GetActiveParticipants().Concat(_videoViewers).OrderBy(p => p.ConnectedAt).ToList();
+
+    private void OnHostParticipantsChanged(object? sender, EventArgs e) => ParticipantsChanged?.Invoke(this, EventArgs.Empty);
+
+    private void UpdateVideoViewers(IReadOnlyList<ShareParticipant> viewers)
+    {
+        var before = string.Join(",", _videoViewers.Select(v => v.Id));
+        var after = string.Join(",", viewers.Select(v => v.Id));
+        _videoViewers = viewers;
+        if (before != after) ParticipantsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     // -- Room chat -----------------------------------------------------------
@@ -565,6 +685,9 @@ public sealed class ShareScreenService : IShareScreenService, IDisposable
     public void Dispose()
     {
         _viewerHost.ControlHolderChanged -= OnControlHolderChanged;
+        _viewerHost.ControlDisabledAfterFailedAttempts -= OnControlDisabledAfterFailedAttempts;
+        _viewerHost.ParticipantsChanged -= OnHostParticipantsChanged;
+        _viewerHost.ApproveControl = null;
         _viewerHost.ChatMessageReceived -= OnChatMessageReceived;
         _viewerHost.VoicePacketReceived -= OnVoicePacketReceived;
         _viewerHost.Dispose();

@@ -261,6 +261,7 @@ public partial class LyricsViewModel : ObservableObject, IDisposable
         }
         catch (OperationCanceledException)
         {
+            // Superseded by the next track.
         }
         catch
         {

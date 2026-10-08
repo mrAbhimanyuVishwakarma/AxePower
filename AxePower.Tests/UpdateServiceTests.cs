@@ -49,6 +49,12 @@ public class UpdateServiceTests
         payload[0] = (byte)'M';
         payload[1] = (byte)'Z';
 
+        using var ecdsa = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        var pubKeyPem = ecdsa.ExportSubjectPublicKeyInfoPem();
+
+        using var sha = System.Security.Cryptography.SHA256.Create();
+        var hashHex = Convert.ToHexString(sha.ComputeHash(payload)).ToLowerInvariant();
+
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
@@ -56,6 +62,16 @@ public class UpdateServiceTests
         var url = $"http://127.0.0.1:{port}/{fileName}";
         var destination = Path.Combine(Path.GetTempPath(), "AxePower_Update", fileName);
         var requestCount = 0;
+
+        var manifest = new AxePower.Core.Services.Update.UpdateManifest
+        {
+            Version = "2.5.0",
+            AssetName = fileName,
+            ByteLength = payload.Length,
+            Sha256 = hashHex,
+            PublishedAt = DateTimeOffset.UtcNow
+        };
+        manifest.Signature = AxePower.Core.Services.Update.ManifestSigner.Sign(manifest, ecdsa);
 
         var server = Task.Run(async () =>
         {
@@ -76,10 +92,18 @@ public class UpdateServiceTests
 
         try
         {
-            var service = new UpdateService(new LogService());
+            var options = new AxePower.Core.Services.Update.UpdateSecurityOptions
+            {
+                PinnedPublicKeyPem = pubKeyPem,
+                AllowHttpForTesting = true
+            };
+            options.AllowedHosts.Add("127.0.0.1");
+
+            var mockAuth = new TestAuthenticodeVerifier();
+            var service = new UpdateService(new LogService(), options, mockAuth);
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var first = service.DownloadUpdateAsync(url, new Progress<double>(), timeout.Token);
-            var second = service.DownloadUpdateAsync(url, new Progress<double>(), timeout.Token);
+            var first = service.DownloadUpdateAsync(url, new Progress<double>(), timeout.Token, manifest);
+            var second = service.DownloadUpdateAsync(url, new Progress<double>(), timeout.Token, manifest);
 
             var paths = await Task.WhenAll(first, second);
             await server;
@@ -94,8 +118,18 @@ public class UpdateServiceTests
         finally
         {
             listener.Stop();
-            File.Delete(destination);
-            File.Delete(destination + ".part");
+            if (File.Exists(destination))
+            {
+                File.Delete(destination);
+            }
+        }
+    }
+
+    private class TestAuthenticodeVerifier : AxePower.Core.Services.Update.IAuthenticodeVerifier
+    {
+        public AxePower.Core.Services.Update.AuthenticodeVerifyResult Verify(string filePath, string expectedPublisher)
+        {
+            return AxePower.Core.Services.Update.AuthenticodeVerifyResult.Success("CN=Abhimanyu Vishwakarma");
         }
     }
 }

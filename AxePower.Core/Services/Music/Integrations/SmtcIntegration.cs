@@ -172,7 +172,7 @@ public sealed class SmtcIntegration : IPlayerIntegration
             smtc.DisplayUpdater.Update();
             smtc.IsEnabled = false;
         }
-        catch { }
+        catch { /* Best-effort: Windows clears the media overlay itself when AxePower exits. */ }
         _smtc = null;
     }
 }

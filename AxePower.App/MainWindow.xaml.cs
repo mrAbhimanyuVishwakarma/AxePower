@@ -25,13 +25,11 @@ public partial class MainWindow : Window
         _settingsService = settingsService;
         _telemetryService = telemetryService;
 
-        // No per-second WMI/disk/network sampling while hidden in the tray
-        IsVisibleChanged += (s, e) =>
-        {
-            if (_telemetryService == null) return;
-            if (IsVisible) _telemetryService.Resume();
-            else _telemetryService.Pause();
-        };
+        // Periodic work runs only while its page is on screen: not in the tray, not minimised
+        viewModel.AttachTelemetry(_telemetryService);
+        void ReportOnScreen() => viewModel.IsOnScreen = IsVisible && WindowState != WindowState.Minimized;
+        IsVisibleChanged += (s, e) => ReportOnScreen();
+        StateChanged += (s, e) => ReportOnScreen();
 
         // Shrink/expand the window to match the dashboard's compact monitor widget
         _expandedMinWidth = MinWidth;
@@ -54,7 +52,7 @@ public partial class MainWindow : Window
             // Picking another tool in the help window starts its guide from the top
             else if (e.PropertyName == nameof(MainViewModel.SelectedToolHelp))
             {
-                ToolHelpScroller.ScrollToTop();
+                ToolHelp.ScrollGuideToTop();
             }
         };
         ApplyCaptionHeight();
@@ -221,7 +219,7 @@ public partial class MainWindow : Window
         {
             Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         }
-        catch { }
+        catch { /* Without the event the window does not follow a Windows theme switch until restarted. */ }
     }
 
     private void OpenApp_Click(object sender, RoutedEventArgs e) => BringToFront();
@@ -286,22 +284,6 @@ public partial class MainWindow : Window
             _ = vm.PhoneHubVm.SpaceDeskActionAsync();
         }
         OpenApp_Click(sender, e);
-    }
-
-    private void PatchNotesScrollUp_Click(object sender, RoutedEventArgs e)
-    {
-        PatchNotesScrollViewer?.LineUp();
-        PatchNotesScrollViewer?.LineUp();
-        PatchNotesScrollViewer?.LineUp();
-        PatchNotesScrollViewer?.LineUp();
-    }
-
-    private void PatchNotesScrollDown_Click(object sender, RoutedEventArgs e)
-    {
-        PatchNotesScrollViewer?.LineDown();
-        PatchNotesScrollViewer?.LineDown();
-        PatchNotesScrollViewer?.LineDown();
-        PatchNotesScrollViewer?.LineDown();
     }
 
     private bool _isExplicitShutdown;
@@ -454,14 +436,21 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>Removes the tray icon now, so no dead icon is left in the notification area. Safe to repeat.</summary>
+    public void DisposeTrayIcon()
+    {
+        try { AppTrayIcon?.Dispose(); } catch (Exception) { /* Best-effort: the icon may already be gone. */ }
+    }
+
     protected override void OnClosed(EventArgs e)
     {
+        DisposeTrayIcon();
         _themeService.ThemeChanged -= OnThemeChanged;
         try
         {
             Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
         }
-        catch { }
+        catch { /* Best-effort teardown: subscribing may have failed in the first place. */ }
         base.OnClosed(e);
     }
 }

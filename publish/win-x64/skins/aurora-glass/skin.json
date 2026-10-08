@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "aurora-glass",
+  "name": "Aurora Glass",
+  "description": "Dark glass over your desktop, with northern-lights teal and violet.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#99040812",
+    "sidebar": "#3304060C",
+    "card": "#590A1020",
+    "cardElevated": "#6B0E1528",
+    "hover": "#7A16203A",
+    "border": "#402DD4BF",
+    "divider": "#1AFFFFFF",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#E0F2FE",
+    "textMuted": "#94B8C8",
+    "textDisabled": "#5B7080",
+    "accent": "#2DD4BF",
+    "success": "#34D399",
+    "warning": "#FBBF24",
+    "error": "#F87171",
+    "eco": "#34D399",
+    "smart": "#2DD4BF",
+    "beast": "#FB923C",
+    "buttonPrimary": "#2DD4BF",
+    "buttonPrimaryText": "#031014"
+  },
+  "glass": {
+    "backdrop": "acrylic",
+    "sheen": 85,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "WindowSecondaryBackgroundColor": "#33040812",
+    "WindowSecondaryBackgroundBrush": "#33040812",
+    "MusicTrackBrush": "#40FFFFFF",
+    "MusicPlaceholderArtBrush": "#2DD4BF, #818CF8, #C084FC"
+  }
+}

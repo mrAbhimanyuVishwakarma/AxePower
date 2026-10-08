@@ -1,0 +1,326 @@
+<UserControl x:Class="AxePower.App.Views.Shell.ShellSidebar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewmodels="clr-namespace:AxePower.App.ViewModels"
+             xmlns:views="clr-namespace:AxePower.App.Views"
+             xmlns:converters="clr-namespace:AxePower.App.Converters"
+             xmlns:musicviews="clr-namespace:AxePower.App.Views.Music"
+             mc:Ignorable="d">
+    <!-- The navigation sidebar: branding, the four navigation groups, Settings and the profile entry. Moved out of MainWindow.xaml unchanged (Prompt 20); its DataContext is the MainViewModel. -->
+    <Border Visibility="{Binding DashboardVm.IsShrunk, Converter={StaticResource InverseBoolToVis}}"
+            Background="{DynamicResource SidebarBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+        <!-- 240 px, or a 72 px icon rail (MainViewModel.IsSidebarCollapsed) -->
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="Width" Value="240"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                        <Setter Property="Width" Value="72"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="88"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Branding -->
+            <Grid Grid.Row="0" WindowChrome.IsHitTestVisibleInChrome="True" VerticalAlignment="Top">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Margin" Value="28,20,10,0"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                <Setter Property="Margin" Value="15,20,15,0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Collapsed, the logo is the way back out; expanded it is only the logo -->
+                <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}" IsEnabled="{Binding IsSidebarCollapsed}"
+                        AutomationProperties.Name="Expand the sidebar">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Cursor" Value="Arrow"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="True">
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="ToolTip" Value="Expand the sidebar"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <Image Source="{DynamicResource AppIconImage}" Width="42" Height="42" />
+                </Button>
+                <TextBlock Grid.Column="1" Text="AxePower" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="22" FontWeight="SemiBold" Margin="12,0,0,0"
+                           Style="{StaticResource SidebarLabelStyle}"/>
+                <Button Grid.Column="2" Style="{StaticResource MusicIconButtonStyle}" Width="28" Height="28" FontSize="11"
+                        Content="&#xE892;" Command="{Binding ToggleSidebarCommand}" VerticalAlignment="Center"
+                        ToolTip="Collapse the sidebar to icons" AutomationProperties.Name="Collapse the sidebar"
+                        Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+            </Grid>
+
+            <!-- Navigation groups. No scroll viewer: every item is sized to fit the sidebar outright, and the
+                 window's MinHeight is set so the list can never be squeezed shorter than it needs. -->
+            <StackPanel Grid.Row="1" Margin="0,2,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <!-- 1. CONTROL GROUP -->
+                    <TextBlock Text="CONTROL" Style="{StaticResource SidebarGroupHeaderTextStyle}" />
+                    <Border Style="{StaticResource SidebarRailDividerStyle}"/>
+
+                    <!-- Dashboard -->
+                    <Button Style="{Binding DashboardActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" ToolTip="Dashboard: choose your power mode" AutomationProperties.Name="Dashboard">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
+                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                <Rectangle.OpacityMask>
+                                    <ImageBrush ImageSource="/Resources/icons/Dashboards.png" Stretch="Uniform"/>
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                            <TextBlock Text="Dashboard" Style="{StaticResource SidebarLabelStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Game Mode -->
+                    <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode" ToolTip="Game Mode: your games and Game Mode" AutomationProperties.Name="Game Mode">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
+                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                <Rectangle.OpacityMask>
+                                    <ImageBrush ImageSource="/Resources/icons/controller.png" Stretch="Uniform"/>
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                            <TextBlock Text="Game Mode" Style="{StaticResource SidebarLabelStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Battery -->
+                    <Button Style="{Binding BatteryActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Battery" ToolTip="Battery: health, history and charging" AutomationProperties.Name="Battery">
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
+                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                <Rectangle.OpacityMask>
+                                    <ImageBrush ImageSource="/Resources/icons/battery.png" Stretch="Uniform"/>
+                                </Rectangle.OpacityMask>
+                            </Rectangle>
+                            <TextBlock Text="Battery" Style="{StaticResource SidebarLabelStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Music -->
+                    <Button Style="{Binding MusicActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Music"
+                            ToolTip="Music: play your music files" AutomationProperties.Name="Music">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Music" Style="{StaticResource SidebarLabelStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 2. CONNECTION GROUP -->
+                    <TextBlock Text="CONNECTION" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="20,10,20,3"/>
+                    <Border Style="{StaticResource SidebarRailDividerStyle}"/>
+
+                    <!-- Friends Hub (Screen sharing, call & chat) -->
+                    <Button Style="{Binding FriendsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Friends" ToolTip="Friends: chat, voice call, screen share &amp; play together" AutomationProperties.Name="Friends">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE779;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Friends" Style="{StaticResource SidebarLabelStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Phone Control -->
+                    <Button Style="{Binding PhoneHubActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="PhoneHub" ToolTip="Phone Control: Screen mirroring, Wi-Fi LAN drop &amp; remote tools">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Phone Control" Style="{StaticResource SidebarLabelStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Second Monitor -->
+                    <Button Style="{Binding SecondMonitorActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="SecondMonitor" ToolTip="Second Monitor: SpaceDesk wireless display for phone, tablet &amp; laptop">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Second Monitor" Style="{StaticResource SidebarLabelStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 3. MAINTENANCE GROUP (Collapsible) -->
+                    <Border Style="{StaticResource SidebarRailDividerStyle}"/>
+                    <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleMaintenanceGroupCommand}" Margin="10,8,10,2">
+                        <Grid VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="MAINTENANCE" FontFamily="{StaticResource PrimaryFontFamily}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding MaintenanceChevronGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+
+                    <!-- Maintenance Sub-items -->
+                    <StackPanel Visibility="{Binding ShowMaintenanceItems, Converter={StaticResource BoolToVis}}">
+                        <!-- Windows Update -->
+                        <Button Style="{Binding UpdatePcActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="UpdatePc" ToolTip="Windows Update: drivers, WinGet batch upgrades and Windows updates">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Windows Update" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- System Care -->
+                        <Button Style="{Binding SystemCareActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="SystemCare" ToolTip="System Care: optimization, health repairs, cleanup and DNS tools">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="System Care" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Uninstaller -->
+                        <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller: remove applications and clean verified leftovers">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Uninstaller" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Debloat -->
+                        <Button Style="{Binding DebloatActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Debloat" ToolTip="Debloat Hub: Win11Debloat &amp; WinUtil Windows tools">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Debloat" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- 4. UTILITIES GROUP (Collapsible) -->
+                    <Border Style="{StaticResource SidebarRailDividerStyle}"/>
+                    <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleUtilitiesGroupCommand}" Margin="10,8,10,2">
+                        <Grid VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="UTILITIES" FontFamily="{StaticResource PrimaryFontFamily}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding UtilitiesChevronGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+
+                    <!-- Utilities Sub-items -->
+                    <StackPanel Visibility="{Binding ShowUtilitiesItems, Converter={StaticResource BoolToVis}}">
+                        <!-- Terminal -->
+                        <Button Style="{Binding TerminalActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Terminal" ToolTip="Terminal: built-in CMD / PowerShell, where AxePower's commands report">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Terminal" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Tools: MSI Afterburner, CPU-Z, GPU-Z, CrystalDiskInfo -->
+                        <Button Style="{Binding ToolsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Tools" ToolTip="Tools: MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo" AutomationProperties.Name="Tools">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xEC7A;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Tools" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+            </StackPanel>
+
+            <!-- Bottom Fixed Navigation (Settings & Profile) -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,10" WindowChrome.IsHitTestVisibleInChrome="True">
+                <!-- Divider -->
+                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="20,0,20,6" Opacity="0.4"/>
+
+                <!-- Trust & Permissions (Prompt 25): permissions, listeners, data and connections in one place -->
+                <Button Style="{Binding TrustActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Trust"
+                        ToolTip="Trust &amp; Permissions: what AxePower can do, listens on, keeps and sends" AutomationProperties.Name="Trust and Permissions">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Trust &amp; Permissions" Style="{StaticResource SidebarLabelStyle}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Settings (above Profile) -->
+                <Button Style="{Binding SettingsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings" ToolTip="Settings" AutomationProperties.Name="Settings">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Settings" Style="{StaticResource SidebarLabelStyle}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Profile (bottom of the list; replaced About in 2.0.8): avatar, name and @username.
+                     Signed out it reads "Sign in"; the rail shows only the avatar. -->
+                <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Profile"
+                        Height="52" ToolTip="{Binding AccountVm.SidebarTitle}" AutomationProperties.Name="Profile"
+                        AutomationProperties.HelpText="{Binding AccountVm.SidebarStatus}">
+                    <StackPanel Orientation="Horizontal">
+                        <Grid Width="30" Height="30" VerticalAlignment="Center">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Margin" Value="-7,0,11,0"/>
+                                    <Style.Triggers>
+                                        <!-- Rail: centre the 30 px avatar on the 72 px rail's centre line -->
+                                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Margin" Value="-7,0,0,0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.22"/>
+                            <TextBlock Text="{Binding AccountVm.Initials}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding AccountVm.HasAccount, Converter={StaticResource BoolToVis}}"/>
+                            <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{Binding AccountVm.IsSignedOut, Converter={StaticResource BoolToVis}}"/>
+                            <Ellipse Visibility="{Binding AccountVm.HasAvatar, Converter={StaticResource BoolToVis}}">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding AccountVm.AvatarUrl}" Stretch="UniformToFill"/>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <!-- Online dot: solid green when signed in and reachable; a hollow ring when offline,
+                                 so the state is a shape as well as a colour -->
+                            <Ellipse Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-1,-1"
+                                     StrokeThickness="2" ToolTip="{Binding AccountVm.StatusLine}"
+                                     Visibility="{Binding AccountVm.IsSignedIn, Converter={StaticResource BoolToVis}}">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                        <Setter Property="Stroke" Value="{DynamicResource SidebarBackgroundBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AccountVm.IsOffline}" Value="True">
+                                                <Setter Property="Fill" Value="{DynamicResource SidebarBackgroundBrush}"/>
+                                                <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                        </Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AccountVm.SidebarTitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="13.5"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                            <TextBlock Text="{Binding AccountVm.SidebarSubtitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="11.5" FontWeight="Normal"
+                                       Foreground="{DynamicResource MutedTextBrush}" TextTrimming="CharacterEllipsis" MaxWidth="150" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

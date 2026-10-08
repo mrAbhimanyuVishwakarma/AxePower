@@ -27,14 +27,18 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
     };
 
     private readonly string _root;
+    private readonly LogService? _log;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private bool _migrated;
 
     public UninstallHistoryService() : this(DefaultRoot) { }
 
-    public UninstallHistoryService(string root)
+    public UninstallHistoryService(LogService log) : this(DefaultRoot, log) { }
+
+    public UninstallHistoryService(string root, LogService? log = null)
     {
         _root = root;
+        _log = log;
     }
 
     private string HistoryFile => Path.Combine(_root, "sessions.json");
@@ -45,6 +49,11 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
         try
         {
             return await LoadAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log?.LogWarning("[Uninstaller] The uninstall history could not be read", ex);
+            return [];
         }
         finally
         {
@@ -62,9 +71,11 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
             sessions.Add(session);
             await WriteAsync(sessions).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // History is best effort; the uninstall itself already happened
+            // Best effort: the uninstall itself already happened. Nothing was written, so the
+            // existing history is intact (LoadAsync throws rather than returning an empty list).
+            _log?.LogWarning("[Uninstaller] This uninstall could not be added to the history", ex);
         }
         finally
         {
@@ -81,7 +92,7 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
             sessions.RemoveAll(s => s.SessionId == sessionId);
             await WriteAsync(sessions).ConfigureAwait(false);
         }
-        catch { }
+        // Not caught: a delete the user asked for must report failure (the page shows it).
         finally
         {
             _gate.Release();
@@ -95,7 +106,7 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
         {
             await WriteAsync([]).ConfigureAwait(false);
         }
-        catch { }
+        // Not caught: a clear the user asked for must report failure.
         finally
         {
             _gate.Release();
@@ -105,14 +116,21 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
     private async Task<List<UninstallSession>> LoadAsync()
     {
         MigrateOnce();
+        if (!File.Exists(HistoryFile)) return [];
+        // Read errors propagate: returning an empty list here would let the next save overwrite
+        // a history that was only temporarily unreadable.
+        var json = await File.ReadAllTextAsync(HistoryFile).ConfigureAwait(false);
         try
         {
-            if (!File.Exists(HistoryFile)) return [];
-            var json = await File.ReadAllTextAsync(HistoryFile).ConfigureAwait(false);
             return Parse(json);
         }
-        catch
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or InvalidOperationException)
         {
+            // Damaged: keep it beside the new history instead of overwriting it.
+            var kept = HistoryFile + $".corrupt-{DateTime.Now:yyyyMMddHHmmss}";
+            try { File.Move(HistoryFile, kept); }
+            catch (Exception moveError) when (moveError is IOException or UnauthorizedAccessException) { kept = "(left in place)"; }
+            _log?.LogWarning($"[Uninstaller] The uninstall history was damaged and was kept as {kept}; a new history is started", ex);
             return [];
         }
     }
@@ -182,9 +200,10 @@ public sealed class UninstallHistoryService : IUninstallHistoryService
             if (!Directory.EnumerateFileSystemEntries(LegacyRoot).Any())
                 Directory.Delete(LegacyRoot);
         }
-        catch
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // Old history stays where it was; nothing is lost
+            _log?.LogWarning("[Uninstaller] Old uninstall history could not be moved to the new folder", ex);
         }
     }
 }

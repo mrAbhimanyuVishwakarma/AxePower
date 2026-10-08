@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "frosted-rose-glass",
+  "name": "Frosted Rose Glass",
+  "description": "The first light glass: frosted white over your desktop, with rose gold.",
+  "author": "AxePower",
+  "base": "light",
+  "colors": {
+    "window": "#B3FFF5F7",
+    "sidebar": "#66FFFFFF",
+    "card": "#99FFFFFF",
+    "cardElevated": "#B3FFFFFF",
+    "hover": "#CCFCE7EC",
+    "border": "#80E8B4C0",
+    "divider": "#50D8A0AE",
+    "textPrimary": "#1F1216",
+    "textSecondary": "#4A2E36",
+    "textMuted": "#7A5A63",
+    "textDisabled": "#B39AA1",
+    "accent": "#A8435B",
+    "success": "#047857",
+    "warning": "#B45309",
+    "error": "#BE123C",
+    "eco": "#047857",
+    "smart": "#A8435B",
+    "beast": "#C2410C",
+    "buttonPrimary": "#A8435B",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": {
+    "backdrop": "acrylic",
+    "sheen": 70,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "WindowSecondaryBackgroundColor": "#4DFFFFFF",
+    "WindowSecondaryBackgroundBrush": "#4DFFFFFF",
+    "MusicPlaceholderArtBrush": "#E8A0B0, #F6D1C1, #C2566F"
+  }
+}

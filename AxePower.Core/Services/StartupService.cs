@@ -45,7 +45,8 @@ public class StartupService
             // Remove the pre-v1.6 Startup-folder shortcut in either case
             if (File.Exists(_legacyShortcutPath))
             {
-                try { File.Delete(_legacyShortcutPath); } catch { }
+                try { File.Delete(_legacyShortcutPath); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* Best-effort: an old shortcut left behind only starts AxePower twice; the task replaces it. */ }
             }
 
             if (enable)
@@ -125,7 +126,8 @@ public class StartupService
         }
         finally
         {
-            try { File.Delete(xmlPath); } catch { }
+            try { File.Delete(xmlPath); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* Best-effort: a leftover task XML in the temp folder is harmless. */ }
         }
     }
 

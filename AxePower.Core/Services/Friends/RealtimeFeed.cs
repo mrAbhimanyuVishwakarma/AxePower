@@ -205,7 +205,7 @@ public sealed class SupabaseRealtimeFeed : IRealtimeFeed
                 }
 
                 session.Cancel();
-                try { await keepAlive; } catch (OperationCanceledException) { }
+                try { await keepAlive; } catch (OperationCanceledException) { /* The keep-alive loop ends by cancellation; that is the expected outcome. */ }
             }
             catch (OperationCanceledException) when (stop.IsCancellationRequested)
             {

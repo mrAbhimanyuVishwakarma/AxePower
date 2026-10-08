@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "light",
+  "name": "Light",
+  "description": "White cards on a cool grey window, black text.",
+  "author": "AxePower",
+  "base": "light",
+  "colors": {
+    "window": "#F1F5F9",
+    "sidebar": "#FFFFFF",
+    "card": "#FFFFFF",
+    "cardElevated": "#FFFFFF",
+    "hover": "#E2E8F0",
+    "border": "#CBD5E1",
+    "divider": "#E2E8F0",
+    "textPrimary": "#000000",
+    "textSecondary": "#000000",
+    "textMuted": "#000000",
+    "textDisabled": "#666666",
+    "accent": "#2563EB",
+    "success": "#047E58",
+    "warning": "#A75C05",
+    "error": "#D72323",
+    "eco": "#059669",
+    "smart": "#2563EB",
+    "beast": "#EA580C",
+    "buttonPrimary": "#0F172A",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": { "backdrop": "none", "sheen": 0, "rim": false, "shadow": false },
+  "overrides": {
+    "AccentHoverBrush": "#1D4ED8",
+    "AccentPressedBrush": "#1E40AF",
+    "MusicPlaceholderArtBrush": "#3B82F6, #7C5CE6, #EC4899"
+  }
+}

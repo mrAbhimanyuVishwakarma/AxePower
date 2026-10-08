@@ -1,5 +1,10 @@
 #define AppName "AxePower"
-#define AppVersion "2.1.0"
+#include "AppVersion.iss"
+; The published app. scripts\package-release.ps1 passes the folder it just published to
+; (/DPublishDir=...), so the installer can never pick up an older build left in bin\.
+#ifndef PublishDir
+  #define PublishDir "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
+#endif
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
 #define AppExeName "AxePower.exe"
@@ -15,6 +20,11 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues"
 AppUpdatesURL="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases"
+; Version resource on Setup.exe itself, so its file version matches the app (Prompt 33)
+VersionInfoVersion={#AppVersion}
+VersionInfoProductVersion={#AppVersion}
+VersionInfoCompany={#AppPublisher}
+VersionInfoDescription={#AppName} Setup
 DefaultDirName={autopf}\{#AppName}
 UsePreviousAppDir=yes
 DisableProgramGroupPage=yes
@@ -34,19 +44,29 @@ CloseApplications=yes
 CloseApplicationsFilter=*.exe,*.dll
 RestartApplications=no
 AppMutex=AxePowerSingleInstanceMutex,AxePower_App_Mutex_2A4A87C1
+#ifdef SignToolCommand
+SignTool={#SignToolCommand}
+SignedUninstaller=yes
+SignedUninstallerDir=Output
+#endif
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Asked on the "Select Additional Tasks" page, ticked by default (owner, 2026-10-08)
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 ; Prerequisite helper — extracted to {tmp} at run time, never installed with the app
 Source: "install-dotnet.ps1"; Flags: dontcopy
-Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion restartreplace
-Source: "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
+Source: "{#PublishDir}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion restartreplace
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
+; License, security policy and privacy policy ship with the app (Prompt 33)
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "..\SECURITY.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\security\PRIVACY.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [InstallDelete]
 ; v1.7 and earlier shipped the launcher as AxePower.App.exe — drop the stale files
@@ -62,8 +82,15 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
+; LAN Drop firewall rule: inbound TCP 5050 for AxePower only, on Private and Domain networks.
+; Public stays under Windows' default inbound block. Delete first so upgrades never duplicate it.
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""AxePower LAN Drop"" dir=in action=allow program=""{app}\{#AppExeName}"" protocol=TCP localport=5050 profile=private,domain enable=yes"; Flags: runhidden waituntilterminated; StatusMsg: "Configuring LAN Drop firewall rule..."
 ; runasoriginaluser: Setup is elevated, but AxePower must start as the normal user
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+
+[UninstallRun]
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveLanDropFirewallRule"
 
 [Code]
 // AxePower targets net8.0-windows, which requires the 8.x desktop shared framework
@@ -205,16 +232,13 @@ begin
   begin
     if not InstallDotNetRuntime() then
     begin
-      // Suppressible so an unattended install answers itself instead of hanging on a dialog
-      if SuppressibleMsgBox('AxePower needs the Microsoft .NET 8 Desktop Runtime, but it could not be installed.'#13#10#13#10 +
-                'Continue installing AxePower anyway?'#13#10 +
-                'AxePower will not start until the runtime is installed from:'#13#10 +
-                'https://dotnet.microsoft.com/download/dotnet/8.0',
-                mbConfirmation, MB_YESNO, IDYES) = IDNO then
-      begin
-        Result := 'Setup was cancelled because the .NET 8 Desktop Runtime is required.';
-        Exit;
-      end;
+      SuppressibleMsgBox('AxePower requires the Microsoft .NET 8 Desktop Runtime (x64), but it could not be automatically installed or verified.'#13#10#13#10 +
+                'Please install the official runtime manually from:'#13#10 +
+                'https://dotnet.microsoft.com/download/dotnet/8.0'#13#10#13#10 +
+                'Setup will now abort to ensure application integrity.',
+                mbError, MB_OK, IDOK);
+      Result := 'Setup was cancelled because the .NET 8 Desktop Runtime is required.';
+      Exit;
     end;
   end;
 

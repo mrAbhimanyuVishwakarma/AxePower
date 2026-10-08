@@ -1,0 +1,205 @@
+# 🏆 AxePower - Completed & Implemented Features Matrix
+
+> **Status:** Up to date through AxePower v2.1.0 (September - October 2026)  
+> **Repository:** [AxePower](https://github.com/mrAbhimanyuVishwakarma/AxePower)  
+> **Official Site:** [axepower.vercel.app](https://axepower.vercel.app/)
+
+---
+
+## 🌟 Major Milestones (v2.0 - v2.1.0)
+
+### ✅ 🎵 Compact Music Player & Universal Media Engine
+* **Implemented In:** `AxePower.Core/Services/Music/`, `AxePower.App/Views/Music/`, `HeaderPlayer.xaml`, `AmbientModeOverlay.xaml`
+* **Features Delivered:**
+  * **Audiophile-Grade Playback Engine:** Low-overhead audio streaming engine with WASAPI support, volume control, track seekbar, and queue management.
+  * **Universal Windows SMTC Integration:** Hooks into `GlobalSystemMediaTransportControlsSessionManager` to detect, display metadata for, and control media playing on Windows (Spotify, Apple Music, YouTube in browsers, VLC, Foobar2000).
+  * **Header Mini Player & Ambient Visualizer:** Compact player embedded in the app header and ambient mode overlay with live audio visualizer bars, synchronized lyrics, and seek control.
+  * **Smart Game Mode Automation:** Background music pause / ducking options during gaming or voice communications.
+  * **Remote Integration:** Web remote playback controls streamed through local LAN Drop companion dashboard (`http://<local-ip>:5050`).
+
+---
+
+### ✅ 👥 AxePower Cloud Accounts & Social Friends Engine
+* **Implemented In:** `AxePower.Core/Services/Accounts/`, `AxePower.Core/Services/Friends/`, `AxePower.App/Views/AccountDialogView.xaml`
+* **Features Delivered:**
+  * **Supabase Authentication:** Secure OAuth2 sign-in via Google, GitHub, Discord, and Steam.
+  * **Profile Management:** User handle, avatar URL resolution from trusted provider CDNs, device registry, and hardware profiles.
+  * **Friends & Live Presence:** Real-time online/in-game status indicators, friend search with live suggestions, invite links, and voice mic status.
+  * **Cross-Device Settings Sync:** Cloud-synced user preferences, custom power presets, and account entitlement tiers.
+
+---
+
+### ✅ ⏱️ Routines & Power Timer Automation Engine
+* **Implemented In:** `AxePower.Core/Services/PowerTimerService.cs`, `AxePower.Core/Services/Routines/`, `AxePower.App/Views/PowerTimerControl.xaml`, `PowerTimerWarningWindow.xaml`, `RoutinesView.xaml`
+* **Features Delivered:**
+  * **Automated Sleep / Shutdown / Hibernate Timers:** Countdown timers with custom interval presets (15m, 30m, 1h, 2h, custom).
+  * **Pre-Action Warning Window:** Transparent Fluent warning banner allowing user cancellation or 5-minute snooze before power actions trigger.
+  * **Custom Action Routines:** Automated triggers tied to battery level, time of day, idle periods, and AC/DC power state changes.
+
+---
+
+### ✅ 🩺 System Care Engine (Unified Optimizer + Doctor)
+* **Implemented In:** `AxePower.App/Views/SystemCareView.xaml`, `AxePower.Core/Services/SystemServiceOptimizer.cs`, `AxePower.Core/Services/SystemDoctorService.cs`, `DnsOptimizerService.cs`, `CacheCleanerService.cs`
+* **Features Delivered:**
+  * **Unified Fluent Interface:** Modern consolidated workspace replacing separate Optimizer and Doctor tabs with a collapsible category rail.
+  * **System Repairs:** SFC / DISM component store corruption repair, shader cache purging (DirectX, NVIDIA, AMD), Windows temporary files cleanup.
+  * **Low-Latency DNS Optimizer:** Benchmarks and switches between Cloudflare (1.1.1.1), Google DNS (8.8.8.8), Quad9, and local router defaults.
+  * **Service & Startup Tuning:** Safe background service optimization to reclaim idle RAM and reduce background thread wakeups.
+
+---
+
+### ✅ 🛠️ Extended Power Utilities & Companion Launchers
+* **Implemented In:** `AxePower.Core/Services/ToolsService.cs`, `AxePower.App/Views/ToolsView.xaml`
+* **Features Delivered:**
+  * **Curated Diagnostic Tools:** Direct integration with industry standards—Revo Uninstaller, WizTree high-speed disk space analyzer, MSI Afterburner, scrcpy Android control, and Win11Debloat.
+  * **Smart Launch & Auto-Download:** Automated binary discovery, integrity validation, and silent elevation for portable tool suites.
+  * **In-App Tool Instruction Guides:** Interactive step-by-step guides with keyboard shortcuts and safety best practices.
+
+---
+
+### ✅ 🛡️ Windows Update Shield & Resilience Center
+* **Implemented In:** `AxePower.Core/Services/WindowsUpdateShieldService.cs`, `AxePower.Core/Services/WindowsUpdateSystem.cs`, `AxePower.Core/Services/RestorePointService.cs`
+* **Features Delivered:**
+  * **Security-Only Policy & 365-Day Deferral:** Prevents unexpected feature updates and forced mid-game reboots while keeping critical security patches active.
+  * **Windows Update Cache Purge:** 1-click repair that stops update services, flushes `%windir%\SoftwareDistribution\Download`, and restarts services cleanly.
+  * **1-Click System Restore Points:** Automated creation of named Windows System Restore points before applying deep system optimizations.
+
+---
+
+### ✅ 🗑️ Uninstaller Pro Rebuild
+* **Implemented In:** `AxePower.Core/Services/Uninstaller/`, `AxePower.App/Views/UninstallerView.xaml`
+* **Features Delivered:**
+  * **Dual Engine Architecture:** Comprehensive discovery of both classic Win32 desktop applications and modern Windows UWP/Store packages.
+  * **Sortable High-Density Table:** Sort by app name, install date, size on disk, and publisher with responsive search filtering.
+  * **Batch Uninstall & Leftover Registry Scrubber:** Multi-selection batch uninstallation with automated leftover file, directory, and registry key scanning and cleaning.
+
+---
+
+### ✅ 🔄 Resilient In-App Auto-Updater
+* **Implemented In:** `AxePower.Core/Services/UpdateService.cs`, `AxePower.App/MainWindow.xaml`
+* **Features Delivered:**
+  * **Single-Flight Download Gate:** Prevents duplicate concurrent download jobs.
+  * **Download Integrity:** Uses `.part` staging files, network stall detection, and executable PE/size validation before handoff.
+  * **Update Changelog Modal:** Clean GitHub release notes viewer with community reactions and 1-click "Restart & Install" execution.
+
+---
+
+## 🚀 Version 1.5 - 1.6 Implementations
+
+### ✅ 🎮 NVIDIA Curated Driver Version Selector & Rollback Engine
+* **Implemented In:** `AxePower.Core/Services/GraphicsDriverService.cs`, `AxePower.App/ViewModels/SoftwareHubViewModel.cs`
+* **Features Delivered:**
+  * Curated catalog of battle-tested stable and rollback driver releases (`572.70`, `566.36`, `566.14`, `561.09`, `560.94`, `552.22`, `537.58`).
+  * Dynamic Laptop/Notebook vs Desktop installer URL resolution directly from official NVIDIA CDNs.
+  * Streaming download engine with real-time progress bar (`MB / Total MB`) and SHA/PE verification.
+  * Direct shortcut to official NVIDIA Advanced Driver Search.
+
+---
+
+### ✅ 🔋 Battery Conservation Mode & Charge Limiter (80% Cap)
+* **Implemented In:** `AxePower.Core/Services/BatteryService.cs`, `AxePower.App/ViewModels/BatteryViewModel.cs`, `AxePower.App/Views/BatteryView.xaml`
+* **Features Delivered:**
+  * **Conservation Mode:** 80% / 75% AC charge threshold limiting to protect battery chemistry and eliminate swelling on continuous AC power.
+  * **Rapid Charge Toggle:** Hardware-accelerated fast charging for rapid turnaround.
+  * **Adaptive Overnight Charging:** Smart charging curve to preserve cell lifespan.
+  * OEM Registry & ACPI hooks (`PWRMTRV` & `VantageService` interfaces) with real-time status sync.
+
+---
+
+### ✅ 🧹 Intelligent Standby List Cleaner (RAM Cache Auto-Purge)
+* **Implemented In:** `AxePower.Core/Services/MemoryOptimizerService.cs`, `AxePower.Core/Services/DynamicModeAutomationService.cs`
+* **Features Delivered:**
+  * Win32 `GlobalMemoryStatusEx` and `EmptyWorkingSet` memory engine.
+  * Automatic standby RAM cache purging when launching games or switching into Beast/Game Mode.
+  * Dynamic notification reporting exact freed memory (e.g. `🧹 Memory Tuned: Cleared ~1420 MB of standby RAM cache`).
+
+---
+
+### ✅ 📱 Remote Phone Web Dashboard & Quick PC Actions (LAN Drop)
+* **Implemented In:** `AxePower.Core/Services/LanDropService.cs`, `AxePower.App/Views/LanDropView.xaml`
+* **Features Delivered:**
+  * Zero-install local HTTP companion server running on local port `5050` with high-resolution QR code generator.
+  * Live PC battery percentage, charging state, and host diagnostics streamed to any mobile browser on local Wi-Fi.
+  * Remote PC quick actions: Lock Workstation, Volume Up / Down / Mute, and Media Play / Pause / Next / Prev track.
+  * High-speed bi-directional LAN Drop file transfer & instant clipboard text sync.
+
+---
+
+### ✅ 📈 24-Hour Rolling Battery History & Health Telemetry
+* **Implemented In:** `AxePower.App/Views/BatteryView.xaml`, `AxePower.App/ViewModels/BatteryViewModel.cs`, `AxePower.Core/Services/BatteryService.cs`
+* **Features Delivered:**
+  * 24-hour continuous rolling battery percentage graph seeded from native Windows battery reports.
+  * Complete hardware telemetry grid: Battery Health %, Cycle Count, Chemistry (Li-Ion), Current Power Usage (Watts), Voltage, Temperature, Design vs Full Charge Capacity, Manufacturer, and Serial Number.
+  * 3x scaled vector battery status pill in application header with live dynamic fill and charging accents.
+
+---
+
+### ✅ 🎨 Creative, Media & Power-User Software Suite (Software Hub)
+* **Implemented In:** `AxePower.Core/Services/WinGetHubService.cs`, `AxePower.App/Views/SoftwareHubView.xaml`
+* **Features Delivered:**
+  * **Audio Equalization & Spatial Sound:** SteelSeries GG (Sonar Audio parametric EQ), Peace Equalizer (Equalizer APO), Dolby Access.
+  * **Audio Recording & DAW:** Audacity multi-track workstation.
+  * **Video Editing & Compression:** DaVinci Resolve, HandBrake.
+  * **Streaming & Capture:** OBS Studio, ShareX screenshot & GIF recorder.
+  * **Graphic Design & 3D:** Canva Desktop, GIMP, Blender 3D creation suite.
+  * **Productivity & Tuning:** Microsoft PowerToys, DLSS Swapper, WeMod, 7-Zip, VLC, Notepad++, CPU-Z, GPU-Z, HWiNFO, CrystalDiskInfo, Ninite.
+
+---
+
+### ✅ 🦆 Advanced Windows Tweaks & Reversible Optimizer Engine
+* **Implemented In:** `AxePower.Core/Services/TweakService.cs`, `AxePower.App/Views/SystemOptimizerView.xaml`
+* **Features Delivered:**
+  * Safe, 1-click reversible system tweaks with granular state detection:
+    * Disable Diagnostic Telemetry & background reporting
+    * Disable Bing Web Search in Start Menu (instant local app search)
+    * Disable Windows Copilot & background AI agent overheads
+    * Disable Activity Feed & cloud timeline
+    * Disable GameDVR background capture (eliminates stuttering)
+    * Disable Mouse Acceleration (1:1 raw linear gaming input)
+    * Classic Windows 10 Full Context Menu (no "Show more options" delay)
+    * Disable Sticky Keys 5x Shift popup
+
+---
+
+### ✅ 🛑 Dynamic Background Service Throttling & Game Booster
+* **Implemented In:** `AxePower.Core/Services/ServiceThrottlerService.cs`, `AxePower.Core/Services/AppKillerService.cs`, `AxePower.Core/Services/DynamicModeAutomationService.cs`
+* **Features Delivered:**
+  * Automatic pause/suspension of non-essential background Windows services (`wuauserv`, `SysMain`, `DiagTrack`, `Spooler`) during Game Mode / Beast Mode.
+  * Automatic seamless service restoration upon returning to Eco or Balanced mode.
+  * Configurable background app killer with auto-restart on game exit.
+
+---
+
+### ✅ 📊 Task Manager-Style 2x2 Live Performance Telemetry Grid
+* **Implemented In:** `AxePower.App/Views/DashboardView.xaml`, `AxePower.Core/Services/SystemTelemetryService.cs`
+* **Features Delivered:**
+  * Real-time hardware performance telemetry cards:
+    * **CPU:** Win32 `GetSystemTimes` utilization % & real-time clock frequency (GHz).
+    * **GPU:** Dedicated Windows WDDM 3D engine utilization % & active GPU temperature (°C).
+    * **RAM:** Physical memory load %, used GB, and total GB.
+    * **Internet:** IPv4/IPv6 live delta send/receive bandwidth throughput.
+  * Zero-baseline pinned glowing gradient sparklines with `Viewbox` auto-scaling.
+
+---
+
+### ✅ 🎮 Steam-Style Tray Context Menu
+* **Implemented In:** `AxePower.App/MainWindow.xaml`, `AxePower.App/ViewModels/MainViewModel.cs`
+* **Features Delivered:**
+  * Modern `#171A21` Steam-styled right-click system tray menu with grouped sections and mode selectors.
+  * Quick toggles for Eco, Smart, Beast, and Game Mode directly from the taskbar notification area.
+
+---
+
+## 🏛️ Core Features Archive (v1.0 - v1.4)
+
+* ✅ **Smart Power Modes (Eco, Smart, Beast, Game Mode):** Full dynamic AC/DC power plan switching.
+* ✅ **Intelligent Auto-Switch Engine:** Dynamic rules (Plugged In: Smart/Beast, Unplugged: Eco, Battery <30%: Eco).
+* ✅ **Display Refresh Rate Auto-Scaling:** 60Hz on Battery &harr; 144Hz/165Hz/240Hz on AC via `ChangeDisplaySettingsEx`.
+* ✅ **Controller Navigation (Gopher360):** Full gamepad-to-mouse & keyboard living-room navigation.
+* ✅ **Phone Control Suite:**
+  * 📱 **scrcpy:** Low-latency Android screen mirroring, stay-awake, and APK installer.
+  * 🖥️ **SpaceDesk:** Wireless phone/tablet secondary display integration.
+  * 📂 **LAN Drop:** Instant local Wi-Fi file sharing & clipboard synchronization.
+* ✅ **Software Hub:** 1-click installer and launcher for 25+ top storefronts, monitors, and runtimes.
+* ✅ **Modern Dark Fluent WPF UI:** Responsive card layout with collapsible sidebar navigation and Segoe UI typography.
+* ✅ **Inno Setup 6 Packaging:** Clean upgrade engine with desktop shortcuts and uninstaller registration.

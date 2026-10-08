@@ -1,0 +1,82 @@
+<Window x:Class="AxePower.App.Windows.DiagnosticsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Diagnostics" Height="640" Width="920" MinHeight="460" MinWidth="720"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        WindowStyle="ToolWindow" ResizeMode="CanResize"
+        xmlns:a11y="clr-namespace:AxePower.App.Helpers"
+        a11y:AccessibleNames.Enabled="True">
+    <!-- Every file of the bundle with its full text. Save writes exactly these files and nothing else. -->
+    <Grid Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="Inspect and export diagnostics" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,6"/>
+            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12.5" TextWrapping="Wrap"
+                       Text="This is everything a bundle would contain, already redacted: tokens, links, email addresses, your user name and this PC's name are removed. Nothing is sent anywhere. Save writes a .zip where you choose, and you decide whether to share it."/>
+        </StackPanel>
+
+        <WrapPanel Grid.Row="1" Margin="0,0,0,12">
+            <CheckBox IsChecked="{Binding IncludeSettings}" Margin="0,0,22,6" Foreground="{DynamicResource PrimaryTextBrush}"
+                      Content="Include my settings (without people, programs, folders or devices)"/>
+            <CheckBox IsChecked="{Binding IncludeUninstallLogs}" Margin="0,0,0,6" Foreground="{DynamicResource PrimaryTextBrush}"
+                      Content="Include Uninstaller Pro's Windows Installer logs"/>
+        </WrapPanel>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="8"
+                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Files in the bundle">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="4,6">
+                                <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Description}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                <TextBlock Text="{Binding Bytes, StringFormat={}{0:N0} bytes}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <Border Grid.Column="2" Background="{DynamicResource WindowSecondaryBackgroundBrush}" CornerRadius="8"
+                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                <TextBox Text="{Binding SelectedItem.Content, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                         Foreground="{DynamicResource PrimaryTextBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="11.5" Padding="10"
+                         TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                         AutomationProperties.Name="Full text of the selected file"/>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                <TextBlock Text="{Binding TotalText}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Style="{DynamicResource SecondaryButtonStyle}" Content="Close" Click="Close_Click" Padding="22,8" Margin="0,0,12,0" IsCancel="True"/>
+                <Button Style="{DynamicResource PrimaryButtonStyle}" Content="Save bundle…" Command="{Binding SaveCommand}" Padding="22,8"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+    </Grid>
+</Window>

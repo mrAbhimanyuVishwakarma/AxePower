@@ -134,8 +134,8 @@ public class LenovoSensorReader : IDisposable
 
     private void ReleaseSession()
     {
-        try { _instance?.Dispose(); } catch { }
-        try { _session?.Dispose(); } catch { }
+        try { _instance?.Dispose(); } catch { /* Best-effort teardown of a WMI object at shutdown. */ }
+        try { _session?.Dispose(); } catch { /* Best-effort teardown of a WMI session at shutdown. */ }
         _instance = null;
         _session = null;
     }

@@ -26,6 +26,7 @@ public sealed record ScheduledTaskInfo(string Path, string Name, IReadOnlyList<s
         }
         catch
         {
+            // The identity could not be read: the task is not treated as this user's.
             return false;
         }
     }
@@ -55,7 +56,7 @@ public static class ScheduledTaskService
         {
             Walk(service.GetFolder("\\"));
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* Task Scheduler refused the root folder: no tasks are listed, so none can be removed. */ }
         finally
         {
             Release(service);
@@ -91,14 +92,14 @@ public static class ScheduledTaskService
                             userId = definition.Principal.UserId ?? string.Empty;
                             highest = (int)definition.Principal.RunLevel == TaskRunLevelHighest;
                         }
-                        catch { }
+                        catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* No readable principal: the task is listed without a user or run level. */ }
 
                         results.Add(new ScheduledTaskInfo((string)task.Path, (string)task.Name, exec, userId, highest));
                     }
-                    catch { }
+                    catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* One unreadable task does not stop the listing. */ }
                 }
             }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* An unreadable folder does not stop the listing. */ }
 
             try
             {
@@ -106,7 +107,7 @@ public static class ScheduledTaskService
                     Walk(sub);
             }
             catch (OperationCanceledException) { throw; }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* Subfolders that cannot be opened are skipped. */ }
         }
     }
 
@@ -121,8 +122,9 @@ public static class ScheduledTaskService
             dynamic task = service.GetFolder(folderPath).GetTask(name);
             return (string)task.Xml;
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Com(caught))
         {
+            // Reported: without the XML backup the cleanup leaves the task in place.
             return null;
         }
         finally
@@ -143,8 +145,9 @@ public static class ScheduledTaskService
             service.GetFolder(folderPath).DeleteTask(name, 0);
             return true;
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Com(caught))
         {
+            // Reported: the cleanup re-checks that the task is gone and marks it Failed if not.
             return false;
         }
         finally
@@ -170,12 +173,13 @@ public static class ScheduledTaskService
                     folder.RegisterTask(name, xml, TaskCreateOrUpdate, null, null, logon, null);
                     return true;
                 }
-                catch { }
+                catch (Exception caught) when (ExpectedFailures.Com(caught)) { /* Try the next logon type. */ }
             }
             return false;
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Com(caught))
         {
+            // Reported: the undo shows this task as not restored.
             return false;
         }
         finally
@@ -201,8 +205,9 @@ public static class ScheduledTaskService
             service.Connect();
             return service;
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Com(caught))
         {
+            // Task Scheduler unavailable: no tasks are listed or changed.
             return null;
         }
     }
@@ -214,6 +219,6 @@ public static class ScheduledTaskService
             if (comObject is not null && Marshal.IsComObject(comObject))
                 Marshal.FinalReleaseComObject(comObject);
         }
-        catch { }
+        catch { /* Best-effort release of a COM object we are finished with. */ }
     }
 }

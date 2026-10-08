@@ -106,6 +106,13 @@ public class ShareScreenSettings
     [JsonPropertyName("savedFriends")]
     public List<SavedFriend> SavedFriends { get; set; } = new();
 
+    /// <summary>
+    /// Set only on the copy handed to one start, after the user chose to share on a Public or
+    /// unclassified network for that session. Never saved, so the next session asks again.
+    /// </summary>
+    [JsonIgnore]
+    public bool AllowUntrustedNetwork { get; set; }
+
     public ShareScreenSettings Clone() => new()
     {
         DisplayIndex = DisplayIndex,
@@ -126,6 +133,7 @@ public class ShareScreenSettings
         ViewerPort = ViewerPort,
         ShareActivityWithFriends = ShareActivityWithFriends,
         AppearOffline = AppearOffline,
+        AllowUntrustedNetwork = AllowUntrustedNetwork,
         SavedFriends = SavedFriends.Select(f => f with { }).ToList()
     };
 }

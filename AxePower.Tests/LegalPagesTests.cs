@@ -14,9 +14,20 @@ namespace AxePower.Tests;
 public class LegalPagesTests(WpfApplicationFixture wpf)
 {
     /// <summary>The repo's AppWebsite folder, found from this source file so it works from any build output.</summary>
-    private static string WebsiteFolder([System.Runtime.CompilerServices.CallerFilePath] string thisFile = "")
+    /// <summary>
+    /// The repository root, found by walking up from the test binaries to AxePower.sln. Not
+    /// [CallerFilePath]: deterministic CI builds rewrite source paths to /_/, so it would point nowhere.
+    /// </summary>
+    private static string RepoRoot()
     {
-        string folder = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(thisFile)!, "..", "AppWebsite"));
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "AxePower.sln"))) dir = dir.Parent;
+        return dir?.FullName ?? throw new DirectoryNotFoundException("AxePower.sln not found above " + AppContext.BaseDirectory);
+    }
+
+    private static string WebsiteFolder()
+    {
+        string folder = Path.Combine(RepoRoot(), "AppWebsite");
         Assert.True(Directory.Exists(folder), $"Website folder not found at {folder}");
         return folder;
     }

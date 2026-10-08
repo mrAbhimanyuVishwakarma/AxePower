@@ -435,6 +435,9 @@
                             <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBackgroundBrush}" />
                             <Setter TargetName="bg" Property="BorderBrush" Value="#FF0000" />
                         </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="bg" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
+                        </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="bg" Property="Opacity" Value="0.8" />
                         </Trigger>

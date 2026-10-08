@@ -281,7 +281,7 @@ public sealed class FriendsService : IDisposable
     private async Task ReloadSafeAsync(CancellationToken ct = default)
     {
         try { await ReloadAsync(ct); }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { /* Cancelled: signed out or shutting down. */ }
         catch (AccountException ex) { _log.LogInfo($"[Friends] Reload skipped ({ex.Error})."); }
     }
 
@@ -370,7 +370,7 @@ public sealed class FriendsService : IDisposable
             MyPresence = presence;
             Changed?.Invoke(this, EventArgs.Empty);
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { /* Cancelled: signed out or shutting down; presence is published again next time. */ }
         catch (AccountException ex) { _log.LogInfo($"[Friends] Presence not published ({ex.Error})."); }
         finally
         {

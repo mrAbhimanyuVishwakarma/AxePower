@@ -150,6 +150,9 @@ public partial class SettingsViewModel : ObservableObject
 
     private bool _isLoadingThemeChoices;
 
+    /// <summary>Windows High Contrast is on, so the High Contrast skin shows in place of the chosen one.</summary>
+    public bool IsHighContrastActive => _themeService.IsHighContrastActive;
+
     /// <summary>Re-reads the skin folders, so a skin added while AxePower runs can be picked.
     /// Called when the Settings page is opened.</summary>
     public void RefreshThemeChoices()
@@ -192,7 +195,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show($"Could not open the skins folder: {ex.Message}");
+            _notificationService.ShowFailure("Open the skins folder", ex);
         }
     }
 
@@ -327,7 +330,10 @@ public partial class SettingsViewModel : ObservableObject
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:devices-touchpad") { UseShellExecute = true });
         }
-        catch { }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            _notificationService.Show("Could not open the touchpad settings.");
+        }
     }
 
     public IEnumerable<PowerMode> AvailableModes => Enum.GetValues(typeof(PowerMode)).Cast<PowerMode>();
@@ -337,7 +343,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly BatteryService? _batteryService;
     private readonly ElevationService? _elevationService;
 
-    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? "2.0.3";
+    public string CurrentVersion => _updateService?.GetCurrentVersionString() ?? UpdateService.FallbackVersion;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LastCheckedDisplay))]
@@ -372,7 +378,14 @@ public partial class SettingsViewModel : ObservableObject
     // ── AxePower Mobile Remote Access ──────────────────────────────────────
 
     [ObservableProperty]
-    private bool _mobileRemoteAccessEnabled = true;
+    private bool _mobileRemoteAccessEnabled;
+
+    /// <summary>False while the cloud bridge is switched off in code; the toggle is then disabled and explained.</summary>
+    public bool RemoteAccessAvailable => CloudBridgeService.IsAvailable;
+
+    public string RemoteAccessNotice => CloudBridgeService.IsAvailable
+        ? "Sign in with the same AxePower account on phone and PC to connect anywhere in the world."
+        : CloudBridgeService.UnavailableReason;
 
     partial void OnMobileRemoteAccessEnabledChanged(bool value)
     {
@@ -467,6 +480,12 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Settings › Diagnostics & Privacy: inspect, export and delete what AxePower has logged.</summary>
+    public DiagnosticsViewModel? Diagnostics { get; }
+
+    /// <summary>Settings › Change history: what AxePower changed in Windows, and rolling it back.</summary>
+    public ChangeHistoryViewModel? ChangeHistory { get; }
+
     // ── Categories (the collapsible list beside the settings) ───────────────
 
     /// <summary>One entry per settings card; "About" opens the About page instead.</summary>
@@ -481,6 +500,8 @@ public partial class SettingsViewModel : ObservableObject
         new SettingsCategoryItem("ShareScreen", "Friends", "\uE779"),
         new SettingsCategoryItem("Music", "Music & Playlists", "\uE8D6"),
         new SettingsCategoryItem("Updates", "Updates & Maintenance", "\uE777"),
+        new SettingsCategoryItem("Diagnostics", "Diagnostics & Privacy", "\uE9D9"),
+        new SettingsCategoryItem("ChangeHistory", "Change history", "\uE81C"),
     };
 
     [ObservableProperty]
@@ -571,15 +592,20 @@ public partial class SettingsViewModel : ObservableObject
         GameModeGpuService? gameModeGpu = null,
         IGpuDisplayModeController? displayModeController = null,
         AxePower.App.Services.IGameModePrompts? gameModePrompts = null,
-        TouchpadService? touchpad = null)
+        TouchpadService? touchpad = null,
+        DiagnosticsViewModel? diagnostics = null,
+        ChangeHistoryViewModel? changeHistory = null)
     {
         _touchpad = touchpad;
+        Diagnostics = diagnostics;
+        ChangeHistory = changeHistory;
         Music = music;
         ShareScreen = shareScreen;
         _settingsService = settingsService;
         _notificationService = notificationService;
         _timeoutService = timeoutService;
         _themeService = themeService;
+        _themeService.ThemeChanged += _ => OnPropertyChanged(nameof(IsHighContrastActive));
         _displayService = displayService;
         _powerPlanService = powerPlanService;
         _updateService = updateService;
@@ -603,7 +629,7 @@ public partial class SettingsViewModel : ObservableObject
         _isTouchpadAvailable = _touchpad?.IsEnabled() is not null;
         _autoCheckUpdates = _currentSettings.AutoCheckUpdates;
         _autoDownloadUpdates = _currentSettings.AutoDownloadUpdates;
-        _mobileRemoteAccessEnabled = _currentSettings.RemoteAccess?.Enabled ?? true;
+        _mobileRemoteAccessEnabled = CloudBridgeService.IsAvailable && (_currentSettings.RemoteAccess?.Enabled ?? false);
         _mobileAllowTelemetry = _currentSettings.RemoteAccess?.AllowTelemetry ?? true;
         _mobileAllowBatterySync = _currentSettings.RemoteAccess?.AllowBatterySync ?? true;
         _mobileAllowPowerModeControl = _currentSettings.RemoteAccess?.AllowPowerModeControl ?? true;
@@ -767,7 +793,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             IsCheckingForUpdate = false;
             CheckButtonText = "Check for updates";
-            _notificationService.Show("Failed to check for updates: " + ex.Message);
+            _notificationService.ShowFailure("Check for updates", ex);
         }
     }
 

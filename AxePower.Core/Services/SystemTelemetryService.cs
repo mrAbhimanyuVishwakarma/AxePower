@@ -131,6 +131,7 @@ public class SystemTelemetryService : IDisposable
 
     // Network latency (sampled on a slow cadence; NaN while offline/unreachable)
     private double _cachedPingMs = double.NaN;
+    private Dictionary<string, double>? _cachedGpuUtilMap;
 
     // GPU clock/temperature via nvidia-smi (sampled on a slow cadence; self-disables when absent)
     private bool _nvidiaSmiUnavailable;
@@ -169,23 +170,45 @@ public class SystemTelemetryService : IDisposable
             NetworkChange.NetworkAddressChanged += (s, e) => _cachedInterfaces = null;
             NetworkChange.NetworkAvailabilityChanged += (s, e) => _cachedInterfaces = null;
         }
-        catch { }
+        catch { /* Without change notifications the adapter cache simply refreshes on its timer. */ }
 
-        // 1-second rolling tick for Task Manager accuracy
-        _timer = new Timer(OnTimerTick, null, 200, 1000);
+        // 1-second rolling tick for Task Manager accuracy, started by Resume() when a page that
+        // shows it is on screen (Prompt 29: each sample costs ~10 ms CPU and a WMI query)
+        _timer = new Timer(OnTimerTick, null, Timeout.Infinite, Timeout.Infinite);
     }
 
-    /// <summary>Stops sampling (e.g. while the window is hidden in the tray).</summary>
+    /// <summary>True while the 1-second sampling runs.</summary>
+    public bool IsSampling { get; private set; }
+
+    /// <summary>
+    /// Whether the network tile's latency is measured: a ping to 1.1.1.1 every fifth sample. Only
+    /// the Dashboard shows it, so only the Dashboard turns it on (disclosed in PRIVACY.md).
+    /// </summary>
+    public bool MeasureLatency
+    {
+        get => _measureLatency;
+        set
+        {
+            _measureLatency = value;
+            if (!value) _cachedPingMs = double.NaN;
+        }
+    }
+
+    private volatile bool _measureLatency;
+
+    /// <summary>Stops sampling (nothing on screen shows it).</summary>
     public void Pause()
     {
-        if (_isDisposed) return;
+        if (_isDisposed || !IsSampling) return;
+        IsSampling = false;
         _timer.Change(Timeout.Infinite, Timeout.Infinite);
     }
 
-    /// <summary>Resumes 1-second sampling.</summary>
+    /// <summary>Starts or resumes 1-second sampling; does nothing if it is already running.</summary>
     public void Resume()
     {
-        if (_isDisposed) return;
+        if (_isDisposed || IsSampling) return;
+        IsSampling = true;
         _timer.Change(200, 1000);
     }
 
@@ -209,7 +232,7 @@ public class SystemTelemetryService : IDisposable
                 }
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Unreadable: the CPU name and base clock stay unknown. */ }
 
         // 2. Discover GPUs via WMI
         try
@@ -226,7 +249,7 @@ public class SystemTelemetryService : IDisposable
                 }
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Wmi(caught)) { /* No GPU list from WMI: GPUs are discovered from the sensors instead. */ }
 
         if (_discoveredGpus.Count == 0)
         {
@@ -332,7 +355,7 @@ public class SystemTelemetryService : IDisposable
                 {
                     // Scale the meter against what the link can actually carry. Speed is -1 on
                     // adapters that do not report it, and those are simply left out of the total.
-                    try { if (ni.Speed > 0) linkBitsPerSec += ni.Speed; } catch { }
+                    try { if (ni.Speed > 0) linkBitsPerSec += ni.Speed; } catch { /* Adapters that do not report a speed are left out of the total. */ }
 
                     var stats = ni.GetIPStatistics();
                     long currentSent = stats.BytesSent;
@@ -374,11 +397,16 @@ public class SystemTelemetryService : IDisposable
                 snapshot.NetworkPercent = 0;
             }
         }
-        catch { }
+        catch { /* Best-effort sample: this second's value is skipped. */ }
 
         // 4. GPU — iGPU and dGPU are separate adapters with distinct LUIDs in the engine counters,
         // so aggregate 3D-engine load per LUID and follow whichever adapter is currently active
+        // Queried every second sample (Prompt 29): the query takes ~300 ms to answer and was the
+        // largest cost of an open Dashboard; the last reading is reused in between.
         var gpuUtilMap = new Dictionary<string, double>();
+        if (_cachedGpuUtilMap != null && _tickCount % 2 == 0)
+            gpuUtilMap = _cachedGpuUtilMap;
+        else
         try
         {
             using var searcher = new ManagementObjectSearcher("SELECT Name, UtilizationPercentage FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine WHERE Name LIKE '%engtype_3D%'");
@@ -393,13 +421,14 @@ public class SystemTelemetryService : IDisposable
                 }
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Wmi(caught)) { /* No GPU counters this second: utilisation shows as 0. */ }
 
         // The sensor library, when elevated, already reported this GPU in SampleCpuSensors;
         // nvidia-smi is only spawned when it did not.
         bool freshGpuSample = _freshGpuSample || (!_gpuSensorsFromMonitor && SampleNvidiaSmi());
         _freshGpuSample = false;
 
+        _cachedGpuUtilMap = gpuUtilMap;
         double wmiActiveUtil = gpuUtilMap.Count > 0 ? Math.Clamp(gpuUtilMap.Values.Max(), 0, 100) : double.NaN;
 
         // Decide which GPU is active from the dedicated GPU's own utilization alone — mixing it
@@ -501,10 +530,10 @@ public class SystemTelemetryService : IDisposable
                         StatusColorHex = colorHex
                     });
                 }
-                catch { }
+                catch { /* Best-effort sample: this second's value is skipped. */ }
             }
         }
-        catch { }
+        catch { /* Best-effort sample: this second's value is skipped. */ }
 
         _cachedDisks = snapshot.Disks;
         return snapshot;
@@ -513,7 +542,7 @@ public class SystemTelemetryService : IDisposable
     // Latency to a fast anycast resolver, refreshed every 5th tick — a per-second ping would be needless traffic.
     private void SampleNetworkPing()
     {
-        if (_tickCount % 5 != 1) return;
+        if (!_measureLatency || _tickCount % 5 != 1) return;
 
         try
         {
@@ -594,7 +623,7 @@ public class SystemTelemetryService : IDisposable
                 break;
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Wmi(caught)) { /* No performance counter: the base clock is shown. */ }
     }
 
     // Thermal-zone performance counters report Kelvin and, unlike the ACPI WMI class
@@ -673,7 +702,7 @@ public class SystemTelemetryService : IDisposable
             string line = p.StandardOutput.ReadLine() ?? string.Empty;
             if (!p.WaitForExit(3000))
             {
-                try { p.Kill(true); } catch { }
+                try { p.Kill(true); } catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* It exited as the timeout fired. */ }
             }
 
             var parts = line.Split(',');

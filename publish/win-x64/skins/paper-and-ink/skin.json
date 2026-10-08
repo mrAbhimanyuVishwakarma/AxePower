@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "paper-and-ink",
+  "name": "Paper & Ink",
+  "description": "Warm paper, ink-black text and a crimson pen.",
+  "author": "AxePower",
+  "base": "light",
+  "colors": {
+    "window": "#F4EEE2",
+    "sidebar": "#FBF7EF",
+    "card": "#FFFCF5",
+    "cardElevated": "#FFFFFF",
+    "hover": "#EDE4D3",
+    "border": "#D9CCB4",
+    "divider": "#E8DECB",
+    "textPrimary": "#1C1712",
+    "textSecondary": "#3D342A",
+    "textMuted": "#6B5E4E",
+    "textDisabled": "#A89A86",
+    "accent": "#B91C1C",
+    "success": "#3D7938",
+    "warning": "#AE5009",
+    "error": "#B91C1C",
+    "eco": "#3F7D3A",
+    "smart": "#1D4E89",
+    "beast": "#B91C1C",
+    "buttonPrimary": "#1C1712",
+    "buttonPrimaryText": "#FBF7EF"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#B91C1C, #1C1712, #D9CCB4"
+  }
+}

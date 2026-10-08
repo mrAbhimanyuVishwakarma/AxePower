@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ServiceProcess;
@@ -86,8 +87,9 @@ public class ServiceThrottlerService : IServiceThrottlerService
                     _ => ManagedServiceStatus.Stopped
                 };
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
+                // ServiceController throws InvalidOperationException for a service that is not installed.
                 item.Status = ManagedServiceStatus.NotFound;
             }
         }
@@ -107,11 +109,18 @@ public class ServiceThrottlerService : IServiceThrottlerService
                     using var sc = new ServiceController(item.ServiceName);
                     if (sc.Status == ServiceControllerStatus.Running)
                     {
+                        // Marked first, so a restore starts it again even if the stop is slow or fails.
                         item.WasRunningBeforeThrottle = true;
-                        StopServiceDirectly(item.ServiceName);
-                        item.Status = ManagedServiceStatus.Throttled;
-                        stoppedCount++;
-                        _log.LogInfo($"[ServiceThrottler] Paused background service: {item.DisplayName} ({item.ServiceName})");
+                        if (RunNet("stop", item.ServiceName))
+                        {
+                            item.Status = ManagedServiceStatus.Throttled;
+                            stoppedCount++;
+                            _log.LogInfo($"[ServiceThrottler] Paused background service: {item.DisplayName} ({item.ServiceName})");
+                        }
+                        else
+                        {
+                            _log.LogWarning($"[ServiceThrottler] Could not pause {item.DisplayName} ({item.ServiceName}); it is still running.");
+                        }
                     }
                     else
                     {
@@ -143,11 +152,18 @@ public class ServiceThrottlerService : IServiceThrottlerService
                 {
                     try
                     {
-                        StartServiceDirectly(item.ServiceName);
-                        item.Status = ManagedServiceStatus.Running;
-                        item.WasRunningBeforeThrottle = false;
-                        restoredCount++;
-                        _log.LogInfo($"[ServiceThrottler] Restored background service: {item.DisplayName} ({item.ServiceName})");
+                        if (RunNet("start", item.ServiceName))
+                        {
+                            item.Status = ManagedServiceStatus.Running;
+                            item.WasRunningBeforeThrottle = false;
+                            restoredCount++;
+                            _log.LogInfo($"[ServiceThrottler] Restored background service: {item.DisplayName} ({item.ServiceName})");
+                        }
+                        else
+                        {
+                            // Left marked, so the next restore tries again.
+                            _log.LogWarning($"[ServiceThrottler] Could not restart {item.DisplayName} ({item.ServiceName}); it stays stopped until the next restore.");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -162,35 +178,31 @@ public class ServiceThrottlerService : IServiceThrottlerService
         });
     }
 
-    private static void StopServiceDirectly(string serviceName)
+    /// <summary>
+    /// Runs "net stop" or "net start" for one service. True only when net reports success within
+    /// the wait, so the counts and the log say what really happened.
+    /// </summary>
+    private bool RunNet(string verb, string serviceName)
     {
         try
         {
-            using var proc = Process.Start(new ProcessStartInfo
+            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "net.exe")) { CreateNoWindow = true, UseShellExecute = false };
+            psi.ArgumentList.Add(verb);
+            psi.ArgumentList.Add(serviceName);
+            if (verb == "stop") psi.ArgumentList.Add("/y");
+            using var proc = Process.Start(psi);
+            if (proc == null) return false;
+            if (!proc.WaitForExit(3000))
             {
-                FileName = "net.exe",
-                Arguments = $"stop \"{serviceName}\" /y",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-            proc?.WaitForExit(3000);
+                _log.LogWarning($"[ServiceThrottler] net {verb} {serviceName} did not finish within 3 s.");
+                return false;
+            }
+            return proc.ExitCode == 0;
         }
-        catch { }
-    }
-
-    private static void StartServiceDirectly(string serviceName)
-    {
-        try
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
-            using var proc = Process.Start(new ProcessStartInfo
-            {
-                FileName = "net.exe",
-                Arguments = $"start \"{serviceName}\"",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-            proc?.WaitForExit(3000);
+            _log.LogWarning($"[ServiceThrottler] Could not run net {verb} for {serviceName}", ex);
+            return false;
         }
-        catch { }
     }
 }

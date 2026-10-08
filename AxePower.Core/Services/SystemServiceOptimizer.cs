@@ -3,11 +3,26 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
+using System.Threading.Tasks;
+using AxePower.Core.Services.Operations;
 
 namespace AxePower.Core.Services;
 
+/// <summary>
+/// Game Mode's list of services that can be paused while gaming. Pausing goes through the
+/// operations framework (preview, history, rollback); it no longer launches sc.exe.
+/// </summary>
 public class SystemServiceOptimizer
 {
+    private readonly Lazy<OperationRunner> _runner;
+
+    /// <param name="runner">Where changes are executed and recorded. Null: the app's journal, created on first use.</param>
+    public SystemServiceOptimizer(LogService? log = null, OperationRunner? runner = null)
+    {
+        _runner = new Lazy<OperationRunner>(() => runner ?? new OperationRunner(
+            new OperationJournal(OperationJournal.DefaultDirectory, log), log ?? new LogService(), new IChangeHandler[] { new ServiceChangeHandler() }));
+    }
+
     // Known safe-to-optimize services
     public static readonly Dictionary<string, string> OptimizableServices = new()
     {
@@ -47,34 +62,27 @@ public class SystemServiceOptimizer
         return list;
     }
 
-    public void OptimizeServices(IEnumerable<string> serviceNames)
-    {
-        foreach (var name in serviceNames)
-        {
-            try
-            {
-                var svc = new ServiceController(name);
-                if (svc.Status == ServiceControllerStatus.Running || svc.Status == ServiceControllerStatus.Paused)
-                {
-                    svc.Stop();
-                    svc.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(5));
-                }
+    public const string SourceFeature = "Game Mode › Services";
+    public const string Subject = "services:game-mode";
 
-                // Set to manual
-                var startInfo = new ProcessStartInfo("sc.exe", $"config \"{name}\" start= demand")
-                {
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    Verb = "runas"
-                };
-                Process.Start(startInfo)?.WaitForExit();
-            }
-            catch
-            {
-                // Ignore if we lack permissions or service doesn't exist
-            }
-        }
+    /// <summary>
+    /// What pausing <paramref name="serviceNames"/> would change: each is stopped and set to Manual
+    /// start. The plan records each service's current startup type and state, so rolling it back
+    /// restores them (and starts the ones that were running). Changes nothing.
+    /// </summary>
+    public OperationRecord PlanPause(IEnumerable<string> serviceNames)
+    {
+        var names = serviceNames.Where(OptimizableServices.ContainsKey).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        return Runner.Plan(
+            names.Count == 1 ? $"Stop {OptimizableServices[names[0]]} and set it to Manual" : $"Stop {names.Count} services and set them to Manual",
+            SourceFeature, Subject,
+            names.Select(n => ServiceChangeHandler.Set(n, ServiceStart.Manual, running: false)));
     }
+
+    /// <summary>Runs an approved plan. Each service is independent: one failing does not undo the others.</summary>
+    public Task<OperationRecord> ExecuteAsync(OperationRecord plan) => Runner.ExecuteAsync(plan, FailurePolicy.ContinueWithOthers);
+
+    private OperationRunner Runner => _runner.Value;
 }
 
 /// <summary>One row in Game Mode's service list. Notifies, so select-all updates every checkbox.</summary>

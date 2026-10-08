@@ -173,7 +173,7 @@ public sealed class ShareEncoderProbe : IShareEncoderProbe
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
-            try { process.Kill(entireProcessTree: true); } catch { }
+            try { process.Kill(entireProcessTree: true); } catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* It exited as the probe timed out. */ }
             throw new TimeoutException($"FFmpeg did not finish within {timeout.TotalSeconds:0}s.");
         }
 

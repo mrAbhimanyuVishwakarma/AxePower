@@ -75,9 +75,9 @@ public sealed class ShareAttachmentStoreTests : IDisposable
         var wire = RoomMessageCrypto.Encrypt(source, secret);
 
         Assert.DoesNotContain("encrypted hello", Encoding.UTF8.GetString(wire));
-        Assert.True(RoomMessageCrypto.TryDecrypt(wire, secret, out var decoded));
+        Assert.True(RoomMessageCrypto.TryDecrypt(wire, secret, new ReplayFilter(), out var decoded, out _));
         Assert.Equal(source.Text, decoded!.Text);
-        Assert.False(RoomMessageCrypto.TryDecrypt(wire, "wrong-secret", out _));
+        Assert.False(RoomMessageCrypto.TryDecrypt(wire, "wrong-secret", new ReplayFilter(), out _, out _));
     }
 
     [Fact]
@@ -87,9 +87,9 @@ public sealed class ShareAttachmentStoreTests : IDisposable
         var wire = RoomVoiceCrypto.Encrypt(opus, "voice-secret");
 
         Assert.NotEqual(opus, wire);
-        Assert.True(RoomVoiceCrypto.TryDecrypt(wire, "voice-secret", out var decoded));
+        Assert.True(RoomVoiceCrypto.TryDecrypt(wire, "voice-secret", new ReplayFilter(), out var decoded, out _));
         Assert.Equal(opus, decoded);
-        Assert.False(RoomVoiceCrypto.TryDecrypt(wire, "wrong-secret", out _));
+        Assert.False(RoomVoiceCrypto.TryDecrypt(wire, "wrong-secret", new ReplayFilter(), out _, out _));
     }
 
     [Fact]

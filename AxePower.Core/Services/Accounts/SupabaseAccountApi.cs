@@ -257,7 +257,7 @@ public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
                 message = Str(o, "msg") ?? Str(o, "message") ?? Str(o, "error_description") ?? string.Empty;
             }
         }
-        catch (JsonException) { }
+        catch (JsonException) { /* A non-JSON error body: the HTTP status alone describes the failure. */ }
 
         AccountException Fail(AccountError error, string text) => new(error, text);
 

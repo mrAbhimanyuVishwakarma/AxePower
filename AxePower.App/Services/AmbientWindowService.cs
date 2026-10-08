@@ -121,6 +121,7 @@ public sealed class AmbientWindowService : IDisposable
             WindowStartupLocation = WindowStartupLocation.Manual,
             Content = new AmbientModeOverlay { DataContext = _ambient }
         };
+        AxePower.App.Helpers.AccessibleNames.SetEnabled(window, true);
 
         // Start on the monitor AxePower is on; maximizing a borderless window then covers all
         // of that monitor, taskbar included. A minimized main window has no useful position.

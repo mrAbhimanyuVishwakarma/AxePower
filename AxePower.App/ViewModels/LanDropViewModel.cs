@@ -13,6 +13,7 @@ using Microsoft.Win32;
 using AxePower.Core.Helpers;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
+using AxePower.Core.Services.LanDrop;
 
 namespace AxePower.App.ViewModels;
 
@@ -25,6 +26,7 @@ public partial class LanDropViewModel : ObservableObject
     private bool _isServerRunning;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShareLink))]
     private string _serverUrl = string.Empty;
 
     [ObservableProperty]
@@ -45,15 +47,24 @@ public partial class LanDropViewModel : ObservableObject
     [ObservableProperty]
     private string _statusMessage = "Ready. Start server to share files with mobile devices.";
 
+    [ObservableProperty]
+    private bool _isPublicNetworkWarningVisible;
+
+    [ObservableProperty]
+    private string _networkWarningText = string.Empty;
+
     public ObservableCollection<string> AvailableIpAddresses { get; } = new();
     public ObservableCollection<LanDropFileItem> ReceivedFiles { get; } = new();
     public ObservableCollection<LanDropFileItem> SharedFiles { get; } = new();
     public ObservableCollection<LanDropTextMessage> ClipboardMessages { get; } = new();
+    public ObservableCollection<LanDropClientSession> ConnectedClients { get; } = new();
 
     public int ReceivedCount => ReceivedFiles.Count;
     public int SharedCount => SharedFiles.Count;
     public bool HasReceivedFiles => ReceivedFiles.Count > 0;
     public bool HasSharedFiles => SharedFiles.Count > 0;
+    public int ConnectedClientsCount => ConnectedClients.Count;
+    public bool HasConnectedClients => ConnectedClients.Count > 0;
 
     public LanDropViewModel(LanDropService lanDropService, NotificationService notificationService)
     {
@@ -62,9 +73,19 @@ public partial class LanDropViewModel : ObservableObject
 
         SaveDirectory = _lanDropService.DownloadDirectory;
 
-        // Initialize IP choices
+        // Initialize IP choices & network classification
         RefreshIpList();
+        RefreshNetworkClassification();
         UpdateQrCode();
+
+        // Subscribe to client session changes
+        _lanDropService.OnClientsChanged += (s, e) =>
+        {
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                RefreshConnectedClients();
+            });
+        };
 
         // Subscribe to service events
         _lanDropService.OnFileReceived += (s, item) =>
@@ -100,6 +121,8 @@ public partial class LanDropViewModel : ObservableObject
                     PortalUrl = string.IsNullOrEmpty(state.PortalUrl) ? state.ServerUrl : state.PortalUrl;
                 }
                 UpdateQrCode();
+                RefreshNetworkClassification();
+                RefreshConnectedClients();
                 StatusMessage = IsServerRunning
                     ? $"Server active on {ServerUrl} — Scan QR code on your phone"
                     : "Server stopped.";
@@ -125,6 +148,7 @@ public partial class LanDropViewModel : ObservableObject
         if (!string.IsNullOrEmpty(value))
         {
             ServerUrl = $"http://{value}:{PortNumber}/";
+            RefreshNetworkClassification();
             RestartServerIfRunning();
             UpdateQrCode();
         }
@@ -194,6 +218,11 @@ public partial class LanDropViewModel : ObservableObject
             {
                 _notificationService.Show($"🚀 LAN Drop active at {ServerUrl}");
             }
+            else if (_lanDropService.LastRefusedNetwork is not null)
+            {
+                StatusMessage = "Not started: Windows treats this network as Public or cannot classify it.";
+                _notificationService.Show("⚠️ LAN Drop did not start on an untrusted network.");
+            }
             else
             {
                 StatusMessage = "Failed to start server. Try selecting a different port or network adapter.";
@@ -249,6 +278,41 @@ public partial class LanDropViewModel : ObservableObject
         OnPropertyChanged(nameof(HasSharedFiles));
     }
 
+    private void RefreshConnectedClients()
+    {
+        ConnectedClients.Clear();
+        foreach (var client in _lanDropService.GetConnectedClients())
+        {
+            ConnectedClients.Add(client);
+        }
+        OnPropertyChanged(nameof(ConnectedClientsCount));
+        OnPropertyChanged(nameof(HasConnectedClients));
+    }
+
+    public void RefreshNetworkClassification()
+    {
+        var classification = _lanDropService.CurrentNetworkClassification;
+        IsPublicNetworkWarningVisible = classification.IsPublicOrUnclassified;
+        NetworkWarningText = classification.WarningMessage ?? string.Empty;
+    }
+
+    [RelayCommand]
+    public void DisconnectAllClients()
+    {
+        _lanDropService.DisconnectAllClientsAndRotateAccess();
+        RefreshConnectedClients();
+        _notificationService.Show("🔒 Disconnected all clients and rotated access token.");
+    }
+
+    [RelayCommand]
+    public void DisconnectClient(LanDropClientSession? client)
+    {
+        if (client == null) return;
+        _lanDropService.DisconnectClient(client.Id);
+        RefreshConnectedClients();
+        _notificationService.Show($"Disconnected {client.DeviceName}.");
+    }
+
     [RelayCommand]
     public void OpenReceivedFile(LanDropFileItem? item)
     {
@@ -268,7 +332,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Could not open file: " + ex.Message);
+            _notificationService.ShowFailure("Open the file", ex);
         }
     }
 
@@ -309,7 +373,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Error deleting file: " + ex.Message);
+            _notificationService.ShowFailure("Delete the file", ex);
         }
     }
 
@@ -340,7 +404,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Could not open folder: " + ex.Message);
+            _notificationService.ShowFailure("Open the folder", ex);
         }
     }
 
@@ -364,7 +428,11 @@ public partial class LanDropViewModel : ObservableObject
             Clipboard.SetText(ShareLink);
             _notificationService.Show("📋 Copied Server URL to clipboard!");
         }
-        catch { }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another app holds the clipboard. Say so; never log what was being copied.
+            _notificationService.Show("Could not copy: another app is using the clipboard. Try again.");
+        }
     }
 
     [RelayCommand]
@@ -381,7 +449,7 @@ public partial class LanDropViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open browser: " + ex.Message);
+            _notificationService.ShowFailure("Open the browser", ex);
         }
     }
 
@@ -403,6 +471,10 @@ public partial class LanDropViewModel : ObservableObject
             Clipboard.SetText(msg.Content);
             _notificationService.Show("📋 Copied message to clipboard!");
         }
-        catch { }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another app holds the clipboard. Say so; never log what was being copied.
+            _notificationService.Show("Could not copy: another app is using the clipboard. Try again.");
+        }
     }
 }

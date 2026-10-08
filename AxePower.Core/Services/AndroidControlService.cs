@@ -302,7 +302,7 @@ public class AndroidControlService
                 var candidate = Path.Combine(dir.Trim(), "adb.exe");
                 if (File.Exists(candidate)) return candidate;
             }
-            catch { }
+            catch { /* A malformed PATH entry is skipped. */ }
         }
 
         return null;
@@ -368,7 +368,7 @@ public class AndroidControlService
                 var candidate = Path.Combine(dir.Trim(), "scrcpy.exe");
                 if (File.Exists(candidate)) return candidate;
             }
-            catch { }
+            catch { /* A malformed PATH entry is skipped. */ }
         }
 
         return null;
@@ -388,7 +388,7 @@ public class AndroidControlService
                 }
             }
         }
-        catch { }
+        catch { /* Unreadable version file: treated as unknown, so the tools are checked for an update. */ }
         return string.Empty;
     }
 
@@ -400,7 +400,7 @@ public class AndroidControlService
             var content = JsonSerializer.Serialize(new { tag = tag, updated_at = DateTime.UtcNow.ToString("O") });
             File.WriteAllText(VersionFilePath, content);
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: without the file the next start checks for an update again. */ }
     }
 
     private async Task<bool> DownloadAndExtractLatestScrcpyAsync(CancellationToken ct)
@@ -467,7 +467,7 @@ public class AndroidControlService
             _logService.LogInfo("Extracting scrcpy archive into tools directory...");
             ZipFile.ExtractToDirectory(tempZip, ToolsDir, overwriteFiles: true);
 
-            try { File.Delete(tempZip); } catch { }
+            try { File.Delete(tempZip); } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Best-effort: a leftover download in the temp folder is harmless. */ }
 
             _logService.LogInfo("Scrcpy downloaded and extracted successfully.");
             return true;

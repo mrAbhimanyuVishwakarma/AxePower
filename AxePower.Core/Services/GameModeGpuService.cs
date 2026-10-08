@@ -111,7 +111,8 @@ public class GameModeGpuService
     private static string? TryFullPath(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
-        try { return Path.GetFullPath(path); } catch { return null; }
+        try { return Path.GetFullPath(path); }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or System.IO.PathTooLongException or System.Security.SecurityException) { return null; /* not a usable path: skipped */ }
     }
 
     /// <summary>
@@ -177,7 +178,7 @@ public class GameModeGpuService
                 var file = process.MainModule?.FileName;
                 if (!string.IsNullOrEmpty(file)) paths.Add(file);
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
                 // Protected or already exited
             }
@@ -247,8 +248,9 @@ internal sealed class RegistryGpuPreferenceStore : IGpuPreferenceStore
             key.SetValue(exePath, value, RegistryValueKind.String);
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is System.Security.SecurityException or System.IO.IOException or UnauthorizedAccessException)
         {
+            // Reported to the caller, which logs the game it could not change or restore.
             return false;
         }
     }
@@ -261,8 +263,9 @@ internal sealed class RegistryGpuPreferenceStore : IGpuPreferenceStore
             key?.DeleteValue(exePath, throwOnMissingValue: false);
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is System.Security.SecurityException or System.IO.IOException or UnauthorizedAccessException)
         {
+            // Reported to the caller, which logs the game it could not change or restore.
             return false;
         }
     }

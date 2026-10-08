@@ -89,6 +89,9 @@ public partial class ToolsViewModel : ObservableObject
     internal ToolsService Service => _tools;
     internal void Notify(string message) => _notifications?.Show(message);
 
+    /// <summary>"Could not <paramref name="action"/>" with what to do about it (Prompt 30).</summary>
+    internal void NotifyFailure(string action, Exception error) => _notifications?.ShowFailure(action, error);
+
     internal async Task OpenAsync(ToolCard card)
     {
         if (card.Definition.Id == "afterburner" && _afterburner != null)
@@ -112,7 +115,7 @@ public partial class ToolsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Notify($"Could not open {card.Definition.Name}: {ex.Message}");
+            NotifyFailure($"Open {card.Definition.Name}", ex);
         }
     }
 
@@ -280,7 +283,11 @@ public partial class ToolCard : ObservableObject
     [RelayCommand]
     private void OpenWebsite()
     {
-        try { Process.Start(new ProcessStartInfo { FileName = Definition.WebUrl, UseShellExecute = true }); } catch { }
+        try { Process.Start(new ProcessStartInfo { FileName = Definition.WebUrl, UseShellExecute = true }); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            _owner.Notify($"Could not open the {Definition.Name} website.");
+        }
     }
 
     private async Task RunAsync(string verb, string busy, string done, string failed)

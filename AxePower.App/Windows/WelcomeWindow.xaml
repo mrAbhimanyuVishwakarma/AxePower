@@ -1,0 +1,99 @@
+<Window x:Class="AxePower.App.Windows.WelcomeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Welcome to AxePower" Width="640" SizeToContent="Height" MaxHeight="820" MinWidth="520"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        ResizeMode="NoResize"
+        xmlns:a11y="clr-namespace:AxePower.App.Helpers"
+        a11y:AccessibleNames.Enabled="True">
+    <!-- First run (Prompt 31): each optional capability is explained where it is asked for, and
+         nothing is applied until Continue. Closing the window applies nothing. -->
+    <Window.Resources>
+        <Style x:Key="WelcomeTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
+        <Style x:Key="WelcomeWhy" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,3,0,0"/>
+        </Style>
+    </Window.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,26,28,24">
+            <TextBlock Text="Welcome to AxePower" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBlock FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,18"
+                       Text="Choose what AxePower may do. Nothing below happens until you click Continue, and every choice can be changed later in Settings."/>
+
+            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                    CornerRadius="12" Padding="18,6">
+                <StackPanel>
+                    <!-- Each row: what it is and why, on the left; the switch on the right -->
+                    <Grid Margin="0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource WelcomeTitle}" Text="Automatic power modes"/>
+                            <TextBlock Style="{StaticResource WelcomeWhy}"
+                                       Text="Switches to Smart now and changes mode when you plug in or unplug. AxePower adds its four power plans (Eco, Smart, Beast, Game Mode) and removes other custom plans; Windows' own plans are kept."/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding AutomaticPowerModes}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Separator Background="{DynamicResource DividerBrush}"/>
+                    <Grid Margin="0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource WelcomeTitle}" Text="Run as administrator"/>
+                            <TextBlock Style="{StaticResource WelcomeWhy}"
+                                       Text="Needed to change power plans, read temperature sensors, pause services in Game Mode and clean system files. Windows will ask for permission when AxePower starts. Without it those features ask each time or stay unavailable."/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding RunAsAdministrator}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Separator Background="{DynamicResource DividerBrush}"/>
+                    <Grid Margin="0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource WelcomeTitle}" Text="Start with Windows"/>
+                            <TextBlock Style="{StaticResource WelcomeWhy}"
+                                       Text="Starts AxePower quietly in the tray when you sign in, so automatic power modes keep working. Adds a scheduled task."/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Separator Background="{DynamicResource DividerBrush}"/>
+                    <Grid Margin="0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource WelcomeTitle}" Text="Check for updates"/>
+                            <TextBlock Style="{StaticResource WelcomeWhy}"
+                                       Text="When AxePower starts, it asks GitHub whether a newer version exists. Nothing is installed without asking you."/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding CheckForUpdates}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Separator Background="{DynamicResource DividerBrush}"/>
+                    <Grid Margin="0,12" IsEnabled="{Binding CheckForUpdates}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource WelcomeTitle}" Text="Download updates automatically"/>
+                            <TextBlock Style="{StaticResource WelcomeWhy}"
+                                       Text="Downloads a new version in the background, ready to install when you choose. Off: AxePower only tells you."/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Style="{DynamicResource ToggleSwitchStyle}" IsChecked="{Binding DownloadUpdatesAutomatically}" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="2,14,0,0"
+                       Text="Always off until you turn them on: Phone Hub and LAN Drop (nothing listens on your network until you start them), your AxePower account (you are not signed in), and diagnostics (nothing is uploaded; a bundle is saved only when you ask)."/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Style="{DynamicResource SecondaryButtonStyle}" Content="Not now" Padding="20,8" Margin="0,0,12,0" IsCancel="True"
+                        Click="NotNow_Click" AutomationProperties.Name="Not now: change nothing and ask again next time"/>
+                <Button x:Name="ContinueButton" Style="{DynamicResource PrimaryButtonStyle}" Content="Continue" Padding="26,8" IsDefault="True"
+                        Click="Continue_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

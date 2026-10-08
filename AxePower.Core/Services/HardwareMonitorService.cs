@@ -250,10 +250,12 @@ public class HardwareMonitorService : IDisposable
     /// Maps Afterburner's published source names onto a snapshot. Its CPU temperature row is the
     /// package reading, so it lands in <see cref="HardwareSnapshot.CpuPackageTempC"/> directly.
     /// </summary>
-    private static HardwareSnapshot ReadFromAfterburner()
+    private static HardwareSnapshot ReadFromAfterburner() => FromAfterburner(AfterburnerSensorReader.TryReadSensors());
+
+    /// <summary>Absent rows, and the placeholder zeros Afterburner publishes for them, stay NaN (unknown).</summary>
+    internal static HardwareSnapshot FromAfterburner(Dictionary<string, float> sensors)
     {
         var snapshot = new HardwareSnapshot();
-        var sensors = AfterburnerSensorReader.TryReadSensors();
         if (sensors.Count == 0) return snapshot;
 
         snapshot.Source = "MSI Afterburner";
@@ -276,7 +278,8 @@ public class HardwareMonitorService : IDisposable
         return snapshot;
     }
 
-    private static void ReadCpu(IHardware hardware, HardwareSnapshot snapshot)
+    /// <summary>Sensors without a reading (null or NaN) are skipped, so a missing value stays NaN.</summary>
+    internal static void ReadCpu(IHardware hardware, HardwareSnapshot snapshot)
     {
         hardware.Update();
 
@@ -327,7 +330,7 @@ public class HardwareMonitorService : IDisposable
             snapshot.CpuClockGhz = clockSum / clockCount / 1000.0;
     }
 
-    private static void ReadGpu(IHardware hardware, HardwareSnapshot snapshot)
+    internal static void ReadGpu(IHardware hardware, HardwareSnapshot snapshot)
     {
         hardware.Update();
         snapshot.GpuName = hardware.Name;
@@ -359,10 +362,10 @@ public class HardwareMonitorService : IDisposable
             if (_isDisposed) return;
             _isDisposed = true;
 
-            try { _computer?.Close(); } catch { }
+            try { _computer?.Close(); } catch { /* Best-effort teardown of the sensor driver at shutdown. */ }
             _computer = null;
 
-            try { _lenovo?.Dispose(); } catch { }
+            try { _lenovo?.Dispose(); } catch { /* Best-effort teardown of the Lenovo sensor reader at shutdown. */ }
             _lenovo = null;
         }
     }

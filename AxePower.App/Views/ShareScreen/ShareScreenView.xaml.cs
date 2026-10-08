@@ -173,6 +173,14 @@ public partial class ShareScreenView : UserControl
             core.Settings.AreDefaultContextMenusEnabled = false;
             core.Settings.IsStatusBarEnabled = false;
             core.Settings.AreDevToolsEnabled = false;
+            core.Settings.AreDefaultScriptDialogsEnabled = false;
+            // The page is the room host's: it stays within that origin and opens no windows
+            // (FINAL_SECURITY_REVIEW M2)
+            core.NavigationStarting += (_, args) =>
+            {
+                if (!AxePower.Core.Services.ShareScreen.WebViewNavigationPolicy.IsAllowed(args.Uri, _shownUrl)) args.Cancel = true;
+            };
+            core.NewWindowRequested += (_, args) => args.Handled = true;
             core.NavigationCompleted += OnNavigationCompleted;
 
             _browserReady = true;
@@ -185,7 +193,8 @@ public partial class ShareScreenView : UserControl
             TileHeadline.Text = "Preview unavailable";
             TileSubtext.Text =
                 "The in-app preview needs the Microsoft Edge WebView2 runtime. Sharing still works — " +
-                "use the browser button to watch the stream. (" + ex.Message + ")";
+                "use the browser button to watch the stream.";
+            System.Diagnostics.Trace.TraceWarning("Share Screen preview unavailable: " + AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex));
             TileSubtext.Visibility = Visibility.Visible;
             return false;
         }

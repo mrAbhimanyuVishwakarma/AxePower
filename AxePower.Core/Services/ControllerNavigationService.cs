@@ -256,18 +256,18 @@ public class ControllerNavigationService
         var cts = _cts;
         if (cts != null)
         {
-            try { cts.Cancel(); } catch { }
+            try { cts.Cancel(); } catch { /* Already disposed by an earlier stop. */ }
         }
 
         if (_pollingTask != null)
         {
-            try { await _pollingTask; } catch { }
+            try { await _pollingTask; } catch { /* The polling loop ends by cancellation; its errors were logged inside it. */ }
             _pollingTask = null;
         }
 
         if (cts != null)
         {
-            try { cts.Dispose(); } catch { }
+            try { cts.Dispose(); } catch { /* Already disposed by an earlier stop. */ }
             _cts = null;
         }
 
@@ -360,7 +360,7 @@ public class ControllerNavigationService
                 }
             }
         }
-        catch { }
+        catch { /* Raw-input device names are cosmetic; an unreadable list leaves the generic name. */ }
 
         // 2. Check for XInput / Xbox compatible controller
         if (CheckXInputConnected())
@@ -551,8 +551,8 @@ public class ControllerNavigationService
                 }
             }
         }
-        catch (OperationCanceledException) { }
-        catch (ObjectDisposedException) { }
+        catch (OperationCanceledException) { /* Stopped. */ }
+        catch (ObjectDisposedException) { /* Stopped while a poll was in flight. */ }
         catch (Exception ex)
         {
             _logService.LogError("[ControllerNavigation] PollingLoop exception", ex);
@@ -625,7 +625,7 @@ public class ControllerNavigationService
                 vib = new XINPUT_VIBRATION { wLeftMotorSpeed = 0, wRightMotorSpeed = 0 };
                 _xinputSetState(userIndex, ref vib);
             }
-            catch { }
+            catch { /* Best-effort rumble; a controller without motors just does not vibrate. */ }
         });
     }
 
@@ -642,6 +642,6 @@ public class ControllerNavigationService
 
             Process.Start(new ProcessStartInfo { FileName = "osk.exe", UseShellExecute = true });
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* No on-screen keyboard available; the controller keeps working without it. */ }
     }
 }

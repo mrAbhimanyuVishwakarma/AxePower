@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "glacier-night",
+  "name": "Glacier Night",
+  "description": "Ice at night: deep blue-black with frosted edges.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0A1118",
+    "sidebar": "#0E1720",
+    "card": "#13202C",
+    "cardElevated": "#1A2A38",
+    "hover": "#223546",
+    "border": "#2E4A60",
+    "divider": "#1A2A38",
+    "textPrimary": "#F0FAFF",
+    "textSecondary": "#C8E6F5",
+    "textMuted": "#8AB4CC",
+    "textDisabled": "#4E6E82",
+    "accent": "#7DD3FC",
+    "success": "#5EEAD4",
+    "warning": "#FCD34D",
+    "error": "#FDA4AF",
+    "eco": "#5EEAD4",
+    "smart": "#7DD3FC",
+    "beast": "#FDBA74",
+    "buttonPrimary": "#BAE6FD",
+    "buttonPrimaryText": "#06121C"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 60,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#BAE6FD, #7DD3FC, #E0F2FE"
+  }
+}

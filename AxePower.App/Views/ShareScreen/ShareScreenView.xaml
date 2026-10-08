@@ -413,6 +413,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <StackPanel Grid.Row="0">
             <Grid Margin="16,12,16,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -460,6 +461,100 @@
                     </Button>
                 </StackPanel>
             </Grid>
+
+            <!-- Untrusted network: the room was not opened. One click allows it for this session only. -->
+            <Border Margin="16,0,16,10" Padding="12,10" CornerRadius="10" BorderThickness="1"
+                    BorderBrush="{DynamicResource ShareDangerBrush}" Background="{DynamicResource CardBackgroundBrush}"
+                    Visibility="{Binding IsUntrustedNetworkRefused, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource ShareDangerBrush}" VerticalAlignment="Top" Margin="0,1,10,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="Room not opened on an untrusted network" FontWeight="Bold" FontSize="12.5" Foreground="{DynamicResource ShareDangerBrush}"/>
+                        <TextBlock Text="{Binding UntrustedNetworkWarning}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <TextBlock Text="Control, chat and voice are encrypted, but on a plain network the viewer page itself is not. Share only where you trust the other devices, or use Tailscale for HTTPS."
+                                   FontSize="11" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <Button Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ShareAnywayOnThisNetworkCommand}"
+                            Padding="11,7" Margin="10,0,0,0" VerticalAlignment="Center" Cursor="Hand"
+                            ToolTip="Open the room on this network until the session ends">
+                        <TextBlock Text="Share anyway for this session" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource ShareDangerBrush}"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- A viewer with the right code asking for control: the code alone never lets them in. -->
+            <Border Margin="16,0,16,10" Padding="12,10" CornerRadius="10" BorderThickness="1"
+                    BorderBrush="{DynamicResource ShareDangerBrush}" Background="{DynamicResource CardBackgroundBrush}"
+                    Visibility="{Binding HasPendingControlApproval, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="&#xE962;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource ShareDangerBrush}" VerticalAlignment="Top" Margin="0,1,10,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="Allow remote control?" FontWeight="Bold" FontSize="12.5" Foreground="{DynamicResource ShareDangerBrush}"/>
+                        <TextBlock Text="{Binding PendingControlApprovalText}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding DenyControlRequestCommand}" Padding="11,7" Margin="0,0,6,0" Cursor="Hand">
+                            <TextBlock Text="Deny" FontSize="11.5" FontWeight="SemiBold"/>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AllowControlRequestCommand}" Padding="11,7" Cursor="Hand"
+                                ToolTip="They can move your mouse and type until they disconnect or you turn control off">
+                            <TextBlock Text="Allow" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource ShareDangerBrush}"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Everyone connected to this PC's room, so nothing watches, listens or controls unseen. -->
+            <Border Margin="16,0,16,10" Padding="10,8" CornerRadius="10" BorderThickness="1"
+                    BorderBrush="{DynamicResource CardBorderBrush}" Background="{DynamicResource CardBackgroundBrush}"
+                    Visibility="{Binding HasParticipants, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="In your room" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ParticipantsSummary}" FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Participants}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="8" Padding="8,4" Margin="0,0,6,6" BorderThickness="1" Background="{DynamicResource HoverBackgroundBrush}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Role}" Value="Controller">
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource ShareDangerBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Role}" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="{Binding Endpoint}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Margin="6,0,0,0"/>
+                                        <TextBlock Text="{Binding ConnectedAt, StringFormat=' since {0:HH:mm}'}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            </StackPanel>
 
             <!-- Participant tiles exist only after a room has actually been opened or joined. -->
             <Grid Grid.Row="1" Margin="16,0,16,10" Height="142"

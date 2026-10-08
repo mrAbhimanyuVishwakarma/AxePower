@@ -136,7 +136,7 @@
   <!-- Policy -->
   <main class="container" style="padding-bottom: 90px; max-width: 820px;">
     <article class="about-card" style="line-height: 1.75; color: var(--text-secondary); font-size: 15px;">
-      <p style="font-size: 13px; margin-bottom: 24px;">Last updated: 26 September 2026</p>
+      <p style="font-size: 13px; margin-bottom: 24px;">Last updated: 6 October 2026</p>
 
       <h2 style="font-size: 20px; color: var(--text-primary); margin: 0 0 10px;">1. This website</h2>
       <p style="margin-bottom: 12px;">
@@ -174,21 +174,36 @@
       <p style="margin-bottom: 12px;">
         <strong style="color: var(--text-primary);">Stored on your computer:</strong> your settings, power
         profiles, themes and automations; music data such as library folders, playlists, recently played songs,
-        recent searches and the saved queue; activity logs used to diagnose problems; backups that some tools
+        recent searches and the saved queue; diagnostics logs, with tokens, links, email addresses and your user
+        and computer names removed, kept for 14 days or 20 MB; a history of the changes AxePower made to Windows,
+        so they can be rolled back; backups that some tools
         make before changing your system; and, if you sign in, your sign-in, encrypted so only your Windows user
         can read it. These are kept in the app-data folders of your Windows user profile and
         never leave your computer on their own. Deleting those folders removes them.
       </p>
       <p style="margin-bottom: 8px;">
-        <strong style="color: var(--text-primary);">Online features.</strong> Some features contact third-party
-        services directly from your computer, and only when you use them:
+        <strong style="color: var(--text-primary);">Online features.</strong> Some features contact other
+        services directly from your computer. One happens on its own: while &ldquo;Check for updates automatically&rdquo; is on
+        (it is by default), AxePower asks GitHub for a newer version when it starts.
+        Everything else happens only when you use that feature:
       </p>
       <ul style="margin: 0 0 12px 22px;">
-        <li>searching and streaming music, which sends your search text and the song being played;</li>
-        <li>finding lyrics, which sends the song's title, artist and length;</li>
-        <li>checking for AxePower updates, and updating software or drivers when you ask it to;</li>
+        <li>signing in, your profile and Friends (online status, friend requests, invites), with Supabase, only if you
+          have an account;</li>
+        <li>searching and streaming music on YouTube, which sends your search text and the song being played;</li>
+        <li>finding lyrics (LRCLIB, KuGou), which sends the song's title, artist, album and length;</li>
+        <li>posters for your installed games, from Steam's image servers;</li>
+        <li>pings: to 1.1.1.1 (Cloudflare) every 5 seconds while the Dashboard is on screen, for its latency reading,
+          and to four public DNS servers when you run the DNS benchmark;</li>
+        <li>downloading AxePower updates, graphics drivers (NVIDIA, AMD), the Share Screen tools and portable apps
+          (GitHub and the publishers' sites), and installing software through WinGet, when you ask;</li>
         <li>links, downloads and help pages, which open in your web browser.</li>
       </ul>
+      <p style="margin-bottom: 12px;">
+        The app's <strong style="color: var(--text-primary);">Trust &amp; Permissions</strong> page lists every one of
+        these connections, what triggers it and what it sends, together with the ports it opens and where it keeps
+        data. Remote control of the PC from the phone app over the internet is turned off in this version.
+      </p>
       <p style="margin-bottom: 12px;">
         Like any website, these services also see your IP address and the request itself, and their own privacy
         policies and terms apply to what they receive. AxePower does not route this traffic through any server of
@@ -203,10 +218,12 @@
         friend only.
       </p>
       <p style="margin-bottom: 28px;">
-        <strong style="color: var(--text-primary);">System access.</strong> The app runs with administrator rights
-        so it can change power, performance and system settings. It changes your system only when you choose an
-        action or set up an automation. Some changes cannot always be fully undone, so read each prompt before
-        confirming.
+        <strong style="color: var(--text-primary);">System access.</strong> By default the app runs with
+        administrator rights (a setting you can turn off) and starts at sign-in through a scheduled task, so it
+        can change power, performance and system settings. It changes your system only when you choose an action
+        or set up an automation. Before a change it shows what will change and whether it is fully, partly or not
+        reversible; changes it can undo are listed in Settings &rarr; Change history. Third-party uninstallers and
+        debloat scripts cannot be undone by AxePower, and their confirmations say so.
       </p>
 
       <h2 style="font-size: 20px; color: var(--text-primary); margin: 0 0 10px;">3. Your AxePower account (optional)</h2>

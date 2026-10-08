@@ -111,8 +111,9 @@ public sealed class CommonFolderFinder : ILeftoverFinder
         {
             return Directory.Exists(root) ? Directory.GetDirectories(root) : [];
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.FileSystem(caught))
         {
+            // Unreadable folder: nothing found in it.
             return [];
         }
     }
@@ -193,7 +194,7 @@ public sealed class SoftwareKeyFinder : ILeftoverFinder
                 if (context.PointsIntoAppFolders(candidate)) return true;
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Unreadable key: no evidence from it. */ }
         return false;
     }
 
@@ -204,8 +205,9 @@ public sealed class SoftwareKeyFinder : ILeftoverFinder
             using var key = RegistryPath.OpenKey(path);
             return key?.GetSubKeyNames() ?? [];
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Registry(caught))
         {
+            // Unreadable key: no subkeys to inspect.
             return [];
         }
     }
@@ -248,6 +250,7 @@ public sealed class UninstallKeyFinder : ILeftoverFinder
                 }
                 catch
                 {
+                    // One unreadable uninstall entry does not stop the scan.
                     continue;
                 }
 
@@ -344,7 +347,7 @@ public sealed class StartupFinder : ILeftoverFinder
                 if (key.GetValue(name) is string data && data.Length > 0) values.Add((name, data));
             }
         }
-        catch { }
+        catch (Exception caught) when (ExpectedFailures.Registry(caught)) { /* Unreadable key: no values to inspect. */ }
         return values;
     }
 }
@@ -393,8 +396,9 @@ public sealed class ShortcutFinder : ILeftoverFinder
                 AttributesToSkip = FileAttributes.ReparsePoint,
             });
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.FileSystem(caught))
         {
+            // Unreadable folder: no shortcuts from it.
             yield break;
         }
 
@@ -429,7 +433,7 @@ public sealed class ShortcutFinder : ILeftoverFinder
             {
                 var item = context.NewItem(LeftoverItemType.Shortcut, link);
                 context.AddExplicitEvidence(item, target);
-                try { item.SizeBytes = new FileInfo(link).Length; } catch { }
+                try { item.SizeBytes = new FileInfo(link).Length; } catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* Size unknown: shown as 0. */ }
                 yield return item;
             }
         }
@@ -445,8 +449,9 @@ public sealed class ShortcutFinder : ILeftoverFinder
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             return files.SetEquals(links);
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.FileSystem(caught))
         {
+            // Unreadable folder: not treated as shortcut-only, so it is not offered whole.
             return false;
         }
     }

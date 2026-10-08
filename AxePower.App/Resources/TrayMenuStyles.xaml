@@ -1,0 +1,56 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- The tray menu's items and separators. Merged only into the tray ContextMenu's resources, so
+         the implicit MenuItem style reaches no other menu. Moved out of MainWindow.xaml unchanged
+         (Prompt 20). -->
+    <Style TargetType="MenuItem">
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TrayMenuForegroundBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="0" Margin="0,0" Padding="12,0">
+                        <Grid VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Only the power modes have an icon, in the mode's colour; their text is plain like the rest -->
+                            <TextBlock x:Name="IconText" Grid.Column="0" Width="24" Text="{TemplateBinding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                            <TextBlock x:Name="HeaderText" Grid.Column="1" Text="{TemplateBinding Header}" Foreground="{DynamicResource TrayMenuForegroundBrush}" FontSize="12.5" FontFamily="Segoe UI Variable Text, Segoe UI, Arial" FontWeight="Normal" VerticalAlignment="Center" Margin="2,0,8,0"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Icon" Value="{x:Null}">
+                            <Setter TargetName="IconText" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource TrayMenuHoverBackgroundBrush}"/>
+                            <Setter TargetName="HeaderText" Property="Foreground" Value="{DynamicResource TrayMenuHoverForegroundBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource TrayMenuSeparatorBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- Menus look separators up by this key, not by type: without it WPF's own
+         style applies and indents the line past the icon column -->
+    <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Margin" Value="0,2"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Height="1" Background="{DynamicResource TrayMenuSeparatorBrush}" HorizontalAlignment="Stretch" Margin="0,0"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

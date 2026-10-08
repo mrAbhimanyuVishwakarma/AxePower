@@ -46,8 +46,10 @@ public class ElevationService
             using var identity = WindowsIdentity.GetCurrent();
             return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
         }
-        catch
+        catch (Exception)
         {
+            // Fails closed: if the token cannot be read, AxePower behaves as not elevated and offers
+            // "Relaunch with Admin" rather than assuming rights it may not have.
             return false;
         }
     }

@@ -1,0 +1,49 @@
+﻿{
+    "buildDefinition":  {
+                            "environment":  {
+                                                "runtime":  ".NET 8.0 (win-x64)",
+                                                "dependencyLockSha256":  "0d10b0e2977ebf930bee3401ae33218790577709f7634ccc8d0353dde2707cb7",
+                                                "dotnetSdkVersion":  "8.0.425",
+                                                "os":  "Microsoft Windows NT 10.0.26300.0"
+                                            },
+                            "workflow":  {
+                                             "workflow":  "LocalBuild",
+                                             "repository":  "mrAbhimanyuVishwakarma/AxePower",
+                                             "runId":  "local",
+                                             "runAttempt":  "1",
+                                             "actor":  "abhim",
+                                             "system":  "Local / Offline Environment"
+                                         },
+                            "source":  {
+                                           "ref":  "v2.1.0-17-g26fb737",
+                                           "commit":  "26fb7374be3794cff8341d83e87fcf6fd685c6c8",
+                                           "repository":  "https://github.com/mrAbhimanyuVishwakarma/AxePower"
+                                       },
+                            "buildType":  "https://github.com/mrAbhimanyuVishwakarma/AxePower/pipeline/v1",
+                            "deterministic":  true
+                        },
+    "timestamp":  "2026-10-06T11:04:34.0662392Z",
+    "schemaVersion":  "https://axepower.app/provenance/v1",
+    "subject":  [
+                    {
+                        "sizeBytes":  31167902,
+                        "sha256":  "6daa3272c365a90557937a2426291ffe4b2e9d66ddd9b63bed2880b4b1eff096",
+                        "name":  "AxePower-v2.1.2-Setup.exe"
+                    },
+                    {
+                        "sizeBytes":  342,
+                        "sha256":  "6ba23093fdfc540922552896523f747c8cc19e276c5d665cadf35b94e0d98980",
+                        "name":  "update-manifest.json"
+                    },
+                    {
+                        "sizeBytes":  155648,
+                        "sha256":  "8c3c303694dd0b00de83ef2c096372290b638c4e6477fe693259aeb89060e99f",
+                        "name":  "AxePower.exe"
+                    },
+                    {
+                        "sizeBytes":  46841,
+                        "sha256":  "8c0337edc60fe690c37cf184ce5705a843706d1ec5ce843f693267a43f927c83",
+                        "name":  "sbom.cdx.json"
+                    }
+                ]
+}

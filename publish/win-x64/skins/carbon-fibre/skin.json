@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "carbon-fibre",
+  "name": "Carbon Fibre",
+  "description": "Graphite and brushed silver.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#111213",
+    "sidebar": "#151617",
+    "card": "#1B1C1E",
+    "cardElevated": "#232427",
+    "hover": "#2C2E31",
+    "border": "#3A3C40",
+    "divider": "#232427",
+    "textPrimary": "#F5F6F7",
+    "textSecondary": "#C9CDD2",
+    "textMuted": "#8B9097",
+    "textDisabled": "#565A60",
+    "accent": "#C0C7D1",
+    "success": "#4ADE80",
+    "warning": "#FBBF24",
+    "error": "#F87171",
+    "eco": "#4ADE80",
+    "smart": "#93C5FD",
+    "beast": "#FB923C",
+    "buttonPrimary": "#D6DBE1",
+    "buttonPrimaryText": "#111213"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 35,
+    "rim": true,
+    "shadow": true
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#D6DBE1, #6B7280, #1B1C1E"
+  }
+}

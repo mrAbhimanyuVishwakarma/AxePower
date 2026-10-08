@@ -22,7 +22,7 @@ public static class GamePosterService
                 Directory.CreateDirectory(CacheDir);
             }
         }
-        catch { }
+        catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.FileSystem(caught)) { /* No cache folder: posters are downloaded each time instead. */ }
     }
 
     public static string? TryGetSteamLibraryCachePoster(string? appId)
@@ -73,7 +73,7 @@ public static class GamePosterService
                 if (anyJpg.Length > 0) return anyJpg[0];
             }
         }
-        catch { }
+        catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.FileSystem(caught)) { /* Unreadable Steam library cache: the poster is fetched online instead. */ }
 
         return null;
     }
@@ -166,7 +166,7 @@ public static class GamePosterService
                             }
                         }
                     }
-                    catch { }
+                    catch { /* Offline or no poster: the card shows its placeholder. */ }
                 }
             }
 

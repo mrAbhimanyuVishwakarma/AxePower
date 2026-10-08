@@ -77,8 +77,10 @@ public class GameModeGuard
         {
             _libraryCache = new HashSet<string>((await _libraryExeNames()).Select(ExeName).OfType<string>(), StringComparer.OrdinalIgnoreCase);
         }
-        catch
+        catch (Exception)
         {
+            // The game library could not be read (the delegate wraps several stores). The guard
+            // then treats no running app as a game, the cautious choice; retried after the cache expires.
             _libraryCache = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
         _libraryCachedAt = DateTime.UtcNow;
@@ -88,7 +90,8 @@ public class GameModeGuard
     private static string? ExeName(string? pathOrName)
     {
         if (string.IsNullOrWhiteSpace(pathOrName)) return null;
-        try { return Path.GetFileNameWithoutExtension(pathOrName.Trim()); } catch { return null; }
+        try { return Path.GetFileNameWithoutExtension(pathOrName.Trim()); }
+        catch (ArgumentException) { return null; /* not a path: ignored */ }
     }
 
     private static IEnumerable<string> RunningProcessNames()
@@ -97,7 +100,7 @@ public class GameModeGuard
         {
             string name;
             try { name = process.ProcessName; }
-            catch { continue; }
+            catch (InvalidOperationException) { continue; /* exited while listed */ }
             finally { process.Dispose(); }
             yield return name;
         }

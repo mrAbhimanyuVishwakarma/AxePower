@@ -195,11 +195,36 @@ public class AppSettings
     [JsonPropertyName("remoteAccess")]
     public RemoteAccessSettings RemoteAccess { get; set; } = new();
 
+    /// <summary>
+    /// Whether the first-run welcome has been completed (Prompt 31). False only on a fresh
+    /// install until the user clicks Continue. Null means a settings file written before the
+    /// welcome existed: an existing user, whose settings are kept and who never sees it.
+    /// </summary>
+    [JsonPropertyName("firstRunCompleted")]
+    public bool? FirstRunCompleted { get; set; }
+
+    /// <summary>
+    /// Settings for a fresh install (Prompt 31): nothing starts with Windows, nothing asks for
+    /// administrator rights, no power plan is created or switched and nothing is checked online,
+    /// until the user chooses on the welcome screen. Existing users never get these values.
+    /// </summary>
+    public static AppSettings CreateForNewInstall() => new()
+    {
+        FirstRunCompleted = false,
+        StartWithWindows = false,
+        RunAsAdministrator = false,
+        AutoSwitchEnabled = false,
+        ApplyExpectedModeOnStartup = false,
+        AutoCheckUpdates = false,
+        AutoDownloadUpdates = false,
+    };
+
     public AppSettings Clone()
     {
         return new AppSettings
         {
             SchemaVersion = this.SchemaVersion,
+            FirstRunCompleted = this.FirstRunCompleted,
             AutoSwitchEnabled = this.AutoSwitchEnabled,
             ApplyExpectedModeOnStartup = this.ApplyExpectedModeOnStartup,
             PluggedInMode = this.PluggedInMode,
@@ -256,8 +281,9 @@ public class AppSettings
 
 public class RemoteAccessSettings
 {
+    /// <summary>Off by default: the cloud bridge is unavailable until its channels are private (see CloudBridgeService.IsAvailable).</summary>
     [JsonPropertyName("enabled")]
-    public bool Enabled { get; set; } = true;
+    public bool Enabled { get; set; } = false;
 
     [JsonPropertyName("allowTelemetry")]
     public bool AllowTelemetry { get; set; } = true;

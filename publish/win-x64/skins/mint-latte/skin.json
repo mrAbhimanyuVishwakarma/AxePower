@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "mint-latte",
+  "name": "Mint Latte",
+  "description": "Soft cream with fresh mint. Calm and light.",
+  "author": "AxePower",
+  "base": "light",
+  "colors": {
+    "window": "#F3F7F2",
+    "sidebar": "#FFFFFF",
+    "card": "#FFFFFF",
+    "cardElevated": "#F8FBF7",
+    "hover": "#E3EFE6",
+    "border": "#CFE3D6",
+    "divider": "#E3EFE6",
+    "textPrimary": "#0F2A1E",
+    "textSecondary": "#2F4F40",
+    "textMuted": "#5A7668",
+    "textDisabled": "#9DB5A8",
+    "accent": "#0A7F57",
+    "success": "#04805A",
+    "warning": "#C2410C",
+    "error": "#D92323",
+    "eco": "#0B8A5F",
+    "smart": "#0891B2",
+    "beast": "#EA580C",
+    "buttonPrimary": "#047857",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#6EE7B7, #A7F3D0, #FDE68A"
+  }
+}

@@ -1,10 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -26,12 +22,11 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     private readonly IShareScreenService _shareService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
-    private readonly ShareChatStore _chatStore;
-    private readonly ShareAttachmentStore _attachmentStore;
-    private readonly IRoomVoiceService _voiceService;
-    private readonly Dictionary<string, IncomingAttachment> _incomingAttachments = new(StringComparer.Ordinal);
-    private readonly object _attachmentLock = new();
-    private readonly SemaphoreSlim _voiceSendGate = new(1, 1);
+
+    // The work behind the page lives in Core; this view model turns it into UI state and commands.
+    private readonly ShareRoomSession _session;          // a joined friend's room: sockets, keys, replay windows
+    private readonly ShareRoomConversation _conversation; // chat history, files, incoming wire messages
+    private readonly ShareVoiceCoordinator _voice;        // audio devices and voice packets
 
     private CancellationTokenSource? _startCts;
     private bool _joinForScreen = true;
@@ -172,7 +167,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
     partial void OnIsDeafenedChanged(bool value)
     {
-        _voiceService.SetDeafened(value);
+        _voice.SetDeafened(value);
         OnPropertyChanged(nameof(AudioGlyph));
         OnPropertyChanged(nameof(AudioTooltip));
     }
@@ -231,11 +226,116 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
     public bool IsSecureTransport => !string.IsNullOrWhiteSpace(_roomSessionSecret);
 
-    private ClientWebSocket? _clientChatSocket;
-    private CancellationTokenSource? _chatCts;
     private string _roomSessionSecret = string.Empty;
-    private ClientWebSocket? _clientVoiceSocket;
-    private CancellationTokenSource? _voiceCts;
+
+    // -- Untrusted networks and who is in the room ---------------------------
+
+    /// <summary>Set when the last start was refused because the network is Public or unclassified.</summary>
+    [ObservableProperty]
+    private bool _isUntrustedNetworkRefused;
+
+    [ObservableProperty]
+    private string _untrustedNetworkWarning = string.Empty;
+
+    private enum UntrustedRetry { None, Room, Share }
+    private UntrustedRetry _untrustedRetry;
+    private bool _allowUntrustedNetworkOnce;
+
+    /// <summary>Everyone connected to this PC's room: watching, listening, chatting or in control.</summary>
+    public ObservableCollection<ShareParticipant> Participants { get; } = new();
+    public bool HasParticipants => Participants.Count > 0;
+    public string ParticipantsSummary => Participants.Count switch
+    {
+        0 => "Nobody is connected",
+        1 => "1 connection",
+        var n => $"{n} connections"
+    };
+
+    /// <summary>Session settings for one start, carrying the one-session network override if the user gave it.</summary>
+    private ShareScreenSettings SessionSettings()
+    {
+        var settings = Settings.BuildSessionSettings();
+        settings.AllowUntrustedNetwork = _allowUntrustedNetworkOnce;
+        return settings;
+    }
+
+    /// <summary>
+    /// Repeats the start that was refused, this time allowed on the current network. The
+    /// permission covers this session only; the next room asks again.
+    /// </summary>
+    [RelayCommand]
+    private async Task ShareAnywayOnThisNetworkAsync()
+    {
+        var retry = _untrustedRetry;
+        _allowUntrustedNetworkOnce = true;
+        try
+        {
+            if (retry == UntrustedRetry.Share) await ToggleSharingAsync();
+            else await StartOrCopyInviteAsync();
+        }
+        finally
+        {
+            _allowUntrustedNetworkOnce = false;
+        }
+    }
+
+    // -- Control approval ----------------------------------------------------
+
+    /// <summary>A viewer with the right code asking to take control, until the host answers or it lapses.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPendingControlApproval))]
+    [NotifyPropertyChangedFor(nameof(PendingControlApprovalText))]
+    private PendingControlApproval? _pendingControlApproval;
+
+    public bool HasPendingControlApproval => PendingControlApproval != null;
+
+    public string PendingControlApprovalText => PendingControlApproval is { } p
+        ? $"A viewer at {p.Request.Endpoint} entered your control code and wants to move your mouse and type on this PC."
+        : string.Empty;
+
+    private void OnControlApprovalRequested(object? sender, PendingControlApproval pending)
+    {
+        void Show()
+        {
+            PendingControlApproval?.Deny(); // only one can be pending; the host sees the newest
+            PendingControlApproval = pending;
+            _notificationService.Show("Someone with your control code wants to control this PC. Open Friends to allow or deny.");
+            pending.Answer.ContinueWith(_ => Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                if (PendingControlApproval == pending) PendingControlApproval = null;
+            }), TaskScheduler.Default);
+        }
+
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess()) dispatcher.BeginInvoke(Show);
+        else Show();
+    }
+
+    [RelayCommand]
+    private void AllowControlRequest() => PendingControlApproval?.Allow();
+
+    [RelayCommand]
+    private void DenyControlRequest() => PendingControlApproval?.Deny();
+
+    private void OnParticipantsChanged(object? sender, EventArgs e)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.BeginInvoke(new Action(RefreshParticipants));
+            return;
+        }
+        RefreshParticipants();
+    }
+
+    private void RefreshParticipants()
+    {
+        Participants.Clear();
+        foreach (var participant in _shareService.GetParticipants()) Participants.Add(participant);
+        OnPropertyChanged(nameof(HasParticipants));
+        OnPropertyChanged(nameof(ParticipantsSummary));
+    }
+
 
     public bool IsLive => State == ShareSessionState.Live;
     public bool IsRoomOpen => State == ShareSessionState.RoomOpen;
@@ -269,6 +369,9 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         get
         {
             if (!Uri.TryCreate(ViewerUrl, UriKind.Absolute, out var uri)) return string.Empty;
+            // An HTTPS room's certificate names its Tailscale host, which also reaches this PC;
+            // swapping in loopback would fail the certificate check.
+            if (uri.Scheme == Uri.UriSchemeHttps) return uri.AbsoluteUri;
             return new UriBuilder(uri) { Host = "127.0.0.1" }.Uri.AbsoluteUri;
         }
     }
@@ -315,13 +418,21 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         Settings = settings;
         _notificationService = notificationService;
         _logService = logService;
-        _chatStore = chatStore ?? new ShareChatStore();
-        _attachmentStore = attachmentStore ?? new ShareAttachmentStore();
-        _voiceService = voiceService ?? new RoomVoiceService(logService);
-        _voiceService.EncodedPacketReady += OnLocalVoicePacketReady;
+        _session = new ShareRoomSession(logService);
+        var router = new ShareRoomRouter(shareService, _session, () => State is ShareSessionState.RoomOpen or ShareSessionState.Live);
+        _conversation = new ShareRoomConversation(chatStore ?? new ShareChatStore(), attachmentStore ?? new ShareAttachmentStore(), router.SendChatAsync, logService);
+        _voice = new ShareVoiceCoordinator(voiceService ?? new RoomVoiceService(logService), router.SendVoiceAsync);
+
+        _session.ChatReceived += (_, message) => _conversation.Receive(message);
+        _session.VoiceReceived += (_, packet) => _voice.Receive(packet);
+        _session.VoiceConnectionChanged += OnJoinedVoiceConnectionChanged;
+        _session.ChatEnded += OnJoinedChatEnded;
+        _conversation.MessageArrived += (_, message) => OnUiThread(() => ShowIncomingMessage(message));
+        _conversation.AttachmentRejected += (_, _) => OnUiThread(() =>
+            _notificationService.Show("A received attachment failed its safety check and was discarded."));
 
         // Restore persisted chat messages across restarts, updates, and reinstalls
-        foreach (var msg in _chatStore.LoadMessages())
+        foreach (var msg in _conversation.LoadHistory())
         {
             Messages.Add(msg);
             if (msg.IsAttachment) SharedFiles.Add(msg);
@@ -357,6 +468,8 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         };
 
         _shareService.StatusChanged += OnStatusChanged;
+        _shareService.ParticipantsChanged += OnParticipantsChanged;
+        _shareService.ControlApprovalRequested += OnControlApprovalRequested;
         _shareService.ChatMessageReceived += OnHostChatMessageReceived;
         _shareService.VoicePacketReceived += OnHostVoicePacketReceived;
         Settings.PropertyChanged += (_, e) =>
@@ -424,7 +537,8 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         try
         {
             var progress = new Progress<string>(message => StatusMessage = message + "...");
-            var result = await _shareService.StartAsync(Settings.BuildSessionSettings(), progress, _startCts.Token);
+            var result = await _shareService.StartAsync(SessionSettings(), progress, _startCts.Token);
+            if (result.UntrustedNetworkRefused) _untrustedRetry = UntrustedRetry.Share;
 
             if (result.State == ShareSessionState.Live)
             {
@@ -439,7 +553,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             _logService.LogError("[ShareScreen] Start failed", ex);
-            StatusMessage = ex.Message;
+            StatusMessage = AxePower.Core.Services.Outcomes.UserMessages.Failed("Start sharing", ex).Text;
         }
         finally
         {
@@ -465,14 +579,15 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
             IsBusy = true;
             try
             {
-                var result = await _shareService.StartRoomAsync(Settings.BuildSessionSettings(), CancellationToken.None);
+                var result = await _shareService.StartRoomAsync(SessionSettings(), CancellationToken.None);
                 Apply(result);
+                if (result.UntrustedNetworkRefused) _untrustedRetry = UntrustedRetry.Room;
                 if (result.State == ShareSessionState.RoomOpen) StartVoiceDevices();
             }
             catch (Exception ex)
             {
                 _logService.LogError("[Friends] Could not open private room", ex);
-                StatusMessage = ex.Message;
+                StatusMessage = AxePower.Core.Services.Outcomes.UserMessages.Failed("Open the private room", ex).Text;
                 return;
             }
             finally
@@ -500,8 +615,13 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
         if (State is ShareSessionState.Idle or ShareSessionState.Faulted)
         {
-            var result = await _shareService.StartRoomAsync(Settings.BuildSessionSettings(), CancellationToken.None);
+            var result = await _shareService.StartRoomAsync(SessionSettings(), CancellationToken.None);
             Apply(result);
+            if (result.UntrustedNetworkRefused)
+            {
+                _untrustedRetry = UntrustedRetry.Room;
+                _notificationService.Show("Your room did not open: this network is Public or unclassified. Allow it on the Friends page to invite.");
+            }
             if (result.State == ShareSessionState.RoomOpen) StartVoiceDevices();
         }
 
@@ -634,7 +754,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     private void ToggleMic()
     {
         IsMicMuted = !IsMicMuted;
-        _voiceService.SetMuted(IsMicMuted);
+        _voice.SetMuted(IsMicMuted);
         _notificationService.Show(IsMicMuted ? "Microphone muted" : "Microphone active");
         OnPropertyChanged(nameof(MicGlyph));
     }
@@ -749,31 +869,21 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ConnectToRoom()
     {
-        var raw = JoinAddressInput?.Trim();
-        if (string.IsNullOrWhiteSpace(raw))
+        switch (ShareRoomLink.TryNormalize(JoinAddressInput, out var raw, out var uri))
         {
-            JoinStatusMessage = "Please enter your friend's room link or IP address.";
-            return;
-        }
-
-        if (!raw.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-            !raw.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            raw = "http://" + raw;
-        }
-
-        if (!Uri.TryCreate(raw, UriKind.Absolute, out var uri) ||
-            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-        {
-            JoinStatusMessage = "Invalid address. Format: http://<ip>:<port>/<room>";
-            return;
+            case ShareRoomLink.JoinAddressProblem.Empty:
+                JoinStatusMessage = "Please enter your friend's room link or IP address.";
+                return;
+            case ShareRoomLink.JoinAddressProblem.Invalid:
+                JoinStatusMessage = "Invalid address. Format: http://<ip>:<port>/<room>";
+                return;
         }
 
         ActiveFriendWatchUrl = raw;
-        _roomSessionSecret = ParseViewerSecret(uri);
+        _roomSessionSecret = ShareRoomLink.ParseViewerSecret(uri!);
         IsWatchingFriend = _joinForScreen;
         IsFriendJoined = true;
-        FriendName = !string.IsNullOrWhiteSpace(FriendNameInput) ? FriendNameInput.Trim() : uri.Host;
+        FriendName = !string.IsNullOrWhiteSpace(FriendNameInput) ? FriendNameInput.Trim() : uri!.Host;
         IsJoinModalOpen = false;
         JoinStatusMessage = string.Empty;
 
@@ -782,8 +892,12 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
             Settings.AddOrUpdateFriend(FriendName, raw, FriendStatus.InCall);
         }
 
-        ConnectChatClient(uri);
-        ConnectVoiceClient(uri);
+        _session.JoinChat(uri!);
+        StopVoice();
+        if (!_session.JoinVoice(uri!))
+        {
+            _notificationService.Show("Voice requires a current AxePower private-room link.");
+        }
 
         OnPropertyChanged(nameof(IsStageActive));
         OnPropertyChanged(nameof(ActiveStreamUrl));
@@ -793,126 +907,29 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         _notificationService.Show($"Joined room with {FriendName}!");
     }
 
-    private void ConnectChatClient(Uri uri)
+    /// <summary>A joined room's chat stopped on its own: say why where the join status shows, and as a toast.</summary>
+    private void OnJoinedChatEnded(object? sender, string reason)
     {
-        _chatCts?.Cancel();
-        _chatCts?.Dispose();
-        _chatCts = new CancellationTokenSource();
-
-        var chatUri = new UriBuilder(uri)
+        Application.Current?.Dispatcher.BeginInvoke(() =>
         {
-            Scheme = uri.Scheme == "https" ? "wss" : "ws",
-            Path = uri.AbsolutePath.TrimEnd('/') + "/chat",
-            Query = "v=" + Uri.EscapeDataString(_roomSessionSecret),
-            Fragment = string.Empty
-        }.Uri;
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var ws = new ClientWebSocket();
-                _clientChatSocket = ws;
-                await ws.ConnectAsync(chatUri, _chatCts.Token);
-
-                var buffer = new byte[8192];
-                while (!_chatCts.Token.IsCancellationRequested && ws.State == WebSocketState.Open)
-                {
-                    using var messageBuffer = new MemoryStream();
-                    ValueWebSocketReceiveResult result;
-                    do
-                    {
-                        result = await ws.ReceiveAsync(buffer.AsMemory(), _chatCts.Token);
-                        if (result.MessageType == WebSocketMessageType.Close) break;
-                        messageBuffer.Write(buffer, 0, result.Count);
-                    }
-                    while (!result.EndOfMessage && messageBuffer.Length <= 64 * 1024);
-
-                    if (result.MessageType == WebSocketMessageType.Close) break;
-                    if (result.MessageType != WebSocketMessageType.Text || messageBuffer.Length > 64 * 1024) continue;
-
-                    try
-                    {
-                        if (RoomMessageCrypto.TryDecrypt(messageBuffer.ToArray(), _roomSessionSecret, out var msg) && msg != null)
-                            DispatchIncomingWireMessage(msg with { IsSelf = false });
-                    }
-                    catch (JsonException) { }
-                }
-            }
-            catch { }
+            JoinStatusMessage = reason;
+            _notificationService.Show(reason);
         });
     }
 
-    private void ConnectVoiceClient(Uri uri)
+    private void OnJoinedVoiceConnectionChanged(object? sender, bool connected)
     {
-        StopVoice();
-        if (string.IsNullOrWhiteSpace(_roomSessionSecret))
+        Application.Current?.Dispatcher.BeginInvoke(() =>
         {
-            _notificationService.Show("Voice requires a current AxePower private-room link.");
-            return;
-        }
-
-        _voiceCts = new CancellationTokenSource();
-        var voiceUri = new UriBuilder(uri)
-        {
-            Scheme = uri.Scheme == "https" ? "wss" : "ws",
-            Path = uri.AbsolutePath.TrimEnd('/') + "/voice",
-            Query = "v=" + Uri.EscapeDataString(_roomSessionSecret),
-            Fragment = string.Empty
-        }.Uri;
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var ws = new ClientWebSocket();
-                _clientVoiceSocket = ws;
-                await ws.ConnectAsync(voiceUri, _voiceCts.Token);
-                Application.Current?.Dispatcher.BeginInvoke(() =>
-                {
-                    StartVoiceDevices();
-                    IsVoiceConnected = true;
-                });
-
-                var buffer = new byte[8192];
-                while (!_voiceCts.Token.IsCancellationRequested && ws.State == WebSocketState.Open)
-                {
-                    using var packetBuffer = new MemoryStream();
-                    ValueWebSocketReceiveResult result;
-                    do
-                    {
-                        result = await ws.ReceiveAsync(buffer.AsMemory(), _voiceCts.Token);
-                        if (result.MessageType == WebSocketMessageType.Close) break;
-                        packetBuffer.Write(buffer, 0, result.Count);
-                    }
-                    while (!result.EndOfMessage && packetBuffer.Length <= 8192);
-
-                    if (result.MessageType == WebSocketMessageType.Close) break;
-                    if (result.MessageType == WebSocketMessageType.Binary &&
-                        RoomVoiceCrypto.TryDecrypt(packetBuffer.ToArray(), _roomSessionSecret, out var opusPacket))
-                    {
-                        _voiceService.ReceivePacket(opusPacket);
-                    }
-                }
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                _logService.LogWarning($"[FriendsVoice] Voice connection ended: {ex.Message}");
-            }
-            finally
-            {
-                Application.Current?.Dispatcher.BeginInvoke(() => IsVoiceConnected = false);
-            }
+            if (connected) StartVoiceDevices();
+            IsVoiceConnected = connected;
         });
     }
 
     private void StartVoiceDevices()
     {
-        if (_voiceService.Start())
+        if (_voice.Start(IsMicMuted, IsDeafened))
         {
-            _voiceService.SetMuted(IsMicMuted);
-            _voiceService.SetDeafened(IsDeafened);
             IsVoiceConnected = true;
         }
         else
@@ -922,102 +939,31 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void OnLocalVoicePacketReady(object? sender, byte[] opusPacket) => _ = SendVoicePacketAsync(opusPacket);
-
-    private void OnHostVoicePacketReceived(object? sender, byte[] opusPacket) => _voiceService.ReceivePacket(opusPacket);
-
-    private async Task SendVoicePacketAsync(byte[] opusPacket)
-    {
-        if (State is ShareSessionState.RoomOpen or ShareSessionState.Live)
-        {
-            _shareService.SendVoicePacket(opusPacket);
-            return;
-        }
-        if (!IsFriendJoined || _clientVoiceSocket?.State != WebSocketState.Open || string.IsNullOrWhiteSpace(_roomSessionSecret)) return;
-
-        await _voiceSendGate.WaitAsync();
-        try
-        {
-            var encrypted = RoomVoiceCrypto.Encrypt(opusPacket, _roomSessionSecret);
-            await _clientVoiceSocket.SendAsync(encrypted.AsMemory(), WebSocketMessageType.Binary, true, CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            _logService.LogWarning($"[FriendsVoice] Could not send voice packet: {ex.Message}");
-        }
-        finally
-        {
-            _voiceSendGate.Release();
-        }
-    }
+    private void OnHostVoicePacketReceived(object? sender, byte[] opusPacket) => _voice.Receive(opusPacket);
 
     private void StopVoice()
     {
-        _voiceCts?.Cancel();
-        _voiceCts?.Dispose();
-        _voiceCts = null;
-        if (_clientVoiceSocket != null)
-        {
-            try { _clientVoiceSocket.Dispose(); } catch { }
-            _clientVoiceSocket = null;
-        }
-        _voiceService.Stop();
+        _session.CloseVoice();
+        _voice.Stop();
         IsVoiceConnected = false;
     }
 
-    private void OnHostChatMessageReceived(object? sender, ShareChatMessage msg)
-    {
-        DispatchIncomingWireMessage(msg with { IsSelf = false });
-    }
+    private void OnHostChatMessageReceived(object? sender, ShareChatMessage msg) => _conversation.Receive(msg);
 
-    private void DispatchIncomingWireMessage(ShareChatMessage message)
+    /// <summary>Runs on the UI thread when there is one; inline otherwise (tests, shutdown).</summary>
+    private static void OnUiThread(Action action)
     {
         var dispatcher = Application.Current?.Dispatcher;
         if (dispatcher != null && !dispatcher.CheckAccess())
         {
-            dispatcher.BeginInvoke(new Action(() => ProcessIncomingWireMessage(message)));
+            dispatcher.BeginInvoke(action);
             return;
         }
-
-        ProcessIncomingWireMessage(message);
+        action();
     }
 
-    private void ProcessIncomingWireMessage(ShareChatMessage message)
+    private void ShowIncomingMessage(ShareChatMessage incoming)
     {
-        switch (message.Kind)
-        {
-            case ShareChatKinds.Text when !string.IsNullOrWhiteSpace(message.Text):
-                AddIncomingMessage(message);
-                break;
-
-            case ShareChatKinds.FileOffer:
-                if (message.AttachmentSize <= 0 || message.AttachmentSize > ShareAttachmentStore.MaxAttachmentBytes ||
-                    message.ChunkCount <= 0 || message.ChunkCount > ShareAttachmentStore.MaxWireChunks ||
-                    message.AttachmentSha256.Length != 64 || string.IsNullOrWhiteSpace(message.AttachmentId)) return;
-                lock (_attachmentLock)
-                {
-                    if (_incomingAttachments.Count >= 8 && !_incomingAttachments.ContainsKey(message.AttachmentId)) return;
-                    _incomingAttachments[message.AttachmentId] = new IncomingAttachment(message);
-                }
-                break;
-
-            case ShareChatKinds.FileChunk:
-                lock (_attachmentLock)
-                {
-                    if (_incomingAttachments.TryGetValue(message.AttachmentId, out var transfer))
-                        transfer.AddChunk(message.ChunkIndex, message.ChunkData);
-                }
-                break;
-
-            case ShareChatKinds.FileComplete:
-                CompleteIncomingAttachment(message.AttachmentId);
-                break;
-        }
-    }
-
-    private void AddIncomingMessage(ShareChatMessage incoming)
-    {
-        _chatStore.AppendMessage(incoming);
         Messages.Add(incoming);
         if (incoming.IsAttachment) SharedFiles.Add(incoming);
         if (!IsChatOpen)
@@ -1026,40 +972,6 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
             _notificationService.Show(incoming.IsAttachment
                 ? $"{incoming.Sender} shared {incoming.AttachmentName}"
                 : $"{incoming.Sender}: {incoming.Text}");
-        }
-    }
-
-    private void CompleteIncomingAttachment(string attachmentId)
-    {
-        IncomingAttachment? transfer;
-        lock (_attachmentLock)
-        {
-            if (!_incomingAttachments.Remove(attachmentId, out transfer)) return;
-        }
-
-        try
-        {
-            var bytes = transfer.Combine();
-            _attachmentStore.Accept(
-                transfer.Offer.AttachmentId,
-                transfer.Offer.AttachmentName,
-                transfer.Offer.AttachmentSize,
-                transfer.Offer.AttachmentSha256,
-                bytes);
-
-            var card = transfer.Offer with
-            {
-                Kind = ShareChatKinds.File,
-                Text = string.Empty,
-                ChunkData = string.Empty,
-                ChunkIndex = 0
-            };
-            AddIncomingMessage(card);
-        }
-        catch (Exception ex)
-        {
-            _logService.LogError("[Friends] Rejected an invalid attachment", ex);
-            _notificationService.Show("A received attachment failed its safety check and was discarded.");
         }
     }
 
@@ -1091,28 +1003,18 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     {
         Messages.Clear();
         SharedFiles.Clear();
-        _chatStore.Clear();
+        _conversation.Clear();
         _notificationService.Show("Chat history cleared");
     }
 
     [RelayCommand]
     private async Task SendMessageAsync()
     {
-        var text = ChatInputText?.Trim();
-        if (string.IsNullOrWhiteSpace(text)) return;
-
-        var message = new ShareChatMessage(
-            Guid.NewGuid().ToString("N"),
-            SelfName,
-            text,
-            DateTime.Now,
-            IsSelf: true);
-
-        Messages.Add(message);
-        _chatStore.AppendMessage(message);
-        ChatInputText = string.Empty;
-
-        await SendWireMessageAsync(message);
+        await _conversation.SendTextAsync(SelfName, ChatInputText, message =>
+        {
+            Messages.Add(message);
+            ChatInputText = string.Empty;
+        });
     }
 
     [RelayCommand]
@@ -1128,48 +1030,26 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
         try
         {
-            var file = _attachmentStore.Import(dialog.FileName);
-            var chunkCount = (int)Math.Ceiling(file.Bytes.Length / (double)ShareAttachmentStore.WireChunkBytes);
-            var card = new ShareChatMessage(
-                Guid.NewGuid().ToString("N"), SelfName, string.Empty, DateTime.Now, true,
-                ShareChatKinds.File, file.Id, file.Name, file.Size, file.Sha256, 0, chunkCount);
-
-            Messages.Add(card);
-            SharedFiles.Add(card);
-            _chatStore.AppendMessage(card);
+            var outgoing = _conversation.PrepareFile(SelfName, dialog.FileName);
+            Messages.Add(outgoing.Card);
+            SharedFiles.Add(outgoing.Card);
             ConversationPanelTab = "Files";
             IsChatOpen = true;
 
-            var offer = card with { Kind = ShareChatKinds.FileOffer, IsSelf = false };
-            await SendWireMessageAsync(offer);
-
-            for (var i = 0; i < chunkCount; i++)
-            {
-                var offset = i * ShareAttachmentStore.WireChunkBytes;
-                var length = Math.Min(ShareAttachmentStore.WireChunkBytes, file.Bytes.Length - offset);
-                var chunk = Convert.ToBase64String(file.Bytes, offset, length);
-                await SendWireMessageAsync(offer with
-                {
-                    Kind = ShareChatKinds.FileChunk,
-                    ChunkIndex = i,
-                    ChunkData = chunk
-                });
-            }
-
-            await SendWireMessageAsync(offer with { Kind = ShareChatKinds.FileComplete, ChunkData = string.Empty });
-            _notificationService.Show($"Shared {file.Name}");
+            await _conversation.SendFileAsync(outgoing);
+            _notificationService.Show($"Shared {outgoing.Card.AttachmentName}");
         }
         catch (Exception ex)
         {
             _logService.LogError("[Friends] Could not share attachment", ex);
-            _notificationService.Show(ex.Message);
+            _notificationService.ShowFailure("Share the file", ex);
         }
     }
 
     [RelayCommand]
     private void SaveAttachment(ShareChatMessage? attachment)
     {
-        if (attachment == null || !attachment.IsAttachment || !_attachmentStore.IsAvailable(attachment.AttachmentId))
+        if (attachment == null || !attachment.IsAttachment || !_conversation.IsAvailable(attachment.AttachmentId))
         {
             _notificationService.Show("This attachment is no longer available on this device.");
             return;
@@ -1185,33 +1065,13 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
         try
         {
-            _attachmentStore.Export(attachment.AttachmentId, dialog.FileName);
+            _conversation.Export(attachment.AttachmentId, dialog.FileName);
             _notificationService.Show($"Saved {attachment.AttachmentName}");
         }
         catch (Exception ex)
         {
             _logService.LogError("[Friends] Could not save attachment", ex);
             _notificationService.Show("The attachment could not be saved.");
-        }
-    }
-
-    private async Task SendWireMessageAsync(ShareChatMessage message)
-    {
-        if (State is ShareSessionState.RoomOpen or ShareSessionState.Live)
-        {
-            _shareService.SendChatMessage(message);
-            return;
-        }
-
-        if (!IsFriendJoined || _clientChatSocket?.State != WebSocketState.Open) return;
-        try
-        {
-            var bytes = RoomMessageCrypto.Encrypt(message, _roomSessionSecret);
-            await _clientChatSocket.SendAsync(bytes.AsMemory(), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            _logService.LogError("[Friends] Could not send room data", ex);
         }
     }
 
@@ -1235,14 +1095,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
         _joinForScreen = true;
 
-        _chatCts?.Cancel();
-        _chatCts?.Dispose();
-        _chatCts = null;
-        if (_clientChatSocket != null)
-        {
-            try { _clientChatSocket.Dispose(); } catch { }
-            _clientChatSocket = null;
-        }
+        _session.Leave();
         StopVoice();
 
         OnPropertyChanged(nameof(IsStageActive));
@@ -1274,12 +1127,23 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
         Telemetry = status.Telemetry;
         ViewerUrl = status.ViewerUrl;
         _roomSessionSecret = Uri.TryCreate(ViewerUrl, UriKind.Absolute, out var viewerUri)
-            ? ParseViewerSecret(viewerUri)
+            ? ShareRoomLink.ParseViewerSecret(viewerUri)
             : string.Empty;
         RoomCode = status.Room?.FormattedCode ?? string.Empty;
         EncoderName = status.Encoder?.DisplayName ?? EncoderName;
         ControlState = status.Control;
         ControlCode = status.ControlCode;
+        if (status.UntrustedNetworkRefused)
+        {
+            IsUntrustedNetworkRefused = true;
+            UntrustedNetworkWarning = status.Message;
+        }
+        else if (status.State is not ShareSessionState.Idle)
+        {
+            IsUntrustedNetworkRefused = false;
+            UntrustedNetworkWarning = string.Empty;
+        }
+        if (status.State is ShareSessionState.Idle or ShareSessionState.Faulted) RefreshParticipants();
 
         OnPropertyChanged(nameof(ActiveStreamUrl));
         OnPropertyChanged(nameof(IsStageActive));
@@ -1288,6 +1152,7 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
 
         StatusMessage = status.State switch
         {
+            ShareSessionState.Idle when status.UntrustedNetworkRefused => "Not started: untrusted network",
             ShareSessionState.Idle => "Ready to share",
             ShareSessionState.Live => string.IsNullOrEmpty(status.Message) ? "Live" : status.Message,
             _ => status.Message
@@ -1297,62 +1162,17 @@ public partial class ShareScreenViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _shareService.StatusChanged -= OnStatusChanged;
+        _shareService.ParticipantsChanged -= OnParticipantsChanged;
+        _shareService.ControlApprovalRequested -= OnControlApprovalRequested;
+        PendingControlApproval?.Deny();
         _shareService.ChatMessageReceived -= OnHostChatMessageReceived;
         _shareService.VoicePacketReceived -= OnHostVoicePacketReceived;
-        _voiceService.EncodedPacketReady -= OnLocalVoicePacketReady;
-        _chatCts?.Cancel();
-        _chatCts?.Dispose();
-        _clientChatSocket?.Dispose();
+        _session.VoiceConnectionChanged -= OnJoinedVoiceConnectionChanged;
+        _session.ChatEnded -= OnJoinedChatEnded;
         _startCts?.Cancel();
         _startCts?.Dispose();
         StopVoice();
-        _voiceService.Dispose();
-        _voiceSendGate.Dispose();
-    }
-
-    private sealed class IncomingAttachment
-    {
-        private readonly byte[][] _chunks;
-
-        public ShareChatMessage Offer { get; }
-
-        public IncomingAttachment(ShareChatMessage offer)
-        {
-            Offer = offer;
-            _chunks = new byte[offer.ChunkCount][];
-        }
-
-        public void AddChunk(int index, string base64)
-        {
-            if (index < 0 || index >= _chunks.Length || string.IsNullOrWhiteSpace(base64)) return;
-            try
-            {
-                var bytes = Convert.FromBase64String(base64);
-                if (bytes.Length <= ShareAttachmentStore.WireChunkBytes) _chunks[index] = bytes;
-            }
-            catch (FormatException) { }
-        }
-
-        public byte[] Combine()
-        {
-            if (_chunks.Any(chunk => chunk == null))
-                throw new InvalidDataException("The attachment transfer was incomplete.");
-
-            using var output = new MemoryStream((int)Offer.AttachmentSize);
-            foreach (var chunk in _chunks) output.Write(chunk!);
-            return output.ToArray();
-        }
-    }
-
-    private static string ParseViewerSecret(Uri uri)
-    {
-        var fragment = uri.Fragment.TrimStart('#');
-        foreach (var part in fragment.Split('&', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var separator = part.IndexOf('=');
-            if (separator > 0 && part[..separator].Equals("v", StringComparison.OrdinalIgnoreCase))
-                return Uri.UnescapeDataString(part[(separator + 1)..]);
-        }
-        return string.Empty;
+        _session.Dispose();
+        _voice.Dispose();
     }
 }

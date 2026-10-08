@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Models.Music;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.Music;
 
@@ -82,6 +83,21 @@ public sealed class RecentlyPlayedService : IPlayerIntegration
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Forgets every recent play, in memory and on disk (Trust & Permissions › delete history).</summary>
+    public void Clear()
+    {
+        lock (_lock)
+        {
+            _plays = new List<RecentPlay>();
+            try { if (File.Exists(_paths.RecentlyPlayedFile)) File.Delete(_paths.RecentlyPlayedFile); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // The empty list is saved instead, so the history is gone either way.
+                Save(_plays);
+            }
+        }
+    }
+
     private List<RecentPlay> Plays() => _plays ??= Load();
 
     private List<RecentPlay> Load()
@@ -89,10 +105,13 @@ public sealed class RecentlyPlayedService : IPlayerIntegration
         try
         {
             if (!File.Exists(_paths.RecentlyPlayedFile)) return new();
-            return JsonSerializer.Deserialize<List<RecentPlay>>(File.ReadAllText(_paths.RecentlyPlayedFile), Options)?
+            var loaded = JsonSerializer.Deserialize<List<RecentPlay>>(File.ReadAllText(_paths.RecentlyPlayedFile), Options);
+            if (loaded is null) return new();
+            JsonNullRepair.RepairItems(loaded);
+            return loaded
                 .Where(p => !string.IsNullOrWhiteSpace(p.Title))
                 .OrderByDescending(p => p.PlayedUtc)
-                .ToList() ?? new();
+                .ToList();
         }
         catch (Exception ex)
         {

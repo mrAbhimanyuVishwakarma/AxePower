@@ -22,6 +22,7 @@ public partial class GameModeViewModel : ObservableObject
     private readonly GameScannerService _gameScannerService;
     private readonly AppKillerService _appKillerService;
     private readonly SystemServiceOptimizer _systemServiceOptimizer;
+    private readonly IOperationPrompts _operationPrompts;
     private readonly PowerPlanService _powerPlanService;
     private readonly ControllerNavigationService? _controllerService;
     private readonly IDynamicModeAutomationService? _automationService;
@@ -217,9 +218,11 @@ public partial class GameModeViewModel : ObservableObject
         IMemoryOptimizerService? memoryOptimizer = null,
         SystemTelemetryService? telemetryService = null,
         MsiAfterburnerService? msiAfterburnerService = null,
-        IGameModePrompts? gameModePrompts = null)
+        IGameModePrompts? gameModePrompts = null,
+        IOperationPrompts? operationPrompts = null)
     {
         _gameModePrompts = gameModePrompts;
+        _operationPrompts = operationPrompts ?? new OperationPrompts();
 
         // Both lists show two groups, safe first and caution below; the rows arrive already sorted
         System.Windows.Data.CollectionViewSource.GetDefaultView(RunningBackgroundApps).GroupDescriptions
@@ -407,7 +410,7 @@ public partial class GameModeViewModel : ObservableObject
                 ? "4 Services Paused"
                 : "Services Normal";
         }
-        catch { }
+        catch { /* Display-only figures: a failure keeps the previous ones. */ }
     }
 
     public void RefreshAutomationStatus()
@@ -588,7 +591,7 @@ public partial class GameModeViewModel : ObservableObject
         GameCards.Clear();
         foreach (var rule in AppRules)
         {
-            GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave));
+            GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave) { Notify = _notificationService.Show });
         }
     }
 
@@ -713,7 +716,7 @@ public partial class GameModeViewModel : ObservableObject
                                 AppRules.Add(existingRule);
                             }
 
-                            GameCards.Add(new GameCardViewModel(existingRule, RemoveRule, AutoSave, game.SteamAppId, game.ExecutablePath, game.Name));
+                            GameCards.Add(new GameCardViewModel(existingRule, RemoveRule, AutoSave, game.SteamAppId, game.ExecutablePath, game.Name) { Notify = _notificationService.Show });
                         }
                     }
 
@@ -753,7 +756,7 @@ public partial class GameModeViewModel : ObservableObject
                 }
             });
         }
-        catch { }
+        catch { /* Best-effort tidy-up of the game list after a scan; the list stays as it was. */ }
     }
 
     [RelayCommand]
@@ -795,7 +798,7 @@ public partial class GameModeViewModel : ObservableObject
                         }
                     }
                 }
-                catch { }
+                catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Com(caught)) { /* Not a readable shortcut: the file itself is added as the game. */ }
             }
 
             if (string.IsNullOrEmpty(exeName))
@@ -813,7 +816,7 @@ public partial class GameModeViewModel : ObservableObject
             var newRule = new AppRule { ExecutableName = exeName, TargetMode = PowerMode.Beast };
             AppRules.Add(newRule);
             string title = GamePosterService.GetCleanTitle(exeName);
-            GameCards.Add(new GameCardViewModel(newRule, RemoveRule, AutoSave, null, filePath, title));
+            GameCards.Add(new GameCardViewModel(newRule, RemoveRule, AutoSave, null, filePath, title) { Notify = _notificationService.Show });
             AutoSave();
             RefreshActiveGameDetection();
             _notificationService.Show($"Added {title} to Game Rules.");
@@ -869,7 +872,7 @@ public partial class GameModeViewModel : ObservableObject
                     {
                         var rule = new AppRule { ExecutableName = game, TargetMode = PowerMode.Beast };
                         AppRules.Add(rule);
-                        GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave));
+                        GameCards.Add(new GameCardViewModel(rule, RemoveRule, AutoSave) { Notify = _notificationService.Show });
                         added++;
                     }
                 }
@@ -913,7 +916,7 @@ public partial class GameModeViewModel : ObservableObject
                     if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrWhiteSpace(p.MainWindowTitle))
                         withWindow.Add(p.ProcessName);
                 }
-                catch { }
+                catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Process(caught)) { /* Exited while listed. */ }
             }
 
             App.Current?.Dispatcher?.BeginInvoke(() =>
@@ -1004,23 +1007,28 @@ public partial class GameModeViewModel : ObservableObject
         var toStop = ConfirmCaution(AvailableServices.Where(s => s.IsSelected).ToList(),
             s => s.IsCaution, s => s.DisplayName, "stop");
         var selectedServices = toStop.Select(s => s.ServiceName).ToList();
-        if (selectedServices.Any())
+        if (!selectedServices.Any()) return;
+
+        // Preview first: each service's startup type and state now, and what it will become.
+        var plan = _systemServiceOptimizer.PlanPause(selectedServices);
+        if (!_operationPrompts.Approve(new[] { plan })) return;
+
+        _ = PauseServicesAsync(plan);
+    }
+
+    private async Task PauseServicesAsync(AxePower.Core.Services.Operations.OperationRecord plan)
+    {
+        var result = await _systemServiceOptimizer.ExecuteAsync(plan);
+        foreach (var step in result.Steps.Where(s => s.Status == AxePower.Core.Services.Operations.StepStatus.Succeeded))
         {
-            Task.Run(() =>
+            if (AvailableServices.FirstOrDefault(s => s.ServiceName.Equals(step.Target, StringComparison.OrdinalIgnoreCase)) is { } row)
             {
-                _systemServiceOptimizer.OptimizeServices(selectedServices);
-                App.Current?.Dispatcher?.BeginInvoke(() =>
-                {
-                    foreach (var s in toStop)
-                    {
-                        s.IsPaused = true;
-                        s.IsRunning = false;
-                    }
-                    _notificationService.Show($"⚡ Paused & set {selectedServices.Count} Windows service(s) to manual.");
-                    RefreshServices();
-                });
-            });
+                row.IsPaused = true;
+                row.IsRunning = false;
+            }
         }
+        _notificationService.Show(ReversibilityText.Outcome(result));
+        RefreshServices();
     }
 
     [RelayCommand]
@@ -1099,7 +1107,7 @@ public partial class GameModeViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show($"Controller Navigation Error: {ex.Message}");
+            _notificationService.ShowFailure("Start controller navigation", ex);
         }
         finally
         {

@@ -116,8 +116,9 @@ public class DnsOptimizerService : IDnsOptimizerService
                         provider.LatencyMs = -1; // Unreachable
                     }
                 }
-                catch
+                catch (Exception ex) when (ex is System.Net.NetworkInformation.PingException or InvalidOperationException)
                 {
+                    // No route or ICMP blocked: shown as unreachable.
                     provider.LatencyMs = -1;
                 }
             }
@@ -155,8 +156,9 @@ public class DnsOptimizerService : IDnsOptimizerService
 
                 return active?.Name ?? "Wi-Fi";
             }
-            catch
+            catch (System.Net.NetworkInformation.NetworkInformationException)
             {
+                // The adapter list could not be read: fall back to the usual adapter name.
                 return "Wi-Fi";
             }
         });

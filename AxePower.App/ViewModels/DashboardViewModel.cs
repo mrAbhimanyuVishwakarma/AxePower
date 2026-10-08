@@ -178,9 +178,30 @@ public partial class DashboardViewModel : ObservableObject
             Interval = TimeSpan.FromSeconds(2)
         };
         _timer.Tick += async (s, e) => await RefreshStatusAsync();
-        _timer.Start();
+        // Started by SetLive while the Dashboard is on screen
 
         _ = RefreshStatusAsync();
+    }
+
+    /// <summary>
+    /// Runs the 2-second status refresh only while the Dashboard is on screen (Prompt 29), and
+    /// refreshes at once when it comes back.
+    /// </summary>
+    /// <summary>True while the periodic refresh runs (Dashboard on screen).</summary>
+    public bool IsLive => _timer.IsEnabled;
+
+    public void SetLive(bool live)
+    {
+        if (live == _timer.IsEnabled) return;
+        if (live)
+        {
+            _timer.Start();
+            _ = RefreshStatusAsync();
+        }
+        else
+        {
+            _timer.Stop();
+        }
     }
 
     private void OnTelemetryUpdated(SystemTelemetrySnapshot snapshot)
@@ -319,7 +340,7 @@ public partial class DashboardViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show($"Controller Navigation Error: {ex.Message}");
+            _notificationService.ShowFailure("Start controller navigation", ex);
         }
         finally
         {
@@ -419,8 +440,10 @@ public partial class DashboardViewModel : ObservableObject
             _hasInitializedMode = true;
         }
         
-        // Update trend
+        // Update trend, only when the history changed: rebuilding it every 2 s redrew the graph
+        // (and the page around it) for nothing (Prompt 29)
         var history = await _batteryService.GetHistoryAsync();
+        if (history.Count == BatteryTrendPoints.Count && history.Select(p => (double)p.Percentage).SequenceEqual(BatteryTrendPoints)) return;
         BatteryTrendPoints.Clear();
         foreach (var point in history)
         {
@@ -541,7 +564,7 @@ public partial class DashboardViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to check for updates: " + ex.Message);
+            _notificationService.ShowFailure("Check for updates", ex);
         }
     }
 

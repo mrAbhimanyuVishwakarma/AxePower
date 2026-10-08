@@ -110,7 +110,7 @@ public class GpuControlAppService
                         });
                         return true;
                     }
-                    catch { }
+                    catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* Try the next control app. */ }
                 }
             }
 
@@ -123,7 +123,7 @@ public class GpuControlAppService
                     Process.Start(new ProcessStartInfo { FileName = gfePath, UseShellExecute = true });
                     return true;
                 }
-                catch { }
+                catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* Try the next control app. */ }
             }
 
             // 3. Try NVIDIA Control Panel
@@ -132,7 +132,7 @@ public class GpuControlAppService
                 Process.Start(new ProcessStartInfo { FileName = "nvcplui.exe", UseShellExecute = true });
                 return true;
             }
-            catch { }
+            catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* None found: the caller reports that no control app could be opened. */ }
         }
 
         if (vendor == DetectedGpuVendor.Amd || vendor == DetectedGpuVendor.Unknown)
@@ -156,7 +156,7 @@ public class GpuControlAppService
                         });
                         return true;
                     }
-                    catch { }
+                    catch (Exception caught) when (ExpectedFailures.Process(caught)) { /* Reported: the caller says the app could not be opened. */ }
                 }
             }
         }

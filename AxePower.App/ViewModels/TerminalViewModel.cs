@@ -50,8 +50,14 @@ public partial class TerminalViewModel : ObservableObject
             ? "AxePower Terminal — running with ADMINISTRATOR privileges.\n"
             : "AxePower Terminal — running as standard user. Use \"Relaunch with Admin\" (top bar) for full access.\n";
 
-        // Start the default PowerShell session.
-        _terminal.StartSession(TerminalShell.PowerShell);
+        // No session yet: a PowerShell session costs ~74 MB and 25 threads, so it starts when the
+        // Terminal page is first shown (EnsureSession) or a command is sent, not at app start.
+    }
+
+    /// <summary>Starts the default PowerShell session if none is running. Called when the page is shown.</summary>
+    public void EnsureSession()
+    {
+        if (!_terminal.HasSession) _terminal.StartSession(_terminal.CurrentShell);
     }
 
     private void OnOutput(string line)

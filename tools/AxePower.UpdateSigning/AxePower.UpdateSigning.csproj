@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Owner tool for update signing: creates the update-signing key pair and signs
+    update-manifest.json for a release. Run it through scripts/new-update-signing-key.ps1 and
+    scripts/sign-update-manifest.ps1. It reuses AxePower.Core's ManifestSigner, so the signature
+    format always matches what the app verifies.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>AxePower.UpdateSigning</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AxePower.Core\AxePower.Core.csproj" />
+  </ItemGroup>
+
+</Project>

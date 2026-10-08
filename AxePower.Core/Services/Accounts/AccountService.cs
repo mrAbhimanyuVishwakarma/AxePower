@@ -92,7 +92,7 @@ public sealed class AccountService : IDisposable
                 Publish(StateFromSession(isOffline: true));
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { /* Cancelled: sign-in state is being torn down. */ }
         finally
         {
             _gate.Release();

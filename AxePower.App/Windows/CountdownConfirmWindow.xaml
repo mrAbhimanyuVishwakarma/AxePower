@@ -3,7 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AxePower" Width="440" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
-        AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Topmost="True">
+        AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Topmost="True"
+        xmlns:a11y="clr-namespace:AxePower.App.Helpers"
+        a11y:AccessibleNames.Enabled="True">
     <Border Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
             BorderThickness="1" CornerRadius="14" Padding="24" Margin="12">
         <Border.Effect>

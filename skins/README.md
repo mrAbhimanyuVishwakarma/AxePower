@@ -131,7 +131,10 @@ Any of these is enough to build a skin from:
 1. `dotnet test` must stay green. `SkinCompilerTests` proves the built-in skins still reproduce the
    original theme files resource for resource, and that `_template` compiles.
 2. `AxePower.exe --self-test` lists the skin on the "Skins:" line, with nothing skipped.
-3. Contrast: `textPrimary` and `textSecondary` must read clearly on `card` and `cardElevated`.
-   Text on `accent` (the Apply button and toggles) must read too.
+3. Contrast: `SkinContrastTests` checks every skin in this folder. `textPrimary`, `textSecondary`,
+   `textMuted`, `success`, `warning`, `error` and `accent` must reach 4.5:1 on `window`, `card` and
+   `cardElevated`, and `buttonPrimaryText` 4.5:1 on `buttonPrimary`. A failure names the skin, the
+   colour and its ratio: change that colour's lightness, keeping its hue, until it passes.
+   `textDisabled` is exempt.
 4. Look at it in the app: Dashboard, Settings, Music and Game Mode. A skin isn't done until someone
    has seen it on screen.

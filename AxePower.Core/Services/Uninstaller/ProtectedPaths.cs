@@ -73,8 +73,9 @@ public static class ProtectedPaths
             var full = Path.GetFullPath(trimmed);
             return IsDriveRootRaw(full) ? full.TrimEnd('\\') + "\\" : full.TrimEnd('\\', '/');
         }
-        catch
+        catch (Exception caught) when (ExpectedFailures.Path(caught))
         {
+            // Not a usable path: GetBlockReason then blocks it ("Not a full path").
             return null;
         }
     }
@@ -190,9 +191,15 @@ public static class ProtectedPaths
                 foreach (var dir in Directory.EnumerateDirectories(pf, "Windows*"))
                     list.Add(dir);
             }
-            catch { }
-            list.Add(Path.Combine(pf, "Windows NT"));
-            list.Add(Path.Combine(pf, "Windows Defender"));
+            catch (Exception caught) when (ExpectedFailures.FileSystem(caught)) { /* The explicit Windows* names below still protect the usual folders. */ }
+            // Named as well, so a failed enumeration above cannot leave them unprotected.
+            foreach (var name in new[]
+            {
+                "Windows NT", "Windows Defender", "Windows Defender Advanced Threat Protection", "Windows Mail",
+                "Windows Media Player", "Windows Photo Viewer", "Windows Portable Devices", "Windows Security",
+                "Windows Sidebar", "Windows Kits", "Windows Journal", "Windows Multimedia Platform",
+            })
+                list.Add(Path.Combine(pf, name));
         }
 
         return list
@@ -253,7 +260,7 @@ public static class ProtectedPaths
                 finally { Marshal.FreeCoTaskMem(ptr); }
             }
         }
-        catch { }
+        catch { /* Falls back to the profile Downloads folder below, which stays protected. */ }
 
         var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return string.IsNullOrEmpty(profile) ? null : Path.Combine(profile, "Downloads");

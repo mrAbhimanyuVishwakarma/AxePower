@@ -8,6 +8,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Models;
 using AxePower.Core.Services;
+using AxePower.App.Services;
+using AxePower.Core.Services.Operations;
 
 namespace AxePower.App.ViewModels;
 
@@ -15,6 +17,7 @@ public partial class SystemDoctorViewModel : ObservableObject
 {
     private readonly ISystemDoctorService _doctorService;
     private readonly ICacheCleanerService _cacheCleanerService;
+    private readonly IConfirmationPrompts _confirm;
     private readonly IDnsOptimizerService _dnsService;
     private readonly NotificationService _notificationService;
     private readonly LogService _logService;
@@ -71,8 +74,10 @@ public partial class SystemDoctorViewModel : ObservableObject
         IDnsOptimizerService dnsService,
         NotificationService notificationService,
         LogService logService,
-        TerminalService terminalService)
+        TerminalService terminalService,
+        IConfirmationPrompts? confirm = null)
     {
+        _confirm = confirm ?? new ConfirmationPrompts();
         _doctorService = doctorService;
         _cacheCleanerService = cacheCleanerService;
         _dnsService = dnsService;
@@ -179,8 +184,8 @@ public partial class SystemDoctorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ConsoleLogs += $"[EXCEPTION] {ex.Message}\n";
-            _notificationService.Show($"Error running {taskName}: {ex.Message}");
+            ConsoleLogs += $"[EXCEPTION] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}\n";
+            _notificationService.ShowFailure($"Run {taskName}", ex);
         }
         finally
         {
@@ -297,6 +302,9 @@ public partial class SystemDoctorViewModel : ObservableObject
     public async Task ApplyDnsAsync(DnsProviderItem provider)
     {
         if (provider == null) return;
+        var adapter = await _dnsService.GetActiveAdapterNameAsync();
+        var servers = string.Join(", ", new[] { provider.PrimaryIpv4, provider.SecondaryIpv4 }.Where(a => !string.IsNullOrWhiteSpace(a)));
+        if (!_confirm.Confirm(ConfirmationCatalog.ChangeDns(adapter, provider.Name, servers, await Task.Run(() => DnsCurrent.Read(adapter))))) return;
 
         _notificationService.Show($"Setting DNS to {provider.Name}...");
         bool success = await _dnsService.ApplyDnsProviderAsync(provider.Id);
@@ -319,6 +327,9 @@ public partial class SystemDoctorViewModel : ObservableObject
     [RelayCommand]
     public async Task ResetDhcpAsync()
     {
+        var adapter = await _dnsService.GetActiveAdapterNameAsync();
+        if (!_confirm.Confirm(ConfirmationCatalog.ResetDnsToAutomatic(adapter, await Task.Run(() => DnsCurrent.Read(adapter))))) return;
+
         _notificationService.Show("Resetting DNS to Automatic (DHCP)...");
         bool success = await _dnsService.ResetToDhcpAsync();
 

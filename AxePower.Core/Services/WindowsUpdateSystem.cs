@@ -69,6 +69,7 @@ internal sealed class WindowsUpdateSystem : IWindowsUpdateSystem
         }
         catch (Exception ex)
         {
+            // Reported: the result carries the reason to the update-cache reset, which shows it.
             return new WindowsUpdateOperationResult(false, ex.Message);
         }
     }
@@ -87,6 +88,7 @@ internal sealed class WindowsUpdateSystem : IWindowsUpdateSystem
         }
         catch (Exception ex)
         {
+            // Reported: the result carries the reason to the update-cache reset, which shows it.
             return new WindowsUpdateOperationResult(false, ex.Message);
         }
     }
@@ -116,6 +118,7 @@ internal sealed class WindowsUpdateSystem : IWindowsUpdateSystem
         }
         catch (Exception ex)
         {
+            // Reported: the result carries the reason, which the page shows.
             return new WindowsUpdateOperationResult(false, $"Could not clear the update download cache: {ex.Message}");
         }
     }

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.Accounts;
 
@@ -62,6 +63,7 @@ public sealed class AccountSessionStore
             {
                 if (!File.Exists(FilePath)) return null;
                 var session = JsonSerializer.Deserialize<StoredAccountSession>(_unprotect(File.ReadAllBytes(FilePath)));
+                if (session is null || !JsonNullRepair.Repair(session).IsComplete) return null;
                 return session is { RefreshToken.Length: > 0, UserId.Length: > 0 } ? session : null;
             }
             catch (Exception ex)

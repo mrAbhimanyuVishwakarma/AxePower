@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "high-contrast",
+  "name": "High Contrast",
+  "description": "Black, white and yellow at maximum contrast, for easy reading.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#000000",
+    "sidebar": "#000000",
+    "card": "#0A0A0A",
+    "cardElevated": "#141414",
+    "hover": "#262626",
+    "border": "#FFFFFF",
+    "divider": "#5C5C5C",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#FFFFFF",
+    "textMuted": "#E0E0E0",
+    "textDisabled": "#9E9E9E",
+    "accent": "#FFD600",
+    "success": "#3DFF6E",
+    "warning": "#FFD600",
+    "error": "#FF4D4D",
+    "eco": "#3DFF6E",
+    "smart": "#4DD2FF",
+    "beast": "#FF8C1A",
+    "buttonPrimary": "#FFD600",
+    "buttonPrimaryText": "#000000"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 0,
+    "rim": false,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#FFD600, #FFFFFF, #4DD2FF"
+  }
+}

@@ -150,6 +150,7 @@ public sealed class DiscoveryService : IDisposable
         }
         catch (OperationCanceledException)
         {
+            // Superseded by a newer request or shutting down.
         }
         catch (Exception ex)
         {

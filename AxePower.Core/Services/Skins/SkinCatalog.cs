@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using AxePower.Core.Models.Skins;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.Skins;
 
@@ -102,8 +103,14 @@ public sealed class SkinCatalog
         _errors = errors;
     }
 
-    public static SkinDefinition Read(string json, string source) =>
-        JsonSerializer.Deserialize<SkinDefinition>(json, Json) ?? throw new SkinException($"{source} is empty.");
+    public static SkinDefinition Read(string json, string source)
+    {
+        var skin = JsonSerializer.Deserialize<SkinDefinition>(json, Json) ?? throw new SkinException($"{source} is empty.");
+        // "colors": null and the like fall back to the defaults; the compiler then reports what is missing.
+        var repair = JsonNullRepair.Repair(skin);
+        if (!repair.IsComplete) throw new SkinException($"{source} is incomplete ({repair.Describe()}).");
+        return skin;
+    }
 
     private static SkinDefinition LoadEmbedded(string id)
     {

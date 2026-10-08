@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "blood-moon",
+  "name": "Blood Moon",
+  "description": "A crimson night sky.",
+  "author": "AxePower",
+  "base": "dark",
+  "colors": {
+    "window": "#0D0507",
+    "sidebar": "#12070A",
+    "card": "#1A0A0E",
+    "cardElevated": "#230E13",
+    "hover": "#2F131A",
+    "border": "#4A1C26",
+    "divider": "#230E13",
+    "textPrimary": "#FFF1F2",
+    "textSecondary": "#FBC4CB",
+    "textMuted": "#B87A84",
+    "textDisabled": "#6B3A42",
+    "accent": "#ED3459",
+    "success": "#4ADE80",
+    "warning": "#F59E0B",
+    "error": "#FF4D6D",
+    "eco": "#4ADE80",
+    "smart": "#F43F5E",
+    "beast": "#DC143C",
+    "buttonPrimary": "#DC143C",
+    "buttonPrimaryText": "#FFFFFF"
+  },
+  "glass": {
+    "backdrop": "none",
+    "sheen": 35,
+    "rim": true,
+    "shadow": false
+  },
+  "overrides": {
+    "MusicPlaceholderArtBrush": "#DC143C, #7F1D1D, #FB7185"
+  }
+}

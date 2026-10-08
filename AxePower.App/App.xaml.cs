@@ -10,6 +10,7 @@ using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
+using AxePower.Core.Services.Diagnostics;
 using AxePower.Core.Services.Music;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
@@ -28,21 +29,18 @@ public partial class App : Application
     private const string MutexName = "AxePower.Desktop.Singleton";
     private const string PipeName = "AxePower.Desktop.Singleton.Pipe";
 
+    /// <summary>The app's log, kept in %LOCALAPPDATA%\AxePower\Diagnostics. Created after the self-test branch, which writes nothing.</summary>
+    private LogService? _log;
+
     private void Application_Startup(object sender, StartupEventArgs e)
     {
-        string logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AxePower", "AxePower.log");
-        try
-        {
-            System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] [STARTUP] Process ID: {Environment.ProcessId}, Args: '{string.Join(" ", e.Args)}'\n");
-        }
-        catch { }
 
         // Initialize smooth proportional touchpad & mouse wheel scrolling globally
         try
         {
             TouchpadScrollHelper.Initialize();
         }
-        catch { }
+        catch { /* Smooth scrolling is an enhancement; without it the default WPF scrolling applies. */ }
 
         // Handle CLI arguments early
         if (e.Args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
@@ -51,6 +49,10 @@ public partial class App : Application
             Environment.Exit(0);
             return;
         }
+
+        _log = CreateDiagnosticsLog();
+        _log.Log(LogLevels.Info, "App", LogEvents.AppStarted,
+            $"AxePower started (process {Environment.ProcessId}, {e.Args.Length} argument(s): {string.Join(" ", e.Args)})");
 
         // Single instance check
         try
@@ -71,11 +73,7 @@ public partial class App : Application
 
                 if (signaled && hasInteractiveWindow)
                 {
-                    try
-                    {
-                        System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] [SINGLE_INSTANCE_EXIT] Active interactive instance signaled successfully: {string.Join(", ", existingProcesses.Select(p => p.Id))}\n");
-                    }
-                    catch { }
+                    _log.LogInfo($"[App] Another instance is already open (process {string.Join(", ", existingProcesses.Select(p => p.Id))}); handed over to it and exiting.");
                     Environment.Exit(0);
                     return;
                 }
@@ -84,7 +82,7 @@ public partial class App : Application
                     // Clean up headless/orphaned background instances
                     foreach (var proc in existingProcesses)
                     {
-                        try { proc.Kill(); } catch { }
+                        try { proc.Kill(); } catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Process(caught)) { /* The stale instance exited on its own. */ }
                     }
                 }
             }
@@ -99,10 +97,9 @@ public partial class App : Application
         {
             try
             {
-                var log = Services?.GetService<LogService>();
-                log?.LogError($"[Unhandled UI Exception] {args.Exception.Message}", args.Exception);
+                _log?.Log(LogLevels.Error, "App", LogEvents.UnhandledUiException, $"Unhandled UI exception: {args.Exception.Message}", args.Exception);
             }
-            catch { }
+            catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
             args.Handled = true;
         };
 
@@ -112,29 +109,49 @@ public partial class App : Application
             {
                 try
                 {
-                    var log = Services?.GetService<LogService>();
-                    log?.LogError($"[Unhandled AppDomain Exception] {ex.Message}", ex);
+                    _log?.Log(LogLevels.Error, "App", LogEvents.UnhandledException, $"Unhandled exception: {ex.Message}", ex);
                 }
-                catch { }
+                catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
             }
+        };
+
+        TaskScheduler.UnobservedTaskException += (s, args) =>
+        {
+            try
+            {
+                _log?.Log(LogLevels.Warning, "App", LogEvents.UnobservedTaskException, "A background task failed and nothing observed it.", args.Exception);
+            }
+            catch { /* Broad on purpose: a crash handler must never throw while recording a crash. */ }
         };
 
         try
         {
-            Services = ConfigureServices();
+            Services = ConfigureServices(_log);
 
             var settingsService = Services.GetRequiredService<SettingsService>();
             settingsService.LoadSettings();
+
+            var themeService = Services.GetRequiredService<ThemeService>();
+
+            // A fresh install asks first (Prompt 31): until the welcome's Continue, nothing starts
+            // with Windows, nothing is elevated, no power plan is touched and nothing is checked online
+            bool firstRun = settingsService.GetSettings().FirstRunCompleted == false;
+            if (firstRun)
+            {
+                themeService.ApplyTheme(settingsService.GetSettings().Theme, settingsService.GetSettings().SkinId);
+                firstRun = !ShowWelcome(settingsService);
+            }
 
             // Elevation is decided before anything else is constructed: on success this process
             // is replaced outright, so there is no point building services or showing a window.
             if (TryElevateAndExit(settingsService, e.Args)) return;
 
-            var themeService = Services.GetRequiredService<ThemeService>();
             themeService.ApplyTheme(settingsService.GetSettings().Theme, settingsService.GetSettings().SkinId);
+            themeService.FollowSystemHighContrast();
 
+            // "Not now" on the welcome: the startup task is neither created nor touched
             var startupService = Services.GetRequiredService<StartupService>();
-            startupService.Initialize();
+            if (!firstRun) startupService.Initialize();
 
             var batteryService = Services.GetRequiredService<BatteryService>();
             batteryService.StartHistoryCollection();
@@ -193,12 +210,14 @@ public partial class App : Application
         {
             try
             {
-                var log = Services?.GetService<LogService>() ?? new LogService();
-                log.LogError($"[Startup Failure] {ex.Message}", ex);
+                (_log ?? new LogService()).Log(LogLevels.Error, "App", LogEvents.StartupFailed, $"Startup failed: {ex.Message}", ex);
             }
-            catch { }
+            catch { /* Broad on purpose: the startup-failure path must still show its message box. */ }
 
-            MessageBox.Show($"AxePower failed to start:\n\n{ex.Message}\n\n{ex.StackTrace}", "AxePower Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            // No stack trace on screen (Prompt 30): it is in the diagnostics log, written just above
+            var why = AxePower.Core.Services.Outcomes.UserMessages.Failed("Start AxePower", ex);
+            MessageBox.Show($"{why.Text}\n\nTechnical detail: {why.Details}\n\nThe full report is in %LOCALAPPDATA%\\AxePower\\Diagnostics.",
+                "AxePower could not start", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -209,6 +228,28 @@ public partial class App : Application
     /// A refused UAC prompt is not an error: AxePower keeps running as a standard user, with the
     /// sentinel argument on the relaunched command line making sure a denial cannot loop.
     /// </summary>
+    /// <summary>
+    /// Shows the first-run welcome before any other window. True when the user chose Continue.
+    /// The app is kept alive while it is open: it is not the main window.
+    /// </summary>
+    private bool ShowWelcome(SettingsService settingsService)
+    {
+        var mode = ShutdownMode;
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        try
+        {
+            var welcome = new AxePower.App.Windows.WelcomeWindow(new WelcomeViewModel(settingsService));
+            bool chose = welcome.ShowDialog() == true;
+            Services?.GetService<LogService>()?.LogInfo(chose ? "First run: welcome completed." : "First run: welcome postponed; nothing applied.");
+            return chose;
+        }
+        finally
+        {
+            MainWindow = null;
+            ShutdownMode = mode;
+        }
+    }
+
     private bool TryElevateAndExit(SettingsService settingsService, string[] args)
     {
         var elevation = Services.GetRequiredService<ElevationService>();
@@ -228,12 +269,31 @@ public partial class App : Application
         return true;
     }
 
-    internal static IServiceProvider ConfigureServices()
+    /// <param name="log">
+    /// The app's disk-backed log. Tests and the self-test pass nothing and get an in-memory log, so
+    /// they never write diagnostics to this PC.
+    /// </param>
+    /// <summary>
+    /// The disk-backed log: prunes old diagnostics and, once, removes AxePower.log and
+    /// AxePower.log.old from %APPDATA%, which predate full redaction (owner's choice, 2026-10-06).
+    /// </summary>
+    private static LogService CreateDiagnosticsLog()
+    {
+        var store = new DiagnosticsStore(DiagnosticsStore.DefaultDirectory);
+        var log = new LogService(store);
+        store.EnforceRetention();
+        var removed = DiagnosticsStore.DeleteLegacyLogs(DiagnosticsStore.LegacyDirectory);
+        if (removed > 0)
+            log.Log(LogLevels.Info, "Diagnostics", LogEvents.LegacyLogsRemoved, $"Removed {removed} log file(s) from before structured diagnostics.");
+        return log;
+    }
+
+    internal static IServiceProvider ConfigureServices(LogService? log = null)
     {
         var services = new ServiceCollection();
 
         // Core Services
-        services.AddSingleton<LogService>();
+        services.AddSingleton(log ?? new LogService());
         services.AddSingleton<SettingsService>();
         services.AddSingleton<ElevationService>();
         services.AddSingleton<HardwareMonitorService>();
@@ -267,7 +327,19 @@ public partial class App : Application
         services.AddSingleton<IDnsOptimizerService, DnsOptimizerService>();
         services.AddSingleton<ISystemDoctorService, SystemDoctorService>();
         services.AddSingleton<IWindowsUpdateShieldService, WindowsUpdateShieldService>();
-        services.AddSingleton<IWinGetHubService, WinGetHubService>();
+        // Software Hub: allow-listed programs, launches as the signed-in user, catalog, installs
+        services.AddSingleton(_ => AxePower.Core.Services.Processes.ExecutableAllowList.Windows());
+        services.AddSingleton<AxePower.Core.Services.Processes.IProcessRunner, AxePower.Core.Services.Processes.AllowListedProcessRunner>();
+        services.AddSingleton<AxePower.Core.Services.Processes.IUserShellLauncher>(sp => new AxePower.Core.Services.Processes.UserShellLauncher(
+            sp.GetRequiredService<LogService>(), sp.GetRequiredService<AxePower.Core.Services.Processes.ExecutableAllowList>()));
+        services.AddSingleton(sp => AxePower.Core.Services.SoftwareHub.SoftwareCatalog.CreateDefault(sp.GetRequiredService<LogService>()));
+        services.AddSingleton<AxePower.Core.Services.SoftwareHub.IPortableToolDownloader>(sp => new AxePower.Core.Services.SoftwareHub.GitHubPortableToolDownloader(sp.GetRequiredService<LogService>()));
+        services.AddSingleton<IWinGetHubService>(sp => new WinGetHubService(
+            sp.GetRequiredService<LogService>(),
+            sp.GetRequiredService<AxePower.Core.Services.SoftwareHub.SoftwareCatalog>(),
+            sp.GetRequiredService<AxePower.Core.Services.Processes.IProcessRunner>(),
+            sp.GetRequiredService<AxePower.Core.Services.Processes.IUserShellLauncher>(),
+            sp.GetRequiredService<AxePower.Core.Services.SoftwareHub.IPortableToolDownloader>()));
         services.AddSingleton<IServiceThrottlerService, ServiceThrottlerService>();
         services.AddSingleton<IMemoryOptimizerService, MemoryOptimizerService>();
         services.AddSingleton<IDynamicModeAutomationService, DynamicModeAutomationService>();
@@ -313,7 +385,7 @@ public partial class App : Application
         services.AddSingleton<IProtectionService, ProtectionService>();
         services.AddSingleton<IUninstallHistoryService, UninstallHistoryService>();
         services.AddSingleton<AxePower.Core.Services.Uninstaller.SystemRestoreService>();
-        services.AddSingleton<IUninstallerPrompts, MessageBoxUninstallerPrompts>();
+        services.AddSingleton<IUninstallerPrompts, DialogUninstallerPrompts>();
 
         // Power timer: shut down / restart / sleep after a set time (in-process only)
         services.AddSingleton<ITouchpadPlatform, WindowsTouchpadPlatform>();
@@ -404,6 +476,29 @@ public partial class App : Application
         services.AddTransient<AutoSwitchViewModel>();
         services.AddTransient<GameModeViewModel>();
         services.AddTransient<BatteryViewModel>();
+        // Every change to Windows state goes through one runner and one journal (Prompt 24).
+        services.AddSingleton(sp => new AxePower.Core.Services.Operations.OperationJournal(
+            AxePower.Core.Services.Operations.OperationJournal.DefaultDirectory, sp.GetRequiredService<LogService>()));
+        services.AddSingleton(sp => new AxePower.Core.Services.Operations.OperationRunner(
+            sp.GetRequiredService<AxePower.Core.Services.Operations.OperationJournal>(), sp.GetRequiredService<LogService>(),
+            new AxePower.Core.Services.Operations.IChangeHandler[]
+            {
+                new AxePower.Core.Services.Operations.RegistryChangeHandler(),
+                new AxePower.Core.Services.Operations.ServiceChangeHandler(),
+            }));
+        services.AddSingleton<IOperationPrompts, OperationPrompts>();
+        services.AddTransient<ChangeHistoryViewModel>();
+        services.AddSingleton<IConfirmationPrompts, ConfirmationPrompts>();
+        services.AddSingleton<TrustViewModel>(sp => new TrustViewModel(
+            sp.GetRequiredService<SettingsService>(), sp.GetRequiredService<LogService>(), sp.GetRequiredService<IConfirmationPrompts>(),
+            sp.GetService<ElevationService>(), sp.GetService<LanDropService>(), sp.GetService<IShareScreenService>(),
+            sp.GetService<ShareViewerHost>(), sp.GetService<MediaMtxServer>(), sp.GetService<AccountService>(),
+            sp.GetService<FriendsService>(), sp.GetService<RecentlyPlayedService>(), sp.GetService<RecentSearchesService>(),
+            sp.GetService<StreamCache>(), sp.GetService<ShareChatStore>(), sp.GetService<BatteryService>(),
+            sp.GetService<AxePower.Core.Services.Processes.IUserShellLauncher>()));
+        services.AddSingleton<IDiagnosticsPrompts, DiagnosticsPrompts>();
+        services.AddTransient<DiagnosticsViewModel>(sp => new DiagnosticsViewModel(
+            sp.GetRequiredService<LogService>(), sp.GetRequiredService<SettingsService>(), sp.GetRequiredService<IDiagnosticsPrompts>()));
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<LogsViewModel>();
         services.AddTransient<AboutViewModel>();
@@ -450,6 +545,12 @@ public partial class App : Application
             $"Skins: {skins.Skins.Count} ({string.Join(", ", skins.Skins.Select(k => k.Id))}); " +
             $"{skins.Errors.Count} skipped{(skins.Errors.Count > 0 ? ": " + string.Join(" | ", skins.Errors) : "")}.");
 
+        // Read-only: what Windows asks for, and whether the skin High Contrast switches to is here
+        Console.WriteLine(
+            $"Accessibility: Windows High Contrast {(SystemParameters.HighContrast ? "on" : "off")}, " +
+            $"High Contrast skin {(skins.Find(ThemeService.HighContrastSkinId) != null ? "present" : "MISSING")}, " +
+            $"animation effects {(AxePower.App.Helpers.Motion.IsReduced ? "off (reduced motion)" : "on")}.");
+
         // Read-only: asks the firmware whether a MUX exists, changes nothing
         var gameModeSettings = sp.GetRequiredService<SettingsService>().GetSettings();
         sp.GetRequiredService<GameModeGpuService>();
@@ -494,6 +595,12 @@ public partial class App : Application
         Console.WriteLine(
             $"Phone portal: token {(sp.GetRequiredService<PortalAccessToken>().Value.Length)} chars, " +
             $"music remote {sp.GetRequiredService<MusicRemote>().GetType().Name} ready.");
+        // Static calls only: constructing LanDropService would create its download folder.
+        var lanDropIp = LanDropService.GetLocalIpAddresses().FirstOrDefault();
+        var lanDropNetwork = AxePower.Core.Services.LanDrop.NetworkProfileClassifier.ClassifyCurrentNetwork(lanDropIp);
+        Console.WriteLine(
+            $"LAN Drop network: {lanDropIp} is {lanDropNetwork.Category} ('{lanDropNetwork.NetworkName}'), " +
+            $"{(lanDropNetwork.IsPublicOrUnclassified ? "start refused without a session override" : "start allowed")}.");
 
         // Reported without opening it: the library is created on first use, and a self-test
         // should not be the thing that brings it into existence.
@@ -510,6 +617,16 @@ public partial class App : Application
         sp.GetRequiredService<ToolsViewModel>();
         Console.WriteLine("Tools: " + string.Join(", ", ToolsService.Tools.Select(t =>
             $"{t.Name} {(toolsService.FindExe(t) is { } exe ? "installed at " + exe : "not installed")}")) + ".");
+        // Read-only: validates the catalog and resolves allow-listed programs; runs and opens nothing
+        var hubCatalog = sp.GetRequiredService<AxePower.Core.Services.SoftwareHub.SoftwareCatalog>();
+        var allowList = sp.GetRequiredService<AxePower.Core.Services.Processes.ExecutableAllowList>();
+        sp.GetRequiredService<IWinGetHubService>();
+        var elevatedNow = TerminalService.IsProcessElevated();
+        Console.WriteLine(
+            $"Software Hub: {hubCatalog.Items.Count} catalog entries, {hubCatalog.Rejected.Count} rejected; " +
+            $"winget {allowList.Resolve(AxePower.Core.Services.Processes.AllowedTool.WinGet) ?? "not found at an allowed location"}; " +
+            $"PowerShell {(allowList.Resolve(AxePower.Core.Services.Processes.AllowedTool.PowerShell) != null ? "found" : "missing")}; " +
+            $"{(elevatedNow ? "elevated, so pages and apps open through Explorer as the signed-in user" : "not elevated, so pages and apps open directly")}.");
         // Read-only: reads saved routines and the PC's state; the engine is not started, so nothing runs
         var routineSettings = sp.GetRequiredService<SettingsService>().GetSettings().Routines ?? new();
         sp.GetRequiredService<AxePower.Core.Services.Routines.RoutineEngine>();
@@ -550,6 +667,24 @@ public partial class App : Application
                 : savedAccount.Profile is { } accountProfile ? $"@{accountProfile.Username} (saved session, not refreshed)"
                 : "signed in, no username yet (saved session)") +
             $"; backend {sp.GetRequiredService<SupabaseProject>().Url.Host}.");
+
+        var operations = sp.GetRequiredService<AxePower.Core.Services.Operations.OperationRunner>().Journal.All();
+        Console.WriteLine(
+            $"Change history: {operations.Count} operation(s) recorded, {operations.Count(o => AxePower.Core.Services.Operations.OperationRunner.CanRollBack(o))} can be rolled back; " +
+            $"tweaks {sp.GetRequiredService<ITweakService>().GetAllTweaks().Count} on the framework, Game Mode services {SystemServiceOptimizer.OptimizableServices.Count}.");
+
+        Console.WriteLine(
+            $"Trust & Permissions: {AxePower.Core.Services.Trust.TrustInventory.DataStores.Count} data stores, {AxePower.Core.Services.Trust.TrustInventory.Connections.Count} connections, " +
+            $"{AxePower.Core.Services.Trust.TrustInventory.Listeners.Count} listeners listed; remote access {(CloudBridgeService.IsAvailable ? "available" : "off in this version")}; " +
+            $"build {AxePower.Core.Services.Trust.BuildInfo.Version} commit {AxePower.Core.Services.Trust.BuildInfo.Commit ?? "not recorded"}.");
+
+        // Read-only: summarising never creates the folder, and this run's log is in memory only.
+        var diagnostics = new DiagnosticsStore(DiagnosticsStore.DefaultDirectory);
+        var diagnosticsSummary = diagnostics.Summarize();
+        var legacyLogs = DiagnosticsStore.LegacyLogNames.Count(n => System.IO.File.Exists(System.IO.Path.Combine(DiagnosticsStore.LegacyDirectory, n)));
+        Console.WriteLine(
+            $"Diagnostics: {diagnosticsSummary.Files} file(s), {diagnosticsSummary.Bytes / 1024} KB on this PC; kept {diagnostics.Retention.MaxAge.TotalDays:0} days or " +
+            $"{diagnostics.Retention.MaxTotalBytes / (1024 * 1024)} MB; {legacyLogs} old log file(s) waiting to be removed; this run logs in memory only ({(sp.GetRequiredService<LogService>().Store is null ? "yes" : "NO")}).");
 
         try
         {
@@ -654,33 +789,13 @@ public partial class App : Application
 
     private void Application_Exit(object sender, ExitEventArgs e)
     {
-        if (Services != null)
-        {
-            try
-            {
-                // Saves the queue and position, then releases the audio device. Run off the UI
-                // thread so its awaits cannot wait on this (blocked) dispatcher.
-                var player = Services.GetService<IMusicPlayerService>();
-                if (player != null) Task.Run(player.ShutdownAsync).Wait(TimeSpan.FromSeconds(3));
-                Services.GetService<PlayerIntegrationHost>()?.Dispose();
-                Services.GetService<AmbientWindowService>()?.Dispose();
-                // Running routines are undone (previous mode, reopened apps) before the timer goes
-                var routines = Services.GetService<AxePower.Core.Services.Routines.RoutineEngine>();
-                if (routines != null) Task.Run(routines.StopAsync).Wait(TimeSpan.FromSeconds(5));
-                Services.GetService<PowerTimerService>()?.Dispose();   // closing AxePower cancels the timer
+        if (Services == null) return;
 
-                // Friends see you leave straight away instead of when the heartbeat runs out
-                var friends = Services.GetService<FriendsService>();
-                if (friends is { IsActive: true }) Task.Run(() => friends.GoOfflineAsync(TimeSpan.FromSeconds(2))).Wait(TimeSpan.FromSeconds(3));
-                friends?.Dispose();
-            }
-            catch { }
-
-            var autoSwitchService = Services.GetService<AutoSwitchService>();
-            autoSwitchService?.Stop();
-
-            var appMonitorService = Services.GetService<AppMonitorService>();
-            appMonitorService?.Stop();
-        }
+        // The tray icon is the window's; without this a dead icon stays until hovered
+        (MainWindow as MainWindow)?.DisposeTrayIcon();
+        var steps = AppShutdown.Run(Services, (MainWindow as MainWindow)?.DataContext as MainViewModel,
+            hardExit: () => Environment.Exit(e.ApplicationExitCode));
+        Services.GetService<LogService>()?.LogInfo("[Shutdown] " + string.Join(", ",
+            steps.Select(s => $"{s.Name} {s.Took.TotalMilliseconds:0} ms{(s.Error != null ? " (failed)" : "")}")));
     }
 }

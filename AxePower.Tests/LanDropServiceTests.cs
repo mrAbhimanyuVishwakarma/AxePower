@@ -17,7 +17,7 @@ public class LanDropServiceTests
     public LanDropServiceTests()
     {
         _logService = new LogService();
-        _lanDropService = new LanDropService(_logService);
+        _lanDropService = new LanDropService(_logService, downloadDirectory: System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AxePower_LanDropTests"));
     }
 
     [Fact]

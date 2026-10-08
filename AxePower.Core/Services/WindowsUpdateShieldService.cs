@@ -10,7 +10,8 @@ public class WindowsUpdateShieldService : IWindowsUpdateShieldService
     internal const string UpdatePolicyKey = @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate";
     internal const string AuPolicyKey = @"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU";
 
-    private static readonly string[] UpdateServices = { "wuauserv", "bits", "cryptsvc", "msiserver" };
+    /// <summary>The services the cache reset stops and starts again (shown in its confirmation).</summary>
+    public static readonly IReadOnlyList<string> UpdateServices = new[] { "wuauserv", "bits", "cryptsvc", "msiserver" };
 
     private readonly LogService _log;
     private readonly IWindowsUpdateSystem _system;

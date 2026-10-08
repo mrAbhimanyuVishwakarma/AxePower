@@ -34,6 +34,16 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isNotificationVisible;
 
+    /// <summary>Redacted technical detail behind the banner's Details link (Prompt 30); null hides the link.</summary>
+    [ObservableProperty]
+    private string? _notificationDetails;
+
+    [ObservableProperty]
+    private bool _isNotificationDetailsOpen;
+
+    [ObservableProperty]
+    private bool _isNotificationFailure;
+
     [ObservableProperty]
     private bool _isToolHelpModalOpen;
 
@@ -61,6 +71,9 @@ public partial class MainViewModel : ObservableObject
     public PhoneHubViewModel PhoneHubVm { get; }
     public TerminalViewModel TerminalVm { get; }
     public ToolsViewModel? ToolsVm { get; }
+
+    /// <summary>Trust & Permissions (Prompt 25).</summary>
+    public TrustViewModel? TrustVm { get; }
     public RoutinesViewModel? RoutinesVm { get; }
     public MusicViewModel? MusicVm { get; }
     public ShareScreenViewModel? ShareScreenVm { get; }
@@ -98,6 +111,7 @@ public partial class MainViewModel : ObservableObject
     public Style? LogsActiveStyle => GetStyleForView(LogsVm);
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
     public Style? AboutActiveStyle => GetStyleForView(AboutVm);
+    public Style? TrustActiveStyle => GetStyleForView((object?)TrustVm ?? new object());
     public Style? UninstallerActiveStyle => GetSubItemStyleForView(UninstallerVm);
     public Style? SystemCareActiveStyle => GetSubItemStyleForView(SystemCareVm);
     public Style? DebloatActiveStyle => GetSubItemStyleForView(DebloatVm);
@@ -177,8 +191,10 @@ public partial class MainViewModel : ObservableObject
         ShareScreenViewModel? shareScreenVm = null,
         ToolsViewModel? toolsVm = null,
         AccountViewModel? accountVm = null,
-        RoutinesViewModel? routinesVm = null)
+        RoutinesViewModel? routinesVm = null,
+        TrustViewModel? trustVm = null)
     {
+        TrustVm = trustVm;
         ToolsVm = toolsVm;
         if (ToolsVm != null) ToolsVm.NavigateTo = target => Navigate(target);
         RoutinesVm = routinesVm;
@@ -240,6 +256,7 @@ public partial class MainViewModel : ObservableObject
         InitializeToolGuides();
 
         _notificationService.OnShowNotification += (s, msg) => ShowNotification(msg);
+        _notificationService.OnShowMessage += (s, msg) => ShowMessage(msg);
 
         // Silent background update check after startup and recurring hourly
         _ = CheckUpdateInBackgroundAsync();
@@ -277,7 +294,7 @@ public partial class MainViewModel : ObservableObject
                     try
                     {
                         // Silently download the update in background
-                        var installerPath = await _updateService.DownloadUpdateAsync(result.DownloadUrl, new Progress<double>());
+                        var installerPath = await _updateService.DownloadUpdateAsync(result.DownloadUrl, new Progress<double>(), manifest: result.Manifest);
                         AboutVm.DownloadedInstallerPath = installerPath;
                         AboutVm.IsUpdateDownloaded = true;
                         AboutVm.SteamUpdateBannerMessage = $"AxePower v{result.LatestVersion} is downloaded and ready to install - ";
@@ -356,8 +373,48 @@ public partial class MainViewModel : ObservableObject
         _settingsService.SaveSettings(settings, notifyListeners: false);
     }
 
+    private AxePower.Core.Services.SystemTelemetryService? _telemetry;
+    private bool _isOnScreen;
+
+    /// <summary>Hands over the live sampler, which only runs while a page that shows it is on screen.</summary>
+    public void AttachTelemetry(AxePower.Core.Services.SystemTelemetryService? telemetry)
+    {
+        _telemetry = telemetry;
+        UpdateBackgroundActivity();
+    }
+
+    /// <summary>The window is shown and not minimised. Set by the main window.</summary>
+    public bool IsOnScreen
+    {
+        get => _isOnScreen;
+        set
+        {
+            if (_isOnScreen == value) return;
+            _isOnScreen = value;
+            UpdateBackgroundActivity();
+        }
+    }
+
+    /// <summary>
+    /// Periodic work runs only while its page is on screen (Prompt 29): the Dashboard's and the
+    /// Battery page's refresh, the 1-second sampler for Dashboard and Game Mode, and the latency
+    /// ping for the Dashboard alone.
+    /// </summary>
+    public void UpdateBackgroundActivity()
+    {
+        if (_isOnScreen && CurrentView == TerminalVm) TerminalVm.EnsureSession();
+        bool dashboard = _isOnScreen && CurrentView == DashboardVm;
+        DashboardVm.SetLive(dashboard);
+        BatteryVm.SetLive(_isOnScreen && CurrentView == BatteryVm);
+        if (_telemetry is null) return;
+        _telemetry.MeasureLatency = dashboard;
+        if (dashboard || (_isOnScreen && CurrentView == GameModeVm)) _telemetry.Resume();
+        else _telemetry.Pause();
+    }
+
     partial void OnCurrentViewChanged(object? value)
     {
+        UpdateBackgroundActivity();
         OnPropertyChanged(nameof(DashboardActiveStyle));
         OnPropertyChanged(nameof(AutoSwitchActiveStyle));
         OnPropertyChanged(nameof(GameModeActiveStyle));
@@ -369,6 +426,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(LogsActiveStyle));
         OnPropertyChanged(nameof(SettingsActiveStyle));
         OnPropertyChanged(nameof(AboutActiveStyle));
+        OnPropertyChanged(nameof(TrustActiveStyle));
         OnPropertyChanged(nameof(UninstallerActiveStyle));
         OnPropertyChanged(nameof(SystemCareActiveStyle));
         OnPropertyChanged(nameof(DebloatActiveStyle));
@@ -423,6 +481,7 @@ public partial class MainViewModel : ObservableObject
             "Music"       => (object?)MusicVm ?? DashboardVm,
             "Settings"    => ShowSettingsSection(arg1),
             "Logs"        => LogsVm,
+            "Trust"       => (object?)TrustVm ?? DashboardVm,
             "About"       => AboutVm,   // older links; the page is Profile now
             "Profile"     => AboutVm,
             "Uninstaller" => UninstallerVm,
@@ -497,7 +556,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ShowNotification($"Could not relaunch as admin: {ex.Message}");
+            _notificationService.ShowFailure("Relaunch as administrator", ex);
         }
     }
 
@@ -576,7 +635,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open credit link: " + ex.Message);
+            _notificationService.ShowFailure("Open the credit link", ex);
         }
     }
 
@@ -593,7 +652,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open MSI site: " + ex.Message);
+            _notificationService.ShowFailure("Open MSI's website", ex);
         }
     }
 
@@ -633,7 +692,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open Help Center: " + ex.Message);
+            _notificationService.ShowFailure("Open the Help Center", ex);
         }
     }
 
@@ -651,7 +710,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _notificationService.Show("Failed to open tool link: " + ex.Message);
+            _notificationService.ShowFailure("Open the tool's page", ex);
         }
     }
 
@@ -845,11 +904,44 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
-    private async void ShowNotification(string message)
+    private void ShowNotification(string message) =>
+        ShowMessage(new AxePower.Core.Services.Outcomes.UserMessage(message, null, false));
+
+    private int _notificationShown;
+
+    /// <summary>
+    /// Shows the banner: 3 s for news, 10 s for a failure, which also keeps it open while its
+    /// details are expanded. A newer message replaces an older one.
+    /// </summary>
+    private async void ShowMessage(AxePower.Core.Services.Outcomes.UserMessage message)
     {
-        NotificationMessage = message;
+        int shown = ++_notificationShown;
+        NotificationMessage = message.Text;
+        NotificationDetails = message.Details;
+        IsNotificationFailure = message.IsFailure;
+        IsNotificationDetailsOpen = false;
         IsNotificationVisible = true;
-        await System.Threading.Tasks.Task.Delay(3000);
+        await System.Threading.Tasks.Task.Delay(message.IsFailure ? 10000 : 3000);
+        while (IsNotificationDetailsOpen && shown == _notificationShown)
+            await System.Threading.Tasks.Task.Delay(1000);
+        if (shown == _notificationShown) IsNotificationVisible = false;
+    }
+
+    [RelayCommand]
+    private void ToggleNotificationDetails() => IsNotificationDetailsOpen = !IsNotificationDetailsOpen;
+
+    [RelayCommand]
+    private void CopyNotificationDetails()
+    {
+        if (string.IsNullOrEmpty(NotificationDetails)) return;
+        try { System.Windows.Clipboard.SetText(NotificationMessage + Environment.NewLine + NotificationDetails); }
+        catch (System.Runtime.InteropServices.COMException) { /* The clipboard is held by another program; the details are in the log too. */ }
+    }
+
+    [RelayCommand]
+    private void DismissNotification()
+    {
+        _notificationShown++;
         IsNotificationVisible = false;
     }
 }

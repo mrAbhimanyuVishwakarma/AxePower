@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using AxePower.Core.Models.ShareScreen;
+using AxePower.Core.Helpers;
 
 namespace AxePower.Core.Services.ShareScreen;
 
@@ -66,7 +67,10 @@ public sealed class ShareChatStore
                     ? Encoding.UTF8.GetString(stored)
                     : Encoding.UTF8.GetString(_unprotect(stored));
                 var messages = JsonSerializer.Deserialize<List<ShareChatMessage>>(json, JsonOptions);
-                return messages ?? new List<ShareChatMessage>();
+                if (messages is null) return new List<ShareChatMessage>();
+                var repair = JsonNullRepair.RepairItems(messages);
+                if (repair.Changed) _log?.LogWarning($"[ShareChat] Saved chat had incomplete messages ({repair.Describe()}).");
+                return messages;
             }
             catch (Exception ex)
             {

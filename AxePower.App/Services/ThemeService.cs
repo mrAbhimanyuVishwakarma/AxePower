@@ -15,12 +15,20 @@ namespace AxePower.App.Services;
 /// </summary>
 public class ThemeService
 {
-    private readonly SkinCatalog _catalog;
-    private ResourceDictionary? _appliedDictionary;
+    /// <summary>The skin shown while Windows High Contrast is on (Prompt 28).</summary>
+    public const string HighContrastSkinId = "high-contrast";
 
-    public ThemeService(SkinCatalog catalog)
+    private readonly SkinCatalog _catalog;
+    private readonly Func<bool> _isSystemHighContrast;
+    private ResourceDictionary? _appliedDictionary;
+    private AppTheme _requestedTheme = AppTheme.System;
+    private string? _requestedSkinId;
+    private bool _followingHighContrast;
+
+    public ThemeService(SkinCatalog catalog, Func<bool>? isSystemHighContrast = null)
     {
         _catalog = catalog;
+        _isSystemHighContrast = isSystemHighContrast ?? (() => SystemParameters.HighContrast);
         ActiveSkin = catalog.Resolve(SkinCatalog.DefaultId);
     }
 
@@ -28,6 +36,30 @@ public class ThemeService
 
     /// <summary>The skin on screen now (dark until the first apply).</summary>
     public SkinEntry ActiveSkin { get; private set; }
+
+    /// <summary>
+    /// True while Windows High Contrast is on and AxePower is showing its High Contrast skin in
+    /// place of the one the user chose. The choice itself is kept and comes back when it is off.
+    /// </summary>
+    public bool IsHighContrastActive { get; private set; }
+
+    /// <summary>
+    /// Re-applies the user's theme whenever Windows High Contrast is turned on or off. Called once,
+    /// by the app at startup; a test's ThemeService does not listen.
+    /// </summary>
+    public void FollowSystemHighContrast()
+    {
+        if (_followingHighContrast) return;
+        _followingHighContrast = true;
+        SystemParameters.StaticPropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(SystemParameters.HighContrast)) return;
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                if (_isSystemHighContrast() != IsHighContrastActive) ApplyTheme(_requestedTheme, _requestedSkinId);
+            });
+        };
+    }
 
     /// <summary>The active skin described the way older code asks: light, glass or dark.</summary>
     public AppTheme ActualTheme => ToAppTheme(ActiveSkin);
@@ -106,7 +138,7 @@ public class ThemeService
                     return AppTheme.Light;
                 }
             }
-            catch { }
+            catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Registry(caught)) { /* Unreadable: AxePower uses its dark skin. */ }
             return AppTheme.Dark;
         }
 
@@ -125,7 +157,7 @@ public class ThemeService
                 return sys == 1;
             }
         }
-        catch { }
+        catch (Exception caught) when (AxePower.Core.Services.ExpectedFailures.Registry(caught)) { /* Unreadable: treated as a dark taskbar. */ }
 
         var actual = ResolveActualTheme(currentTheme);
         return actual == AppTheme.Light;
@@ -137,14 +169,21 @@ public class ThemeService
     /// </summary>
     public void ApplyTheme(AppTheme theme, string? skinId = null)
     {
-        var skin = skinId != null
-            ? _catalog.Resolve(skinId)
-            : _catalog.Resolve(ResolveActualTheme(theme) switch
-            {
-                AppTheme.Light => "light",
-                AppTheme.Glass => "glass",
-                _ => "dark"
-            });
+        _requestedTheme = theme;
+        _requestedSkinId = skinId;
+
+        // Windows High Contrast overrides the chosen skin without changing the saved choice.
+        var highContrast = _isSystemHighContrast() ? _catalog.Find(HighContrastSkinId) : null;
+        IsHighContrastActive = highContrast != null;
+        var skin = highContrast
+            ?? (skinId != null
+                ? _catalog.Resolve(skinId)
+                : _catalog.Resolve(ResolveActualTheme(theme) switch
+                {
+                    AppTheme.Light => "light",
+                    AppTheme.Glass => "glass",
+                    _ => "dark"
+                }));
 
         var dictionary = SkinResourceFactory.Build(skin.Compiled);
 
@@ -285,7 +324,7 @@ public class ThemeService
             SetWindowCompositionAttribute(hwnd, ref data);
             Marshal.FreeHGlobal(accentPtr);
         }
-        catch { }
+        catch { /* Acrylic is cosmetic; without it the skin's solid background shows. */ }
     }
 
     private static void DisableAcrylicFallback(IntPtr hwnd)
@@ -311,6 +350,6 @@ public class ThemeService
             SetWindowCompositionAttribute(hwnd, ref data);
             Marshal.FreeHGlobal(accentPtr);
         }
-        catch { }
+        catch { /* Best-effort: the window keeps its last effect. */ }
     }
 }

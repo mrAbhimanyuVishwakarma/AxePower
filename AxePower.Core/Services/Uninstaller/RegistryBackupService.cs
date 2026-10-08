@@ -37,8 +37,9 @@ public sealed class RegistryBackupService : IRegistryBackupService
         {
             return exitCode == 0 && File.Exists(targetFile) && new FileInfo(targetFile).Length > 0;
         }
-        catch
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // Reported: no verified backup means the cleanup leaves the key in place ("backup failed").
             return false;
         }
     }
@@ -96,8 +97,9 @@ public sealed class RegistryBackupService : IRegistryBackupService
                 ValueData = json,
             };
         }
-        catch
+        catch (Exception)
         {
+            // Reported: without a backup the cleanup leaves the value in place ("could not be backed up").
             return null;
         }
     }
@@ -128,8 +130,9 @@ public sealed class RegistryBackupService : IRegistryBackupService
             key.SetValue(item.ValueName, value, kind);
             return true;
         }
-        catch
+        catch (Exception)
         {
+            // Reported: the undo marks this value as not restored and shows it.
             return false;
         }
     }
@@ -212,8 +215,9 @@ public sealed class RegistryBackupService : IRegistryBackupService
         {
             throw;
         }
-        catch
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or OperationCanceledException or IOException)
         {
+            // reg.exe could not run or timed out: -1 is a failure the callers report.
             return -1;
         }
     }
