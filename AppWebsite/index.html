@@ -14,14 +14,14 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://axepower.vercel.app/">
   <meta property="og:title" content="AxePower - Your PC. Your Control Center.">
-  <meta property="og:description" content="AxePower brings PC monitoring, performance modes, game controls, AI recommendations and mobile control into one simple Windows experience.">
+  <meta property="og:description" content="Monitor, tune, clean, game, and control your Windows 11 PC from one focused workspace—without giving up the specialist tools you trust.">
   <meta property="og:image" content="assets/website_home_image.png">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://axepower.vercel.app/">
   <meta name="twitter:title" content="AxePower - Your PC. Your Control Center.">
-  <meta name="twitter:description" content="AxePower brings PC monitoring, performance modes, game controls, AI recommendations and mobile control into one simple Windows experience.">
+  <meta name="twitter:description" content="Monitor, tune, clean, game, and control your Windows 11 PC from one focused workspace—without giving up the specialist tools you trust.">
   <meta name="twitter:image" content="assets/website_home_image.png">
 
   <!-- Favicons -->
@@ -67,13 +67,13 @@
       </a>
 
       <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
-        <a href="features.html" class="nav-link">Features</a>
         <a href="download.html" class="nav-link">Download</a>
-        <a href="support.html" class="nav-link">Connect with Us</a>
+        <a href="features.html" class="nav-link">Features</a>
         <a href="help.html" class="nav-link">Help</a>
-        <a href="about.html" class="nav-link">About</a>
-        <a href="jobs.html" class="nav-link">Jobs</a>
         <a href="store.html" class="nav-link">Store</a>
+        <a href="support.html" class="nav-link">Connect</a>
+        <a href="jobs.html" class="nav-link">Jobs</a>
+        <a href="about.html" class="nav-link">About</a>
       </nav>
 
       <div class="nav-actions">
@@ -111,43 +111,29 @@
   <main>
     <!-- HERO SECTION -->
     <section class="hero-section" id="hero">
+      <img
+        src="assets/website_Dashboard.png"
+        onerror="this.onerror=null;this.src='assets/website_home_image.png';"
+        alt="AxePower dashboard running on a Windows laptop with the Android companion app"
+        class="hero-backdrop"
+        width="2752"
+        height="1536"
+        fetchpriority="high"
+      >
+      <div class="hero-overlay" aria-hidden="true"></div>
       <div class="container hero-container">
-        <div class="hero-badge">
-          <span class="status-dot"></span>
-          <span>Windows PC Control Center &amp; Android Companion</span>
-        </div>
-
-        <h1 class="hero-title">Your PC. Your Control Center.</h1>
-
-        <p class="hero-subtitle">
-          AxePower brings PC monitoring, performance modes, game controls, AI recommendations and mobile control into one simple Windows experience.
-        </p>
-
-        <div class="hero-buttons">
-          <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest" class="btn btn-lg btn-primary js-direct-download" aria-label="Download Latest AxePower for Windows">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download AxePower
-          </a>
-          <a href="#features" class="btn btn-lg btn-secondary">
-            See Features
-          </a>
-        </div>
-
-        <p class="hero-specs-tag">
-          Windows &bull; Android Companion &bull; Wi-Fi &amp; USB
-        </p>
-
-        <!-- Main Product Visual (Laptop + Android Phone) -->
-        <div class="hero-visual-wrapper">
-          <div class="hero-device-frame">
-            <img 
-              src="assets/website_home_image.png" 
-              alt="AxePower running on modern gaming laptop alongside Android phone companion app showing live system telemetry"
-              class="hero-render-img"
-              width="1080"
-              height="608"
-              priority
-            >
+        <div class="hero-content">
+          <h1 class="hero-title">AxePower <span class="hero-version-phrase"><span class="js-version-num">2.1.4</span> is here!</span></h1>
+          <p class="hero-subtitle">
+            Windows 11-ready with smarter power modes, live system monitoring, Android control, and much more!
+          </p>
+          <div class="hero-buttons">
+            <a href="whats-new.html" class="btn btn-lg btn-secondary hero-whats-new">
+              What's New
+            </a>
+            <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest" class="btn btn-lg btn-primary js-direct-download" aria-label="Download AxePower 2.1.4 for Windows">
+              Download
+            </a>
           </div>
         </div>
       </div>
@@ -200,14 +186,6 @@
             <p class="feature-card-desc">Recommended optimizations, health repairs, update policy, forced-reboot protection, cache reset, and restore points.</p>
           </article>
 
-          <!-- Card 5: Mobile Companion & SpaceDesk -->
-          <article class="feature-card">
-            <div class="feature-icon-wrapper icon-emerald">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-            </div>
-            <h3 class="feature-card-title">Mobile Suite &amp; Display</h3>
-            <p class="feature-card-desc">Wireless LAN Drop file sharing, scrcpy mirroring, SpaceDesk second monitor, and Phone Link integration.</p>
-          </article>
         </div>
       </div>
     </section>
@@ -222,16 +200,20 @@
 
         <!-- High-Fidelity Gaming Laptop Displaying Real AxePower Dashboard -->
         <div class="dashboard-laptop-container">
-          <div class="window-shadow-glow"></div>
           <figure class="dashboard-laptop-frame">
-            <img 
-              src="assets/dashboard_laptop.png" 
-              alt="AxePower running on ASUS ROG STRIX SCAR gaming laptop showcasing PC Dashboard, Power Modes Eco, Smart, Beast and Smart Auto Switch"
-              class="dashboard-laptop-img"
-              width="1080"
-              height="695"
-              loading="lazy"
+            <video
+              id="dashboardScrollVideo"
+              class="dashboard-laptop-video"
+              width="1776"
+              height="1080"
+              muted
+              playsinline
+              preload="none"
+              poster="assets/dashboard_laptop.png"
+              aria-label="AxePower running on an ASUS ROG gaming laptop, showing the dashboard interface as the page scrolls"
             >
+              <source data-src="assets/dashboard_laptop_ROG_alpha.webm" type="video/webm">
+            </video>
           </figure>
         </div>
       </div>

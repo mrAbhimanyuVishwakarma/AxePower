@@ -4,145 +4,97 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Donate &amp; Support AxePower</title>
-  <meta name="description" content="Support AxePower open-source development. Donate via Buy Me a Coffee, GitHub Sponsors, or UPI to fund development, test hardware, and infrastructure.">
-  <meta name="keywords" content="Donate AxePower, Sponsor open source, Buy Me a Coffee mrabhimanyu, UPI donation">
+  <meta name="description" content="Support AxePower open-source development through GitHub Sponsors, Buy Me a Coffee, or a direct UPI donation.">
+  <meta name="keywords" content="Donate AxePower, sponsor open source, Buy Me a Coffee, UPI donation">
   <meta name="author" content="AxePower">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://axepower.vercel.app/donate.html">
-
-  <!-- Favicons -->
   <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
   <link rel="icon" type="image/x-icon" id="appFavicon" href="assets/AxePower_white.ico">
   <link rel="shortcut icon" id="appShortcutFavicon" href="assets/AxePower_white.ico">
   <link rel="apple-touch-icon" id="appAppleIcon" href="assets/AxePower_white.ico">
-
-  <!-- Analytics loads only after the visitor accepts (see consent.js) -->
   <script src="consent.js"></script>
-
-  <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
-
   <style>
-    .page-hero {
-      padding: 130px 0 50px;
-      text-align: center;
-      background: var(--body-gradient);
+    .donate-page {
+      background-image: linear-gradient(var(--border-divider) 1px, transparent 1px), linear-gradient(90deg, var(--border-divider) 1px, transparent 1px);
+      background-size: 32px 32px;
     }
-    .donate-channels-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      margin-top: 36px;
+    .page-hero { padding: 96px 0 42px; text-align: center; background: transparent; }
+    .page-hero .hero-title { font-size: clamp(2.5rem, 5vw, 4.75rem); letter-spacing: -0.04em; margin-bottom: 18px; }
+    .page-hero .hero-subtitle { max-width: 720px; margin: 0 auto; font-size: 1.12rem; }
+    .support-paths { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding-bottom: 28px; }
+    .support-path {
+      background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 12px; padding: 32px;
+      display: flex; flex-direction: column; justify-content: space-between; min-height: 292px;
+      transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
     }
-    .donate-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-card);
-      border-radius: var(--radius-xl);
-      padding: 32px 28px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: all var(--transition-base);
-      position: relative;
-    }
-    .donate-card:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-4px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-    }
-    .donate-card.featured {
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 0 1px var(--accent-cyan), 0 12px 32px rgba(0, 212, 255, 0.15);
-    }
-    .payment-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 14px;
-      width: fit-content;
-    }
+    .support-path:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.2); }
+    .path-icon { width: 42px; height: 42px; display: grid; place-items: center; color: var(--text-primary); margin-bottom: 26px; }
+    .support-path h2 { font-size: 1.65rem; margin-bottom: 12px; }
+    .support-path p { font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
+    .support-path .btn { align-self: flex-start; }
+    .support-note { color: var(--text-muted); font-size: 13px; margin: 0 0 56px; }
+    .payment-section { background: var(--bg-main); border-top: 1px solid var(--border-divider); padding: 72px 0 96px; }
+    .payment-heading { max-width: 720px; margin-bottom: 36px; }
+    .payment-heading h2 { font-size: clamp(2rem, 4vw, 3.5rem); letter-spacing: -0.04em; margin-bottom: 12px; }
+    .payment-heading p { font-size: 1.05rem; }
+    .payment-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 24px; align-items: stretch; }
+    .payment-panel { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 12px; padding: 32px; }
+    .payment-panel h3 { font-size: 1.5rem; margin-bottom: 10px; }
+    .payment-panel > p { margin-bottom: 24px; }
+    .coffee-action { display: flex; flex-direction: column; justify-content: space-between; }
+    .coffee-action .btn { background: #ffdd00; color: #171717; border: 0; box-shadow: 0 8px 20px rgba(0,0,0,.18); }
+    .qr-row { display: grid; grid-template-columns: 170px 1fr; gap: 24px; align-items: center; }
+    .qr-frame { background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #d8dde4; }
+    .qr-frame img { border-radius: 6px; }
+    .qr-caption { font-size: 12px; color: var(--text-muted); margin-top: 8px; text-align: center; }
     .upi-box {
-      background: var(--bg-elevated);
-      border: 1px solid var(--border-card);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-      margin: 16px 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
+      background: var(--bg-elevated); border: 1px solid var(--border-card); border-radius: 8px; padding: 12px 14px;
+      margin: 0 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
     }
-    .upi-code {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent-cyan);
-      word-break: break-all;
-    }
+    .upi-code { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--accent-cyan); word-break: break-all; }
     .copy-btn {
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 6px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-card);
-      color: var(--text-primary);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all var(--transition-fast);
+      padding: 8px 13px; font-size: 12px; font-weight: 600; border-radius: 6px; background: var(--bg-card);
+      border: 1px solid var(--border-card); color: var(--text-primary); cursor: pointer; white-space: nowrap;
     }
-    .copy-btn:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-hover);
+    .copy-btn:hover { background: var(--bg-card-hover); border-color: var(--border-hover); }
+    .secondary-support { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+    .support-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px;
+      background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 12px;
     }
+    .support-row h3 { font-size: 1.05rem; margin-bottom: 4px; }
+    .support-row p { font-size: 13px; }
+    .support-row .btn { flex-shrink: 0; }
+    .support-row.is-disabled { opacity: .68; }
+    .support-row button:disabled { cursor: not-allowed; }
     @media (max-width: 768px) {
-      .page-hero {
-        padding: 42px 0 24px !important;
-      }
-      .donate-channels-grid {
-        grid-template-columns: 1fr !important;
-        gap: 16px !important;
-      }
-      .donate-card {
-        padding: 22px 18px !important;
-      }
-      .upi-box {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        text-align: center;
-      }
-      .copy-btn {
-        width: 100%;
-        padding: 8px 12px;
-      }
+      .page-hero { padding: 64px 0 32px; }
+      .page-hero .hero-subtitle { font-size: 1rem; }
+      .support-paths, .payment-grid, .secondary-support, .qr-row { grid-template-columns: 1fr; gap: 16px; }
+      .support-path { min-height: 0; padding: 26px 24px; }
+      .support-path .btn { width: 100%; }
+      .support-note { margin-bottom: 42px; }
+      .payment-section { padding: 56px 0 72px; }
+      .payment-panel { padding: 24px; }
+      .qr-frame { max-width: 190px; margin-inline: auto; }
+      .upi-box { flex-direction: column; align-items: stretch; text-align: center; }
+      .copy-btn { width: 100%; padding: 10px 12px; }
+      .support-row { align-items: flex-start; flex-direction: column; }
+      .support-row .btn { width: 100%; }
     }
   </style>
-
-  <!-- Prevent Theme Flash -->
   <script>
     (function() {
       const savedTheme = localStorage.getItem('axepower-theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', theme);
-      
-      const icoPath = theme === 'light' ? 'assets/AxePower_black.ico' : 'assets/AxePower_white.ico';
-      const fav = document.getElementById('appFavicon');
-      const shortFav = document.getElementById('appShortcutFavicon');
-      const appleFav = document.getElementById('appAppleIcon');
-      if (fav) fav.href = icoPath;
-      if (shortFav) shortFav.href = icoPath;
-      if (appleFav) appleFav.href = icoPath;
     })();
   </script>
 </head>
 <body>
-  <!-- Header / Navigation -->
   <header class="site-header" id="navbar">
     <div class="container header-container">
       <a href="index.html" class="brand-logo" aria-label="AxePower Home">
@@ -150,169 +102,92 @@
         <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
         <span class="brand-name">AxePower</span>
       </a>
-
       <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
-        <a href="features.html" class="nav-link">Features</a>
         <a href="download.html" class="nav-link">Download</a>
-        <a href="support.html" class="nav-link">Connect with Us</a>
+        <a href="features.html" class="nav-link">Features</a>
         <a href="help.html" class="nav-link">Help</a>
-        <a href="about.html" class="nav-link">About</a>
-        <a href="jobs.html" class="nav-link">Jobs</a>
         <a href="store.html" class="nav-link">Store</a>
+        <a href="support.html" class="nav-link">Connect</a>
+        <a href="jobs.html" class="nav-link">Jobs</a>
+        <a href="about.html" class="nav-link">About</a>
       </nav>
-
       <div class="nav-actions">
-        <a href="donate.html" class="btn-donate" aria-label="Support AxePower with a Donation">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          <span>Donate</span>
+        <a href="donate.html" class="btn-donate" aria-label="Support AxePower with a donation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.8a5.5 5.5 0 0 0 1-8.8Z"/></svg><span>Donate</span>
         </a>
-
         <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light theme" title="Toggle theme">
-          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M1 12h2m18 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
         </button>
-
-        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="page-hero">
+  <main class="donate-page">
+    <section class="page-hero">
+      <div class="container"><h1 class="hero-title">Support AxePower.</h1><p class="hero-subtitle">Help one Windows control center grow. Sponsor development, make a direct donation, or contribute your time and ideas.</p></div>
+    </section>
+    <section class="container" aria-label="Ways to support AxePower">
+      <div class="support-paths">
+        <article class="support-path">
+          <div><div class="path-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 19c-3 0-5-2-5-5 0-2 1-4 3-5V5l4-2 4 2v4c2 1 3 3 3 5 0 3-2 5-5 5H8Z"/><path d="M8 19v2m4-2v2m5-8 3-2m-3 5 4 1"/></svg></div><h2>Sponsor</h2><p>Back the open-source work behind AxePower with recurring support through GitHub Sponsors.</p></div>
+          <a href="https://github.com/sponsors/mrAbhimanyuVishwakarma" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Sponsor on GitHub â†—</a>
+        </article>
+        <article class="support-path">
+          <div><div class="path-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.8a5.5 5.5 0 0 0 1-8.8Z"/></svg></div><h2>Donate</h2><p>Send a one-time contribution through Buy Me a Coffee or make a direct UPI payment in India.</p></div>
+          <a href="#payment-options" class="btn btn-secondary">Choose how to donate â†’</a>
+        </article>
+        <article class="support-path">
+          <div><div class="path-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v6m0 8v6M4.9 4.9l4.2 4.2m5.8 5.8 4.2 4.2M2 12h6m8 0h6M4.9 19.1l4.2-4.2m5.8-5.8 4.2-4.2"/></svg></div><h2>Contribute</h2><p>Help with testing, bug reports, translations, documentation, or ideasâ€”support is more than money.</p></div>
+          <a href="get-involved.html" class="btn btn-secondary">Get involved â†’</a>
+        </article>
+      </div>
+      <p class="support-note">Every contribution supports development and testing. AxePower remains free to download and use.</p>
+    </section>
+  </main>
+
+  <section class="payment-section" id="payment-options">
     <div class="container">
-      <div style="font-size: 44px; margin-bottom: 10px;">💖</div>
-      <h1 class="hero-title" style="font-size: clamp(2rem, 4vw, 3.2rem); margin-bottom: 12px;">
-        Support AxePower Development
-      </h1>
-      <p class="hero-subtitle" style="max-width: 680px; margin: 0 auto;">
-        AxePower is 100% free and open source. Your contributions directly fund hardware testing, domain hosting, and continuous feature development.
-      </p>
+      <div class="payment-heading"><h2>Choose how to donate.</h2><p>Use the option that works best for you. Direct donations do not unlock paid features or change application access.</p></div>
+      <div class="payment-grid">
+        <article class="payment-panel coffee-action"><div><h3>Buy Me a Coffee</h3><p>Make a quick one-time or monthly contribution using card, Apple Pay, or Google Pay.</p></div><a href="https://buymeacoffee.com/mrabhimanyu" target="_blank" rel="noopener noreferrer" class="btn">Open Buy Me a Coffee â†—</a></article>
+        <article class="payment-panel">
+          <h3>UPI Â· India</h3><p>Scan the QR code or copy the UPI ID to donate from any compatible banking app.</p>
+          <div class="qr-row"><div><div class="qr-frame"><img src="assets/donation_qr_image_1787677065256.png" alt="UPI QR code for donating to AxePower" width="180" height="180"></div><p class="qr-caption">Scan with any UPI app</p></div>
+            <div><div class="upi-box"><span class="upi-code" id="upiIdText">abhimanyuvishwakarma5120@sbi</span><button class="copy-btn" id="copyUpiBtn" type="button">Copy</button></div><a href="upi://pay?pa=abhimanyuvishwakarma5120@sbi&amp;pn=Abhimanyu%20Vishwakarma&amp;cu=INR" class="btn btn-primary" style="width:100%;">Open UPI app â†’</a></div>
+          </div>
+        </article>
+      </div>
+      <div class="secondary-support">
+        <article class="support-row"><div><h3>GitHub Sponsors</h3><p>Choose recurring support through your GitHub account.</p></div><a href="https://github.com/sponsors/mrAbhimanyuVishwakarma" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View profile â†—</a></article>
+        <article class="support-row is-disabled"><div><h3>PayPal</h3><p>International PayPal support is being prepared.</p></div><button class="btn btn-secondary" type="button" disabled>Coming soon</button></article>
+      </div>
     </div>
   </section>
 
-  <!-- Donation Channels Grid -->
-  <main class="container" style="padding-bottom: 90px;">
-    <div class="donate-channels-grid">
-
-      <!-- Channel 1: Buy Me a Coffee (Featured) -->
-      <div class="donate-card featured">
-        <div>
-          <span class="payment-badge" style="background: rgba(255, 221, 0, 0.18); color: #eab308;">☕ BUY ME A COFFEE</span>
-          <h2 style="font-size: 22px; font-weight: 800; margin: 8px 0 10px;">Buy Me a Coffee</h2>
-          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
-            Quick one-time or monthly support via Credit/Debit card, Apple Pay, or Google Pay.
-          </p>
-        </div>
-        <a href="https://buymeacoffee.com/mrabhimanyu" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background: linear-gradient(135deg, #FFDD00 0%, #F59E0B 100%); color: #000; font-weight: 700; border: none; width: 100%;">
-          <span>buymeacoffee.com/mrabhimanyu ➔</span>
-        </a>
-      </div>
-
-      <!-- Channel 2: UPI / VPA (Direct India) -->
-      <div class="donate-card">
-        <div>
-          <span class="payment-badge" style="background: rgba(16, 185, 129, 0.12); color: var(--mode-eco);">⚡ DIRECT UPI</span>
-          <h2 style="font-size: 22px; font-weight: 800; margin: 8px 0 10px;">UPI Payment (India)</h2>
-          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
-            Zero-fee instant transfer via Google Pay, PhonePe, Paytm, BHIM, or any UPI banking app.
-          </p>
-
-          <div style="text-align: center; margin: 18px 0 14px;">
-            <div style="display: inline-block; background: #ffffff; padding: 10px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid var(--border-card);">
-              <img src="assets/donation_qr_image_1787677065256.png" alt="AxePower UPI QR Code" width="180" height="auto" style="border-radius: 8px; display: block; max-width: 100%;">
-            </div>
-            <span style="display: block; font-size: 12px; color: var(--text-muted); margin-top: 8px;">Scan with any UPI app to donate</span>
-          </div>
-          
-          <div class="upi-box">
-            <span class="upi-code" id="upiIdText">abhimanyuvishwakarma5120@sbi</span>
-            <button class="copy-btn" id="copyUpiBtn" type="button">Copy</button>
-          </div>
-        </div>
-        <a href="upi://pay?pa=abhimanyuvishwakarma5120@sbi&pn=Abhimanyu%20Vishwakarma&cu=INR" class="btn btn-secondary" style="width: 100%;">
-          <span>Pay via UPI App ⚡</span>
-        </a>
-      </div>
-
-      <!-- Channel 3: GitHub Sponsors -->
-      <div class="donate-card">
-        <div>
-          <span class="payment-badge" style="background: rgba(236, 72, 153, 0.12); color: #ec4899;">🐙 GITHUB SPONSORS</span>
-          <h2 style="font-size: 22px; font-weight: 800; margin: 8px 0 10px;">GitHub Sponsors</h2>
-          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
-            Sponsor directly via GitHub with tiered monthly backing and official GitHub sponsor profile badge.
-          </p>
-        </div>
-        <a href="https://github.com/sponsors/mrAbhimanyuVishwakarma" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="width: 100%;">
-          <span>Sponsor on GitHub ↗</span>
-        </a>
-      </div>
-
-      <!-- Channel 4: PayPal (Coming Soon) -->
-      <div class="donate-card" style="opacity: 0.85;">
-        <div>
-          <span class="payment-badge" style="background: rgba(0, 102, 255, 0.12); color: #0066ff;">💳 PAYPAL</span>
-          <h2 style="font-size: 22px; font-weight: 800; margin: 8px 0 10px;">PayPal</h2>
-          <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
-            International PayPal support for overseas supporters and currency conversions.
-          </p>
-        </div>
-        <button class="btn btn-secondary" disabled style="width: 100%; cursor: default; opacity: 0.6;">
-          <span>Coming Soon</span>
-        </button>
-      </div>
-
-    </div>
-  </main>
-
-  <!-- Footer -->
   <footer class="site-footer">
     <div class="container footer-container">
-      <div class="footer-brand-col">
-        <a href="index.html" class="brand-logo footer-logo">
-          <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
-          <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
-          <span class="brand-name">AxePower</span>
-        </a>
-        <p class="footer-tagline">Your PC. Your Control Center.</p>
-      </div>
-
-      <div class="footer-links-col">
-        <ul class="footer-links">
-          <li><a href="features.html" class="footer-link">Features</a></li>
-          <li><a href="download.html" class="footer-link">Download</a></li>
-          <li><a href="support.html" class="footer-link">Support &amp; Help</a></li>
-          <li><a href="get-involved.html" class="footer-link">Get Involved</a></li>
-          <li><a href="about.html" class="footer-link">About</a></li>
-          <li><a href="jobs.html" class="footer-link">Jobs</a></li>
-          <li><a href="store.html" class="footer-link">Store</a></li>
-          <li><a href="donate.html" class="footer-link">Donate</a></li>
-          <li><a href="privacy.html" class="footer-link">Privacy</a></li>
-          <li><a href="terms.html" class="footer-link">Terms</a></li>
-          <li><a href="#" class="footer-link" data-cookie-settings>Cookie settings</a></li>
-        </ul>
-      </div>
+      <div class="footer-brand-col"><a href="index.html" class="brand-logo footer-logo"><img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28"><img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28"><span class="brand-name">AxePower</span></a><p class="footer-tagline">Your PC. Your Control Center.</p></div>
+      <div class="footer-links-col"><ul class="footer-links"><li><a href="features.html" class="footer-link">Features</a></li><li><a href="download.html" class="footer-link">Download</a></li><li><a href="support.html" class="footer-link">Support &amp; Help</a></li><li><a href="get-involved.html" class="footer-link">Get Involved</a></li><li><a href="about.html" class="footer-link">About</a></li><li><a href="jobs.html" class="footer-link">Jobs</a></li><li><a href="store.html" class="footer-link">Store</a></li><li><a href="privacy.html" class="footer-link">Privacy</a></li><li><a href="terms.html" class="footer-link">Terms</a></li><li><a href="#" class="footer-link" data-cookie-settings>Cookie settings</a></li></ul></div>
     </div>
-    <div class="container footer-bottom">
-      <p class="copyright-text">&copy; 2026 AxePower. Built for Windows enthusiasts.</p>
-    </div>
+    <div class="container footer-bottom"><p class="copyright-text">&copy; 2026 AxePower. Built for Windows enthusiasts.</p></div>
   </footer>
 
   <script src="script.js"></script>
   <script>
     const copyBtn = document.getElementById('copyUpiBtn');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText('abhimanyuvishwakarma5120@sbi').then(() => {
-          copyBtn.textContent = 'Copied! ✓';
-          copyBtn.style.color = 'var(--mode-eco)';
-          setTimeout(() => {
-            copyBtn.textContent = 'Copy';
-            copyBtn.style.color = '';
-          }, 2000);
-        });
-      });
-    }
+    if (copyBtn) copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText('abhimanyuvishwakarma5120@sbi');
+        copyBtn.textContent = 'Copied';
+        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+      } catch (_) {
+        copyBtn.textContent = 'Select the UPI ID';
+        document.getElementById('upiIdText').setAttribute('tabindex', '-1');
+        document.getElementById('upiIdText').focus();
+      }
+    });
   </script>
 </body>
 </html>

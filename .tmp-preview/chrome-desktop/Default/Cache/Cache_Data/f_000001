@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AxePower - Your PC. Your Control Center.</title>
+  <meta name="description" content="AxePower is a Windows PC control center for monitoring, performance modes, gaming, AI recommendations and Android remote control.">
+  <meta name="keywords" content="AxePower, Windows control center, PC monitoring, power modes, game booster, Android companion, Windows 11 utility">
+  <meta name="author" content="AxePower">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://axepower.vercel.app/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://axepower.vercel.app/">
+  <meta property="og:title" content="AxePower - Your PC. Your Control Center.">
+  <meta property="og:description" content="AxePower brings PC monitoring, performance modes, game controls, AI recommendations and mobile control into one simple Windows experience.">
+  <meta property="og:image" content="assets/website_home_image.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://axepower.vercel.app/">
+  <meta name="twitter:title" content="AxePower - Your PC. Your Control Center.">
+  <meta name="twitter:description" content="AxePower brings PC monitoring, performance modes, game controls, AI recommendations and mobile control into one simple Windows experience.">
+  <meta name="twitter:image" content="assets/website_home_image.png">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon/favicon-96x96.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" id="appFavicon" href="assets/AxePower_white.ico">
+  <link rel="shortcut icon" id="appShortcutFavicon" href="assets/AxePower_white.ico">
+  <link rel="apple-touch-icon" id="appAppleIcon" href="assets/AxePower_white.ico">
+
+  <!-- Analytics loads only after the visitor accepts (see consent.js) -->
+  <script src="consent.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Prevent Theme Flash & Set Initial Favicon -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('axepower-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      const icoPath = theme === 'light' ? 'assets/AxePower_black.ico' : 'assets/AxePower_white.ico';
+      const fav = document.getElementById('appFavicon');
+      const shortFav = document.getElementById('appShortcutFavicon');
+      const appleFav = document.getElementById('appAppleIcon');
+      if (fav) fav.href = icoPath;
+      if (shortFav) shortFav.href = icoPath;
+      if (appleFav) appleFav.href = icoPath;
+    })();
+  </script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header" id="navbar">
+    <div class="container header-container">
+      <a href="#" class="brand-logo" aria-label="AxePower Home">
+        <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+        <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+        <span class="brand-name">AxePower</span>
+      </a>
+
+      <nav class="nav-links" id="navLinks" aria-label="Primary Navigation">
+        <a href="features.html" class="nav-link">Features</a>
+        <a href="download.html" class="nav-link">Download</a>
+        <a href="support.html" class="nav-link">Connect with Us</a>
+        <a href="help.html" class="nav-link">Help</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="jobs.html" class="nav-link">Jobs</a>
+        <a href="store.html" class="nav-link">Store</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="donate.html" class="btn-donate" aria-label="Support AxePower with a Donation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Donate</span>
+        </a>
+
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle dark/light theme" title="Toggle theme">
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section class="hero-section" id="hero">
+      <div class="container hero-container">
+        <div class="hero-badge">
+          <span class="status-dot"></span>
+          <span>Windows PC Control Center &amp; Android Companion</span>
+        </div>
+
+        <h1 class="hero-title">One command center.<br><span>Every side of Windows.</span></h1>
+
+        <p class="hero-subtitle">
+          Monitor, tune, clean, game, and control your Windows 11 PC from one focused workspace—without giving up the specialist tools you trust.
+        </p>
+
+        <div class="hero-buttons">
+          <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest" class="btn btn-lg btn-primary js-direct-download" aria-label="Download Latest AxePower for Windows">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download AxePower
+          </a>
+          <a href="#features" class="btn btn-lg btn-secondary">
+            See Features
+          </a>
+        </div>
+
+        <p class="hero-specs-tag">
+          Windows &bull; Android Companion &bull; Wi-Fi &amp; USB
+        </p>
+
+        <!-- Main Product Visual (Laptop + Android Phone) -->
+        <div class="hero-visual-wrapper">
+          <div class="hero-device-frame">
+            <img 
+              src="assets/website_home_image.png" 
+              alt="AxePower running on modern gaming laptop alongside Android phone companion app showing live system telemetry"
+              class="hero-render-img"
+              width="1080"
+              height="608"
+              priority
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: WHAT IS AXEPOWER (FEATURES) -->
+    <section class="section section-features" id="features">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Everything you need. One place.</h2>
+          <p class="section-description">
+            A complete set of tools to monitor, optimize, and control your Windows PC without complex configurations.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Card 1: System Monitoring -->
+          <article class="feature-card">
+            <div class="feature-icon-wrapper icon-blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <h3 class="feature-card-title">2x2 Telemetry &amp; 24h Battery</h3>
+            <p class="feature-card-desc">Real-time Task Manager metrics (CPU, GPU, RAM, Internet) and continuous 24-hour battery history curves.</p>
+          </article>
+
+          <!-- Card 2: Performance Modes -->
+          <article class="feature-card">
+            <div class="feature-icon-wrapper icon-cyan">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <h3 class="feature-card-title">Performance Modes</h3>
+            <p class="feature-card-desc">Switch instantly between Eco, Smart, Beast, and custom Game Profiles with 1-click Steam context menus.</p>
+          </article>
+
+          <!-- Card 3: Game Optimizations -->
+          <article class="feature-card">
+            <div class="feature-icon-wrapper icon-purple">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg>
+            </div>
+            <h3 class="feature-card-title">Game Booster &amp; Audio</h3>
+            <p class="feature-card-desc">Per-game refresh rate locks, background suspension, controller navigation, and Dolby Atmos 3D audio tuning.</p>
+          </article>
+
+          <!-- Card 4: System Care & Update Shield -->
+          <article class="feature-card">
+            <div class="feature-icon-wrapper icon-amber">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </div>
+            <h3 class="feature-card-title">System Care &amp; Update Shield</h3>
+            <p class="feature-card-desc">Recommended optimizations, health repairs, update policy, forced-reboot protection, cache reset, and restore points.</p>
+          </article>
+
+          <!-- Card 5: Mobile Companion & SpaceDesk -->
+          <article class="feature-card">
+            <div class="feature-icon-wrapper icon-emerald">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </div>
+            <h3 class="feature-card-title">Mobile Suite &amp; Display</h3>
+            <p class="feature-card-desc">Wireless LAN Drop file sharing, scrcpy mirroring, SpaceDesk second monitor, and Phone Link integration.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: REAL DASHBOARD SHOWCASE -->
+    <section class="section section-dashboard" id="dashboard">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="sub-badge">Unified Control Surface</span>
+          <h2 class="section-title">One dashboard. Your whole PC.</h2>
+        </div>
+
+        <!-- High-Fidelity Gaming Laptop Displaying Real AxePower Dashboard -->
+        <div class="dashboard-laptop-container">
+          <div class="window-shadow-glow"></div>
+          <figure class="dashboard-laptop-frame">
+            <img 
+              src="assets/dashboard_laptop.png" 
+              alt="AxePower running on ASUS ROG STRIX SCAR gaming laptop showcasing PC Dashboard, Power Modes Eco, Smart, Beast and Smart Auto Switch"
+              class="dashboard-laptop-img"
+              width="1080"
+              height="695"
+              loading="lazy"
+            >
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: POWER + GAMING -->
+    <section class="section section-modes" id="modes">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Choose how your PC performs.</h2>
+          <p class="section-description">
+            Switch between everyday efficiency and full performance with a single click.
+          </p>
+        </div>
+
+        <!-- 4 Modes Grid -->
+        <div class="modes-grid">
+          <!-- Mode 1: Eco -->
+          <div class="mode-card mode-eco">
+            <div class="mode-badge">Eco</div>
+            <div class="mode-icon-container">
+              <img src="assets/icon_saver.png" alt="Eco Mode Icon" class="mode-img" width="76" height="76" loading="lazy">
+            </div>
+            <h3 class="mode-card-title">Eco Mode</h3>
+            <p class="mode-card-desc">Maximum efficiency for everyday browsing, documents and battery longevity.</p>
+            <ul class="mode-specs">
+              <li>
+                <img src="assets/icons/battery_eco.png" alt="Battery" width="16" height="16">
+                <span>Best battery endurance</span>
+              </li>
+              <li>
+                <img src="assets/icons/thermostat_smart.png" alt="Thermostat" width="16" height="16">
+                <span>Lower temperatures</span>
+              </li>
+              <li>
+                <img src="assets/icons/volume_eco.png" alt="Quiet" width="16" height="16">
+                <span>Whisper quiet fans</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Mode 2: Smart -->
+          <div class="mode-card mode-smart">
+            <div class="mode-badge">Smart</div>
+            <div class="mode-icon-container">
+              <img src="assets/icon_smart.png" alt="Smart Mode Icon" class="mode-img" width="76" height="76" loading="lazy">
+            </div>
+            <h3 class="mode-card-title">Smart Mode</h3>
+            <p class="mode-card-desc">Intelligent balance that dynamically adapts power based on your active workload.</p>
+            <ul class="mode-specs">
+              <li>
+                <img src="assets/icons/performance_smart.png" alt="Adaptive" width="16" height="16">
+                <span>Dynamic AC/DC scaling</span>
+              </li>
+              <li>
+                <img src="assets/icons/battery_smart.png" alt="Balanced" width="16" height="16">
+                <span>Optimal power-to-fan curve</span>
+              </li>
+              <li>
+                <img src="assets/icons/thermostat_smart.png" alt="Cooling" width="16" height="16">
+                <span>Balanced thermal envelope</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Mode 3: Beast -->
+          <div class="mode-card mode-beast">
+            <div class="mode-badge">Beast</div>
+            <div class="mode-icon-container">
+              <img src="assets/icon_beast.png" alt="Beast Mode Icon" class="mode-img" width="76" height="76" loading="lazy">
+            </div>
+            <h3 class="mode-card-title">Beast Mode</h3>
+            <p class="mode-card-desc">Uncapped performance unleashing maximum CPU &amp; GPU power limits for heavy tasks.</p>
+            <ul class="mode-specs">
+              <li>
+                <img src="assets/icons/performance_beast.png" alt="Max Clock" width="16" height="16">
+                <span>Maximum sustained clocks</span>
+              </li>
+              <li>
+                <img src="assets/icons/bolt_beast.png" alt="Power" width="16" height="16">
+                <span>Full hardware wattage</span>
+              </li>
+              <li>
+                <img src="assets/icons/thermometer_beast.png" alt="Active Cooling" width="16" height="16">
+                <span>Aggressive cooling response</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Mode 4: Game -->
+          <div class="mode-card mode-game">
+            <div class="mode-badge">Game</div>
+            <div class="mode-icon-container">
+              <img src="assets/Gamemode2.png" alt="Game Mode Icon" class="mode-img" width="76" height="76" loading="lazy">
+            </div>
+            <h3 class="mode-card-title">Game Mode</h3>
+            <p class="mode-card-desc">Automated game booster that suspends background tasks and applies gaming profiles.</p>
+            <ul class="mode-specs">
+              <li>
+                <img src="assets/icons/GameMode.png" alt="Game Boost" width="16" height="16">
+                <span>Foreground game priority</span>
+              </li>
+              <li>
+                <img src="assets/icons/performance_beast.png" alt="High Refresh" width="16" height="16">
+                <span>Locks max display Hz</span>
+              </li>
+              <li>
+                <img src="assets/icons/bolt_beast.png" alt="Process Suspension" width="16" height="16">
+                <span>Background app suspension</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Game Profile Simple Workflow UI -->
+        <div class="game-profile-flow">
+          <div class="flow-header">
+            <h3 class="flow-title">Game Mode Profile Workflow</h3>
+            <p class="flow-subtitle">Launch your favourite titles with instant automated optimization.</p>
+          </div>
+
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <span class="step-label">Select a game</span>
+                <span class="step-sub">Auto-detected or custom executable</span>
+              </div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <span class="step-label">Apply profile</span>
+                <span class="step-sub">Suspend background apps &amp; set refresh rate</span>
+              </div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <span class="step-label">Switch performance mode</span>
+                <span class="step-sub">Locks into Beast mode instantly</span>
+              </div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <span class="step-label">Launch</span>
+                <span class="step-sub">Zero stutter, maximum frame rates</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: AI RECOMMENDATIONS -->
+    <section class="section section-ai" id="ai">
+      <div class="container">
+        <div class="section-header">
+          <span class="sub-badge">Context-Aware Intelligence</span>
+          <h2 class="section-title">AI that recommends. You decide.</h2>
+          <p class="section-description">
+            AxePower can look at your current system and suggest useful actions, from performance settings to background applications and gaming recommendations.
+          </p>
+        </div>
+
+        <div class="ai-cards-grid">
+          <!-- Recommendation 1 -->
+          <div class="ai-card">
+            <div class="ai-card-badge">Gaming Suggestion</div>
+            <div class="ai-card-body">
+              <div class="ai-quote-icon">&ldquo;</div>
+              <p class="ai-card-text">Game detected. Game Mode may improve performance.</p>
+            </div>
+            <div class="ai-card-actions">
+              <button class="btn-action-primary" type="button">Apply Beast Mode</button>
+              <button class="btn-action-ghost" type="button">Dismiss</button>
+            </div>
+          </div>
+
+          <!-- Recommendation 2 -->
+          <div class="ai-card">
+            <div class="ai-card-badge">Resource Optimization</div>
+            <div class="ai-card-body">
+              <div class="ai-quote-icon">&ldquo;</div>
+              <p class="ai-card-text">Several background applications are using system resources.</p>
+            </div>
+            <div class="ai-card-actions">
+              <button class="btn-action-primary" type="button">Suspend 4 Apps</button>
+              <button class="btn-action-ghost" type="button">View Details</button>
+            </div>
+          </div>
+
+          <!-- Recommendation 3 -->
+          <div class="ai-card">
+            <div class="ai-card-badge">Streaming Tuning</div>
+            <div class="ai-card-body">
+              <div class="ai-quote-icon">&ldquo;</div>
+              <p class="ai-card-text">Your current setup may benefit from different OBS settings.</p>
+            </div>
+            <div class="ai-card-actions">
+              <button class="btn-action-primary" type="button">Optimize Encoding</button>
+              <button class="btn-action-ghost" type="button">Dismiss</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-footer-note">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span><strong>User First:</strong> AxePower recommends actions. The user remains in full control with zero unwanted automated overrides.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: ANDROID COMPANION -->
+    <section class="section section-android" id="companion">
+      <div class="container">
+        <div class="companion-layout">
+          <div class="companion-text-side">
+            <span class="sub-badge">Mobile Development Preview</span>
+            <h2 class="section-title">Your PC, from your phone.</h2>
+            <p class="section-description">
+              Explore the planned companion dashboard with simulated telemetry today. Desktop discovery, pairing, and the end-to-end live PC bridge are still under development.
+            </p>
+
+            <!-- Feature Tags Grid -->
+            <div class="companion-tags">
+              <div class="tag-pill"><span class="tag-dot"></span>Wi-Fi</div>
+              <div class="tag-pill"><span class="tag-dot"></span>USB</div>
+              <div class="tag-pill"><span class="tag-dot"></span>QR Pairing</div>
+              <div class="tag-pill"><span class="tag-dot"></span>Password Pairing</div>
+              <div class="tag-pill"><span class="tag-dot"></span>PC Monitoring</div>
+              <div class="tag-pill"><span class="tag-dot"></span>Remote Controls</div>
+              <div class="tag-pill"><span class="tag-dot"></span>Game Launching</div>
+            </div>
+
+            <div class="companion-connection-info">
+              <div class="conn-item">
+                <span class="conn-title">Local-first direction</span>
+                <span class="conn-desc">The planned bridge uses a direct local WebSocket connection; pairing, authentication, and desktop-server integration are not complete yet.</span>
+              </div>
+            </div>
+
+            <!-- Android Download CTA -->
+            <div class="companion-cta-wrap">
+              <a href="https://github.com/mrAbhimanyuVishwakarma/Axepower-Mobile-Download/releases" target="_blank" rel="noopener noreferrer" class="btn btn-lg btn-primary btn-android-download" aria-label="Download AxePower Android App (Beta - In Progress)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4483.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.996-3.4572c.1556-.2692.0633-.6135-.2059-.7691-.2692-.1555-.6135-.0633-.7691.2059l-2.0231 3.5042c-1.4287-.652-3.0371-1.0163-4.7594-1.0163s-3.3307.3643-4.7594 1.0163l-2.0231-3.5042c-.1556-.2692-.4999-.3614-.7691-.2059-.2692.1556-.3615.4999-.2059.7691l1.996 3.4572c-3.1554 1.7214-5.321 4.9084-5.5902 8.706h22.451c-.2692-3.7976-2.4348-6.9846-5.5902-8.706"/>
+                </svg>
+                <span>View Development Builds</span>
+                <span class="badge-coming-soon" style="background: rgba(245, 158, 11, 0.25); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);">Preview</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="companion-visual-side">
+            <div class="phone-mockup-wrapper">
+              <!-- Android Phone Mockup with Real Mobile Screenshot -->
+              <div class="android-phone">
+                <div class="phone-speaker-grill"></div>
+                <div class="phone-camera-punch"></div>
+                <div class="phone-screen-container">
+                  <img 
+                    src="assets/dashboard_mobile.png" 
+                    alt="AxePower Android Companion App Dark UI showing live Gaming PC telemetry, Beast Mode, 165Hz Display control and System Vitals"
+                    class="phone-screenshot-img phone-screenshot-dark"
+                    width="320"
+                    height="680"
+                    loading="lazy"
+                  >
+                  <img 
+                    src="assets/dashboard_mobile_light.png" 
+                    alt="AxePower Android Companion App Light UI showing live Gaming PC telemetry, Beast Mode, 165Hz Display control and System Vitals"
+                    class="phone-screenshot-img phone-screenshot-light"
+                    width="320"
+                    height="680"
+                    loading="lazy"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: WORKS WITH YOUR TOOLS -->
+    <section class="section section-tools" id="tools">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Use the tools you already trust.</h2>
+          <p class="section-description">
+            AxePower isn't here to replace every application on your PC. It works alongside specialized tools that already do their jobs well.
+          </p>
+        </div>
+
+        <div class="tools-grid">
+          <!-- Card 1: Android Control (scrcpy) -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder logo-scrcpy">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+              </div>
+              <span class="tool-tag">Companion</span>
+            </div>
+            <h3 class="tool-name">Android Control</h3>
+            <p class="tool-desc">Direct low-latency Android device mirroring &amp; control via scrcpy (Genymobile).</p>
+            <div class="tool-action-wrap">
+              <a href="https://github.com/Genymobile/scrcpy" target="_blank" rel="noopener noreferrer" class="btn btn-tool">View scrcpy</a>
+            </div>
+          </div>
+
+          <!-- Card 2: SpaceDesk Second Display -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder" style="background: rgba(16, 185, 129, 0.12); color: var(--mode-eco);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <span class="tool-tag">Display</span>
+            </div>
+            <h3 class="tool-name">SpaceDesk Second Monitor</h3>
+            <p class="tool-desc">Turn any tablet, smartphone, or laptop into a wireless secondary Windows monitor over local Wi-Fi.</p>
+            <div class="tool-action-wrap">
+              <a href="https://www.spacedesk.net/" target="_blank" rel="noopener noreferrer" class="btn btn-tool">Learn More</a>
+            </div>
+          </div>
+
+          <!-- Card 3: MSI Afterburner -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder logo-msi">
+                <img src="assets/icons/MSI Afterburner.png" alt="MSI Afterburner" width="28" height="28" loading="lazy">
+              </div>
+              <span class="tool-tag">Companion</span>
+            </div>
+            <h3 class="tool-name">MSI Afterburner</h3>
+            <p class="tool-desc">GPU overclocking, custom fan curve presets, and RivaTuner in-game statistics overlay.</p>
+            <div class="tool-action-wrap">
+              <a href="https://www.msi.com/Landing/afterburner/graphics-cards" target="_blank" rel="noopener noreferrer" class="btn btn-tool">Learn More</a>
+            </div>
+          </div>
+
+          <!-- Card 4: Audio Optimization Suite -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder" style="background: rgba(139, 92, 246, 0.12); color: var(--mode-game);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+              </div>
+              <span class="tool-tag">Audio</span>
+            </div>
+            <h3 class="tool-name">Dolby &amp; Sonar Audio</h3>
+            <p class="tool-desc">1-Click setup for Dolby Atmos 3D spatial surround sound, SteelSeries GG Sonar, and Peace Equalizer.</p>
+            <div class="tool-action-wrap">
+              <span class="badge-builtin">Integrated</span>
+            </div>
+          </div>
+
+          <!-- Card 5: Uninstaller Pro -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder logo-uninstaller">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </div>
+              <span class="tool-tag">Built-in</span>
+            </div>
+            <h3 class="tool-name">Uninstaller Pro</h3>
+            <p class="tool-desc">Deep Win32/MSI/UWP app discovery, batch removal, and verified registry leftover cleanup.</p>
+            <div class="tool-action-wrap">
+              <span class="badge-builtin">Integrated</span>
+            </div>
+          </div>
+
+          <!-- Card 6: Update PC -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder logo-update">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </div>
+              <span class="tool-tag">Utility</span>
+            </div>
+            <h3 class="tool-name">Update PC &amp; Winget</h3>
+            <p class="tool-desc">Elevated Windows driver and package update checks via winget and USOClient with silent background auto-updates.</p>
+            <div class="tool-action-wrap">
+              <span class="badge-builtin">Integrated</span>
+            </div>
+          </div>
+
+          <!-- Card 7: Debloat Utility -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder logo-debloat">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <span class="tool-tag">Companion</span>
+            </div>
+            <h3 class="tool-name">Win11Debloat</h3>
+            <p class="tool-desc">Elevated execution of Windows optimization and telemetry reduction scripts by Raphire.</p>
+            <div class="tool-action-wrap">
+              <a href="https://github.com/Raphire/Win11Debloat" target="_blank" rel="noopener noreferrer" class="btn btn-tool">View GitHub</a>
+            </div>
+          </div>
+
+          <!-- Card 8: Controller Navigation (Gopher360) -->
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <div class="tool-logo-placeholder logo-controller">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="8" cy="12" r="2"/><path d="M15 9h.01M17 12h.01M15 15h.01M13 12h.01"/></svg>
+              </div>
+              <span class="tool-tag">Game Mode</span>
+            </div>
+            <h3 class="tool-name">Controller Navigation</h3>
+            <p class="tool-desc">Xbox and PC gamepad mouse &amp; keyboard navigation integration via Gopher360 (Tylemagne).</p>
+            <div class="tool-action-wrap">
+              <a href="https://github.com/Tylemagne/Gopher360" target="_blank" rel="noopener noreferrer" class="btn btn-tool">View Gopher360</a>
+            </div>
+          </div>
+        </div>
+
+        <p class="tools-disclaimer">
+          Note: scrcpy, SpaceDesk, MSI Afterburner, Gopher360, and Win11Debloat are independent software created by their respective owners. AxePower provides elevated workflow launch, in-app instructions, and companion integrations.
+        </p>
+      </div>
+    </section>
+
+    <!-- SECTION 8: DOWNLOAD (FINAL CTA) -->
+    <section class="section section-download" id="download">
+      <div class="container">
+        <div class="download-card">
+          <div class="download-glow"></div>
+          <div class="download-content">
+            <h2 class="download-heading">Ready to take control?</h2>
+            <p class="download-desc">
+              Download AxePower for Windows or explore the mobile development preview.
+            </p>
+
+            <div class="download-action-row">
+              <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest" class="btn btn-xl btn-primary download-trigger-btn js-direct-download" id="dlBtn" aria-label="Download Latest AxePower for Windows">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Download for Windows</span>
+              </a>
+
+              <a href="https://github.com/mrAbhimanyuVishwakarma/Axepower-Mobile-Download/releases" target="_blank" rel="noopener noreferrer" class="btn btn-xl btn-secondary btn-android-cta" aria-label="View AxePower Mobile development preview builds">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4483.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.996-3.4572c.1556-.2692.0633-.6135-.2059-.7691-.2692-.1555-.6135-.0633-.7691.2059l-2.0231 3.5042c-1.4287-.652-3.0371-1.0163-4.7594-1.0163s-3.3307.3643-4.7594 1.0163l-2.0231-3.5042c-.1556-.2692-.4999-.3614-.7691-.2059-.2692.1556-.3615.4999-.2059.7691l1.996 3.4572c-3.1554 1.7214-5.321 4.9084-5.5902 8.706h22.451c-.2692-3.7976-2.4348-6.9846-5.5902-8.706"/>
+                </svg>
+                <span>Mobile Preview Builds</span>
+                <span class="badge-coming-soon" style="background: rgba(245, 158, 11, 0.25); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);">In Progress</span>
+              </a>
+            </div>
+
+            <div class="download-meta-info">
+              <span class="meta-item"><strong>Version:</strong> <span id="latestVersionText">Latest Release</span></span>
+              <span class="meta-separator">&bull;</span>
+              <span class="meta-item"><strong>Windows requirements:</strong> Windows 10 (1809+) or Windows 11</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ SECTION -->
+    <section class="section section-faq" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Frequently Asked Questions</h2>
+          <p class="section-description">Quick answers about AxePower and how it works on your PC.</p>
+        </div>
+
+        <div class="faq-accordion" id="faqAccordion">
+          <!-- Q1 -->
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>What is AxePower?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>AxePower is a modern Windows control center application that unifies hardware monitoring, power plan switching (Eco, Smart, Beast), game profile optimizations, AI recommendations, and Android companion remote control in a clean, lightweight interface.</p>
+            </div>
+          </div>
+
+          <!-- Q2 -->
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>Is AxePower free?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Yes. AxePower is 100% free to download and use with no paywalls, no ads and no usage analytics.</p>
+            </div>
+          </div>
+
+          <!-- Q3 -->
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>Can I control my PC from Android?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Yes. The AxePower Android companion app connects directly to your PC over your local Wi-Fi or USB connection, letting you monitor temperatures, switch performance modes, and launch game profiles remotely.</p>
+            </div>
+          </div>
+
+          <!-- Q4 -->
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>Does AxePower replace OBS or MSI Afterburner?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>No. AxePower is designed to work harmoniously alongside the tools you already rely on. It provides convenient quick-launch access and companion workflows without replacing your dedicated recording or overclocking software.</p>
+            </div>
+          </div>
+
+          <!-- Q5 -->
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>Does AxePower support Wi-Fi and USB connections?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Yes. You can pair your Android companion device seamlessly using local Wi-Fi network discovery (via QR code or password pairing) or over a direct low-latency USB connection.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-brand-col">
+        <a href="#" class="brand-logo footer-logo" aria-label="AxePower Home">
+          <img src="assets/AxePower_white.ico" class="brand-icon-img brand-icon-dark" alt="AxePower Logo" width="28" height="28">
+          <img src="assets/AxePower_black.ico" class="brand-icon-img brand-icon-light" alt="AxePower Logo" width="28" height="28">
+          <span class="brand-name">AxePower</span>
+        </a>
+        <p class="footer-tagline">Your PC. Your Control Center.</p>
+      </div>
+
+      <div class="footer-links-col">
+        <ul class="footer-links">
+          <li><a href="help.html" class="footer-link">Help &amp; Guides</a></li>
+          <li><a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues" target="_blank" rel="noopener noreferrer" class="footer-link">Support &amp; Issues</a></li>
+          <li><a href="privacy.html" class="footer-link">Privacy</a></li>
+          <li><a href="terms.html" class="footer-link">Terms</a></li>
+          <li><a href="#" class="footer-link" data-cookie-settings>Cookie settings</a></li>
+          <li><a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a></li>
+          <li><a href="#contact-modal" class="footer-link js-open-modal" data-modal="contactModal">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p class="copyright-text">&copy; <span id="copyrightYear">2026</span> AxePower. All rights reserved. &bull; <span id="footerVersionText">AxePower Windows &amp; Android</span></p>
+    </div>
+  </footer>
+
+  <!-- CONTACT MODAL -->
+  <div class="legal-modal-backdrop" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" hidden>
+    <div class="legal-modal-card">
+      <div class="legal-modal-header">
+        <h3 id="contactTitle">Contact &amp; Community</h3>
+        <button class="modal-close-btn js-close-modal" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="legal-modal-body">
+        <p>Get in touch, report bugs, or join the AxePower community:</p>
+        <div class="contact-channel-list">
+          <a href="https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues" target="_blank" rel="noopener noreferrer" class="contact-channel-card">
+            <span class="contact-icon">&#x1F41B;</span>
+            <div class="contact-meta">
+              <strong>GitHub Issues</strong>
+              <span>Bug reports, feature requests &amp; support</span>
+            </div>
+          </a>
+          <a href="https://github.com/mrAbhimanyuVishwakarma" target="_blank" rel="noopener noreferrer" class="contact-channel-card">
+            <span class="contact-icon">&#x1F464;</span>
+            <div class="contact-meta">
+              <strong>Developer Profile</strong>
+              <span>Created by Abhimanyu Vishwakarma</span>
+            </div>
+          </a>
+          <a href="https://discord.gg/WfD4wZFJ8d" target="_blank" rel="noopener noreferrer" class="contact-channel-card discord-card" id="discordCard">
+            <span class="contact-icon">&#x1F4AC;</span>
+            <div class="contact-meta">
+              <strong>Official Discord</strong>
+              <span id="discordStatusText">Join the AxePower Discord Community ➔</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
