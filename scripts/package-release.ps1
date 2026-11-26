@@ -170,7 +170,10 @@ foreach ($bin in $binariesToSign) {
 Write-Host "`nCompiling Inno Setup installer using $iscc..." -ForegroundColor Yellow
 & $iscc "/O$resolvedOut" "/DPublishDir=$publishPath" (Join-Path $repoRoot "Installer/AxePower.iss")
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
-if ((Get-Item -LiteralPath $installerOutput).VersionInfo.FileVersion -ne "$Version.0") {
+$setupVersionInfo = (Get-Item -LiteralPath $installerOutput).VersionInfo
+$setupVersion = [version]::new($setupVersionInfo.FileMajorPart, $setupVersionInfo.FileMinorPart,
+    $setupVersionInfo.FileBuildPart, $setupVersionInfo.FilePrivatePart)
+if ($setupVersion -ne [version]"$Version.0") {
     throw "The installer's file version does not match v$Version."
 }
 & (Join-Path $scriptRoot "sign-file.ps1") -FilePath $installerOutput -RequireSigned:$RequireSigned
