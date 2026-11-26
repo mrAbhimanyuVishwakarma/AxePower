@@ -171,6 +171,13 @@ public sealed class InstallPlanner
         "--accept-source-agreements", "--accept-package-agreements", "--silent"
     }, InstallTimeout);
 
+    internal static ProcessCommand WinGetUpgrade(string id, string source, string version) =>
+        new(AllowedTool.WinGet, new[]
+        {
+            "upgrade", "--id", RequireValid(id), "--exact", "--source", source, "--version", version,
+            "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"
+        }, InstallTimeout);
+
     public static ProcessCommand WinGetUninstall(string id, bool silent)
     {
         var args = new List<string> { "uninstall", "--id", RequireValid(id), "--exact" };
@@ -178,10 +185,16 @@ public sealed class InstallPlanner
         return new ProcessCommand(AllowedTool.WinGet, args, UninstallTimeout);
     }
 
-    public static ProcessCommand WinGetUpgradeAll() => new(AllowedTool.WinGet, new[]
+    public static ProcessCommand WinGetUpgradeAll() => WinGetUpgradeAll(includeUnknown: true);
+
+    public static ProcessCommand WinGetUpgradeAll(bool includeUnknown)
     {
-        "upgrade", "--all", "--include-unknown", "--accept-source-agreements", "--accept-package-agreements"
-    }, UpgradeAllTimeout);
+        var arguments = new List<string> { "upgrade", "--all" };
+        if (includeUnknown) arguments.Add("--include-unknown");
+        arguments.Add("--accept-package-agreements");
+        arguments.Add("--accept-source-agreements");
+        return new ProcessCommand(AllowedTool.WinGet, arguments, UpgradeAllTimeout);
+    }
 
     private static string RequireValid(string id) =>
         PackageInput.IsValidWinGetId(id) ? id : throw new ArgumentException($"'{id}' is not a valid package identifier.", nameof(id));

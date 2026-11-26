@@ -3,7 +3,7 @@
 ; The published app. scripts\package-release.ps1 passes the folder it just published to
 ; (/DPublishDir=...), so the installer can never pick up an older build left in bin\.
 #ifndef PublishDir
-  #define PublishDir "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
+  #define PublishDir "..\AxePower.App\bin\Release\net10.0-windows10.0.19041.0\win-x64\publish"
 #endif
 #define AppPublisher "Abhimanyu Vishwakarma"
 #define AppURL "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download"
@@ -93,60 +93,8 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveLanDropFirewallRule"
 
 [Code]
-// AxePower targets net8.0-windows, which requires the 8.x desktop shared framework
-// specifically — a newer major runtime does not satisfy it by default.
-function IsDotNetDesktopRuntimeInstalled(): Boolean;
-var
-  FindRec: TFindRec;
-  BasePath: String;
-begin
-  Result := False;
-  BasePath := ExpandConstant('{commonpf64}\dotnet\shared\Microsoft.WindowsDesktop.App');
+#include "DotNetRuntime.iss"
 
-  if not DirExists(BasePath) then
-    Exit;
-
-  if FindFirst(BasePath + '\8.*', FindRec) then
-  begin
-    try
-      repeat
-        if (FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0 then
-        begin
-          Result := True;
-          Exit;
-        end;
-      until not FindNext(FindRec);
-    finally
-      FindClose(FindRec);
-    end;
-  end;
-end;
-
-// Runs the prerequisite installer in a visible PowerShell window so the user can watch
-// the download and install progress instead of staring at a Setup that looks frozen.
-// The window closes itself, then Setup carries on.
-function InstallDotNetRuntime(): Boolean;
-var
-  ScriptPath: String;
-  ShowMode: Integer;
-  ResultCode: Integer;
-begin
-  ExtractTemporaryFile('install-dotnet.ps1');
-  ScriptPath := ExpandConstant('{tmp}\install-dotnet.ps1');
-
-  // Keep it hidden for unattended/silent installs, visible for normal ones
-  if WizardSilent then
-    ShowMode := SW_HIDE
-  else
-    ShowMode := SW_SHOWNORMAL;
-
-  Exec('powershell.exe',
-       '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '"',
-       '', ShowMode, ewWaitUntilTerminated, ResultCode);
-
-  // Trust the machine state, not the exit code
-  Result := IsDotNetDesktopRuntimeInstalled();
-end;
 // Closes any running instances of the application
 procedure CloseRunningApp();
 var
@@ -228,19 +176,9 @@ function PrepareToInstall(var NeedsRestart: Boolean): string;
 begin
   // 0. Install the .NET runtime first if it is missing. This runs before any files are
   //    copied, and covers silent installs too (where wizard pages never appear).
-  if not IsDotNetDesktopRuntimeInstalled() then
-  begin
-    if not InstallDotNetRuntime() then
-    begin
-      SuppressibleMsgBox('AxePower requires the Microsoft .NET 8 Desktop Runtime (x64), but it could not be automatically installed or verified.'#13#10#13#10 +
-                'Please install the official runtime manually from:'#13#10 +
-                'https://dotnet.microsoft.com/download/dotnet/8.0'#13#10#13#10 +
-                'Setup will now abort to ensure application integrity.',
-                mbError, MB_OK, IDOK);
-      Result := 'Setup was cancelled because the .NET 8 Desktop Runtime is required.';
-      Exit;
-    end;
-  end;
+  Result := EnsureDotNetDesktopRuntime();
+  if Result <> '' then
+    Exit;
 
   // 1. Force terminate any running instances
   CloseRunningApp();

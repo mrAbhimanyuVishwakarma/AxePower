@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Management;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AxePower.Core.Models;
 using AxePower.Core.Services.Processes;
@@ -18,14 +15,17 @@ public class FirmwareUpdateService
     private readonly LogService _logService;
     private readonly IUserShellLauncher _launcher;
     private readonly IProcessRunner _runner;
+    private readonly IWindowsUpdateCatalogService _catalog;
     private FirmwareInfo? _cachedInfo;
     private DateTime _lastScanTime = DateTime.MinValue;
 
-    public FirmwareUpdateService(LogService logService, IUserShellLauncher? launcher = null, IProcessRunner? runner = null)
+    public FirmwareUpdateService(LogService logService, IUserShellLauncher? launcher = null, IProcessRunner? runner = null,
+        IWindowsUpdateCatalogService? catalog = null)
     {
         _logService = logService;
         _launcher = launcher ?? new UserShellLauncher(logService);
         _runner = runner ?? new AllowListedProcessRunner(ExecutableAllowList.Windows(), logService);
+        _catalog = catalog ?? new WindowsUpdateCatalogService(logService);
     }
 
     public async Task<FirmwareInfo> GetFirmwareInfoAsync(bool forceRefresh = false)
@@ -37,7 +37,7 @@ public class FirmwareUpdateService
 
         return await Task.Run(() =>
         {
-            var info = new FirmwareInfo();
+            var info = new FirmwareInfo { VendorPortalUrl = string.Empty };
 
             try
             {
@@ -105,7 +105,7 @@ public class FirmwareUpdateService
                 info.FirmwareDevices = QueryFirmwareDevices();
 
                 // 6. Resolve Vendor Name and Official Support Portal URL
-                ResolveVendorAndPortal(info);
+                (info.VendorName, info.VendorPortalUrl) = ResolveVendorAndPortal(info);
 
                 info.LastScanned = DateTime.Now;
                 info.UpdateStatus = "Ready to check for latest vendor BIOS and firmware updates.";
@@ -123,87 +123,47 @@ public class FirmwareUpdateService
 
     public async Task<(bool HasUpdates, string StatusMessage)> CheckForFirmwareUpdatesAsync()
     {
-        return await Task.Run(() =>
+        _logService.LogInfo("[FirmwareUpdate] Checking for firmware in Windows Update.");
+        var scan = await _catalog.ScanAsync().ConfigureAwait(false);
+        string[] firmware = scan.Candidates.Where(update => update.IsFirmware == true)
+            .Select(update => update.Title).ToArray();
+
+        if (firmware.Length > 0)
         {
-            try
-            {
-                _logService.LogInfo("[FirmwareUpdate] Checking for pending Windows Update firmware capsules...");
+            string status = scan.Succeeded ? "Windows Update listed firmware" : "Windows Update returned partial results and listed firmware";
+            return (true, $"{status}: {string.Join(", ", firmware)}. Review Windows Update or your manufacturer's support page.");
+        }
 
-                int pendingFirmwareCount = 0;
-                var pendingTitles = new List<string>();
+        if (!scan.Succeeded)
+            return (false, $"Firmware check incomplete. {scan.Detail ?? "Open Windows Update in Settings to check again."}");
 
-                try
-                {
-                    var updateSession = Activator.CreateInstance(Type.GetTypeFromProgID("Microsoft.Update.Session")!)!;
-                    var createSearcherMethod = updateSession.GetType().GetMethod("CreateUpdateSearcher");
-                    var updateSearcher = createSearcherMethod?.Invoke(updateSession, null);
+        if (scan.Candidates.Any(update => update.IsDeviceUpdate && update.IsFirmware is null))
+            return (false, "Windows Update listed device updates it could not classify as firmware. Review Optional updates and your manufacturer's support page.");
 
-                    if (updateSearcher != null)
-                    {
-                        var searchMethod = updateSearcher.GetType().GetMethod("Search");
-                        var searchResult = searchMethod?.Invoke(updateSearcher, new object[] { "IsInstalled=0 and IsHidden=0" });
-
-                        if (searchResult != null)
-                        {
-                            var updatesProp = searchResult.GetType().GetProperty("Updates");
-                            var updates = updatesProp?.GetValue(searchResult) as System.Collections.IEnumerable;
-
-                            if (updates != null)
-                            {
-                                foreach (var update in updates)
-                                {
-                                    var titleProp = update.GetType().GetProperty("Title");
-                                    var title = titleProp?.GetValue(update)?.ToString() ?? string.Empty;
-
-                                    if (Regex.IsMatch(title, @"(?i)firmware|bios|uefi|system hardware update|lenovo - system|dell inc\. - firmware|asus - firmware|hp - firmware"))
-                                    {
-                                        pendingFirmwareCount++;
-                                        pendingTitles.Add(title);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logService.LogWarning($"Windows Update COM query note: {ex.Message}");
-                }
-
-                if (pendingFirmwareCount > 0)
-                {
-                    string message = $"Found {pendingFirmwareCount} firmware update(s) pending: {string.Join(", ", pendingTitles)}";
-                    _logService.LogInfo($"[FirmwareUpdate] {message}");
-                    return (true, message);
-                }
-
-                return (false, "Your BIOS and UEFI system firmware are up to date. No pending firmware capsules detected in Windows Update.");
-            }
-            catch (Exception ex)
-            {
-                _logService.LogError("Failed to scan for firmware updates.", ex);
-                return (false, $"Scan completed. Could not contact online update catalog: {ex.Message}");
-            }
-        });
+        return (false, "Windows Update did not identify a firmware update in this scan. Check your manufacturer's support page for other releases.");
     }
 
-    public void OpenVendorBiosPortal(FirmwareInfo info)
+    public ShellLaunchResult OpenVendorBiosPortal(FirmwareInfo info)
     {
         try
         {
-            string url = info.VendorPortalUrl;
+            var (vendor, url) = ResolveVendorAndPortal(info);
             if (string.IsNullOrWhiteSpace(url))
             {
-                url = "https://www.google.com/search?q=" + Uri.EscapeDataString($"{info.Manufacturer} {info.SystemModel} BIOS update download");
+                return new(ShellLaunchStatus.Refused,
+                    "AxePower could not identify an official BIOS support site for this device. Check Windows Optional Updates or your PC or motherboard manufacturer's support site.");
             }
 
             var result = _launcher.OpenUri(url);
-            if (result.Started) _logService.LogInfo($"[FirmwareUpdate] Opened vendor support portal: {url}");
+            if (result.Started) _logService.LogInfo($"[FirmwareUpdate] Requested {vendor} BIOS support.");
             else _logService.LogWarning($"[FirmwareUpdate] Vendor portal not opened: {result.Message}");
+            return result;
         }
         catch (Exception ex)
         {
             _logService.LogError("Failed to open vendor BIOS portal.", ex);
+            return new(ShellLaunchStatus.Failed,
+                "Could not open the BIOS support site. Try Windows Optional Updates or visit your manufacturer's support site.");
         }
     }
 
@@ -281,70 +241,37 @@ public class FirmwareUpdateService
         return list;
     }
 
-    private void ResolveVendorAndPortal(FirmwareInfo info)
+    private static (string Vendor, string Url) ResolveVendorAndPortal(FirmwareInfo info)
     {
         var mfg = (info.Manufacturer ?? string.Empty).ToLowerInvariant();
-        var model = info.SystemModel ?? string.Empty;
         var serial = info.SerialNumber != "--" ? info.SerialNumber : string.Empty;
 
         if (mfg.Contains("lenovo"))
         {
-            info.VendorName = "Lenovo";
-            if (!string.IsNullOrEmpty(serial))
-            {
-                info.VendorPortalUrl = $"https://pcsupport.lenovo.com/products/search?query={Uri.EscapeDataString(serial)}";
-            }
-            else
-            {
-                info.VendorPortalUrl = "https://pcsupport.lenovo.com/products/laptops-and-netbooks";
-            }
+            return ("Lenovo", string.IsNullOrEmpty(serial)
+                ? "https://pcsupport.lenovo.com/products/laptops-and-netbooks"
+                : $"https://pcsupport.lenovo.com/products/search?query={Uri.EscapeDataString(serial)}");
         }
-        else if (mfg.Contains("asus") || mfg.Contains("asustek"))
+        if (mfg.Contains("asus") || mfg.Contains("asustek"))
+            return ("ASUS", "https://www.asus.com/support/download-center/");
+        if (mfg.Contains("dell"))
         {
-            info.VendorName = "ASUS";
-            info.VendorPortalUrl = "https://www.asus.com/support/download-center/";
+            return ("Dell", string.IsNullOrEmpty(serial)
+                ? "https://www.dell.com/support/home/en-us/products"
+                : $"https://www.dell.com/support/home/en-us/product-support/servicetag/{Uri.EscapeDataString(serial)}/drivers");
         }
-        else if (mfg.Contains("dell"))
-        {
-            info.VendorName = "Dell";
-            if (!string.IsNullOrEmpty(serial))
-            {
-                info.VendorPortalUrl = $"https://www.dell.com/support/home/en-us/product-support/servicetag/{Uri.EscapeDataString(serial)}/drivers";
-            }
-            else
-            {
-                info.VendorPortalUrl = "https://www.dell.com/support/home/en-us/products";
-            }
-        }
-        else if (mfg.Contains("hp") || mfg.Contains("hewlett"))
-        {
-            info.VendorName = "HP";
-            info.VendorPortalUrl = "https://support.hp.com/drivers";
-        }
-        else if (mfg.Contains("acer"))
-        {
-            info.VendorName = "Acer";
-            info.VendorPortalUrl = "https://www.acer.com/support";
-        }
-        else if (mfg.Contains("msi") || mfg.Contains("micro-star"))
-        {
-            info.VendorName = "MSI";
-            info.VendorPortalUrl = "https://www.msi.com/support/download";
-        }
-        else if (mfg.Contains("gigabyte"))
-        {
-            info.VendorName = "Gigabyte";
-            info.VendorPortalUrl = "https://www.gigabyte.com/Support";
-        }
-        else if (mfg.Contains("asrock"))
-        {
-            info.VendorName = "ASRock";
-            info.VendorPortalUrl = "https://www.asrock.com/support/index.asp";
-        }
-        else
-        {
-            info.VendorName = !string.IsNullOrWhiteSpace(info.Manufacturer) && info.Manufacturer != "--" ? info.Manufacturer : "OEM Support";
-            info.VendorPortalUrl = $"https://www.google.com/search?q={Uri.EscapeDataString((info.Manufacturer ?? "OEM") + " " + model + " BIOS firmware update download")}";
-        }
+        if (mfg.Contains("hp") || mfg.Contains("hewlett"))
+            return ("HP", "https://support.hp.com/drivers");
+        if (mfg.Contains("acer"))
+            return ("Acer", "https://www.acer.com/support");
+        if (mfg.Contains("msi") || mfg.Contains("micro-star"))
+            return ("MSI", "https://www.msi.com/support/download");
+        if (mfg.Contains("gigabyte"))
+            return ("Gigabyte", "https://www.gigabyte.com/Support");
+        if (mfg.Contains("asrock"))
+            return ("ASRock", "https://www.asrock.com/support/index.asp");
+
+        string manufacturer = string.IsNullOrWhiteSpace(info.Manufacturer) || info.Manufacturer == "--" ? "OEM Support" : info.Manufacturer;
+        return (manufacturer, string.Empty);
     }
 }

@@ -12,6 +12,7 @@ using AxePower.Core.Services;
 using AxePower.Core.Services.SoftwareHub;
 using AxePower.App.Services;
 using AxePower.Core.Services.Operations;
+using AxePower.Core.Services.Processes;
 
 namespace AxePower.App.ViewModels;
 
@@ -50,6 +51,10 @@ public partial class PackageCardViewModel : ObservableObject
     {
         _parent.NotifySelectionChanged();
     }
+
+    partial void OnIsBusyChanged(bool value) => _parent.NotifyPackageOperationStateChanged();
+
+    private bool CanStartOperation => !IsBusy && _parent.CanStartToolPackageOperation;
 
     public bool IsNotInstalled => !IsInstalled && !IsWebLinkOnly && !HasCustomInstaller;
     public bool CanOpen => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
@@ -103,6 +108,7 @@ public partial class PackageCardViewModel : ObservableObject
     [RelayCommand]
     public void LaunchLocalInstaller()
     {
+        if (!CanStartOperation) return;
         var result = _hubService.LaunchLocalInstaller(Item);
         if (result.Succeeded)
         {
@@ -146,7 +152,7 @@ public partial class PackageCardViewModel : ObservableObject
     /// <summary>Runs one action with a fresh cancellation source; the card is busy until it ends.</summary>
     private async Task<PackageOperationResult?> RunOperationAsync(PackageAction action)
     {
-        if (IsBusy) return null;
+        if (!CanStartOperation) return null;
 
         IsBusy = true;
         using var operation = new CancellationTokenSource();
@@ -174,7 +180,7 @@ public partial class PackageCardViewModel : ObservableObject
     [RelayCommand]
     public async Task InstallAsync()
     {
-        if (IsBusy) return;
+        if (!CanStartOperation) return;
         _parent.Notify($"🚀 1-Click Install started for {Name}!");
         _parent.AppendLog($"\n>>> 1-Click Install: {Name} ({WinGetId})...");
 
@@ -197,7 +203,7 @@ public partial class PackageCardViewModel : ObservableObject
     [RelayCommand]
     public async Task UpdateAsync()
     {
-        if (IsBusy) return;
+        if (!CanStartOperation) return;
         _parent.Notify($"🚀 Update started for {Name}...");
         _parent.AppendLog($"\n>>> [Update] Updating {Name} ({WinGetId})...");
 
@@ -209,7 +215,7 @@ public partial class PackageCardViewModel : ObservableObject
     [RelayCommand]
     public async Task UninstallAsync()
     {
-        if (IsBusy) return;
+        if (!CanStartOperation) return;
         _parent.AppendLog($"\n>>> Uninstalling {Name} ({WinGetId})...");
 
         var result = await RunOperationAsync(PackageAction.Uninstall);
@@ -236,7 +242,6 @@ public partial class SoftwareHubViewModel : ObservableObject
     private readonly IConfirmationPrompts _confirm;
     private readonly IWinGetHubService _hubService;
     private readonly IWindowsUpdateShieldService _updateShieldService;
-    private readonly DriverUpdateService _driverUpdateService;
     private readonly FirmwareUpdateService _firmwareUpdateService;
     private readonly GraphicsDriverService _graphicsDriverService;
     private readonly NotificationService _notificationService;
@@ -265,16 +270,6 @@ public partial class SoftwareHubViewModel : ObservableObject
 
     [ObservableProperty]
     private string _firmwareCheckStatus = "Ready to check for latest BIOS & firmware updates.";
-
-    // Hero Banner Properties
-    [ObservableProperty]
-    private string _lastUpdatedText = DateTime.Now.ToString("M/d/yyyy h:mm tt");
-
-    [ObservableProperty]
-    private string _nextScheduledUpdateText = DateTime.Now.AddDays(7).ToString("M/d/yyyy h:mm tt");
-
-    [ObservableProperty]
-    private bool _isCheckingAllUpdates;
 
     // Web Link Warning Modal
     [ObservableProperty]
@@ -333,9 +328,6 @@ public partial class SoftwareHubViewModel : ObservableObject
     private bool _isRefreshing;
 
     [ObservableProperty]
-    private bool _isUpgradingAll;
-
-    [ObservableProperty]
     private bool _isCreatingRestorePoint;
 
     [ObservableProperty]
@@ -368,18 +360,23 @@ public partial class SoftwareHubViewModel : ObservableObject
         GraphicsDriverService graphicsDriverService,
         TerminalService terminalService,
         RestorePointService systemRestoreService,
-        IConfirmationPrompts? confirm = null)
+        IConfirmationPrompts? confirm = null,
+        IWindowsUpdateCatalogService? windowsUpdates = null,
+        IWinGetUpdateService? appUpdates = null,
+        IUserShellLauncher? updateHandoff = null)
     {
         _confirm = confirm ?? new ConfirmationPrompts();
         _hubService = hubService;
         _updateShieldService = updateShieldService;
-        _driverUpdateService = driverUpdateService;
         _firmwareUpdateService = firmwareUpdateService;
         _notificationService = notificationService;
         _logService = logService;
         _graphicsDriverService = graphicsDriverService;
         _terminalService = terminalService;
         _systemRestoreService = systemRestoreService;
+        _windowsUpdates = windowsUpdates;
+        _appUpdates = appUpdates;
+        _updateHandoff = updateHandoff ?? new UserShellLauncher(logService);
 
         LoadPackages();
         LoadShieldSettings();
@@ -409,7 +406,12 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public async Task UpdateGraphicsDriverAsync(GraphicsAdapterInfo? adapter)
     {
-        if (adapter == null || IsInstallingGraphicsDriver) return;
+        if (adapter == null || !CanCheckForUpdates) return;
+        if (!adapter.UsesStore)
+        {
+            OpenGraphicsVendorSite(adapter);
+            return;
+        }
 
         IsInstallingGraphicsDriver = true;
         try
@@ -491,7 +493,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public async Task InstallSelectedNvidiaDriverAsync()
     {
-        if (SelectedNvidiaDriver == null || IsDownloadingNvidiaDriver) return;
+        if (SelectedNvidiaDriver == null || !CanCheckForUpdates) return;
 
         IsDownloadingNvidiaDriver = true;
         try
@@ -712,7 +714,7 @@ public partial class SoftwareHubViewModel : ObservableObject
 
     private async Task RunBatchInstallAsync(bool showTerminal)
     {
-        if (IsBatchInstalling) return;
+        if (!CanCheckForUpdates) return;
 
         var toInstall = AllPackages.Where(p => p.IsSelected && !p.IsInstalled && !p.IsWebLinkOnly).ToList();
         if (toInstall.Count == 0)
@@ -810,63 +812,9 @@ public partial class SoftwareHubViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void LaunchElevatedDriverUpdate()
-    {
-        AppendLog("\n>>> Launching Elevated 3-Step Driver & System Updater...");
-        var result = _driverUpdateService.LaunchDriverAndSystemUpdate();
-        switch (result)
-        {
-            case DriverUpdateLaunchResult.StartedNew:
-                Notify("Elevated Update PC process started.");
-                AppendLog("Updater launched in background.");
-                break;
-            case DriverUpdateLaunchResult.FocusedExisting:
-                Notify("Update PC is already running.");
-                AppendLog("Focused existing updater window.");
-                break;
-            case DriverUpdateLaunchResult.CancelledByUser:
-                Notify("Administrator prompt was cancelled.");
-                AppendLog("[Cancelled] User denied UAC prompt.");
-                break;
-            case DriverUpdateLaunchResult.Failed:
-                Notify("Failed to launch Update PC.");
-                AppendLog("[Error] Failed to start driver updater process.");
-                break;
-        }
-    }
-
-    [RelayCommand]
-    public async Task UpgradeAllAppsAsync()
-    {
-        if (IsUpgradingAll) return;
-        if (!_confirm.Confirm(ConfirmationCatalog.UpgradeAllPackages(Array.Empty<string>()))) return;
-
-        IsUpgradingAll = true;
-        try
-        {
-            // Live progress now streams to the shared Terminal page.
-            _terminalService.RequestNavigateToTerminal();
-            var progress = new Progress<string>(AppendLog);
-            bool ok = await _hubService.UpgradeAllPackagesAsync(progress);
-            if (ok)
-            {
-                Notify("✓ All applications upgraded successfully!");
-            }
-            else
-            {
-                Notify("Batch upgrade completed with notices. Check logs.");
-            }
-        }
-        finally
-        {
-            IsUpgradingAll = false;
-        }
-    }
-
-    [RelayCommand]
     public async Task ToggleSecurityOnlyUpdatesAsync()
     {
-        if (IsChangingUpdatePolicy) return;
+        if (!CanCheckForUpdates) return;
         if (!TerminalService.IsProcessElevated())
         {
             Notify("Changing Windows Update policy needs administrator rights — use Relaunch with Admin, then try again.");
@@ -884,9 +832,9 @@ public partial class SoftwareHubViewModel : ObservableObject
             if (ok && IsSecurityOnlyUpdates == requested)
             {
                 Notify(requested
-                    ? "Feature updates deferred for 365 days; security and quality updates stay enabled."
-                    : "Windows feature-update deferral restored to default.");
-                AppendLog($"[Policy Changed] Security-only updates: {requested} (verified)");
+                    ? "The 365-day feature update deferral is configured. Windows determines whether it applies."
+                    : "The feature update deferral setting was cleared.");
+                AppendLog($"[Update Policy] Feature update deferral configured: {requested}.");
             }
             else
             {
@@ -912,7 +860,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public async Task ToggleNoForcedRebootAsync()
     {
-        if (IsChangingUpdatePolicy) return;
+        if (!CanCheckForUpdates) return;
         if (!TerminalService.IsProcessElevated())
         {
             Notify("Changing the automatic-restart policy needs administrator rights — use Relaunch with Admin, then try again.");
@@ -930,9 +878,9 @@ public partial class SoftwareHubViewModel : ObservableObject
             if (ok && IsNoForcedReboot == requested)
             {
                 Notify(requested
-                    ? "Automatic restarts are blocked while a user is logged on."
-                    : "Default Windows restart policy restored.");
-                AppendLog($"[Policy Changed] No forced reboot: {requested} (verified)");
+                    ? "Signed-in restart protection is configured. It applies only to scheduled automatic installs."
+                    : "The signed-in restart protection setting was cleared.");
+                AppendLog($"[Update Policy] Signed-in restart protection configured: {requested}.");
             }
             else
             {
@@ -955,7 +903,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public async Task ResetUpdateCacheAsync()
     {
-        if (IsResettingUpdateCache) return;
+        if (!CanCheckForUpdates) return;
 
         // Stopping the update services and clearing SoftwareDistribution needs admin rights
         if (!TerminalService.IsProcessElevated())
@@ -1014,7 +962,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public async Task CheckFirmwareUpdatesAsync()
     {
-        if (IsCheckingFirmware) return;
+        if (!CanCheckForUpdates) return;
 
         IsCheckingFirmware = true;
         FirmwareCheckStatus = "Scanning Windows Update catalog & firmware devices...";
@@ -1045,55 +993,16 @@ public partial class SoftwareHubViewModel : ObservableObject
     [RelayCommand]
     public void OpenVendorBiosPortal()
     {
-        if (FirmwareInfo != null)
-        {
-            _firmwareUpdateService.OpenVendorBiosPortal(FirmwareInfo);
-            Notify($"Opening official {FirmwareInfo.VendorName} BIOS support portal...");
-            AppendLog($"[BIOS & Firmware] Opened vendor portal: {FirmwareInfo.VendorPortalUrl}");
-        }
-    }
-
-    [RelayCommand]
-    public void TriggerWindowsFirmwareScan()
-    {
-        _firmwareUpdateService.TriggerInteractiveScan();
-        Notify("Triggered Windows Update firmware capsule interactive scan.");
-        AppendLog("[BIOS & Firmware] USOClient StartInteractiveScan triggered.");
-    }
-
-    [RelayCommand]
-    public async Task CheckAllUpdatesAsync()
-    {
-        if (IsCheckingAllUpdates) return;
-
-        IsCheckingAllUpdates = true;
-        LastUpdatedText = DateTime.Now.ToString("M/d/yyyy h:mm tt");
-        NextScheduledUpdateText = DateTime.Now.AddDays(7).ToString("M/d/yyyy h:mm tt");
-        Notify("Checking for system, driver & BIOS updates...");
-        AppendLog($"[{DateTime.Now:T}] [System Update] Initiating full system update check...");
-
-        try
-        {
-            await CheckFirmwareUpdatesAsync();
-            await RefreshStatusesAsync();
-            Notify("✓ System scan completed. All components checked.");
-            AppendLog($"[{DateTime.Now:T}] [System Update] Full system scan completed successfully.");
-        }
-        catch (Exception ex)
-        {
-            NotifyFailure("Check for system updates", ex);
-            AppendLog($"[System Update Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
-        }
-        finally
-        {
-            IsCheckingAllUpdates = false;
-        }
+        var result = _firmwareUpdateService.OpenVendorBiosPortal(FirmwareInfo);
+        var message = result.Started ? "Requested the manufacturer's BIOS support page." : result.Message;
+        Notify(message);
+        AppendLog($"[BIOS & Firmware] {message}");
     }
 
     [RelayCommand]
     public async Task CreateRestorePointAsync()
     {
-        if (IsCreatingRestorePoint) return;
+        if (!CanCheckForUpdates) return;
 
         if (!TerminalService.IsProcessElevated())
         {

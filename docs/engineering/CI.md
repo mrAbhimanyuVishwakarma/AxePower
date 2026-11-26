@@ -3,7 +3,7 @@
 ## 1. Overview
 
 AxePower uses GitHub Actions for continuous integration. The CI workflow is defined in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) and is designed with:
-- **Reproducibility**: Pinned Windows runner (`windows-2022`) and pinned .NET SDK (`8.0.403`).
+- **Reproducibility**: Pinned Windows runner (`windows-2022`) and pinned .NET 10 SDK (`10.0.404`).
 - **Least-Privilege Security**: Global and job-level permissions explicitly restricted to `contents: read`.
 - **Zero Secrets**: No repository secrets, signing certificates, or deployment tokens are used in CI.
 - **Fail-Closed Gates**: Automated failure on high/critical package vulnerabilities, version drift, build errors, or test failures.
@@ -25,7 +25,7 @@ The workflow automatically triggers on `push` and `pull_request` events targetin
 
 ## 3. Locally Equivalent Commands
 
-Every step performed in CI can be run directly on a local developer machine in PowerShell from the repository root (`D:\Projects\AxePower`):
+Run these checks in PowerShell from the repository root with the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). Verify the branch and executable version before reviewing a local build.
 
 ### 1. Environment Diagnostics
 ```powershell

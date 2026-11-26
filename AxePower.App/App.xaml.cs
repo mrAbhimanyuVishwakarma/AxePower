@@ -327,9 +327,11 @@ public partial class App : Application
         services.AddSingleton<IDnsOptimizerService, DnsOptimizerService>();
         services.AddSingleton<ISystemDoctorService, SystemDoctorService>();
         services.AddSingleton<IWindowsUpdateShieldService, WindowsUpdateShieldService>();
+        services.AddSingleton<IWindowsUpdateCatalogService, WindowsUpdateCatalogService>();
         // Software Hub: allow-listed programs, launches as the signed-in user, catalog, installs
         services.AddSingleton(_ => AxePower.Core.Services.Processes.ExecutableAllowList.Windows());
         services.AddSingleton<AxePower.Core.Services.Processes.IProcessRunner, AxePower.Core.Services.Processes.AllowListedProcessRunner>();
+        services.AddSingleton<AxePower.Core.Services.SoftwareHub.IWinGetUpdateService, AxePower.Core.Services.SoftwareHub.WinGetUpdateService>();
         services.AddSingleton<AxePower.Core.Services.Processes.IUserShellLauncher>(sp => new AxePower.Core.Services.Processes.UserShellLauncher(
             sp.GetRequiredService<LogService>(), sp.GetRequiredService<AxePower.Core.Services.Processes.ExecutableAllowList>()));
         services.AddSingleton(sp => AxePower.Core.Services.SoftwareHub.SoftwareCatalog.CreateDefault(sp.GetRequiredService<LogService>()));

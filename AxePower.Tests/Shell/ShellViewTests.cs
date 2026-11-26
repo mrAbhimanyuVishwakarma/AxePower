@@ -78,6 +78,35 @@ public class ShellViewTests
     }
 
     [Fact]
+    public Task UpdatesOverviewAllowsPortraitWindowAndOtherPagesRestoreTheirMinimums() => _wpf.RunAsync(async () =>
+    {
+        using var shell = new Shell();
+        double regularMinWidth = shell.Window.MinWidth;
+        double regularMinHeight = shell.Window.MinHeight;
+
+        shell.Vm.NavigateCommand.Execute("UpdatePc");
+        Assert.True(shell.Window.MinWidth < regularMinWidth);
+        shell.Window.Width = shell.Window.MinWidth;
+        shell.Window.Height = 800;
+        await Settle(shell.Window);
+
+        var updates = Assert.Single(ShellTestHost.Descendants(shell.Root).OfType<UpdatersTab>());
+        var windows = Assert.IsType<Expander>(updates.FindName("WindowsGroup"));
+        Assert.True(updates.IsVisible);
+        Assert.True(shell.Window.ActualWidth < shell.Window.ActualHeight);
+        Assert.True(Assert.IsAssignableFrom<FrameworkElement>(windows.Template.FindName("GroupBody", windows)).IsVisible);
+
+        shell.Vm.NavigateCommand.Execute("UpdatePc:Apps");
+        Assert.Equal(regularMinWidth, shell.Window.MinWidth);
+        Assert.Equal(regularMinHeight, shell.Window.MinHeight);
+        shell.Vm.NavigateCommand.Execute("UpdatePc");
+        Assert.True(shell.Window.MinWidth < regularMinWidth);
+        shell.Vm.NavigateCommand.Execute("Tools");
+        Assert.Equal(regularMinWidth, shell.Window.MinWidth);
+        Assert.Equal(regularMinHeight, shell.Window.MinHeight);
+    });
+
+    [Fact]
     public Task MainWindow_BindsWithoutErrors_InEveryShellState_UnderEachBaseSkin() => _wpf.RunAsync(async () =>
     {
         using var shell = new Shell();

@@ -40,10 +40,11 @@ internal static class ShellTestHost
         var field = typeof(Application).GetField("_resourceAssembly", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?? throw new InvalidOperationException("WPF's Application._resourceAssembly field was not found.");
         field.SetValue(null, app);
-        // The pack-URI resolver caches a resource manager for the old assembly; drop it so it is rebuilt.
-        typeof(Application).Assembly.GetType("MS.Internal.AppModel.ResourceContainer")?
-            .GetField("_applicationResourceManagerWrapper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?
-            .SetValue(null, null);
+        // WPF on .NET 10 caches a resource manager for the entry assembly. Rebuild it for AxePower.
+        var resourceManager = typeof(Application).Assembly.GetType("MS.Internal.AppModel.ResourceContainer")?
+            .GetField("s_applicationResourceManagerWrapper", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("WPF's application resource manager field was not found.");
+        resourceManager.SetValue(null, null);
     }
 
     /// <summary>

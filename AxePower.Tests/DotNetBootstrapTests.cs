@@ -237,7 +237,6 @@ public class DotNetBootstrapTests
         string hostExe = Environment.ProcessPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet", "dotnet.exe");
         if (!File.Exists(hostExe)) return;
 
-        var (exitCode, stdout, _) = RunInstallDotNetScript($"-Command \"Write-Host 'Checking'\"");
         // Verify that PowerShell Get-AuthenticodeSignature identifies Microsoft signature
         var psi = new ProcessStartInfo
         {
@@ -255,16 +254,30 @@ public class DotNetBootstrapTests
     }
 
     [Fact]
-    public void InnoSetupScript_DoesNotOfferBypassOnRuntimeFailure()
+    public void DefaultBootstrap_PinsTheMicrosoftDesktopRuntimePackage()
     {
-        string issPath = Path.Combine(RepoRoot, "Installer", "AxePower.iss");
-        string content = File.ReadAllText(issPath);
+        string content = File.ReadAllText(Path.Combine(RepoRoot, "Installer", "install-dotnet.ps1"));
 
-        // Prove old bypass prompt is removed
-        Assert.DoesNotContain("Continue installing AxePower anyway?", content);
+        Assert.Contains("https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.15/windowsdesktop-runtime-10.0.15-win-x64.exe", content);
+        Assert.Matches(@"\$officialSha512 = '[0-9a-f]{128}'", content);
+        Assert.Contains("-Algorithm SHA512", content);
+        Assert.Contains("A custom runtime URL can only be used with -SkipExecution.", content);
+    }
 
-        // Prove fail-closed abort is enforced
-        Assert.Contains("Setup was cancelled because the .NET 8 Desktop Runtime is required.", content);
-        Assert.Contains("https://dotnet.microsoft.com/download/dotnet/8.0", content);
+    [Theory]
+    [InlineData("AxePower.iss")]
+    [InlineData("AxePowerSetup.iss")]
+    public void InnoSetupScripts_CheckTheRuntimeBeforeInstall(string fileName)
+    {
+        string installerDir = Path.Combine(RepoRoot, "Installer");
+        string entrypoint = File.ReadAllText(Path.Combine(installerDir, fileName));
+        string runtime = File.ReadAllText(Path.Combine(installerDir, "DotNetRuntime.iss"));
+
+        Assert.Contains("#include \"DotNetRuntime.iss\"", entrypoint);
+        Assert.Contains("function PrepareToInstall(", entrypoint);
+        Assert.Contains("Result := EnsureDotNetDesktopRuntime();", entrypoint);
+        Assert.DoesNotContain("Continue installing AxePower anyway?", entrypoint + runtime);
+        Assert.Contains("10.0.15 or later in the 10.0 series, is required.", runtime);
+        Assert.Contains("https://dotnet.microsoft.com/download/dotnet/10.0", runtime);
     }
 }

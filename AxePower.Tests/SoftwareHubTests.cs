@@ -91,7 +91,7 @@ public class SoftwareHubTests
 
         Assert.Contains("vcredist", ids);
         Assert.Contains("directx", ids);
-        Assert.Contains("dotnet8", ids);
+        Assert.Contains("dotnet10", ids);
         Assert.Contains("steam", ids);
         Assert.Contains("epic", ids);
         Assert.Contains("rockstar", ids);

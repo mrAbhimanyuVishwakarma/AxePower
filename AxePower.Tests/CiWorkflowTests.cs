@@ -76,8 +76,8 @@ public class CiWorkflowTests
         // Pinned Windows runner
         Assert.Contains("runs-on: windows-2022", content);
 
-        // Pinned .NET 8 SDK
-        Assert.Contains("dotnet-version: '8.0.403'", content);
+        // Pinned .NET 10 SDK
+        Assert.Contains("dotnet-version: '10.0.404'", content);
     }
 
     [Fact]

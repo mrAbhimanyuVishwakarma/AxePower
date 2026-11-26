@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-11-26
+
+### Changed
+
+- **Windows Update** now opens a review page with expandable Windows, WinGet, optional driver, and BIOS sections. In a narrow window, the sections open as stacked cards and the graphics-driver cards move below the scan controls. App selections survive resizing.
+- **WinGet** previews eligible app upgrades. Users can confirm an exact selection or start a separate bulk upgrade. Including apps whose installed versions are unknown is opt-in. Progress, per-app outcomes, bulk results, and restart guidance are shown in the current session.
+- **Windows, optional driver, Store, and BIOS updates** use Windows Settings, Microsoft Store, or official vendor handoffs. A partial or unavailable scan is labeled separately from an empty result.
+- **Update Shield** describes the Windows policy limits on feature-update deferral and signed-in restart protection. Cache repair and restore-point actions remain available.
+- **Runtime and installer** now target .NET 10 LTS for Windows x64. Setup checks for Desktop Runtime 10.0.15 or a newer 10.0.x x64 patch and verifies Microsoft's installer checksum and signature before running it.
+
 ## [2.1.3] - 2026-10-08
 
 AxePower 2.1.3 is about trust and polish: it asks before it changes anything, explains every

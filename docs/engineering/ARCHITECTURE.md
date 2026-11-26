@@ -1,6 +1,6 @@
 # AxePower architecture
 
-**Status:** describes the code at `b68f001` plus the uncommitted working tree of 2026-10-05.
+**Status:** the project targets and Windows Update section reflect the v2.1.5 source. Earlier architecture observations retain their original context where noted.
 **Audience:** anyone changing AxePower.App or AxePower.Core.
 
 This is a description of what exists, followed by a plan. Where the code is messy the document
@@ -15,8 +15,8 @@ together with Microsoft.Extensions.DependencyInjection.
 
 | Project | Target | Role | References |
 |---|---|---|---|
-| `AxePower.App` | `net8.0-windows`, WPF (`UseWPF`) | Windows, views, view models, UI-only services (themes, hotkeys, tray, WebView2), the composition root (`App.ConfigureServices`) | `AxePower.Core`, CommunityToolkit.Mvvm, Hardcodet.NotifyIcon.Wpf, WebView2, MS DI |
-| `AxePower.Core` | `net8.0-windows10.0.19041.0`, no UI framework | Every feature's logic **and** its Windows integration: registry, WMI, P/Invoke, processes, sockets, HTTP, SQLite, audio | NuGet only (LibreHardwareMonitorLib, Microsoft.Data.Sqlite, System.Management, MMI, YoutubeExplode, NAudio, Concentus, TagLibSharp, …) |
+| `AxePower.App` | `net10.0-windows10.0.19041.0`, WPF (`UseWPF`) | Windows, views, view models, UI-only services (themes, hotkeys, tray, WebView2), the composition root (`App.ConfigureServices`) | `AxePower.Core`, CommunityToolkit.Mvvm, Hardcodet.NotifyIcon.Wpf, WebView2, MS DI |
+| `AxePower.Core` | `net10.0-windows10.0.19041.0`, no UI framework | Every feature's logic **and** its Windows integration: registry, WMI, P/Invoke, processes, sockets, HTTP, SQLite, audio | NuGet only (LibreHardwareMonitorLib, Microsoft.Data.Sqlite, System.Management, MMI, YoutubeExplode, NAudio, Concentus, TagLibSharp, …) |
 | `AxePower.Tests` | xUnit | Unit, integration, policy and fuzz tests | App and Core |
 
 **Dependency direction today:** `App → Core`, never the reverse. Core contains no WPF, Forms or
@@ -226,13 +226,14 @@ unit-tested on their own.
 | `AllowListedProcessRunner` (`IProcessRunner`), `ExecutableAllowList`, `ProcessCommand`, `ProcessTreeJob` (`Services/Processes`) | Infrastructure: the one way to run a non-interactive program; `ArgumentList`, stdin closed, timeout, a job object per run so cancel ends exactly that tree | — |
 | `UserShellLauncher` (`IUserShellLauncher`), `ElevationPolicy` | Infrastructure + policy: validated pages, protocols and programs, as the signed-in user when elevated | `ExecutableAllowList` (Explorer) |
 | `WindowsUpdateShieldService` (`IWindowsUpdateShieldService`) / `WindowsUpdateSystem` | Native integration (services, registry) | `ServiceController` |
-| `DriverUpdateService` | Infrastructure (an interactive elevated PowerShell window; inline `-EncodedCommand` when already elevated) | `ExecutableAllowList` |
-| `FirmwareUpdateService`, `GraphicsDriverService` | Infrastructure + native (WMI, vendor HTTP); launches through the launcher and runner, driver downloads only from vendor hosts | `IUserShellLauncher`, `IProcessRunner` |
+| `WindowsUpdateCatalogService` | Read-only discovery of Windows and device updates and reboot status through Windows Update Agent | Windows Update Agent |
+| `WinGetUpdateService` | Reviewed app upgrade candidates, exact selected or explicit bulk upgrades, typed outcomes | `IProcessRunner`, `InstallPlanner` |
+| `FirmwareUpdateService`, `GraphicsDriverService` | WMI and firmware/driver discovery, official vendor and Store handoffs, curated NVIDIA driver choices | Windows Update Agent, `IUserShellLauncher`, `IProcessRunner` |
 | `RestorePointService` | Native integration (PowerShell `Checkpoint-Computer`) | `IProcessRunner` |
 | `TerminalService` | Infrastructure (PowerShell host) | — |
 | `UpdateService` + `Update/*` | Application + infrastructure (GitHub, Authenticode, manifest signature) | `IManifestVerifier`, `IAuthenticodeVerifier` |
-| Presentation | `SoftwareHubViewModel` (1,136 lines: commands and state only; card and batch Cancel), `TerminalViewModel`, `AboutViewModel` (update UI) | |
-| Views | `SoftwareHubView` (68 lines: header, tabs, where the parts go) with `Views/SoftwareHub/UpdatersTab`, `PackagesTab`, `UpdateShieldTab`, `WebLinkWarningDialog`, `NvidiaDriverPickerDialog`; styles and converters in `Resources/SoftwareHubStyles.xaml` | `SoftwareHubViewModel` (inherited DataContext) |
+| Presentation | `SoftwareHubViewModel` and its `.PcUpdates` partial coordinate scans, confirmation, progress, results, and restart guidance. `AboutViewModel` shows AxePower's own updates. | |
+| Views | `SoftwareHubView` hosts `UpdatersTab`, `PackagesTab`, `UpdateShieldTab`, `WebLinkWarningDialog`, and `NvidiaDriverPickerDialog`. Shared styles live in `Resources/SoftwareHubStyles.xaml`. | `SoftwareHubViewModel` (inherited DataContext) |
 
 Tests: `AxePower.Tests/SoftwareHub/` covers malicious identifiers, quoting round-trips through a
 real process, exit codes, timeout, cancellation (including an orphaned grandchild only the job

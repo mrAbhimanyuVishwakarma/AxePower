@@ -2,15 +2,16 @@
 
 **For:** the owner. These items cannot be finished by code alone: they need a real phone, a second
 PC, the elevated app on screen, an installer run, or something only you can buy or decide.
-**Last updated:** 2026-10-08 (after Prompt 31).
+**Last updated:** 2026-11-26 for the v2.1.5 source.
 
 Work through them in any order. For each one, tell me the item number and either "pass" or what
 you saw (a screenshot helps). I then close it in `SOFTWARE_COMPLETION_PROMPTS.md` and
 `skillsMD/MUSIC_FIX_PLAN.md`, or fix what you found.
 
-**Before any of them:** build and run the current code (`dotnet build AxePower.sln -c Release`,
-then start `AxePower.App\bin\Release\net8.0-windows10.0.19041.0\AxePower.exe`). The installed
-2.1.0 does not have these changes.
+**Before any of them:** verify the active branch, exe path, and file version. Exit a running
+installed copy from the tray, then build the current checkout with the .NET 10 SDK
+(`dotnet build AxePower.sln -c Release`) and open
+`AxePower.App\bin\Release\net10.0-windows10.0.19041.0\AxePower.exe`.
 
 ---
 

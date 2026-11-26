@@ -4,7 +4,8 @@ Thank you for improving AxePower. This is a Windows desktop application that can
 
 ## Before opening a change
 
-- Use Windows 10 build 1809 or later, or Windows 11, with the .NET 8 SDK.
+- Use the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) on Windows x64. CI and local release verification use SDK 10.0.404.
+- Before starting AxePower work, verify the active branch, source version, and path and version of the executable you intend to use. If the latest published release and the latest branch build differ and both fit the request, ask which to use. Exit an installed instance normally before reviewing a checkout build.
 - Search existing issues and pull requests before starting substantial work.
 - For a security vulnerability, follow [SECURITY.md](SECURITY.md) and report it privately.
 - Discuss large features, new external services, new privileges, or installer changes with the maintainer before implementation.
@@ -15,7 +16,7 @@ Thank you for improving AxePower. This is a Windows desktop application that can
 From the repository root in PowerShell:
 
 ```powershell
-dotnet restore AxePower.sln
+dotnet restore AxePower.sln --locked-mode
 dotnet build AxePower.sln -c Release --no-restore
 dotnet test AxePower.sln -c Release --no-build
 ```
@@ -33,7 +34,7 @@ When application composition or service registration changes, also run the publi
 
 ```powershell
 dotnet publish AxePower.App\AxePower.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false
-& .\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\AxePower.exe --self-test
+& .\AxePower.App\bin\Release\net10.0-windows10.0.19041.0\win-x64\publish\AxePower.exe --self-test
 ```
 
 The self-test must remain read-only and must not create or modify user data.

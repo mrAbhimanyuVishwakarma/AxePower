@@ -13,7 +13,6 @@ namespace AxePower.App.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly NotificationService _notificationService;
-    private readonly DriverUpdateService _driverUpdateService;
     private readonly MsiAfterburnerService _msiAfterburnerService;
     private readonly DebloatService _debloatService;
     private readonly AndroidControlService _androidControlService;
@@ -178,7 +177,6 @@ public partial class MainViewModel : ObservableObject
         PhoneHubViewModel phoneHubVm,
         TerminalViewModel terminalVm,
         NotificationService notificationService,
-        DriverUpdateService driverUpdateService,
         MsiAfterburnerService msiAfterburnerService,
         DebloatService debloatService,
         AndroidControlService androidControlService,
@@ -238,7 +236,6 @@ public partial class MainViewModel : ObservableObject
             Application.Current?.Dispatcher?.BeginInvoke(new Action(() => Navigate("Terminal")));
 
         _notificationService = notificationService;
-        _driverUpdateService = driverUpdateService;
         _msiAfterburnerService = msiAfterburnerService;
         _debloatService = debloatService;
         _androidControlService = androidControlService;
@@ -495,7 +492,7 @@ public partial class MainViewModel : ObservableObject
             "Tools"       => (object?)ToolsVm ?? DashboardVm,
             "Routines"    => (object?)RoutinesVm ?? DashboardVm,
             "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
-            "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
+            "UpdatePc"    => SwitchSoftwareHubTab(arg1 ?? "Updaters", arg2),
             "ShareScreen" => (object?)ShareScreenVm ?? DashboardVm,
             "Friends"     => (object?)ShareScreenVm ?? DashboardVm,
             "PhoneControl"=> SwitchPhoneHubTab("ScreenMirror"),
@@ -591,27 +588,6 @@ public partial class MainViewModel : ObservableObject
                 break;
             case MsiAfterburnerLaunchResult.Failed:
                 _notificationService.Show("Could not launch or install MSI Afterburner.");
-                break;
-        }
-    }
-
-    [RelayCommand]
-    private void UpdateDrivers()
-    {
-        var result = _driverUpdateService.LaunchDriverAndSystemUpdate();
-        switch (result)
-        {
-            case DriverUpdateLaunchResult.StartedNew:
-                _notificationService.Show("Update PC started in background (minimized).");
-                break;
-            case DriverUpdateLaunchResult.FocusedExisting:
-                _notificationService.Show("Update PC is already running. Showing active window.");
-                break;
-            case DriverUpdateLaunchResult.CancelledByUser:
-                _notificationService.Show("Update PC administrator request was cancelled.");
-                break;
-            case DriverUpdateLaunchResult.Failed:
-                _notificationService.Show("Failed to launch Update PC.");
                 break;
         }
     }
@@ -737,7 +713,7 @@ public partial class MainViewModel : ObservableObject
                 Navigate("Uninstaller");
                 break;
             case "UpdatePc":
-                UpdateDrivers();
+                Navigate("UpdatePc");
                 break;
             case "Debloat":
                 Debloat();
@@ -831,22 +807,22 @@ public partial class MainViewModel : ObservableObject
             Id = "UpdatePc",
             Title = "Update PC",
             IconGlyph = "\uE777",
-            Subtitle = "Hardware Drivers, Windows Packages & GPU Updater",
-            Credit = "Powered by Windows Driver & Winget Engine",
+            Subtitle = "Windows, Apps, and Device Updates",
+            Credit = "Windows Update and WinGet",
             CreditUrl = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download#readme",
-            Overview = "Scans Windows Update catalog and winget software repositories to find and install the latest stable device drivers, audio/chipset updates, and gaming runtimes.",
+            Overview = "See what Windows Update and WinGet offer, choose which apps to update, and find the right Windows or vendor settings for device updates.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "Click 'Update PC' in the sidebar or 'Launch Tool' below.",
-                "AxePower initiates a background scan for outdated drivers and core packages.",
-                "Review pending device and driver updates.",
-                "Allow the updates to download and install. Restart your PC if prompted to complete driver installation."
+                "Open Windows Update in the sidebar, or use Open Update PC below.",
+                "Select Check for updates to see available Windows, app, and device updates.",
+                "Select the apps you want to update and confirm the selection.",
+                "Use the Windows Update and vendor links for Windows and device updates. Review results before restarting."
             },
             Tips = new System.Collections.Generic.List<string>
             {
-                "Keep GPU and motherboard chipset drivers updated to minimize micro-stutters and maximize frame rates in modern titles."
+                "Save your work before starting an installer. Some updates require a restart."
             },
-            LaunchButtonText = "Run Update PC"
+            LaunchButtonText = "Open Update PC"
         });
 
         // 5. Debloat

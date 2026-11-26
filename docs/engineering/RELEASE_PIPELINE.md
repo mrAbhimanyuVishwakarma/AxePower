@@ -45,7 +45,7 @@ Every release candidate generates the following verifiable bundle in `artifacts/
 | Artifact | Purpose | Standard / Format |
 |---|---|---|
 | `AxePower-v*-Setup.exe` | Production installer executable | Inno Setup 6, Authenticode Signed |
-| `AxePower.exe` | Portable application executable | .NET 8 Win-x64, Authenticode Signed |
+| `AxePower.exe` | Application executable in the Windows x64 publish directory | .NET 10 Desktop Runtime, framework-dependent, Authenticode signed for production |
 | `sbom.cdx.json` | Software Bill of Materials | CycloneDX 1.5 JSON |
 | `provenance.json` | Machine-readable build provenance | SLSA-inspired JSON |
 | `SHA256SUMS` | Cryptographic digests of all outputs | Standard GNU/BSD sha256 checksum format |
@@ -64,7 +64,7 @@ Get-FileHash -Algorithm SHA256 (Get-ChildItem -Path artifacts/release -Exclude S
 ### Signature Verification
 ```powershell
 # Verify Authenticode on installer and application
-pwsh scripts/verify-signature.ps1 -FilePath "artifacts/release/AxePower-v2.1.0-Setup.exe" -ExpectedSubject "Abhimanyu Vishwakarma"
+pwsh scripts/verify-signature.ps1 -FilePath "artifacts/release/AxePower-v2.1.5-Setup.exe" -ExpectedSubject "Abhimanyu Vishwakarma"
 pwsh scripts/verify-signature.ps1 -FilePath "artifacts/release/AxePower.exe" -ExpectedSubject "Abhimanyu Vishwakarma"
 ```
 
@@ -77,15 +77,15 @@ pwsh scripts/release-gate.ps1 -Artifacts (Get-ChildItem artifacts/release/*.exe)
 
 ## 5. Local Developer Dry-Run
 
-Developers can run the release packaging pipeline locally without production signing certificates:
+Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) and [Inno Setup 6](https://jrsoftware.org/isinfo.php) to run the release packaging pipeline locally:
 
 ```powershell
 # Run local release packaging in permissive dev mode
-powershell -ExecutionPolicy Bypass -File scripts\package-release.ps1 -Version "2.1.0"
+powershell -ExecutionPolicy Bypass -File scripts\package-release.ps1 -Version "2.1.5"
 ```
 In permissive dev mode:
 - Dependencies are restored and built deterministically.
 - Tests are executed.
-- Application and installer are staged.
+- The x64 application is published. Inno Setup compiles `Installer/Output/AxePower-v2.1.5-Setup.exe` and the packaging script stages a copy in `artifacts/release/`.
 - CycloneDX SBOM, SHA-256 checksums, provenance, and release notes are generated.
 - Unsigned binaries emit a `[SKIP]` notice and allow developers to inspect the output package in `artifacts/release/`.

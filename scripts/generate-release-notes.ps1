@@ -83,7 +83,7 @@ $notesBuilder.AppendLine($body) | Out-Null
 $notesBuilder.AppendLine("") | Out-Null
 $notesBuilder.AppendLine("---") | Out-Null
 $notesBuilder.AppendLine('## Security & Verification') | Out-Null
-$notesBuilder.AppendLine('- **Authenticode**: All executables and installers are signed with SHA-256 and RFC 3161 timestamps.') | Out-Null
+$notesBuilder.AppendLine('- **Authenticode**: Production release artifacts require SHA-256 signatures and RFC 3161 timestamps. Local candidates may be unsigned.') | Out-Null
 $notesBuilder.AppendLine('- **SBOM**: CycloneDX 1.5 Software Bill of Materials is provided in `sbom.cdx.json`.') | Out-Null
 $notesBuilder.AppendLine('- **Provenance**: Machine-readable build provenance is provided in `provenance.json`.') | Out-Null
 $notesBuilder.AppendLine('') | Out-Null

@@ -178,7 +178,8 @@ public class ConfirmationStandardTests
         Assert.Contains("ConfirmationCatalog.RunDebloatScript", Source("ViewModels", "DebloatViewModel.cs"));
         Assert.Contains("ConfirmationCatalog.ResetWindowsUpdateCache", Source("ViewModels", "SoftwareHubViewModel.cs"));
         Assert.Contains("ConfirmationCatalog.InstallPackages", Source("ViewModels", "SoftwareHubViewModel.cs"));
-        Assert.Contains("ConfirmationCatalog.UpgradeAllPackages", Source("ViewModels", "SoftwareHubViewModel.cs"));
+        Assert.Contains("ConfirmationCatalog.UpgradeAllPackages", Source("ViewModels", "SoftwareHubViewModel.PcUpdates.cs"));
+        Assert.Contains("ConfirmationCatalog.UpgradeSelectedPackages", Source("ViewModels", "SoftwareHubViewModel.PcUpdates.cs"));
         Assert.Contains("ConfirmationCatalog.ChangeDns", Source("ViewModels", "SystemDoctorViewModel.cs"));
         Assert.Contains("ConfirmationCatalog.ResetDnsToAutomatic", Source("ViewModels", "SystemDoctorViewModel.cs"));
 

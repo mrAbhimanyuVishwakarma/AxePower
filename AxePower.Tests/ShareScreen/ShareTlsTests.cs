@@ -52,7 +52,7 @@ public class ShareTlsTests : IDisposable
         var keyPath = Path.Combine(_dir, "room.key");
         File.WriteAllText(certPath, cert.ExportCertificatePem());
         File.WriteAllText(keyPath, key.ExportPkcs8PrivateKeyPem());
-        var usable = new X509Certificate2(cert.Export(X509ContentType.Pkcs12));
+        var usable = X509CertificateLoader.LoadPkcs12(cert.Export(X509ContentType.Pkcs12), password: null);
         return (certPath, keyPath, usable, cert.Thumbprint);
     }
 

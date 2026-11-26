@@ -33,20 +33,20 @@
 
         <!-- ─── 2. Segment Tabs ─────────────────────────────────────────────── -->
         <Border Grid.Row="1" Padding="40,0,40,12">
-            <StackPanel Orientation="Horizontal">
-                <RadioButton Content="🚀 System &amp; Driver Updaters" Style="{StaticResource SoftwareTabStyle}"
-                             IsChecked="{Binding ActiveTab, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Updaters}" Margin="0,0,10,0"/>
-                <RadioButton Content="📦 Gaming Runtimes &amp; Tools" Style="{StaticResource SoftwareTabStyle}"
-                             IsChecked="{Binding ActiveTab, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Apps}" Margin="0,0,10,0"/>
-                <RadioButton Content="🛡️ Windows Update Shield" Style="{StaticResource SoftwareTabStyle}"
-                             IsChecked="{Binding ActiveTab, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Updates}" Margin="0,0,10,0"/>
-            </StackPanel>
+            <WrapPanel>
+                <RadioButton Content="Updates overview" Style="{StaticResource SoftwareTabStyle}"
+                             IsChecked="{Binding ActiveTab, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Updaters}" Margin="0,0,10,4"/>
+                <RadioButton Content="Gaming Runtimes &amp; Tools" Style="{StaticResource SoftwareTabStyle}"
+                             IsChecked="{Binding ActiveTab, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Apps}" Margin="0,0,10,4"/>
+                <RadioButton Content="Windows Update Shield" Style="{StaticResource SoftwareTabStyle}"
+                             IsChecked="{Binding ActiveTab, Converter={StaticResource StringEqualsToBool}, ConverterParameter=Updates}" Margin="0,0,10,4"/>
+            </WrapPanel>
         </Border>
 
         <!-- ─── 3. Content Panel ────────────────────────────────────────────── -->
         <Grid Grid.Row="2" Margin="40,0,40,12">
 
-            <!-- TAB 1: System & Driver Updaters (Old + New Integration) -->
+            <!-- TAB 1: Update overview -->
             <hub:UpdatersTab/>
 
             <!-- TAB 2: Gaming Runtimes & Tools -->

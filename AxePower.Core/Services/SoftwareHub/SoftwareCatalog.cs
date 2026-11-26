@@ -106,13 +106,13 @@ public sealed class SoftwareCatalog
 
         items.Add(new SoftwarePackageItem
         {
-            Id = "dotnet8",
-            WinGetId = "Microsoft.DotNet.DesktopRuntime.8",
-            Name = ".NET 8 Desktop Runtime",
+            Id = "dotnet10",
+            WinGetId = "Microsoft.DotNet.DesktopRuntime.10",
+            Name = ".NET 10 Desktop Runtime",
             Description = "High-performance runtime for modern Windows desktop software and tools.",
             Category = PackageCategory.Runtimes,
             Glyph = "\uE8B8",
-            WebUrl = "https://dotnet.microsoft.com/download/dotnet/8.0"
+            WebUrl = "https://dotnet.microsoft.com/download/dotnet/10.0"
         });
 
         // 2. Launchers & Gaming

@@ -79,7 +79,7 @@ public class TailscaleCertificateProvider
 
             // SChannel cannot serve with a PEM-loaded (ephemeral) key, so round-trip through PKCS#12.
             using var pem = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-            var usable = new X509Certificate2(pem.Export(X509ContentType.Pkcs12));
+            var usable = X509CertificateLoader.LoadPkcs12(pem.Export(X509ContentType.Pkcs12), password: null);
             _log.LogInfo($"[ShareScreen] Serving the room over HTTPS as {dnsName} (certificate valid until {usable.NotAfter:yyyy-MM-dd}).");
             return new ShareTlsCertificate(usable, dnsName, certPath, keyPath);
         }

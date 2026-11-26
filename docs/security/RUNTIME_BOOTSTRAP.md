@@ -1,7 +1,7 @@
 # Hardened .NET Desktop Runtime Bootstrap Architecture
 
 ## 1. Overview
-AxePower requires the 64-bit Microsoft .NET 8 Desktop Runtime to execute. During installation, if the runtime is not present, AxePower Setup invokes `Installer/install-dotnet.ps1` to acquire and install the prerequisite.
+AxePower v2.1.5 requires Microsoft .NET Desktop Runtime 10.0.15 or a newer 10.0.x patch for x64. Both installer entry points use [the shared runtime check](../../Installer/DotNetRuntime.iss). If the check finds no compatible runtime, Setup invokes [the bootstrap script](../../Installer/install-dotnet.ps1).
 
 Previously, `install-dotnet.ps1` only inspected whether the downloaded file began with the two ASCII characters `MZ` (DOS header) and used `curl.exe -L` to follow any redirect blindly to a predictable filename in `%TEMP%`. If installation failed, Inno Setup offered a prompt allowing the user to bypass the runtime prerequisite.
 
@@ -14,13 +14,15 @@ This bootstrap path has been completely hardened to prevent arbitrary code execu
 ```mermaid
 graph TD
     A[Inno Setup: Check IsDotNetDesktopRuntimeInstalled] -->|Missing| B[Extract & Execute install-dotnet.ps1]
-    B --> C[Validate Initial URL Scheme & Host: aka.ms HTTPS]
+    B --> C[Validate Pinned Microsoft HTTPS Download URL]
     C -->|Invalid Scheme or Untrusted Host| X[Fail Closed: Abort Setup]
     C -->|Valid HTTPS Microsoft URL| D[Safe Redirect Following Loop: max 5 redirects]
     D -->|Redirect to Insecure Scheme or Untrusted Host| X
     D -->|Redirect to Allowed Microsoft CDN| E[Stream Download to Private Temporary Directory]
     E -->|Payload < 64KB or HTML Error| X
-    E --> F{Pinned SHA-256 Configured?}
+    E --> S[Verify Official Package SHA-512]
+    S -->|Hash Mismatch| X
+    S -->|Hash Verified| F{Additional SHA-256 Configured?}
     F -->|Yes| G[Verify Package SHA-256 Against Pinned Hash]
     G -->|Hash Mismatch| X
     G -->|Hash Verified| H[Verify Authenticode Digital Signature]
@@ -44,6 +46,7 @@ graph TD
   - `aka.ms`
   - `download.visualstudio.microsoft.com`
   - `download.microsoft.com`
+  - `builds.dotnet.microsoft.com`
   - `dotnetcli.azureedge.net`
   - `dotnetbuilds.azureedge.net`
   - `dotnet.microsoft.com`
@@ -59,9 +62,11 @@ graph TD
   - `CN=Microsoft Windows`
 - Non-Microsoft signatures or unsigned files (even if starting with `MZ`) are rejected.
 
-### C. Optional Pinned Hash Support
+### C. Package Hash Verification
+- The automatic path downloads the x64 Windows Desktop Runtime 10.0.15 installer from `builds.dotnet.microsoft.com` and verifies the SHA-512 digest pinned from Microsoft's [.NET 10 release metadata](https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json).
 - Accepts an optional parameter `-PinnedSha256` (or `$env:DOTNET_RUNTIME_SHA256`).
 - When provided, the downloaded package's SHA-256 checksum is computed via `Get-FileHash` and verified prior to signature checking.
+- Custom URLs are available for verification runs with `-SkipExecution`. Automatic execution is reserved for the pinned Microsoft package.
 
 ### D. Isolated Temporary Directory & Reliable Cleanup
 - Staged in a privately generated random directory:
@@ -69,13 +74,12 @@ graph TD
 - The entire directory is purged in a `finally` block upon completion, failure, or cancellation.
 
 ### E. Elimination of Insecure Bypass in Inno Setup
-- In `Installer/AxePower.iss`, if `InstallDotNetRuntime()` fails, the setup displays an error dialog directing the user to the official Microsoft download portal:
-  `https://dotnet.microsoft.com/download/dotnet/8.0`
+- If `InstallDotNetRuntime()` fails, Setup directs the user to [Microsoft .NET 10 downloads](https://dotnet.microsoft.com/download/dotnet/10.0). For offline deployment, install the verified x64 Desktop Runtime package manually and rerun Setup.
 - The previous "Continue installing AxePower anyway?" bypass has been removed. Setup aborts to protect system stability.
 
 ---
 
-## 4. Test Verification ([`AxePower.Tests/DotNetBootstrapTests.cs`](file:///d:/Projects/AxePower/AxePower.Tests/DotNetBootstrapTests.cs))
+## 4. Test Verification ([`AxePower.Tests/DotNetBootstrapTests.cs`](../../AxePower.Tests/DotNetBootstrapTests.cs))
 
 The automated test suite verifies:
 1. `HtmlOrErrorPayload_IsRejected`: Rejects HTML CDN error pages or truncated files.

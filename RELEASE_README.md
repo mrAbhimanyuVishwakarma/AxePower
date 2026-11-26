@@ -3,10 +3,10 @@
 
 <div align="center">
 
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue)
-![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%208-512BD4)
+![Platform](https://img.shields.io/badge/Platform-Windows%20x64-blue)
+![Framework](https://img.shields.io/badge/Framework-WPF%20%7C%20.NET%2010-512BD4)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.1.0-blueviolet)
+![Source version](https://img.shields.io/badge/Source%20version-2.1.5-blueviolet)
 
 [Official Website](https://axepower.vercel.app/) • [Discord Community](https://discord.gg/WfD4wZFJ8d) • [Releases](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases) • [Help Center](https://axepower.vercel.app/help.html) • [Issues & Support](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/issues)
 
@@ -37,6 +37,16 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 **The best part?** You can turn on **Auto Switch**, and AxePower will automatically switch between these modes for you. Out-of-the-box, it defaults to **Smart Mode** when plugged in and **Eco Mode** on battery for optimal balance, or you can choose your own defaults!
 
 ---
+
+## What's new in v2.1.5
+
+- Open **Maintenance → Windows Update → Updates overview** to check Windows, apps, and devices separately. This view supports a narrower window. At regular widths, use the expandable Windows, WinGet, optional driver, and BIOS sections. At narrow widths, the sections open as stacked cards and graphics drivers move below the scan controls. App selections survive resizing.
+- Select WinGet upgrades and confirm the exact packages, or confirm **Update all eligible apps** as a separate action. Including apps whose installed versions are unknown is off by default. Results stay visible for the session and show failures, partial completion, and restart requirements when available.
+- Use **Open Windows Update**, **Open Windows Optional Updates**, **Open Microsoft Store updates**, or the vendor support buttons for updates handled by those tools. Unavailable sources and missing or ambiguous package information are shown separately from a successful scan with no matches.
+- Update Shield explains when feature-update deferral and signed-in restart protection apply. It retains Windows Update cache repair and restore points. Windows policy and permissions govern the available actions.
+- The Windows x64 build targets .NET 10 LTS. Setup checks for Microsoft .NET Desktop Runtime 10.0.15 or a newer 10.0.x x64 patch. When needed, it downloads and validates the Microsoft installer before continuing. For offline setup, install the x64 Desktop Runtime first and rerun AxePower Setup. [Microsoft .NET 10 downloads](https://dotnet.microsoft.com/download/dotnet/10.0)
+
+The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Published releases are listed on the [downloads repository](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases).
 
 ## 🌟 What's New in v2.1.0
 

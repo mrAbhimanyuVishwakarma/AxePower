@@ -2,12 +2,12 @@
 
 <div align="center">
 
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%20(1809+)%20%7C%20Windows%2011-0078D4?logo=windows&logoColor=white)
-![Framework](https://img.shields.io/badge/Framework-.NET%208%20WPF-512BD4?logo=dotnet&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows%20x64-0078D4?logo=windows&logoColor=white)
+![Framework](https://img.shields.io/badge/Framework-.NET%2010%20WPF-512BD4?logo=dotnet&logoColor=white)
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Version](https://img.shields.io/badge/Version-2.1.0-blueviolet)
+![Source version](https://img.shields.io/badge/Source%20version-2.1.5-blueviolet)
 
 [Security Policy](SECURITY.md) | [Contributing](CONTRIBUTING.md) | [Third-Party Notices](THIRD_PARTY_NOTICES.md)
 
@@ -20,7 +20,7 @@
 ## 🚀 Key Features
 
 - 🧰 **System Care Workspace**: Optimizer and Doctor are unified behind a collapsible category rail, with recommended tweaks, repair actions, restore points, junk cleanup, DNS switching, and live terminal output in one place.
-- 🛡️ **Windows Update Controls That Perform Real Work**: Apply the recommended security-updates-only policy, block forced reboots while signed in, repair the Windows Update cache and services, and create a restore point before changes.
+- 🛡️ **Windows Update and Update Shield**: Review available Windows, app, and device updates from one page. Update Shield lets you configure feature-update deferral and signed-in restart protection where Windows policy allows, repair the update download cache, and request a restore point.
 - 🗂️ **Table-Based Uninstaller Pro**: Full-width Win32 and Windows Apps views with file-type badges, sortable columns, ascending/descending alphabetical order, batch selection, broken-entry filtering, and a Select All action for detected leftovers.
 - 🧭 **Responsive Software Hub**: A collapsible category rail for runtimes, gaming, hardware tuning, and utilities. Install controls stay inline when space permits and move below content only in compact layouts.
 - 🎵 **Integrated Music Player & Media Hub**: Built-in high-fidelity audio engine supporting local libraries and YouTube Music streaming. Features an aesthetic Header Player matching the dashboard design and automatically follows default Windows audio output device switches.
@@ -51,7 +51,7 @@
   - 📱 **Android Screen Mirroring (scrcpy)**: Ultra-low latency device mirroring, stay-awake / screen-off power toggles, resolution & FPS presets, and 1-click APK sideloading *(Credit to Genymobile)*.
 - 📖 **Dedicated Help & Documentation Center**: Direct in-app `? Help` title bar button and "Learn More" links connecting to the official [AxePower Help Center](https://axepower.vercel.app/help.html).
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
-- 🔄 **Update PC Utility & BIOS Checks**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and BIOS/firmware version checks.
+- 🔄 **WinGet and device updates**: Confirm exact app upgrades or run a separate bulk upgrade, then review the results and any restart requirement. Windows Settings, Microsoft Store, and official vendor tools handle their own Windows, Store, driver, and firmware installs.
 - 🧹 **Win11Debloat Integration**: Launches Raphire's Win11Debloat script with administrator rights after a confirmation that says plainly what it is: a third-party script whose changes AxePower cannot list or undo *(Credit to Raphire)*.
 - 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
 - 🔒 **Private by Default, Honest About the Network**: No ads and no usage analytics. Accounts are optional; without one, nothing about you is stored in AxePower's cloud. Every connection AxePower makes, what triggers it and what it sends is listed in [docs/security/PRIVACY.md](docs/security/PRIVACY.md) and on the in-app **Trust & Permissions** page.
@@ -74,7 +74,7 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
 | **🖥️ Share Screen** | 🖥️ | Low-latency display and gameplay streaming to any browser with audio. |
 | **MAINTENANCE** | | |
-| **🛡️ Windows Update** | 🛡️ | Driver/package checks, security-only update policy, forced-reboot protection, cache/service repair, and restore points. |
+| **🛡️ Windows Update** | 🛡️ | Discover Windows, app, and device updates, confirm WinGet upgrades, review results, and open Update Shield for policy, repair, and restore points. |
 | **🧰 System Care** | 🧰 | Recommended optimizations, SFC/DISM health repair, junk cleanup, DNS tools, and other guarded maintenance actions. |
 | **🗑️ Uninstaller** | 🗑️ | Sortable Win32/Windows Apps inventory, batch uninstall, broken-entry handling, and selectable leftovers. |
 | **🧹 Debloat** | 🧹 | Win11Debloat by Raphire integration. |
@@ -197,11 +197,14 @@ sequenceDiagram
 ## 💻 Development & Build Guide
 
 ### Prerequisites
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (or Visual Studio 2022 v17.8+)
-- Windows 10 (Build 1809+) or Windows 11 (64-bit)
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). Local release verification uses SDK 10.0.404.
+- The release targets Intel and AMD x64 Windows 11 desktops. Windows 10 build 17763 is the minimum API version declared in source. Windows 10 coverage depends on OS servicing, the .NET 10 prerequisites, and release validation. Windows 11 on Arm may run the x64 build under emulation. Arm64 coverage requires separate validation. [Microsoft's Windows requirements for .NET 10](https://learn.microsoft.com/en-us/dotnet/core/install/windows#supported-versions)
+- The framework-dependent app uses the x64 .NET 10 Desktop Runtime. Setup checks for 10.0.15 or a newer 10.0.x patch and downloads a verified Microsoft installer when needed. For offline setup, install the x64 Desktop Runtime first. [Microsoft .NET 10 downloads](https://dotnet.microsoft.com/download/dotnet/10.0)
+- WinGet actions require a usable App Installer/WinGet setup in the current Windows session. Sources, hardware features, and policy controls depend on the device and account. See the [Windows Update compatibility and rollout plan](docs/engineering/WINDOWS_UPDATE_PLAN.md).
 
 ### Running Locally
-```bash
+```powershell
 # Clone the repository
 git clone https://github.com/mrAbhimanyuVishwakarma/AxePower.git
 cd AxePower
@@ -210,9 +213,11 @@ cd AxePower
 dotnet restore AxePower.sln
 dotnet build AxePower.sln -c Release --no-restore
 
-# Run the WPF application
-dotnet run --project AxePower.App/AxePower.App.csproj
+# Run the latest build from this checkout
+dotnet run --project AxePower.App/AxePower.App.csproj -c Release --no-build
 ```
+
+Before reviewing a change, verify the current branch and the version/path of the app you launch. If an installed copy is running, exit it through the tray before starting the checkout build so the app's single-instance handling opens the intended copy. Ask which build to use when the latest published release and the latest branch build are both plausible.
 
 ### Running Unit Tests
 ```bash
@@ -225,10 +230,13 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 ```
 
 ### Creating the Inno Setup Installer
+
 1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
-2. Publish first (the script packages `AxePower.App/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish/`).
-3. Open `Installer/AxePower.iss` — the full script, which also bootstraps the .NET 8 Desktop Runtime and removes older installs.
+2. Publish first. The default installer source folder is `AxePower.App/bin/Release/net10.0-windows10.0.19041.0/win-x64/publish/`.
+3. Open `Installer/AxePower.iss`. This script checks and, when needed, acquires the .NET 10 Desktop Runtime for x64.
 4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v<version>-Setup.exe`.
+
+For a repeatable build with checksums and provenance, use the [release packaging workflow](docs/engineering/RELEASE_PIPELINE.md).
 
 ---
 

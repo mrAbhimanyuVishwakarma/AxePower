@@ -74,11 +74,20 @@ public interface IUserShellLauncher
 /// </summary>
 public sealed class UserShellLauncher : IUserShellLauncher
 {
-    /// <summary>Web, Microsoft Store and the game launchers the Software Hub opens.</summary>
+    /// <summary>Web, Windows Update, Microsoft Store, and the game launchers the Software Hub opens.</summary>
     public static readonly IReadOnlySet<string> DefaultSchemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "https", "http", "ms-windows-store",
+        "https", "http", "ms-windows-store", "ms-settings",
         "steam", "com.epicgames.launcher", "rockstargames", "uplay", "battlenet", "goggalaxy", "origin2", "discord"
+    };
+
+    public const string WindowsUpdateSettings = "ms-settings:windowsupdate";
+    public const string OptionalUpdateSettings = "ms-settings:windowsupdate-optionalupdates";
+    public const string RestartUpdateSettings = "ms-settings:windowsupdate-restartoptions";
+
+    private static readonly IReadOnlySet<string> UpdateSettingsTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        WindowsUpdateSettings, OptionalUpdateSettings, RestartUpdateSettings
     };
 
     private readonly IReadOnlySet<string> _schemes;
@@ -148,6 +157,11 @@ public sealed class UserShellLauncher : IUserShellLauncher
         }
         if (!Uri.TryCreate(target, UriKind.Absolute, out var uri)) { reason = "not an absolute address"; return false; }
         if (!schemes.Contains(uri.Scheme)) { reason = $"the {uri.Scheme}: scheme is not allowed"; return false; }
+        if (uri.Scheme == "ms-settings" && !UpdateSettingsTargets.Contains(target))
+        {
+            reason = "only Windows Update settings pages can be opened here";
+            return false;
+        }
         if (uri.Scheme is "http" or "https")
         {
             if (string.IsNullOrEmpty(uri.Host)) { reason = "the address has no host"; return false; }
