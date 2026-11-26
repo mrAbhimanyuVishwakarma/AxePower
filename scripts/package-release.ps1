@@ -224,9 +224,14 @@ Write-Host "Generating draft release notes..." -ForegroundColor Yellow
 $notesPath = Join-Path $resolvedOut "release-notes.md"
 & (Join-Path $scriptRoot "generate-release-notes.ps1") -TargetVersion $Version -OutputPath $notesPath -ChecksumsPath $checksumsPath
 
-# 13. Execute Release Gate
+# 13. Verify Authenticode on the installer and published binaries. JSON release
+# metadata is covered by the checksums, and the update manifest has its own signature.
 Write-Host "`n[7/7] Executing production release gate..." -ForegroundColor Yellow
-& (Join-Path $scriptRoot "release-gate.ps1") -Artifacts $releaseArtifacts -RequireSigned:$RequireSigned
+$authenticodeArtifacts = @($installerOutput, $destExe)
+foreach ($bin in $binariesToSign | Where-Object { $_ -ne 'AxePower.exe' }) {
+    $authenticodeArtifacts += Join-Path $publishPath $bin
+}
+& (Join-Path $scriptRoot "release-gate.ps1") -Artifacts $authenticodeArtifacts -RequireSigned:$RequireSigned
 if ($LASTEXITCODE -ne 0) {
     throw "Release gate rejected one or more release candidate artifacts."
 }
