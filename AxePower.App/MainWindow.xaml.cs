@@ -284,23 +284,13 @@ public partial class MainWindow : Window
 
         // Separators sit between the groups, in menu order
         var groups = Models.TrayMenuCatalog.Entries.Select(x => x.Group).Distinct().ToList();
-        var separators = new[] { TraySeparator1, TraySeparator2, TraySeparator3 };
+        var separators = new[] { TraySeparator1, TraySeparator2, TraySeparator3, TraySeparator4, TraySeparator5 };
         for (int i = 0; i < separators.Length && i + 1 < groups.Count; i++)
         {
             bool before = groups.Take(i + 1).Any(g => groupVisible[g]);
             bool after = groupVisible[groups[i + 1]];
             separators[i].Visibility = before && after ? Visibility.Visible : Visibility.Collapsed;
         }
-    }
-
-    private void TraySecondMonitor_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel vm)
-        {
-            vm.NavigateCommand.Execute("PhoneControl");
-            _ = vm.PhoneHubVm.SpaceDeskActionAsync();
-        }
-        OpenApp_Click(sender, e);
     }
 
     private bool _isExplicitShutdown;

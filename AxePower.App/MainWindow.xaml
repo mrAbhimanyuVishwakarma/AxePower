@@ -251,23 +251,40 @@
 
                         <Separator x:Name="TraySeparator1"/>
 
-                        <!-- Group 2: Core Views -->
+                        <!-- Control -->
                         <MenuItem x:Name="TrayItem_Dashboard" Header="Dashboard" Tag="Dashboard" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_GameModePage" Header="Open Game Mode" Tag="GameMode" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Battery" Header="Battery" Tag="Battery" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_PhoneControl" Header="Phone Control" Tag="PhoneControl" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_SecondMonitor" Header="Second Monitor" Click="TraySecondMonitor_Click"/>
+                        <MenuItem x:Name="TrayItem_Music" Header="Music" Tag="Music" Click="OpenAppAndNavigate_Click"/>
 
                         <Separator x:Name="TraySeparator2"/>
 
-                        <!-- Group 3: Maintenance & Tools -->
-                        <MenuItem x:Name="TrayItem_Maintenance" Header="Maintenance" Tag="Maintenance" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_Utilities" Header="Utilities" Tag="Utilities" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_UpdatePc" Header="Update PC" Tag="UpdatePc" Click="OpenAppAndNavigate_Click"/>
+                        <!-- Connection -->
+                        <MenuItem x:Name="TrayItem_PhoneControl" Header="Phone Control" Tag="PhoneHub" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_SecondMonitor" Header="Second Monitor" Tag="SecondMonitor" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_LanDrop" Header="LAN Drop" Tag="LanDrop" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_PhoneLink" Header="Phone Link" Tag="PhoneLink" Click="OpenAppAndNavigate_Click"/>
 
                         <Separator x:Name="TraySeparator3"/>
 
-                        <!-- Group 4: Settings & Exit -->
+                        <!-- Maintenance -->
+                        <MenuItem x:Name="TrayItem_UpdatePc" Header="Windows Update" Tag="UpdatePc" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_SystemCare" Header="System Care" Tag="SystemCare" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Uninstaller" Header="Uninstaller" Tag="Uninstaller" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Debloat" Header="Debloat" Tag="Debloat" Click="OpenAppAndNavigate_Click"/>
+
+                        <Separator x:Name="TraySeparator4"/>
+
+                        <!-- Utilities -->
+                        <MenuItem x:Name="TrayItem_Terminal" Header="Terminal" Tag="Terminal" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Tools" Header="Tools" Tag="Tools" Click="OpenAppAndNavigate_Click"/>
+
+                        <Separator x:Name="TraySeparator5"/>
+
+                        <!-- Account, settings and exit -->
+                        <MenuItem x:Name="TrayItem_Trust" Header="Trust &amp; Permissions" Tag="Trust" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Settings" Header="Settings" Tag="Settings" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Profile" Header="Profile" Tag="Profile" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Exit" Header="Exit AxePower" Click="ExitApp_Click"/>
                     </ContextMenu>
                 </tb:TaskbarIcon.ContextMenu>

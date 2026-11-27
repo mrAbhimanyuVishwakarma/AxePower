@@ -546,6 +546,7 @@ public partial class SettingsViewModel : ObservableObject
         CurrentSettings.SidebarMaintenanceExpanded = latest.SidebarMaintenanceExpanded;
         CurrentSettings.SidebarUtilitiesExpanded = latest.SidebarUtilitiesExpanded;
         CurrentSettings.SidebarCollapsed = latest.SidebarCollapsed;
+        CurrentSettings.HiddenTrayMenuItems = latest.HiddenTrayMenuItems;
         // The music section is edited elsewhere (Music group, header player); never save a stale copy of it
         CurrentSettings.Music = latest.Music;
         // Written in the background by the power-plan and Game Mode GPU services

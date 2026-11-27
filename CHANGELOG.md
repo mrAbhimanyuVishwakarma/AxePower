@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Update Shield** describes the Windows policy limits on feature-update deferral and signed-in restart protection. Cache repair and restore-point actions remain available.
 - **Runtime and installer** now target .NET 10 LTS for Windows x64. Setup checks for Desktop Runtime 10.0.15 or a newer 10.0.x x64 patch and verifies Microsoft's installer checksum and signature before running it.
 - **Sidebar** keeps Control visible and remembers the expanded state of Connection, Maintenance, and Utilities. New profiles start with all groups expanded.
+- **Tray menu** offers the same pages in sidebar order. Settings → Taskbar preferences lets users choose which shortcuts appear.
 - **Dashboard** opens the Game Mode page from its Game Mode shortcut. GPU readouts display `0 GHz` when the clock cannot be read.
 
 ### Added

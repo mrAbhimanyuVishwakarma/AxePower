@@ -456,7 +456,7 @@
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Taskbar preferences" Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,2"/>
-                                    <TextBlock Text="Choose what appears when you right-click AxePower's icon in the taskbar." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"/>
+                                    <TextBlock Text="Choose which power modes and sidebar pages appear in the AxePower tray menu." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </StackPanel>
 

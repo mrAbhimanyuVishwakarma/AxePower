@@ -270,10 +270,21 @@ public class ShellViewTests
         Assert.Contains(itemStyle.Setters.OfType<Setter>(), s => s.Property == FrameworkElement.HeightProperty && Equals(s.Value, 28.0));
         Assert.IsType<Style>(menu.TryFindResource(MenuItem.SeparatorStyleKey));
 
-        var names = new[] { "TrayItem_Eco", "TrayItem_Smart", "TrayItem_Beast", "TrayItem_GameMode", "TrayItem_Dashboard", "TrayItem_Battery",
-                            "TrayItem_PhoneControl", "TrayItem_SecondMonitor", "TrayItem_Maintenance", "TrayItem_Utilities", "TrayItem_UpdatePc",
-                            "TrayItem_Settings", "TrayItem_Exit" };
-        Assert.Equal(names, menu.Items.OfType<MenuItem>().Select(i => i.Name));
+        var items = menu.Items.OfType<MenuItem>().ToArray();
+        var sidebar = Assert.Single(ShellTestHost.Descendants(shell.Root).OfType<ShellSidebar>());
+        var sidebarPages = ShellTestHost.Descendants(sidebar).OfType<Button>()
+            .Where(button => ReferenceEquals(button.Command, shell.Vm.NavigateCommand))
+            .Select(button => Assert.IsType<string>(button.CommandParameter));
+        var trayPages = items.Select(item => item.Tag).OfType<string>().Where(tag => tag != "ModeColour");
+        Assert.Equal(sidebarPages, trayPages);
+
+        var options = shell.Vm.SettingsVm.TrayMenuOptions;
+        Assert.Equal(items.Select(item => (string)item.Header), options.Select(option => option.Title));
+        var music = Assert.Single(options, option => option.Id == "Music");
+        music.IsShown = false;
+        menu.RaiseEvent(new RoutedEventArgs(ContextMenu.OpenedEvent));
+        Assert.Equal(Visibility.Collapsed, Assert.Single(items, item => Equals(item.Tag, "Music")).Visibility);
+        Assert.Contains("Music", shell.ReloadSettings().HiddenTrayMenuItems);
         // The implicit item style reaches only this menu.
         Assert.NotSame(itemStyle, shell.Root.TryFindResource(typeof(MenuItem)));
         return Task.CompletedTask;

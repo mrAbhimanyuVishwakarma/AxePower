@@ -51,6 +51,7 @@ The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Publish
 
 - Connection offers **Phone Control**, **Second Monitor**, **LAN Drop**, and **Phone Link**. Friends and Share Screen rooms were removed from the desktop app.
 - Connection, Maintenance, and Utilities start expanded and remember their state. Control is always expanded.
+- The tray menu includes the same pages as the sidebar. **Settings → Taskbar preferences** controls which shortcuts are shown.
 - Click **Game Mode** on the Dashboard to open the Game Mode page. The Dashboard and Game Mode GPU readouts use `0 GHz` when the clock is unavailable.
 - Open **BCUninstaller** from the Uninstaller toolbar. Use **Tools** to install it if it is missing.
 
