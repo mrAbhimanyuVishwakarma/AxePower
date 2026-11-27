@@ -384,7 +384,6 @@ function initLatestRelease() {
       
       const version = vTag.replace(/^v/i, '');
       document.querySelectorAll('.js-version-num').forEach(el => el.textContent = version);
-      document.querySelectorAll('.js-hero-version').forEach(el => el.textContent = `${version} is here!`);
       
       if (release.published_at) {
         const d = new Date(release.published_at);
