@@ -16,7 +16,7 @@ A Windows 10/11 desktop utility for laptops and gaming PCs. It does the followin
 - installs and removes software (Software Hub, Uninstaller Pro);
 - cleans and repairs Windows (System Care, System Doctor, Debloat);
 - shares files with a phone on the same Wi-Fi (Phone Hub / LAN Drop);
-- plays music, and shares the screen with friends.
+- plays music.
 
 Many actions change Windows settings. Every such action is previewed, and most can be undone from
 Settings › Change history.

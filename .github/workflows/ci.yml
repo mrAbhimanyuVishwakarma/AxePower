@@ -6,13 +6,13 @@ on:
       - main
       - master
       - 'v*'
-      - 'v2.1.1---monitization-features'
+      - windowsupdatepage-rework
   pull_request:
     branches:
       - main
       - master
       - 'v*'
-      - 'v2.1.1---monitization-features'
+      - windowsupdatepage-rework
   schedule:
     - cron: '0 6 * * 1'
   workflow_dispatch:
@@ -35,7 +35,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@6bd300f5eaf4f733e00787e7225e35732fe6adda # v4.0.1
         with:
-          dotnet-version: '8.0.403'
+          dotnet-version: '10.0.404'
 
       - name: Environment Diagnostics
         shell: powershell

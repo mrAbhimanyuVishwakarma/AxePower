@@ -24,7 +24,7 @@
         </Border.Style>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="88"/>
+                <RowDefinition Height="74"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -33,10 +33,10 @@
             <Grid Grid.Row="0" WindowChrome.IsHitTestVisibleInChrome="True" VerticalAlignment="Top">
                 <Grid.Style>
                     <Style TargetType="Grid">
-                        <Setter Property="Margin" Value="28,20,10,0"/>
+                        <Setter Property="Margin" Value="28,16,10,0"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
-                                <Setter Property="Margin" Value="15,20,15,0"/>
+                                <Setter Property="Margin" Value="17,16,17,0"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -67,9 +67,9 @@
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
-                    <Image Source="{DynamicResource AppIconImage}" Width="42" Height="42" />
+                    <Image Source="{DynamicResource AppIconImage}" Width="38" Height="38" />
                 </Button>
-                <TextBlock Grid.Column="1" Text="AxePower" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="22" FontWeight="SemiBold" Margin="12,0,0,0"
+                <TextBlock Grid.Column="1" Text="AxePower" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="20" FontWeight="SemiBold" Margin="12,0,0,0"
                            Style="{StaticResource SidebarLabelStyle}"/>
                 <Button Grid.Column="2" Style="{StaticResource MusicIconButtonStyle}" Width="28" Height="28" FontSize="11"
                         Content="&#xE892;" Command="{Binding ToggleSidebarCommand}" VerticalAlignment="Center"
@@ -77,9 +77,9 @@
                         Visibility="{Binding IsSidebarCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
             </Grid>
 
-            <!-- Navigation groups. No scroll viewer: every item is sized to fit the sidebar outright, and the
-                 window's MinHeight is set so the list can never be squeezed shorter than it needs. -->
-            <StackPanel Grid.Row="1" Margin="0,2,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                          Focusable="False" WindowChrome.IsHitTestVisibleInChrome="True">
+            <StackPanel Margin="0,2,0,0">
                     <!-- 1. CONTROL GROUP -->
                     <TextBlock Text="CONTROL" Style="{StaticResource SidebarGroupHeaderTextStyle}" />
                     <Border Style="{StaticResource SidebarRailDividerStyle}"/>
@@ -88,7 +88,7 @@
                     <Button Style="{Binding DashboardActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" ToolTip="Dashboard: choose your power mode" AutomationProperties.Name="Dashboard">
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
-                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                       Fill="{DynamicResource SidebarIconBrush}">
                                 <Rectangle.OpacityMask>
                                     <ImageBrush ImageSource="/Resources/icons/Dashboards.png" Stretch="Uniform"/>
                                 </Rectangle.OpacityMask>
@@ -101,7 +101,7 @@
                     <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode" ToolTip="Game Mode: your games and Game Mode" AutomationProperties.Name="Game Mode">
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
-                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                       Fill="{DynamicResource SidebarIconBrush}">
                                 <Rectangle.OpacityMask>
                                     <ImageBrush ImageSource="/Resources/icons/controller.png" Stretch="Uniform"/>
                                 </Rectangle.OpacityMask>
@@ -114,7 +114,7 @@
                     <Button Style="{Binding BatteryActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Battery" ToolTip="Battery: health, history and charging" AutomationProperties.Name="Battery">
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
-                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                       Fill="{DynamicResource SidebarIconBrush}">
                                 <Rectangle.OpacityMask>
                                     <ImageBrush ImageSource="/Resources/icons/battery.png" Stretch="Uniform"/>
                                 </Rectangle.OpacityMask>
@@ -127,58 +127,63 @@
                     <Button Style="{Binding MusicActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Music"
                             ToolTip="Music: play your music files" AutomationProperties.Name="Music">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Music" Style="{StaticResource SidebarLabelStyle}"/>
                         </StackPanel>
                     </Button>
 
                     <!-- 2. CONNECTION GROUP -->
-                    <TextBlock Text="CONNECTION" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="20,10,20,3"/>
+                    <Button x:Name="ConnectionToggle" Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Content="CONNECTION"
+                            Command="{Binding ToggleConnectionGroupCommand}" Tag="{Binding ConnectionChevronGlyph}"
+                            ToolTip="{Binding ConnectionToggleLabel}" AutomationProperties.Name="{Binding ConnectionToggleLabel}"/>
                     <Border Style="{StaticResource SidebarRailDividerStyle}"/>
 
-                    <!-- Friends Hub (Screen sharing, call & chat) -->
-                    <Button Style="{Binding FriendsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Friends" ToolTip="Friends: chat, voice call, screen share &amp; play together" AutomationProperties.Name="Friends">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE779;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Friends" Style="{StaticResource SidebarLabelStyle}"/>
-                        </StackPanel>
-                    </Button>
+                    <StackPanel x:Name="ConnectionItems" Visibility="{Binding ShowConnectionItems, Converter={StaticResource BoolToVis}}">
+                        <!-- Phone Control -->
+                        <Button Style="{Binding PhoneHubActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="PhoneHub" ToolTip="Phone Control: mirror and control your phone" AutomationProperties.Name="Phone Control">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Phone Control" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
 
-                    <!-- Phone Control -->
-                    <Button Style="{Binding PhoneHubActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="PhoneHub" ToolTip="Phone Control: Screen mirroring, Wi-Fi LAN drop &amp; remote tools">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Phone Control" Style="{StaticResource SidebarLabelStyle}"/>
-                        </StackPanel>
-                    </Button>
+                        <!-- Second Monitor -->
+                        <Button Style="{Binding SecondMonitorActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="SecondMonitor" ToolTip="Second Monitor: SpaceDesk wireless display for phone, tablet &amp; laptop" AutomationProperties.Name="Second Monitor">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Second Monitor" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
 
-                    <!-- Second Monitor -->
-                    <Button Style="{Binding SecondMonitorActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="SecondMonitor" ToolTip="Second Monitor: SpaceDesk wireless display for phone, tablet &amp; laptop">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Second Monitor" Style="{StaticResource SidebarLabelStyle}"/>
-                        </StackPanel>
-                    </Button>
+                        <Button Style="{Binding LanDropActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="LanDrop"
+                                ToolTip="LAN Drop: transfer files and text over your local network" AutomationProperties.Name="LAN Drop">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="LAN Drop" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{Binding PhoneLinkActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="PhoneLink"
+                                ToolTip="Phone Link: connect your phone with Windows" AutomationProperties.Name="Phone Link">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE71B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Phone Link" Style="{StaticResource SidebarLabelStyle}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
 
                     <!-- 3. MAINTENANCE GROUP (Collapsible) -->
                     <Border Style="{StaticResource SidebarRailDividerStyle}"/>
-                    <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleMaintenanceGroupCommand}" Margin="10,8,10,2">
-                        <Grid VerticalAlignment="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="MAINTENANCE" FontFamily="{StaticResource PrimaryFontFamily}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{Binding MaintenanceChevronGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Button>
+                    <Button x:Name="MaintenanceToggle" Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Content="MAINTENANCE"
+                            Command="{Binding ToggleMaintenanceGroupCommand}" Tag="{Binding MaintenanceChevronGlyph}"
+                            ToolTip="{Binding MaintenanceToggleLabel}" AutomationProperties.Name="{Binding MaintenanceToggleLabel}"/>
 
                     <!-- Maintenance Sub-items -->
-                    <StackPanel Visibility="{Binding ShowMaintenanceItems, Converter={StaticResource BoolToVis}}">
+                    <StackPanel x:Name="MaintenanceItems" Visibility="{Binding ShowMaintenanceItems, Converter={StaticResource BoolToVis}}">
                         <!-- Windows Update -->
                         <Button Style="{Binding UpdatePcActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="UpdatePc" ToolTip="Windows Update: drivers, WinGet batch upgrades and Windows updates">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Windows Update" Style="{StaticResource SidebarLabelStyle}"/>
                             </StackPanel>
                         </Button>
@@ -186,7 +191,7 @@
                         <!-- System Care -->
                         <Button Style="{Binding SystemCareActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="SystemCare" ToolTip="System Care: optimization, health repairs, cleanup and DNS tools">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="System Care" Style="{StaticResource SidebarLabelStyle}"/>
                             </StackPanel>
                         </Button>
@@ -194,7 +199,7 @@
                         <!-- Uninstaller -->
                         <Button Style="{Binding UninstallerActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Uninstaller" ToolTip="Uninstaller: remove applications and clean verified leftovers">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Uninstaller" Style="{StaticResource SidebarLabelStyle}"/>
                             </StackPanel>
                         </Button>
@@ -202,7 +207,7 @@
                         <!-- Debloat -->
                         <Button Style="{Binding DebloatActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Debloat" ToolTip="Debloat Hub: Win11Debloat &amp; WinUtil Windows tools">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Debloat" Style="{StaticResource SidebarLabelStyle}"/>
                             </StackPanel>
                         </Button>
@@ -210,23 +215,16 @@
 
                     <!-- 4. UTILITIES GROUP (Collapsible) -->
                     <Border Style="{StaticResource SidebarRailDividerStyle}"/>
-                    <Button Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Command="{Binding ToggleUtilitiesGroupCommand}" Margin="10,8,10,2">
-                        <Grid VerticalAlignment="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="UTILITIES" FontFamily="{StaticResource PrimaryFontFamily}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{Binding UtilitiesChevronGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Button>
+                    <Button x:Name="UtilitiesToggle" Style="{StaticResource SidebarExpanderHeaderButtonStyle}" Content="UTILITIES"
+                            Command="{Binding ToggleUtilitiesGroupCommand}" Tag="{Binding UtilitiesChevronGlyph}"
+                            ToolTip="{Binding UtilitiesToggleLabel}" AutomationProperties.Name="{Binding UtilitiesToggleLabel}"/>
 
                     <!-- Utilities Sub-items -->
-                    <StackPanel Visibility="{Binding ShowUtilitiesItems, Converter={StaticResource BoolToVis}}">
+                    <StackPanel x:Name="UtilitiesItems" Visibility="{Binding ShowUtilitiesItems, Converter={StaticResource BoolToVis}}">
                         <!-- Terminal -->
                         <Button Style="{Binding TerminalActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Terminal" ToolTip="Terminal: built-in CMD / PowerShell, where AxePower's commands report">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Terminal" Style="{StaticResource SidebarLabelStyle}"/>
                             </StackPanel>
                         </Button>
@@ -234,12 +232,13 @@
                         <!-- Tools: MSI Afterburner, CPU-Z, GPU-Z, CrystalDiskInfo -->
                         <Button Style="{Binding ToolsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Tools" ToolTip="Tools: MSI Afterburner, CPU-Z, GPU-Z and CrystalDiskInfo" AutomationProperties.Name="Tools">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xEC7A;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xEC7A;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Tools" Style="{StaticResource SidebarLabelStyle}"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
             </StackPanel>
+            </ScrollViewer>
 
             <!-- Bottom Fixed Navigation (Settings & Profile) -->
             <StackPanel Grid.Row="2" Margin="0,0,0,10" WindowChrome.IsHitTestVisibleInChrome="True">
@@ -250,7 +249,7 @@
                 <Button Style="{Binding TrustActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Trust"
                         ToolTip="Trust &amp; Permissions: what AxePower can do, listens on, keeps and sends" AutomationProperties.Name="Trust and Permissions">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Trust &amp; Permissions" Style="{StaticResource SidebarLabelStyle}"/>
                     </StackPanel>
                 </Button>
@@ -258,7 +257,7 @@
                 <!-- Settings (above Profile) -->
                 <Button Style="{Binding SettingsActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings" ToolTip="Settings" AutomationProperties.Name="Settings">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Settings" Style="{StaticResource SidebarLabelStyle}"/>
                     </StackPanel>
                 </Button>
@@ -266,7 +265,7 @@
                 <!-- Profile (bottom of the list; replaced About in 2.0.8): avatar, name and @username.
                      Signed out it reads "Sign in"; the rail shows only the avatar. -->
                 <Button Style="{Binding AboutActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Profile"
-                        Height="52" ToolTip="{Binding AccountVm.SidebarTitle}" AutomationProperties.Name="Profile"
+                        Height="46" ToolTip="{Binding AccountVm.SidebarTitle}" AutomationProperties.Name="Profile"
                         AutomationProperties.HelpText="{Binding AccountVm.SidebarStatus}">
                     <StackPanel Orientation="Horizontal">
                         <Grid Width="30" Height="30" VerticalAlignment="Center">
@@ -313,7 +312,7 @@
                             </Ellipse>
                         </Grid>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{Binding AccountVm.SidebarTitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="13.5"
+                            <TextBlock Text="{Binding AccountVm.SidebarTitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="12.5"
                                        TextTrimming="CharacterEllipsis" MaxWidth="150"/>
                             <TextBlock Text="{Binding AccountVm.SidebarSubtitle}" Style="{StaticResource SidebarLabelStyle}" FontSize="11.5" FontWeight="Normal"
                                        Foreground="{DynamicResource MutedTextBrush}" TextTrimming="CharacterEllipsis" MaxWidth="150" Margin="0,1,0,0"/>

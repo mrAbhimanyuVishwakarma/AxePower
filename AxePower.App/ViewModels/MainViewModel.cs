@@ -6,14 +6,12 @@ using CommunityToolkit.Mvvm.Input;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Uninstaller;
 using AxePower.App.ViewModels.Music;
-using AxePower.App.ViewModels.ShareScreen;
 
 namespace AxePower.App.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
     private readonly NotificationService _notificationService;
-    private readonly DriverUpdateService _driverUpdateService;
     private readonly MsiAfterburnerService _msiAfterburnerService;
     private readonly DebloatService _debloatService;
     private readonly AndroidControlService _androidControlService;
@@ -76,8 +74,6 @@ public partial class MainViewModel : ObservableObject
     public TrustViewModel? TrustVm { get; }
     public RoutinesViewModel? RoutinesVm { get; }
     public MusicViewModel? MusicVm { get; }
-    public ShareScreenViewModel? ShareScreenVm { get; }
-    public ShareScreenViewModel? FriendsVm => ShareScreenVm;
 
     /// <summary>Shared Now Playing state for the title-bar player (null only in minimal test setups).</summary>
     public NowPlayingViewModel? NowPlaying { get; }
@@ -96,12 +92,15 @@ public partial class MainViewModel : ObservableObject
         NowPlaying != null && (MusicVm == null || CurrentView != MusicVm);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowConnectionItems), nameof(ConnectionChevronGlyph), nameof(ConnectionToggleLabel))]
+    private bool _isConnectionExpanded;
+
+    [ObservableProperty]
     private bool _isMaintenanceExpanded;
 
     [ObservableProperty]
     private bool _isUtilitiesExpanded;
 
-    private string _currentNavSection = "Dashboard";
 
     public Style? DashboardActiveStyle => GetStyleForView(DashboardVm);
     public Style? AutoSwitchActiveStyle => AutoSwitchVm != null ? GetStyleForView(AutoSwitchVm) : null;
@@ -112,31 +111,35 @@ public partial class MainViewModel : ObservableObject
     public Style? SettingsActiveStyle => GetStyleForView(SettingsVm);
     public Style? AboutActiveStyle => GetStyleForView(AboutVm);
     public Style? TrustActiveStyle => GetStyleForView((object?)TrustVm ?? new object());
-    public Style? UninstallerActiveStyle => GetSubItemStyleForView(UninstallerVm);
-    public Style? SystemCareActiveStyle => GetSubItemStyleForView(SystemCareVm);
-    public Style? DebloatActiveStyle => GetSubItemStyleForView(DebloatVm);
-    public Style? TerminalActiveStyle => GetSubItemStyleForView(TerminalVm);
-    public Style? ToolsActiveStyle => GetSubItemStyleForView((object?)ToolsVm ?? new object());
+    public Style? UninstallerActiveStyle => GetStyleForView(UninstallerVm);
+    public Style? SystemCareActiveStyle => GetStyleForView(SystemCareVm);
+    public Style? DebloatActiveStyle => GetStyleForView(DebloatVm);
+    public Style? TerminalActiveStyle => GetStyleForView(TerminalVm);
+    public Style? ToolsActiveStyle => GetStyleForView((object?)ToolsVm ?? new object());
     public Style? SoftwareHubActiveStyle => GetStyleForView(SoftwareHubVm);
-    public Style? UpdatePcActiveStyle => GetSubItemStyleForView(SoftwareHubVm);
-    public Style? PhoneHubActiveStyle => (_currentNavSection is "PhoneHub" or "PhoneControl") && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
-    public Style? SecondMonitorActiveStyle => _currentNavSection == "SecondMonitor" && CurrentView == PhoneHubVm ? (Application.Current?.TryFindResource("SidebarActiveButtonStyle") as Style) : (Application.Current?.TryFindResource("SidebarButtonStyle") as Style);
-    public Style? LanDropActiveStyle => GetStyleForView(PhoneHubVm);
-    public Style? ShareScreenActiveStyle => ShareScreenVm != null ? GetStyleForView(ShareScreenVm) : GetStyleForView(new object());
-    public Style? FriendsActiveStyle => ShareScreenActiveStyle;
+    public Style? UpdatePcActiveStyle => GetStyleForView(SoftwareHubVm);
+    public Style? PhoneHubActiveStyle => GetConnectionStyle("ScreenMirror");
+    public Style? SecondMonitorActiveStyle => GetConnectionStyle("SecondMonitor");
+    public Style? LanDropActiveStyle => GetConnectionStyle("LanDrop");
+    public Style? PhoneLinkActiveStyle => GetConnectionStyle("PhoneLink");
 
+    public string ConnectionChevronGlyph => IsConnectionExpanded ? "\uE70D" : "\uE76C";
+    public string ConnectionToggleLabel => IsConnectionExpanded ? "Collapse Connection" : "Expand Connection";
     public string MaintenanceChevronGlyph => IsMaintenanceExpanded ? "\uE70D" : "\uE76C";
     public string UtilitiesChevronGlyph => IsUtilitiesExpanded ? "\uE70D" : "\uE76C";
+    public string MaintenanceToggleLabel => IsMaintenanceExpanded ? "Collapse Maintenance" : "Expand Maintenance";
+    public string UtilitiesToggleLabel => IsUtilitiesExpanded ? "Collapse Utilities" : "Expand Utilities";
 
     /// <summary>Below this window width the sidebar collapses to its icon rail by itself.</summary>
     public const double SidebarAutoCollapseWidth = 1200;
 
     /// <summary>The sidebar is a 72 px icon rail instead of the full 240 px list.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowMaintenanceItems), nameof(ShowUtilitiesItems))]
+    [NotifyPropertyChangedFor(nameof(ShowConnectionItems), nameof(ShowMaintenanceItems), nameof(ShowUtilitiesItems))]
     private bool _isSidebarCollapsed;
 
     // The rail has no group headers to open, so it always shows every tool
+    public bool ShowConnectionItems => IsConnectionExpanded || IsSidebarCollapsed;
     public bool ShowMaintenanceItems => IsMaintenanceExpanded || IsSidebarCollapsed;
     public bool ShowUtilitiesItems => IsUtilitiesExpanded || IsSidebarCollapsed;
 
@@ -178,7 +181,6 @@ public partial class MainViewModel : ObservableObject
         PhoneHubViewModel phoneHubVm,
         TerminalViewModel terminalVm,
         NotificationService notificationService,
-        DriverUpdateService driverUpdateService,
         MsiAfterburnerService msiAfterburnerService,
         DebloatService debloatService,
         AndroidControlService androidControlService,
@@ -188,7 +190,6 @@ public partial class MainViewModel : ObservableObject
         AutoSwitchViewModel? autoSwitchVm = null,
         MusicViewModel? musicVm = null,
         NowPlayingViewModel? nowPlaying = null,
-        ShareScreenViewModel? shareScreenVm = null,
         ToolsViewModel? toolsVm = null,
         AccountViewModel? accountVm = null,
         RoutinesViewModel? routinesVm = null,
@@ -201,8 +202,6 @@ public partial class MainViewModel : ObservableObject
         if (RoutinesVm != null) RoutinesVm.NavigateTo = target => Navigate(target);
         AccountVm = accountVm;
         MusicVm = musicVm;
-        ShareScreenVm = shareScreenVm;
-        if (ShareScreenVm != null) ShareScreenVm.NavigateTo = target => Navigate(target);
         NowPlaying = nowPlaying;
         if (NowPlaying != null)
         {
@@ -229,6 +228,10 @@ public partial class MainViewModel : ObservableObject
         DebloatVm = debloatVm;
         SoftwareHubVm = softwareHubVm;
         PhoneHubVm = phoneHubVm;
+        PhoneHubVm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(PhoneHubViewModel.ActiveTab)) RefreshConnectionStyles();
+        };
         TerminalVm = terminalVm;
         _terminalService = terminalService;
         IsElevated = TerminalService.IsProcessElevated();
@@ -238,7 +241,6 @@ public partial class MainViewModel : ObservableObject
             Application.Current?.Dispatcher?.BeginInvoke(new Action(() => Navigate("Terminal")));
 
         _notificationService = notificationService;
-        _driverUpdateService = driverUpdateService;
         _msiAfterburnerService = msiAfterburnerService;
         _debloatService = debloatService;
         _androidControlService = androidControlService;
@@ -246,6 +248,7 @@ public partial class MainViewModel : ObservableObject
         _settingsService = settingsService;
 
         var startupSettings = _settingsService.GetSettings();
+        IsConnectionExpanded = startupSettings.SidebarConnectionExpanded;
         IsMaintenanceExpanded = startupSettings.SidebarMaintenanceExpanded;
         IsUtilitiesExpanded = startupSettings.SidebarUtilitiesExpanded;
         IsSidebarCollapsed = startupSettings.SidebarCollapsed;
@@ -331,26 +334,31 @@ public partial class MainViewModel : ObservableObject
         return Application.Current.TryFindResource(styleName) as Style;
     }
 
-    private Style? GetSubItemStyleForView(object viewVm)
-    {
-        if (Application.Current == null) return null;
-        var styleName = CurrentView == viewVm ? "SidebarSubItemActiveButtonStyle" : "SidebarSubItemButtonStyle";
-        return Application.Current.TryFindResource(styleName) as Style;
-    }
-
     // Battery status lives on the Dashboard only; other pages get the title bar space back
     public bool ShowBatteryPill => CurrentView == DashboardVm;
 
     partial void OnIsMaintenanceExpandedChanged(bool value)
     {
         OnPropertyChanged(nameof(MaintenanceChevronGlyph));
+        OnPropertyChanged(nameof(MaintenanceToggleLabel));
         OnPropertyChanged(nameof(ShowMaintenanceItems));
     }
 
     partial void OnIsUtilitiesExpandedChanged(bool value)
     {
         OnPropertyChanged(nameof(UtilitiesChevronGlyph));
+        OnPropertyChanged(nameof(UtilitiesToggleLabel));
         OnPropertyChanged(nameof(ShowUtilitiesItems));
+    }
+
+    [RelayCommand]
+    private void ToggleConnectionGroup()
+    {
+        IsConnectionExpanded = !IsConnectionExpanded;
+
+        var settings = _settingsService.GetSettings();
+        settings.SidebarConnectionExpanded = IsConnectionExpanded;
+        _settingsService.SaveSettings(settings, notifyListeners: false);
     }
 
     [RelayCommand]
@@ -434,10 +442,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ToolsActiveStyle));
         OnPropertyChanged(nameof(SoftwareHubActiveStyle));
         OnPropertyChanged(nameof(UpdatePcActiveStyle));
-        OnPropertyChanged(nameof(PhoneHubActiveStyle));
-        OnPropertyChanged(nameof(LanDropActiveStyle));
-        OnPropertyChanged(nameof(ShareScreenActiveStyle));
-        OnPropertyChanged(nameof(FriendsActiveStyle));
+        RefreshConnectionStyles();
         OnPropertyChanged(nameof(ShowBatteryPill));
     }
 
@@ -460,8 +465,6 @@ public partial class MainViewModel : ObservableObject
         var baseKey = parts[0];
         var arg1 = parts.Length > 1 ? parts[1] : null;
         var arg2 = parts.Length > 2 ? parts[2] : null;
-
-        _currentNavSection = baseKey;
 
         if (baseKey is "SystemCare" or "Optimizer" or "Doctor" or "Maintenance" or "Uninstaller" or "UpdatePc" or "SoftwareHub" or "Debloat")
         {
@@ -495,9 +498,7 @@ public partial class MainViewModel : ObservableObject
             "Tools"       => (object?)ToolsVm ?? DashboardVm,
             "Routines"    => (object?)RoutinesVm ?? DashboardVm,
             "SoftwareHub" => SwitchSoftwareHubTab(arg1, arg2),
-            "UpdatePc"    => SwitchSoftwareHubTab(arg1, arg2),
-            "ShareScreen" => (object?)ShareScreenVm ?? DashboardVm,
-            "Friends"     => (object?)ShareScreenVm ?? DashboardVm,
+            "UpdatePc"    => SwitchSoftwareHubTab(arg1 ?? "Updaters", arg2),
             "PhoneControl"=> SwitchPhoneHubTab("ScreenMirror"),
             "PhoneHub"    => SwitchPhoneHubTab("ScreenMirror"),
             "SecondMonitor"=> SwitchPhoneHubTab("SecondMonitor"),
@@ -507,11 +508,22 @@ public partial class MainViewModel : ObservableObject
             _             => DashboardVm
         };
 
-        OnPropertyChanged(nameof(PhoneHubActiveStyle));
-        OnPropertyChanged(nameof(SecondMonitorActiveStyle));
-
         // The sidebar's "Sign in" item: land on Profile with the sign-in dialog already open.
         if (baseKey == "Profile" && AccountVm is { IsSignedOut: true, IsDialogOpen: false }) AccountVm.OpenSignIn();
+    }
+
+    private Style? GetConnectionStyle(string tab)
+    {
+        var key = CurrentView == PhoneHubVm && PhoneHubVm.ActiveTab == tab ? "SidebarActiveButtonStyle" : "SidebarButtonStyle";
+        return Application.Current?.TryFindResource(key) as Style;
+    }
+
+    private void RefreshConnectionStyles()
+    {
+        OnPropertyChanged(nameof(PhoneHubActiveStyle));
+        OnPropertyChanged(nameof(SecondMonitorActiveStyle));
+        OnPropertyChanged(nameof(LanDropActiveStyle));
+        OnPropertyChanged(nameof(PhoneLinkActiveStyle));
     }
 
     private object OpenSystemCare(string section)
@@ -520,13 +532,10 @@ public partial class MainViewModel : ObservableObject
         return SystemCareVm;
     }
 
-    /// <summary>
-    /// Opens Settings, optionally asking the page to bring one card into view. Used by the Share
-    /// Screen stage, whose gear sends the user here rather than duplicating the pickers.
-    /// </summary>
     private object ShowSettingsSection(string? section)
     {
-        SettingsVm.RequestedSection = section;
+        if (section is not null && SettingsVm.Categories.Any(category => category.Id == section))
+            SettingsVm.SelectedCategory = section;
         // The page lives for the whole session, so pick up skins added since it was built
         SettingsVm.RefreshThemeChoices();
         return SettingsVm;
@@ -591,27 +600,6 @@ public partial class MainViewModel : ObservableObject
                 break;
             case MsiAfterburnerLaunchResult.Failed:
                 _notificationService.Show("Could not launch or install MSI Afterburner.");
-                break;
-        }
-    }
-
-    [RelayCommand]
-    private void UpdateDrivers()
-    {
-        var result = _driverUpdateService.LaunchDriverAndSystemUpdate();
-        switch (result)
-        {
-            case DriverUpdateLaunchResult.StartedNew:
-                _notificationService.Show("Update PC started in background (minimized).");
-                break;
-            case DriverUpdateLaunchResult.FocusedExisting:
-                _notificationService.Show("Update PC is already running. Showing active window.");
-                break;
-            case DriverUpdateLaunchResult.CancelledByUser:
-                _notificationService.Show("Update PC administrator request was cancelled.");
-                break;
-            case DriverUpdateLaunchResult.Failed:
-                _notificationService.Show("Failed to launch Update PC.");
                 break;
         }
     }
@@ -737,7 +725,7 @@ public partial class MainViewModel : ObservableObject
                 Navigate("Uninstaller");
                 break;
             case "UpdatePc":
-                UpdateDrivers();
+                Navigate("UpdatePc");
                 break;
             case "Debloat":
                 Debloat();
@@ -831,22 +819,22 @@ public partial class MainViewModel : ObservableObject
             Id = "UpdatePc",
             Title = "Update PC",
             IconGlyph = "\uE777",
-            Subtitle = "Hardware Drivers, Windows Packages & GPU Updater",
-            Credit = "Powered by Windows Driver & Winget Engine",
+            Subtitle = "Windows, Apps, and Device Updates",
+            Credit = "Windows Update and WinGet",
             CreditUrl = "https://github.com/mrAbhimanyuVishwakarma/AxePower_Download#readme",
-            Overview = "Scans Windows Update catalog and winget software repositories to find and install the latest stable device drivers, audio/chipset updates, and gaming runtimes.",
+            Overview = "See what Windows Update and WinGet offer, choose which apps to update, and find the right Windows or vendor settings for device updates.",
             Steps = new System.Collections.Generic.List<string>
             {
-                "Click 'Update PC' in the sidebar or 'Launch Tool' below.",
-                "AxePower initiates a background scan for outdated drivers and core packages.",
-                "Review pending device and driver updates.",
-                "Allow the updates to download and install. Restart your PC if prompted to complete driver installation."
+                "Open Windows Update in the sidebar, or use Open Update PC below.",
+                "Select Check for updates to see available Windows, app, and device updates.",
+                "Select the apps you want to update and confirm the selection.",
+                "Use the Windows Update and vendor links for Windows and device updates. Review results before restarting."
             },
             Tips = new System.Collections.Generic.List<string>
             {
-                "Keep GPU and motherboard chipset drivers updated to minimize micro-stutters and maximize frame rates in modern titles."
+                "Save your work before starting an installer. Some updates require a restart."
             },
-            LaunchButtonText = "Run Update PC"
+            LaunchButtonText = "Open Update PC"
         });
 
         // 5. Debloat

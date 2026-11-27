@@ -1,6 +1,6 @@
 ---
 name: axepower-wpf-engineer
-description: Guides implementation, redesign, debugging, testing, review, and release work for the AxePower .NET 8 WPF application using strict MVVM, CommunityToolkit.Mvvm, safe Windows power integration, responsive Fluent-inspired XAML, accessibility, and verified builds.
+description: Guides implementation, debugging, testing, and release work for AxePower, a .NET 10 WPF Windows app. Use it for XAML, MVVM, navigation, themes, Windows integration, and installer verification.
 ---
 
 # AxePower WPF Engineering Skill
@@ -10,6 +10,8 @@ You must follow these rules whenever working on AxePower, specifically when hand
 ## A. Inspect before editing
 
 Always inspect relevant existing files before creating replacements.
+
+Read `AGENTS.md` and the latest entry in `WORK_LOG.md`. Check the branch and source version, preserve local changes, and use `scripts/run-latest.ps1` when reviewing the app from the checkout.
 
 You must:
 * Reuse existing services and commands.
@@ -34,7 +36,7 @@ Require strict MVVM:
 * Use constructor injection.
 * Use interfaces for system-facing services.
 * Use `[ObservableProperty]`.
-* Use `[RelayCommand]` and `[AsyncRelayCommand]`.
+* Use `[RelayCommand]` on command methods, including methods that return `Task`.
 * Use `CancellationToken`.
 * Avoid `async void` except genuine event handlers.
 * Dispose event subscriptions and native resources.
@@ -181,17 +183,17 @@ Require:
 
 After UI changes:
 ```powershell
-dotnet restore
-dotnet build -c Debug
-dotnet build -c Release
+dotnet restore AxePower.sln --locked-mode
+dotnet build AxePower.sln -c Debug --no-restore
+dotnet build AxePower.sln -c Release --no-restore
 ```
 
 After ViewModel, service, settings, or business-logic changes:
 ```powershell
-dotnet restore
-dotnet build -c Debug
-dotnet build -c Release
-dotnet test -c Release
+dotnet restore AxePower.sln --locked-mode
+dotnet build AxePower.sln -c Debug --no-restore
+dotnet build AxePower.sln -c Release --no-restore -p:ContinuousIntegrationBuild=true
+dotnet test AxePower.Tests/AxePower.Tests.csproj -c Release --no-build
 ```
 
 You must:

@@ -26,7 +26,7 @@
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <!-- Policy 1: Security Updates Only -->
+                <!-- Feature update deferral -->
                 <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
                         BorderBrush="{DynamicResource CardBorderBrush}"
                         BorderThickness="1" CornerRadius="14" Padding="24,20" Margin="0,0,0,16">
@@ -42,20 +42,21 @@
                         </Border>
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Security Updates Only (Recommended Policy)" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4"/>
-                            <TextBlock Text="Defers major disruptive Windows feature updates by 365 days while ensuring essential security and quality patches install smoothly."
+                            <TextBlock Text="Defer feature updates" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4" TextWrapping="Wrap"/>
+                            <TextBlock Text="Configure a 365-day deferral for feature updates. Windows determines whether the policy applies. Security and quality updates follow their usual policy."
                                        FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="18"/>
                         </StackPanel>
 
                         <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}"
                                   IsChecked="{Binding IsSecurityOnlyActive, Mode=OneWay}"
                                   Command="{Binding ToggleSecurityOnlyCommand}"
-                                  IsEnabled="{Binding IsChangingUpdatePolicy, Converter={StaticResource InverseBool}}"
+                                  AutomationProperties.Name="Configure feature update deferral"
+                                  IsEnabled="{Binding CanCheckForUpdates}"
                                   VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
 
-                <!-- Policy 2: Block Forced Reboots -->
+                <!-- Automatic restart policy -->
                 <Border Background="{DynamicResource ElevatedCardBackgroundBrush}"
                         BorderBrush="{DynamicResource CardBorderBrush}"
                         BorderThickness="1" CornerRadius="14" Padding="24,20" Margin="0,0,0,16">
@@ -71,15 +72,18 @@
                         </Border>
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Block Forced Automatic Reboots" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4"/>
-                            <TextBlock Text="Prevents Windows from forcefully restarting your PC when a user is actively logged on, protecting ongoing games, downloads, and rendering jobs."
+                            <TextBlock Text="Signed-in restart protection" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,4" TextWrapping="Wrap"/>
+                            <TextBlock Text="Configure restart protection for Windows updates installed on an automatic schedule. Windows settings and organization policy determine when it applies."
                                        FontSize="13" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                            <Button Content="Open restart options" Style="{DynamicResource SecondaryButtonStyle}" HorizontalAlignment="Left"
+                                    Margin="0,8,0,0" Command="{Binding OpenWindowsRestartOptionsCommand}"/>
                         </StackPanel>
 
                         <CheckBox Grid.Column="2" Style="{DynamicResource ToggleSwitchStyle}"
                                   IsChecked="{Binding IsNoForcedRebootActive, Mode=OneWay}"
                                   Command="{Binding ToggleNoForcedRebootCommand}"
-                                  IsEnabled="{Binding IsChangingUpdatePolicy, Converter={StaticResource InverseBool}}"
+                                  AutomationProperties.Name="Configure signed-in restart protection"
+                                  IsEnabled="{Binding CanCheckForUpdates}"
                                   VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
@@ -107,7 +111,7 @@
 
                         <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"
                                 Command="{Binding ResetUpdateCacheCommand}"
-                                IsEnabled="{Binding IsResettingUpdateCache, Converter={StaticResource InverseBool}}"
+                                IsEnabled="{Binding CanCheckForUpdates}"
                                 Padding="18,10" FontSize="13" VerticalAlignment="Center">
                             <TextBlock Text="Reset &amp; Repair Cache" FontWeight="SemiBold"/>
                         </Button>
@@ -137,7 +141,7 @@
 
                         <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}"
                                 Command="{Binding CreateRestorePointCommand}"
-                                IsEnabled="{Binding IsCreatingRestorePoint, Converter={StaticResource InverseBool}}"
+                                IsEnabled="{Binding CanCheckForUpdates}"
                                 Padding="18,10" FontSize="13" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>

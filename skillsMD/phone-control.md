@@ -5,7 +5,7 @@ description: Phone Control suite — Android screen mirroring via scrcpy/ADB, Sp
 
 # Phone Control
 
-Four phone tools share one view, with one tab each. The sidebar has two entries: **Phone Control** (opens Screen Mirror) and **Second Monitor**.
+Four tools share one view, with one tab each. The sidebar's Connection group has a shortcut for **Phone Control**, **Second Monitor**, **LAN Drop**, and **Phone Link**. It starts expanded and remembers the user's choice.
 
 | Tab key | Tab | Engine |
 |---|---|---|
@@ -38,13 +38,13 @@ Navigation keys: `PhoneHub`, `PhoneControl` and `AndroidControl` open ScreenMirr
 ## Second Monitor (SpaceDesk)
 - **Detection** (`GetSpaceDeskExePath`): looks for `spacedeskServiceTray.exe` / `spacedeskDriverConsole.exe` under Program Files (x86 too) `\datronicsoft\spacedesk\`, then the uninstall registry key "spacedesk Windows DRIVER".
 - **Install:** `winget install --id Datronicsoft.SpacedeskDriver.Server --silent`. If that fails, it opens spacedesk.net.
-- **QR modal** (`ShowDownloadQr`) links to the Android and iOS viewer apps and the HTML5 viewer (`viewer.spacedesk.net`).
+- **QR modal** (`ShowDownloadQr`) links to the Android and iOS viewer apps. On iPhone or iPad, allow the viewer to access the local network so it can find the PC.
 - `OpenWindowsDisplaySettings` opens Windows display settings so the user can arrange the new monitor.
 
 ## LAN Drop
-A hand-rolled HTTP/1.1 server on a `TcpListener` bound to **all interfaces** (default port **5050**). The phone just opens the URL (or scans the QR code) in a browser, with no app needed.
+The HTTP server binds to the selected network adapter (default port **5050**). The phone opens the session link or scans the QR code in a browser.
 
-- **URL:** `http://<selected LAN IP>:<port>/`. Candidate IPs come from `LanDropService.GetLocalIpAddresses()`.
+- **URL:** The selected LAN IP and port, with a session token in the shared link. Candidate IPs come from `LanDropService.GetLocalIpAddresses()`.
 - **Received files** are saved to `%USERPROFILE%\Downloads\AxePower_LanDrop\`. The filename passes through `Path.GetFileName` to block path traversal.
 - **Routes:**
 
@@ -62,7 +62,7 @@ A hand-rolled HTTP/1.1 server on a `TcpListener` bound to **all interfaces** (de
 - The remote actions send media and volume keys with `keybd_event`. `lock` calls `LockWorkStation()`.
 - Events `OnFileReceived`, `OnTextReceived` and `OnStateChanged` drive the VM's received-files and messages lists.
 
-> **Security note:** there is no pairing, token or PIN. Anyone on the same network who can reach the port can download shared files, upload files into Downloads, post messages, and **lock the PC**. Keep the server off on untrusted networks. Adding a per-session token to the URL/QR is the obvious hardening step.
+LAN Drop authenticates the shared link with a per-session token and uses a session cookie for portal requests. Starting on a Public or unclassified network requires a session-specific override. See the [remote-access security guide](../docs/security/REMOTE_ACCESS.md) for the network and session behavior.
 
 ## Phone Link
 `LaunchPhoneLink` tries `ms-phonelink:`, then `ms-yourphone:`, then opens `https://aka.ms/phonelink`. The QR modal (`phonelink_android` / `phonelink_ios`) links the store pages for Link to Windows.

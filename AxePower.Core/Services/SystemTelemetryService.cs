@@ -756,13 +756,11 @@ public class SystemTelemetryService : IDisposable
     }
 
     /// <summary>
-    /// Always renders clock / load / temperature so the card keeps one layout. A value with no
-    /// source available renders as an em dash: integrated adapters expose neither a clock nor a
-    /// temperature, and showing those as "0.00 GHz  0°C" claimed a measurement that was never taken.
+    /// Renders clock, load, and temperature. An unavailable clock is displayed as 0 GHz.
     /// </summary>
     private string FormatGpuDisplay(double clockGhz, double percent, double tempC)
     {
-        string clock = double.IsNaN(clockGhz) ? "—" : $"{clockGhz:0.00} GHz";
+        string clock = double.IsNaN(clockGhz) ? "0 GHz" : $"{clockGhz:0.00} GHz";
         return $"{clock}  {percent:0}%  {FormatTemp(tempC)}";
     }
 

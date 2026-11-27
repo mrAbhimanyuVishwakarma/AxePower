@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
-    Securely downloads, verifies, and installs the Microsoft .NET 8 Desktop Runtime.
+    Securely downloads, verifies, and installs the Microsoft .NET 10 Desktop Runtime.
 .DESCRIPTION
     Enforces HTTPS-only downloads with restricted redirect validation to Microsoft domains.
     Enforces Authenticode digital signature and Microsoft publisher verification before execution.
-    Supports optional pinned SHA-256 validation.
+    Pins the official x64 package SHA-512 and supports an additional SHA-256 check.
     Never relies on MZ header alone to authorize execution.
     Cleans up all temporary staging files in a secure directory.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [string]$Url = "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe",
+    [string]$Url,
 
     [Parameter(Mandatory = $false)]
     [string]$PinnedSha256 = $env:DOTNET_RUNTIME_SHA256,
@@ -28,15 +28,21 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Microsoft release feed: https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json
+$officialUrl = 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.15/windowsdesktop-runtime-10.0.15-win-x64.exe'
+$officialSha512 = 'f838960962172f1a769c49fa600e6f60f56f8d08a28e3cb878890ffc2e3a7a2e1b65697588e23efa767b8b8e8523ec01f55e875120507dde16d9a0869102dab3'
+if ([string]::IsNullOrWhiteSpace($Url)) { $Url = $officialUrl }
+
 Add-Type -AssemblyName System.Net.Http
 
-try { $Host.UI.RawUI.WindowTitle = 'AxePower Setup - Installing .NET 8 Desktop Runtime' } catch { }
+try { $Host.UI.RawUI.WindowTitle = 'AxePower Setup - Installing .NET 10 Desktop Runtime' } catch { }
 
 $allowedHosts = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 $defaultAllowedHosts = @(
     "aka.ms",
     "download.visualstudio.microsoft.com",
     "download.microsoft.com",
+    "builds.dotnet.microsoft.com",
     "dotnetcli.azureedge.net",
     "dotnetbuilds.azureedge.net",
     "dotnet.microsoft.com",
@@ -50,7 +56,7 @@ Write-Host '  ===============================================================' -
 Write-Host '    AxePower Setup - Installing Required Component' -ForegroundColor Cyan
 Write-Host '  ===============================================================' -ForegroundColor Cyan
 Write-Host ''
-Write-Host '  AxePower requires the Microsoft .NET 8 Desktop Runtime (x64).'
+Write-Host '  AxePower requires the Microsoft .NET 10 Desktop Runtime (x64).'
 Write-Host '  This window will verify and install the runtime securely.'
 Write-Host ''
 
@@ -75,6 +81,10 @@ function Validate-DownloadUrl {
 }
 
 try {
+    if ($Url -cne $officialUrl -and -not $SkipExecution) {
+        throw "A custom runtime URL can only be used with -SkipExecution."
+    }
+
     [System.IO.Directory]::CreateDirectory($tempDir) | Out-Null
 
     Write-Host '  [1/3] Connecting to Microsoft download service...' -ForegroundColor Yellow
@@ -87,7 +97,7 @@ try {
     $handler.AllowAutoRedirect = $false
     $client = [System.Net.Http.HttpClient]::new($handler)
     $client.Timeout = [System.TimeSpan]::FromMinutes(5)
-    $client.DefaultRequestHeaders.Add("User-Agent", "AxePower-Prerequisite-Installer/2.1.0")
+    $client.DefaultRequestHeaders.Add("User-Agent", "AxePower-Prerequisite-Installer")
 
     $currentUri = $initialUri
     $redirectCount = 0
@@ -155,6 +165,18 @@ try {
     if ($fileSize -lt 64 * 1024) {
         throw "Downloaded payload is unexpectedly small ($fileSize bytes). Expected full installer binary."
     }
+    if ($null -ne $contentLength -and $fileSize -ne $contentLength) {
+        throw "The runtime download was incomplete ($fileSize of $contentLength bytes)."
+    }
+
+    if ($Url -ceq $officialUrl) {
+        Write-Host '  Verifying Microsoft SHA-512 package hash...' -ForegroundColor Yellow
+        $actualHash = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA512).Hash
+        if ($actualHash -ne $officialSha512) {
+            throw "The runtime does not match Microsoft's published SHA-512 hash."
+        }
+        Write-Host '  [OK] Microsoft SHA-512 hash verified.' -ForegroundColor Green
+    }
 
     # 1. Pinned Hash Verification (if provided)
     if (-not [string]::IsNullOrWhiteSpace($PinnedSha256)) {
@@ -203,14 +225,14 @@ try {
     }
 
     Write-Host ''
-    Write-Host '  Installing .NET 8 Desktop Runtime, please wait...' -ForegroundColor Yellow
+    Write-Host '  Installing .NET 10 Desktop Runtime, please wait...' -ForegroundColor Yellow
     Write-Host ''
 
-    $proc = Start-Process -FilePath $installerPath -ArgumentList '/install', '/quiet', '/norestart' -Wait -PassThru
+    $proc = Start-Process -FilePath $installerPath -ArgumentList '/install', '/quiet', '/norestart' -WindowStyle Hidden -Wait -PassThru
 
     # 0 = success, 3010 = success reboot required
     if ($proc.ExitCode -eq 0 -or $proc.ExitCode -eq 3010) {
-        Write-Host '  .NET 8 Desktop Runtime installed successfully.' -ForegroundColor Green
+        Write-Host '  .NET 10 Desktop Runtime installed successfully.' -ForegroundColor Green
     } else {
         throw "The runtime installer returned exit code $($proc.ExitCode)."
     }
@@ -224,9 +246,9 @@ catch {
     Write-Host ''
     Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host ''
-    Write-Host '  AxePower cannot run without the official Microsoft .NET 8 Desktop Runtime.' -ForegroundColor Yellow
+    Write-Host '  AxePower cannot run without the official Microsoft .NET 10 Desktop Runtime.' -ForegroundColor Yellow
     Write-Host '  Please download and install it manually from:' -ForegroundColor Yellow
-    Write-Host '    https://dotnet.microsoft.com/download/dotnet/8.0' -ForegroundColor White
+    Write-Host '    https://dotnet.microsoft.com/download/dotnet/10.0' -ForegroundColor White
     Write-Host '  (Select ".NET Desktop Runtime" -> "Windows x64")' -ForegroundColor DarkGray
     Write-Host ''
     Write-Host '  Setup will now abort to protect your system from executing unverified packages.' -ForegroundColor Red
@@ -235,7 +257,10 @@ catch {
     exit 1
 }
 finally {
-    if (Test-Path $tempDir) {
-        Remove-Item -LiteralPath $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $installerPath) {
+        Remove-Item -LiteralPath $installerPath -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path -LiteralPath $tempDir) {
+        try { [System.IO.Directory]::Delete($tempDir) } catch { }
     }
 }

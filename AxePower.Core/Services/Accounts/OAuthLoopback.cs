@@ -35,7 +35,7 @@ public interface IOAuthLoopback : IDisposable
 /// The port is fixed because Supabase only redirects to addresses on its allow-list, and this exact
 /// URL is on it. It binds loopback only, so nothing on the network can reach it, and it closes as
 /// soon as one callback has arrived. Raw sockets rather than HttpListener, which needs admin rights
-/// or a URL reservation to listen (the same reason as ShareViewerHost).
+/// or a URL reservation to listen.
 /// </summary>
 public sealed class OAuthLoopback : IOAuthLoopback
 {

@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Services;
 using AxePower.Core.Services.LanDrop;
-using AxePower.Core.Services.ShareScreen;
 using Xunit;
 
 namespace AxePower.Tests.Fuzzing;
@@ -21,7 +20,7 @@ public class HttpParserFuzzTests
     {
         foreach (var regression in FuzzTestCorpus.MinimizedHttpHeaderRegressions)
         {
-            // 1. LanDrop HTTP Header Parser
+            // LAN Drop HTTP header parser
             var lanDropResult = LanDropHttp.ParseRequestHeaders(regression);
             Assert.NotNull(lanDropResult);
 
@@ -34,10 +33,6 @@ public class HttpParserFuzzTests
             {
                 Assert.True(lanDropResult.MalformedContentLength);
             }
-
-            // 2. Share Screen HTTP Head Parser
-            var shareResult = ShareViewerHost.ParseRequestHead(regression);
-            // May be null if invalid format, but must NEVER throw
         }
     }
 
@@ -91,10 +86,6 @@ public class HttpParserFuzzTests
         Assert.True(lanDropResult.IsValid);
         Assert.Equal("value_49", lanDropResult.Headers["X-Custom-Header"]);
         Assert.Equal("Bearer token_49", lanDropResult.Headers["Authorization"]);
-
-        var shareResult = ShareViewerHost.ParseRequestHead(text);
-        Assert.NotNull(shareResult);
-        Assert.Equal("value_49", shareResult.Value.Headers["X-Custom-Header"]);
     }
 
     [Fact]
@@ -117,9 +108,6 @@ public class HttpParserFuzzTests
 
             var lanDropResult = LanDropHttp.ParseRequestHeaders(decoded);
             Assert.NotNull(lanDropResult);
-
-            var shareResult = ShareViewerHost.ParseRequestHead(decoded);
-            // Must not throw exception
         }
     }
 
@@ -138,10 +126,6 @@ public class HttpParserFuzzTests
             // LanDrop header parser
             var lanDropResult = LanDropHttp.ParseRequestHeaders(text);
             Assert.NotNull(lanDropResult);
-
-            // ShareScreen head parser
-            var shareResult = ShareViewerHost.ParseRequestHead(text);
-            // Must not throw
         }
     }
 }

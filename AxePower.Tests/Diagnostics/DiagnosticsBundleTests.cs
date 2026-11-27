@@ -5,7 +5,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using AxePower.Core.Models;
-using AxePower.Core.Models.ShareScreen;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Diagnostics;
 using Xunit;
@@ -32,7 +31,6 @@ public class DiagnosticsBundleTests : IDisposable
         settings.AppsToClose.Add("SecretGameLauncher.exe");
         settings.Music.LibraryFolders.Add(@"D:\Private Music\Ex Playlist");
         settings.Music.Integrations.LastFmUsername = "lastfm_handle_xyz";
-        settings.ShareScreen.SavedFriends.Add(new SavedFriend { Name = "Aarav Mehta" });
         settings.Uninstaller.ExcludedFilePaths.Add(@"D:\Taxes\2026");
         settings.GpuPreferenceBackups[@"C:\Games\Hidden\game.exe"] = "GpuPreference=2;";
         return settings;
@@ -80,10 +78,9 @@ public class DiagnosticsBundleTests : IDisposable
     {
         var snapshot = DiagnosticsBundleBuilder.SettingsSnapshot(PersonalSettings());
 
-        foreach (var personal in new[] { "SecretGameLauncher", "Private Music", "lastfm_handle_xyz", "Aarav", "Taxes", @"Games\\Hidden", "GpuPreference=2" })
+        foreach (var personal in new[] { "SecretGameLauncher", "Private Music", "lastfm_handle_xyz", "Taxes", @"Games\\Hidden", "GpuPreference=2" })
             Assert.DoesNotContain(personal, snapshot);
         Assert.Contains("\"appsToClose\": \"[removed: 1 item(s)]\"", snapshot);
-        Assert.Contains("\"savedFriends\": \"[removed: 1 item(s)]\"", snapshot);
         Assert.Contains("\"autoSwitchEnabled\"", snapshot); // ordinary settings stay
     }
 

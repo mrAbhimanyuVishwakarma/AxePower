@@ -205,18 +205,34 @@ public static class ConfirmationCatalog
         ConfirmLabel = names.Count == 1 ? $"Install {names[0]}" : $"Install {names.Count} apps",
     };
 
-    public static ActionConfirmation UpgradeAllPackages(IReadOnlyList<string> knownUpgrades) => new()
+    public static ActionConfirmation UpgradeAllPackages(IReadOnlyList<string> knownUpgrades, bool includeUnknown = false) =>
+        ConfirmAppUpgrade(
+            "Update all eligible WinGet apps",
+            new[]
+            {
+                "WinGet chooses eligible apps at the time you start. This can differ from the preview.",
+                includeUnknown
+                    ? "Include apps whose installed version is unknown. Their installers may run again."
+                    : "Skip apps whose installed version is unknown."
+            }.Concat(knownUpgrades).ToArray(),
+            "Update all eligible apps");
+
+    public static ActionConfirmation UpgradeSelectedPackages(IReadOnlyList<string> reviewedUpgrades) =>
+        ConfirmAppUpgrade($"Update {Count(reviewedUpgrades.Count, "selected app")}", reviewedUpgrades,
+            $"Update {Count(reviewedUpgrades.Count, "selected app")}");
+
+    private static ActionConfirmation ConfirmAppUpgrade(string action, IReadOnlyList<string> affected, string confirmLabel) => new()
     {
-        Action = "Update every app WinGet has an update for",
+        Action = action,
         Source = "Software Hub",
-        Affected = knownUpgrades.Count > 0 ? knownUpgrades : new[] { "Every installed app that WinGet finds a newer version of (the list is decided by WinGet when it runs)." },
-        RequiresAdministrator = true,
+        Affected = affected.Concat(new[] { "Continuing accepts the applicable WinGet source and package agreements." }).ToArray(),
+        InstallerMayRequestAdministrator = true,
         Risk = RiskLevel.Medium,
-        Backup = "None: earlier versions are not kept.",
-        Restart = RestartNeed.None,
+        Backup = "Earlier versions are not backed up.",
+        Restart = RestartNeed.MayRestart,
         Reversibility = Reversibility.Irreversible,
         ReversibilityNote = "AxePower cannot go back to an earlier version of an app.",
-        ConfirmLabel = "Update all apps",
+        ConfirmLabel = confirmLabel,
     };
 
     private static string Count(int n, string noun) => n == 1 ? $"1 {noun}" : $"{n} {noun}s";

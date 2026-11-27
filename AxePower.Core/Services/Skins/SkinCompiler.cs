@@ -36,7 +36,7 @@ public sealed class SkinException : Exception
 }
 
 /// <summary>
-/// Builds the 61 theme resources from a skin's ~20 core colours. Colours a skin leaves out come
+/// Builds theme resources from a skin's core colours. Colours a skin leaves out come
 /// from its base skin (the built-in dark or light), and <see cref="SkinDefinition.Overrides"/>
 /// replaces any derived value last.
 /// </summary>
@@ -108,6 +108,7 @@ public static class SkinCompiler
         Solid("WindowBackgroundBrush", window);
         Solid("WindowSecondaryBackgroundBrush", sidebar);
         Solid("SidebarBackgroundBrush", sidebar);
+        Solid("SidebarIconBrush", isLight ? text1 : "#FFFFFFFF");
         Solid("TitleBarBackgroundBrush", titleBar);
 
         // Surfaces
@@ -191,20 +192,6 @@ public static class SkinCompiler
         {
             new GradientStopValue(accent, 0), new GradientStopValue("#FF7C5CE6", 0.55), new GradientStopValue("#FFEC4899", 1)
         }));
-
-        // Share Screen: a video surface stays dark in every skin, so it recedes around the picture
-        Solid("ShareStageBackgroundBrush", "#FF0A0B0D");
-        Solid("ShareTileBackgroundBrush", "#FF16181C");
-        Solid("ShareTileBorderBrush", "#FF2A2E37");
-        Solid("ShareControlBarBrush", "#F21E2129");
-        Solid("ShareControlButtonBrush", "#2EFFFFFF");
-        Solid("ShareControlButtonHoverBrush", "#52FFFFFF");
-        Solid("ShareControlForegroundBrush", "#FFF2F3F5");
-        Solid("ShareControlMutedBrush", "#FF9BA3AF");
-        Solid("ShareNamePillBrush", "#B3000000");
-        Solid("ShareDangerBrush", "#FFDA373C");
-        Solid("ShareDangerHoverBrush", "#FFB02B2F");
-        Solid("ShareLiveBrush", "#FF23A55A");
 
         ApplyOverrides(skin, r);
 

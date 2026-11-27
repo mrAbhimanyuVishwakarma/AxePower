@@ -15,7 +15,7 @@ Play / Steam Link does it.
 
 | Question | Decision |
 |---|---|
-| Streaming engine | **Hybrid.** In-app remote desktop over WebRTC (our Share Screen stack) **and** a *Game Stream* button that runs Apollo on the PC and hands off to Artemis / Moonlight on the phone. |
+| Streaming engine | **Hybrid.** In-app remote desktop over a transport to be selected **and** a *Game Stream* button that runs Apollo on the PC and hands off to Artemis / Moonlight on the phone. |
 | Reaching the PC from elsewhere | **Tailscale first, then Steam-style.** Remote access ships over Tailscale; our own rendezvous + STUN + TURN relay comes after. |
 | Who may reach which PC | **AxePower account**, like a Steam account, on **Supabase**. Built by [ACCOUNTS_PROFILE_PLAN.md](ACCOUNTS_PROFILE_PLAN.md), which comes first; same-Wi-Fi QR pairing keeps working without an account. |
 | Server hosting | **Decide later**, at the start of phase 7. |
@@ -35,13 +35,9 @@ BSD-3), but the relay network behind it is Steam-only, so it gives us nothing We
 
 ## Where we start from
 
-- **Share Screen** exists: FFmpeg `ddagrab` + NVENC/AMF/QSV → RTSP → MediaMTX → WebRTC (WHEP) →
-  browser, with PIN-gated control through `RemoteInputService`. Its live checks (SS-1…SS-5 in
-  [SHARE_SOCIAL_PLAN.md](SHARE_SOCIAL_PLAN.md)) have **never been run** on two machines.
 - **The desktop half of the mobile bridge does not exist.** `PairedDevice` and `BridgeServerState`
   in [BridgeModels.cs](../AxePower.Core/Models/BridgeModels.cs) are unused; the phone's
   `WebSocketPcBridge` has nothing to talk to. The app has only ever run against its simulated bridge.
-- MediaMTX runs with no STUN/TURN; internet use today needs a VPN.
 
 ## Architecture
 
@@ -50,8 +46,8 @@ BSD-3), but the relay network behind it is Steam-only, so it gives us nothing We
  ┌─────────────────────────────────┐               ┌─────────────────────────────────────┐
  │ Dashboard / modes               │◄── bridge ───►│ Bridge server  (NEW, :8765)          │
  │                                 │   WebSocket   │  pairing · telemetry · commands     │
- │ Remote Desktop (NEW)            │               │  input → RemoteInputService          │
- │  flutter_webrtc player ◄────────┼─ WebRTC ──────┤ FFmpeg → MediaMTX (WHEP)             │
+ │ Remote Desktop (NEW)            │               │  input → per-device input adapter          │
+ │  flutter_webrtc player ◄────────┼─ WebRTC ──────┤ Dedicated desktop transport             │
  │  touch · keys · on-screen pad ──┼─ input ──────►│ ViGEmBus virtual Xbox pad            │
  │                                 │               │                                     │
  │ [Game Stream] ── launches ──►  Artemis/Moonlight ◄─ Moonlight protocol ─ Apollo (service)│
@@ -72,16 +68,16 @@ and a check on a real phone. Then we stop for review. Anything that has not run 
 reported as unverified.
 
 ### Phase 0 — Spikes (measure, no product code)
-- Play the existing WHEP stream in a throwaway `flutter_webrtc` page on a real phone and measure
+- Prototype and compare a dedicated streaming transport in an isolated phone client on a real phone and measure
   glass-to-glass latency on Wi-Fi (stopwatch on PC, photo of both screens). Record the number here.
   This decides whether phase 7 needs a direct WebRTC sender (Pion in a Go sidecar, or SIPSorcery in
-  C#) that carries input on a DataChannel, instead of MediaMTX plus input through the relay.
+  C#) that carries input on a DataChannel, instead of routing input through the bridge.
 - Install Apollo by hand and confirm three things: pairing can be automated from its local API; it
   can be installed silently; and Artemis (Android) and Moonlight (iOS) can be launched straight into
   a host from another app. If they cannot, the phone opens the app and the user picks the PC.
 
 ### Phase 1 — Desktop bridge + QR pairing (same Wi-Fi)
-- `BridgeService` in Core: raw-socket HTTP/WebSocket like `ShareViewerHost` (no admin URL
+- `BridgeService` in Core: a dedicated local bridge (no admin URL
   reservation). Serves the `/telemetry` protocol of [design.md §4.1](../design.md) on 8765.
 - Pairing: the PC shows a QR code containing the host, port, a one-time code and the PC's key
   fingerprint. The phone gets a bearer token, and the PC stores only its hash (as `PairedDevice`
@@ -95,13 +91,13 @@ reported as unverified.
 - A self-test line for the bridge (reports config only; starts nothing).
 
 ### Phase 2 — Remote Desktop in the app (same Wi-Fi)
-- The phone asks the bridge to start a stream. The PC starts the Share Screen pipeline with a phone
+- The phone asks the bridge to start a stream. A dedicated desktop transport would start a session with a phone
   preset (720p60 or 1080p60, chosen to match the phone's screen) and returns the WHEP URL.
 - `flutter_webrtc` player: full screen, landscape, PC audio, pinch-zoom and pan, a stats overlay
   (resolution, FPS, bitrate, RTT, encoder).
 
 ### Phase 3 — Mouse and keyboard control (same Wi-Fi)
-- Compact input messages go over the bridge socket into the existing `RemoteInputService` gate.
+- Compact input messages go over the bridge socket into the existing `per-device input adapter` gate.
   That gives the same stuck-key release on disconnect and binds input to the streamed monitor.
 - Touch modes: **trackpad** (relative, tap to click) and **direct touch** (absolute).
   - Long-press gives a right-click.
@@ -135,10 +131,10 @@ reported as unverified.
 
 ### Phase 6 — Remote access over Tailscale
 - PC: detect Tailscale (100.64.0.0/10 interface or `tailscale status --json`). Put the tailnet IP in
-  the pairing QR and the device record. Make sure MediaMTX advertises it.
+  the pairing QR and the device record.
 - Phone: try the LAN address first, then the tailnet address. Show which path is in use.
 - Guided setup screens: install Tailscale on both devices and sign in with the same account.
-- Both engines work here. This is the first release that works "from a different location".
+- Test both candidate paths from a separate network before enabling remote access.
 
 ### Phase 7 — AxePower accounts + Steam-style relay
 Accounts already exist by now ([ACCOUNTS_PROFILE_PLAN.md](ACCOUNTS_PROFILE_PLAN.md)). Start by choosing TURN hosting, and whether the rendezvous runs on Supabase Realtime or our own service.
@@ -146,9 +142,9 @@ Accounts already exist by now ([ACCOUNTS_PROFILE_PLAN.md](ACCOUNTS_PROFILE_PLAN.
 - **Rendezvous:** the PC keeps an outbound WSS connection (no port forwarding) and reports whether it
   is online. The server relays only the SDP offer/answer and ICE candidates.
 - **STUN + TURN (coturn):** short-lived TURN credentials (TURN REST API) come from the account
-  service, and the ICE server list is pushed to MediaMTX (`webrtcICEServers2`) and the phone.
+  service, and the ICE server list is delivered to both the sender and the phone.
 - **Direct / Relay indicator:** bitrate and resolution adapt on mobile data (FPS is kept before
-  resolution, per the GameStream blueprint).
+  resolution).
 - **Input:** if phase 0 showed the relay hop is too slow for input, add the direct sender with a
   DataChannel here.
 - Being signed in does **not** by itself grant control. The per-device permissions from phase 1
@@ -171,13 +167,12 @@ hotkey; revoke while streaming; and expired TURN credentials.
 - Tokens are stored only as hashes on the PC and in the platform keystore on the phone.
 - Media is DTLS-SRTP end to end. The relay forwards encrypted packets and cannot see the screen.
 - The WHEP and bridge endpoints are gated by the session token. Nothing is served on a guessable
-  path (as `ShareViewerHost` already does).
+  path .
 
 ## Libraries and licences
 | Use | Project | Licence | How |
 |---|---|---|---|
 | Phone WebRTC | [flutter-webrtc](https://github.com/flutter-webrtc/flutter-webrtc) | MIT | dependency |
-| Media server | MediaMTX | MIT | already bundled |
 | Relay | coturn | BSD-3 | on our server |
 | Direct sender (only if needed) | Pion / SIPSorcery | MIT / BSD-3 | sidecar or dependency |
 | Virtual pad | ViGEmBus + Nefarius.ViGEm.Client | BSD-3 / MIT | on-demand driver + NuGet |
@@ -190,5 +185,3 @@ hotkey; revoke while streaming; and expired TURN credentials.
 - **Phase 5:** what happens if Artemis/Moonlight cannot be launched straight into a host (found in
   phase 0).
 - **Phase 7:** TURN hosting (small VPS with coturn, or Cloudflare's managed TURN), and rendezvous on Supabase Realtime or our own service. The auth backend is decided: Supabase.
-- **Phase 7:** accounts change the account-free product decision in
-  [SHARE_SOCIAL_PLAN.md](SHARE_SOCIAL_PLAN.md). Do Friends move to accounts too, or stay account-free?

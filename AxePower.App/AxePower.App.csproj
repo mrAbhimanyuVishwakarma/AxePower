@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <!-- The release pipeline publishes for win-x64; listing it here puts that runtime in the lock
          file, so locked-mode restore (CI and release builds) can publish it (Prompt 33) -->
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
@@ -83,12 +83,10 @@
     <Resource Include="Resources\AxePower_white.ico" />
     <Resource Include="Resources\AxePower_black.ico" />
     <Resource Include="Resources\logo.png" />
-    <Resource Include="Resources\banner.png" />
     <Resource Include="Resources\icon_saver.png" />
     <Resource Include="Resources\icon_beast.png" />
     <Resource Include="Resources\icon_smart.png" />
     <Resource Include="Resources\Gamemode.png" />
-    <Resource Include="Resources\Gamemode2.png" />
     <Resource Include="Resources\xbox-controller.png" />
     <Resource Include="Resources\ps5-controller.png" />
     <Resource Include="Resources\icons\*.png" />
@@ -98,8 +96,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3485.44" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.15" />
   </ItemGroup>
 
 </Project>

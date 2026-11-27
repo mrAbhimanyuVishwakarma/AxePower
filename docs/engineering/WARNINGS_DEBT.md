@@ -50,8 +50,6 @@ property declared non-nullable. Prompt 22 found that a `settings.json` containin
   Before, a room chat message with `"chunkData": null` passed decryption and then threw inside the
   host's chat loop.
 
-Also fixed: `ShareRoomClient` threw `KeyNotFoundException` for a host reply without a nonce. It now
-gives its own "The host returned no nonce." error.
 
 Tests: `AxePower.Tests/Nullability/` (JSON files, network replies, wrong-typed registry values,
 sensors without readings), plus a portable-download test in `SoftwareHubOperationsTests`. The

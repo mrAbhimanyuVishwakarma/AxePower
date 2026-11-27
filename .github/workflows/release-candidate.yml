@@ -31,7 +31,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@6bd300f5eaf4f733e00787e7225e35732fe6adda # v4.0.1
         with:
-          dotnet-version: '8.0.403'
+          dotnet-version: '10.0.404'
 
       - name: Install Inno Setup
         shell: powershell
@@ -52,6 +52,7 @@ jobs:
           SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
           SIGNING_EXPECTED_SUBJECT: ${{ secrets.SIGNING_EXPECTED_SUBJECT }}
           SIGNING_RFC3161_URL: ${{ secrets.SIGNING_RFC3161_URL }}
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
         run: |
           $ver = "${{ github.event.inputs.version }}"
           if ([string]::IsNullOrWhiteSpace($ver) -and "${{ github.ref_name }}".StartsWith("v")) {
@@ -74,8 +75,10 @@ jobs:
           prerelease: true
           name: AxePower ${{ github.ref_name }} (Release Candidate)
           body_path: artifacts/release/release-notes.md
+          fail_on_unmatched_files: true
           files: |
             artifacts/release/AxePower-*-Setup.exe
+            artifacts/release/update-manifest.json
             artifacts/release/AxePower.exe
             artifacts/release/sbom.cdx.json
             artifacts/release/provenance.json

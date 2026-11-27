@@ -2,6 +2,6 @@
   "name": "axepower-supabase-tests",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node friends.test.mjs" },
+  "scripts": { "test": "node --test accounts.test.mjs" },
   "devDependencies": { "@electric-sql/pglite": "^0.5.8" }
 }

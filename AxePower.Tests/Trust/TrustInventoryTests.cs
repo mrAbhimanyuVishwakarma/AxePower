@@ -70,7 +70,7 @@ public class TrustInventoryTests
         // Owner's choice (2026-10-06): files, backups, settings, undo data and sessions are open-only.
         foreach (var id in new[] { "settings", "operations", "uninstaller", "received", "account", "tools" })
             Assert.False(TrustInventory.DataStores.Single(s => s.Id == id).Deletable, id);
-        foreach (var id in new[] { "diagnostics", "music-history", "music-cache", "chat", "battery", "game-art" })
+        foreach (var id in new[] { "diagnostics", "music-history", "music-cache", "battery", "game-art" })
             Assert.True(TrustInventory.DataStores.Single(s => s.Id == id).Deletable, id);
     }
 
@@ -85,7 +85,7 @@ public class TrustInventoryTests
         });
         Assert.Equal(TrustInventory.Connections.Count, TrustInventory.Connections.Select(c => c.Id).Distinct().Count());
         Assert.Equal(TrustInventory.DataStores.Count, TrustInventory.DataStores.Select(c => c.Id).Distinct().Count());
-        Assert.Contains(TrustInventory.CloudData, c => c.Id == "invites" && c.Retention.Contains("10 minutes"));
+        Assert.Equal(new[] { "auth", "profile", "steam" }, TrustInventory.CloudData.Select(c => c.Id));
     }
 
     [Fact]

@@ -110,11 +110,11 @@ public class TrustViewModelTests : IDisposable
         var row = vm.Listeners.Single(l => l.Id == "landrop");
 
         _confirm.Answer = false;
-        await vm.StopListenerCommand.ExecuteAsync(row);
+        vm.StopListenerCommand.Execute(row);
         Assert.True(lanDrop.IsRunning);
 
         _confirm.Answer = true;
-        await vm.StopListenerCommand.ExecuteAsync(row);
+        vm.StopListenerCommand.Execute(row);
         Assert.False(lanDrop.IsRunning);
         Assert.False(row.IsOpen);
         var asked = _confirm.Asked.Last();
@@ -193,7 +193,7 @@ public class TrustViewModelTests : IDisposable
         var fact = Assert.Single(vm.AccountFacts);
         Assert.Equal("Not signed in", fact.Value);
         Assert.Contains("nothing about you is stored", fact.Detail);
-        Assert.Equal(6, vm.CloudData.Count);
+        Assert.Equal(new[] { "auth", "profile", "steam" }, vm.CloudData.Select(c => c.Id));
     }
 
     [Fact]

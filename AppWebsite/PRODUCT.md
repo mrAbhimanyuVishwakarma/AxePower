@@ -24,7 +24,7 @@ People use AxePower while maintaining a Windows PC, switching between quiet and 
 
 ## Capabilities and Constraints
 
-- Primary desktop target: Windows 11; current download copy also lists Windows 10 1809+ compatibility.
+- Primary desktop target: Windows 11 x64. Windows 10 compatibility depends on the serviced edition and Microsoft's .NET 10 requirements.
 - Includes monitoring, Eco/Smart/Beast/Game modes, game profiles, system utilities, AI recommendations, and Android companion workflows.
 - Supports local Wi-Fi and USB companion connections.
 - Integrates with or launches independent tools rather than claiming ownership of them.

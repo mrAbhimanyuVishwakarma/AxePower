@@ -229,26 +229,6 @@ public sealed class AccountService : IDisposable
         }
     }
 
-    /// <summary>
-    /// A valid access token for other services that call Supabase as this user (Friends). Refreshes
-    /// first when it is about to expire, or when <paramref name="forceRefresh"/> says the server
-    /// rejected it. Throws <see cref="AccountException"/> (NotSignedIn / SessionExpired / Offline).
-    /// </summary>
-    public async Task<string> GetAccessTokenAsync(bool forceRefresh = false, CancellationToken ct = default)
-    {
-        await _gate.WaitAsync(ct);
-        try
-        {
-            var session = RequireSession();
-            if (forceRefresh || session.ExpiresAtUtc - _clock.UtcNow < RefreshMargin) await RefreshOrEndAsync(ct);
-            return RequireSession().AccessToken;
-        }
-        finally
-        {
-            _gate.Release();
-        }
-    }
-
     public Task RequestPasswordResetAsync(string email, CancellationToken ct = default) =>
         _api.RequestPasswordResetAsync(email.Trim(), ct);
 
@@ -292,23 +272,6 @@ public sealed class AccountService : IDisposable
 
             var profile = await WithTokenAsync(
                 token => _api.UpdateProfileAsync(token, session.UserId, display, name, ct), ct);
-            SetProfile(profile);
-        }
-        finally
-        {
-            _gate.Release();
-        }
-    }
-
-    /// <summary>"Let people find me by name": whether this profile appears in others' search suggestions.</summary>
-    public async Task SetDiscoverableAsync(bool discoverable, CancellationToken ct = default)
-    {
-        await _gate.WaitAsync(ct);
-        try
-        {
-            var session = RequireSession();
-            if (State.Profile?.Discoverable == discoverable) return;
-            var profile = await WithTokenAsync(token => _api.SetDiscoverableAsync(token, session.UserId, discoverable, ct), ct);
             SetProfile(profile);
         }
         finally

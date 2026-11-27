@@ -10,8 +10,6 @@
         xmlns:converters="clr-namespace:AxePower.App.Converters"
         xmlns:musicvm="clr-namespace:AxePower.App.ViewModels.Music"
         xmlns:musicviews="clr-namespace:AxePower.App.Views.Music"
-        xmlns:sharevm="clr-namespace:AxePower.App.ViewModels.ShareScreen"
-        xmlns:shareviews="clr-namespace:AxePower.App.Views.ShareScreen"
         xmlns:shell="clr-namespace:AxePower.App.Views.Shell"
         mc:Ignorable="d"
         Title="AxePower" Height="840" Width="1290" MinWidth="1290" MinHeight="840"
@@ -224,37 +222,6 @@
             <!-- ─── Steam-Style Client Update Banner (Image 2 & 3) ─────────────── -->
             <shell:UpdateBanner Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="998"/>
 
-            <!-- A friend's invite (call or watch): pops up on any page, bottom right -->
-            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="999"
-                    DataContext="{Binding ShareScreenVm.AccountFriends}" WindowChrome.IsHitTestVisibleInChrome="True"
-                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,72" Width="340"
-                    Background="{DynamicResource PopupBackgroundBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
-                    CornerRadius="14" Padding="16,14" Effect="{DynamicResource CardShadowEffect}"
-                    Visibility="{Binding IsInvitePopupOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}"
-                    AutomationProperties.Name="Friend invite">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid Width="42" Height="42" Margin="0,0,12,0" VerticalAlignment="Top">
-                        <Ellipse Fill="{DynamicResource AccentBrush}" Opacity="0.2"/>
-                        <TextBlock Text="{Binding InviteFromInitials}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding InviteTitle}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="{Binding InviteSubtitle}" FontSize="12.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,2,0,12"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding DeclineInviteCommand}" Padding="16,7" FontSize="12.5" Margin="0,0,8,0" Content="Decline"/>
-                            <Button Style="{DynamicResource PrimaryButtonStyle}" Command="{Binding JoinInviteCommand}" Padding="22,7" FontSize="12.5">
-                                <TextBlock Text="Join"/>
-                            </Button>
-                        </StackPanel>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
             <!-- Account dialog (sign in, sign up, username, edit, delete): over the whole window -->
             <views:AccountDialogView Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Panel.ZIndex="1001"
                                      DataContext="{Binding AccountVm}" WindowChrome.IsHitTestVisibleInChrome="True"
@@ -284,23 +251,40 @@
 
                         <Separator x:Name="TraySeparator1"/>
 
-                        <!-- Group 2: Core Views -->
+                        <!-- Control -->
                         <MenuItem x:Name="TrayItem_Dashboard" Header="Dashboard" Tag="Dashboard" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_GameModePage" Header="Game Mode" Tag="GameMode" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Battery" Header="Battery" Tag="Battery" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_PhoneControl" Header="Phone Control" Tag="PhoneControl" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_SecondMonitor" Header="Second Monitor" Click="TraySecondMonitor_Click"/>
+                        <MenuItem x:Name="TrayItem_Music" Header="Music" Tag="Music" Click="OpenAppAndNavigate_Click"/>
 
                         <Separator x:Name="TraySeparator2"/>
 
-                        <!-- Group 3: Maintenance & Tools -->
-                        <MenuItem x:Name="TrayItem_Maintenance" Header="Maintenance" Tag="Maintenance" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_Utilities" Header="Utilities" Tag="Utilities" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_UpdatePc" Header="Update PC" Tag="UpdatePc" Click="OpenAppAndNavigate_Click"/>
+                        <!-- Connection -->
+                        <MenuItem x:Name="TrayItem_PhoneControl" Header="Phone Control" Tag="PhoneHub" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_SecondMonitor" Header="Second Monitor" Tag="SecondMonitor" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_LanDrop" Header="LAN Drop" Tag="LanDrop" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_PhoneLink" Header="Phone Link" Tag="PhoneLink" Click="OpenAppAndNavigate_Click"/>
 
                         <Separator x:Name="TraySeparator3"/>
 
-                        <!-- Group 4: Settings & Exit -->
+                        <!-- Maintenance -->
+                        <MenuItem x:Name="TrayItem_UpdatePc" Header="Windows Update" Tag="UpdatePc" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_SystemCare" Header="System Care" Tag="SystemCare" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Uninstaller" Header="Uninstaller" Tag="Uninstaller" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Debloat" Header="Debloat" Tag="Debloat" Click="OpenAppAndNavigate_Click"/>
+
+                        <Separator x:Name="TraySeparator4"/>
+
+                        <!-- Utilities -->
+                        <MenuItem x:Name="TrayItem_Terminal" Header="Terminal" Tag="Terminal" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Tools" Header="Tools" Tag="Tools" Click="OpenAppAndNavigate_Click"/>
+
+                        <Separator x:Name="TraySeparator5"/>
+
+                        <!-- Account, settings and exit -->
+                        <MenuItem x:Name="TrayItem_Trust" Header="Trust &amp; Permissions" Tag="Trust" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Settings" Header="Settings" Tag="Settings" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_Profile" Header="Profile" Tag="Profile" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Exit" Header="Exit AxePower" Click="ExitApp_Click"/>
                     </ContextMenu>
                 </tb:TaskbarIcon.ContextMenu>

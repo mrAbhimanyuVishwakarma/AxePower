@@ -19,7 +19,7 @@ public class DashboardFeaturesTests
     {
         "Dashboard", "AutoSwitch", "GameMode", "Battery", "Music", "Settings", "Logs", "About", "Profile",
         "Uninstaller", "Optimizer", "Utilities", "Doctor", "Maintenance", "Debloat", "Terminal",
-        "SoftwareHub", "UpdatePc", "ShareScreen", "PhoneControl", "PhoneHub", "SecondMonitor",
+        "SoftwareHub", "UpdatePc", "PhoneControl", "PhoneHub", "SecondMonitor",
         "PhoneLink", "Tools", "Routines"
     };
 
@@ -59,8 +59,9 @@ public class DashboardFeaturesTests
         // The Dashboard selects the first entry on load, so ordering decides what is shown.
         // The owner picks this list each release; change it only when they do.
         Assert.Equal(
-            new[] { "DLSS 5 Swapper", "Timer & Routines", "Share Screen", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller", "Terminal" },
+            new[] { "Veyra", "DLSS 5 Manager", "DLSS 5 Swapper", "Timer & Routines", "Skins", "Game Mode", "Phone Control & LanDrop", "Uninstaller", "Terminal" },
             Features().Select(f => f.Title));
+        Assert.Equal("PS5 FrameGen Upscaler", Features()[0].Badge);
     }
 
     [Fact]

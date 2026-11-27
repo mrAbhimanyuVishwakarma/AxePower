@@ -459,27 +459,6 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>The Music settings group (null in minimal test setups, which hides it).</summary>
     public AxePower.App.ViewModels.Music.MusicSettingsViewModel? Music { get; }
 
-    /// <summary>The Share Screen settings group (null in minimal test setups, which hides it).</summary>
-    public AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? ShareScreen { get; }
-
-    private string? _requestedSection;
-
-    /// <summary>
-    /// A card the page should scroll to on arrival, e.g. "ShareScreen" when the user clicked the
-    /// gear on the sharing stage. The view clears it once it has obliged.
-    /// </summary>
-    public string? RequestedSection
-    {
-        get => _requestedSection;
-        set
-        {
-            _requestedSection = value;
-            OnPropertyChanged(nameof(RequestedSection));
-            // A deep link now simply opens its category
-            if (!string.IsNullOrEmpty(value) && Categories.Any(c => c.Id == value)) SelectedCategory = value;
-        }
-    }
-
     /// <summary>Settings › Diagnostics & Privacy: inspect, export and delete what AxePower has logged.</summary>
     public DiagnosticsViewModel? Diagnostics { get; }
 
@@ -497,7 +476,6 @@ public partial class SettingsViewModel : ObservableObject
         new SettingsCategoryItem("Startup", "Startup & Elevation", "\uE7E8"),
         new SettingsCategoryItem("Taskbar", "Taskbar preferences", "\uE75B"),
         new SettingsCategoryItem("AxePowerMobile", "AxePower Mobile", "\uE8EA"),
-        new SettingsCategoryItem("ShareScreen", "Friends", "\uE779"),
         new SettingsCategoryItem("Music", "Music & Playlists", "\uE8D6"),
         new SettingsCategoryItem("Updates", "Updates & Maintenance", "\uE777"),
         new SettingsCategoryItem("Diagnostics", "Diagnostics & Privacy", "\uE9D9"),
@@ -540,7 +518,7 @@ public partial class SettingsViewModel : ObservableObject
 
     private void LoadTrayMenuOptions()
     {
-        var hidden = new HashSet<string>(CurrentSettings.HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        var hidden = new HashSet<string>(CurrentSettings.HiddenTrayMenuItems, StringComparer.OrdinalIgnoreCase);
         string? previousGroup = null;
         TrayMenuOptions = AxePower.App.Models.TrayMenuCatalog.Entries.Select(entry =>
         {
@@ -555,22 +533,21 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (option.IsPermanent) return;
         var settings = _settingsService.GetSettings();
-        settings.HiddenTrayMenuItems ??= new List<string>();
         settings.HiddenTrayMenuItems.RemoveAll(id => string.Equals(id, option.Id, StringComparison.OrdinalIgnoreCase));
         if (!option.IsShown) settings.HiddenTrayMenuItems.Add(option.Id);
-        _settingsService.SaveSettings(settings);
+        _settingsService.SaveSettings(settings, notifyListeners: false);
     }
 
     private void SaveCurrentSettings()
     {
         var latest = _settingsService.GetSettings();
+        CurrentSettings.SidebarConnectionExpanded = latest.SidebarConnectionExpanded;
         CurrentSettings.SidebarMaintenanceExpanded = latest.SidebarMaintenanceExpanded;
         CurrentSettings.SidebarUtilitiesExpanded = latest.SidebarUtilitiesExpanded;
         CurrentSettings.SidebarCollapsed = latest.SidebarCollapsed;
+        CurrentSettings.HiddenTrayMenuItems = latest.HiddenTrayMenuItems;
         // The music section is edited elsewhere (Music group, header player); never save a stale copy of it
         CurrentSettings.Music = latest.Music;
-        // Same for Share Screen: its pickers write straight through, so a snapshot here is stale
-        CurrentSettings.ShareScreen = latest.ShareScreen;
         // Written in the background by the power-plan and Game Mode GPU services
         CurrentSettings.PowerPlansInitialized = latest.PowerPlansInitialized;
         CurrentSettings.GpuPreferenceBackups = latest.GpuPreferenceBackups;
@@ -588,7 +565,6 @@ public partial class SettingsViewModel : ObservableObject
         BatteryService? batteryService = null,
         ElevationService? elevationService = null,
         AxePower.App.ViewModels.Music.MusicSettingsViewModel? music = null,
-        AxePower.App.ViewModels.ShareScreen.ShareScreenSettingsViewModel? shareScreen = null,
         GameModeGpuService? gameModeGpu = null,
         IGpuDisplayModeController? displayModeController = null,
         AxePower.App.Services.IGameModePrompts? gameModePrompts = null,
@@ -600,7 +576,6 @@ public partial class SettingsViewModel : ObservableObject
         Diagnostics = diagnostics;
         ChangeHistory = changeHistory;
         Music = music;
-        ShareScreen = shareScreen;
         _settingsService = settingsService;
         _notificationService = notificationService;
         _timeoutService = timeoutService;

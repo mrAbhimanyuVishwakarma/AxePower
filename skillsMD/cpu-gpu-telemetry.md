@@ -59,7 +59,7 @@ When Tier 1 succeeds, `MergeGpuDetail` still asks LibreHardwareMonitor for the G
 - `nvidia-smi` is spawned only when the sensor stack did not already supply GPU data, and it disables itself if it never returns a valid line.
 
 ## Display rules
-- A missing reading renders as `—`, never as `0°C` or `0.00 GHz`, which would look like a real measurement.
+- Dashboard and Game Mode show `0 GHz` when the GPU clock is unavailable. A missing temperature shows `—`.
 - The CPU card reads `"{GHz} GHz  {load}%  {temp}"`; the GPU card uses the same shape.
 - The unit follows `AppSettings.TemperatureUnit` (Celsius or Fahrenheit).
 - The network meter is scaled against the negotiated link speed (100 Mbps if unknown). Its label is `WiFi`, `LAN`, or `NET` when several links are up.

@@ -492,12 +492,12 @@
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="3. Online features"/>
                             <TextBlock Style="{StaticResource PolicyText}" Margin="0,0,0,8"
                                        Text="Some features contact other services directly from your computer. One happens on its own: while &quot;Check for updates automatically&quot; is on (the default), AxePower asks GitHub for a newer version when it starts. The rest happen only when you use the feature:"/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Signing in, your profile and Friends, with Supabase, only if you have an account."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Signing in and saving your profile with Supabase, only if you have an account."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Searching and streaming music on YouTube, which sends your search text and the song being played."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Finding lyrics (LRCLIB, KuGou), which sends the song's title, artist, album and length."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Posters for your installed games, from Steam's image servers."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Pings: to 1.1.1.1 (Cloudflare) every 5 seconds while the Dashboard is on screen, for its latency reading; and to four public DNS servers when you run the DNS benchmark."/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Downloading updates, graphics drivers, Share Screen tools and portable apps, and installing software through WinGet, when you ask."/>
+                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Downloading updates, graphics drivers and portable apps, and installing software through WinGet, when you ask."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Links, downloads and help pages, which open in your web browser."/>
                             <TextBlock Style="{StaticResource PolicyText}"
                                        Text="Like any website, these services also see your IP address and the request itself. Their own privacy policies and terms apply to what they receive. AxePower does not route this traffic through any server of its own. Trust &amp; Permissions (in the sidebar) lists every connection, what triggers it and what it sends."/>
@@ -507,18 +507,14 @@
                                        Text="If you create an account, these are stored by Supabase, the service that runs AxePower accounts:"/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• How you sign in: your email address, or the Google, Discord, GitHub or Steam account you use (its ID, name and email if it has one). Passwords are kept only as a secure hash."/>
                             <TextBlock Style="{StaticResource PolicyBullet}" Text="• Your profile: @username, display name, the link to your profile picture from that service, and when you joined."/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• Friends: your friends and friend requests, the people you blocked, and invites you send, which expire after 10 minutes."/>
-                            <TextBlock Style="{StaticResource PolicyBullet}" Text="• While AxePower is open and you're signed in: whether you're online or away and, unless you turn it off, what you're doing (the game you're playing, in a call, sharing your screen)."/>
-                            <TextBlock Style="{StaticResource PolicyText}" Margin="0,10,0,8"
-                                       Text="Who can see it: anyone signed in to AxePower can see your @username, display name and picture, so friends can find you. Your friends list, status, activity and invites are visible only to you and the friends involved. Settings → Friends lets you hide your activity or appear offline."/>
                             <TextBlock Style="{StaticResource PolicyText}" Margin="0,0,0,8"
                                        Text="When you sign in with Google, Discord, GitHub or Steam, that service's own privacy policy covers the sign-in. For Steam, AxePower also looks up your public Steam name and picture."/>
                             <TextBlock Style="{StaticResource PolicyText}"
-                                       Text="Deleting your account on the Profile page removes your account, profile, friends, status and invites. The services involved may keep short-lived technical logs under their own policies."/>
+                                       Text="Deleting your account on the Profile page removes your account and profile. The services involved may keep short-lived technical logs under their own policies."/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="5. Your devices and the people you connect to"/>
                             <TextBlock Style="{StaticResource PolicyText}"
-                                       Text="Phone control, file transfer, remote playback control, calls and screen sharing work over your local network or an address you choose to connect to. Data goes directly between those devices, not through AxePower's servers. Local-network access is protected by a private link you share by QR code, and nothing is shared until you start it. When you invite a friend through your account, the invite carries your room's link to that friend only."/>
+                                       Text="Phone control, file transfer, and remote playback control work over your local network. Data goes directly between those devices, not through AxePower's servers. Local-network access is protected by a private link you share by QR code, and nothing is shared until you start it."/>
 
                             <TextBlock Style="{StaticResource PolicyHeading}" Text="6. System access"/>
                             <TextBlock Style="{StaticResource PolicyText}"
@@ -608,10 +604,10 @@
                             <TextBlock Style="{StaticResource TermsText}"
                                        Text="Use AxePower only in ways that are legal where you live. Do not use it to access, download, copy or share content you do not have the right to, to get around the protections of any service or software, or to harm other people&#x27;s devices or networks. Only connect to devices and people you trust."/>
 
-                            <TextBlock Style="{StaticResource TermsHeading}" Text="5. Your account and friends"/>
+                            <TextBlock Style="{StaticResource TermsHeading}" Text="5. Your account"/>
 
                             <TextBlock Style="{StaticResource TermsText}"
-                                       Text="An account is optional. If you create one, keep your sign-in safe and use one account per person. Choose a username and display name that don&#x27;t pretend to be someone else and aren&#x27;t offensive. Usernames or accounts used to impersonate, harass or spam people may be removed. Only invite and connect with people you trust, and never give remote control to someone you don&#x27;t. Accounts depend on online services that can be unavailable; AxePower&#x27;s other features keep working without them. You can delete your account at any time on the Profile page."/>
+                                       Text="An account is optional. If you create one, keep your sign-in safe and use one account per person. Choose a username and display name that don&#x27;t pretend to be someone else and aren&#x27;t offensive. Usernames or accounts used to impersonate, harass or spam people may be removed. Accounts depend on online services that can be unavailable; AxePower&#x27;s other features keep working without them. You can delete your account at any time on the Profile page."/>
 
                             <TextBlock Style="{StaticResource TermsHeading}" Text="6. Third-party services and tools"/>
 

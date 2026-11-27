@@ -39,11 +39,19 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(DashboardViewModel.IsShrunk))
                 ApplyShrinkState(viewModel.DashboardVm);
         };
+        viewModel.SoftwareHubVm.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(SoftwareHubViewModel.ActiveTab))
+                ApplyWindowMinimums(viewModel);
+        };
 
         // The title bar collapses to just the window buttons on pages without the battery pill,
         // so the drag region has to follow or it swallows clicks on the top of the page
         viewModel.PropertyChanged += (s, e) =>
         {
+            if (e.PropertyName == nameof(MainViewModel.CurrentView))
+                ApplyWindowMinimums(viewModel);
+
             if (e.PropertyName == nameof(MainViewModel.ShowBatteryPill))
             {
                 ApplyCaptionHeight();
@@ -55,6 +63,7 @@ public partial class MainWindow : Window
                 ToolHelp.ScrollGuideToTop();
             }
         };
+        ApplyWindowMinimums(viewModel);
         ApplyCaptionHeight();
 
         // The title-bar music player follows the window controls and the available width
@@ -118,6 +127,15 @@ public partial class MainWindow : Window
     private double _expandedMinHeight;
     private bool _hasExpandedBounds;
 
+    private void ApplyWindowMinimums(MainViewModel viewModel)
+    {
+        if (viewModel.DashboardVm.IsShrunk) return;
+
+        bool updatesOverview = viewModel.CurrentView == viewModel.SoftwareHubVm && viewModel.SoftwareHubVm.ActiveTab == "Updaters";
+        MinWidth = updatesOverview ? 660 : _expandedMinWidth;
+        MinHeight = updatesOverview ? 640 : _expandedMinHeight;
+    }
+
     /// <summary>
     /// Collapses the window down to just the hardware monitor card, or restores the size and
     /// position it had before shrinking. The card scales itself, so the window follows that scale.
@@ -157,8 +175,7 @@ public partial class MainWindow : Window
         {
             SizeToContent = SizeToContent.Manual;
             SetWindowCornerPreference(DWMWCP_DEFAULT);
-            MinWidth = _expandedMinWidth;
-            MinHeight = _expandedMinHeight;
+            if (DataContext is MainViewModel viewModel) ApplyWindowMinimums(viewModel);
             ApplyCaptionHeight();
 
             if (_hasExpandedBounds)
@@ -254,7 +271,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void TrayMenu_Opened(object sender, RoutedEventArgs e)
     {
-        var hidden = new HashSet<string>(_settingsService.GetSettings().HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        var hidden = new HashSet<string>(_settingsService.GetSettings().HiddenTrayMenuItems, StringComparer.OrdinalIgnoreCase);
         var groupVisible = new Dictionary<string, bool>();
 
         foreach (var entry in Models.TrayMenuCatalog.Entries)
@@ -267,23 +284,13 @@ public partial class MainWindow : Window
 
         // Separators sit between the groups, in menu order
         var groups = Models.TrayMenuCatalog.Entries.Select(x => x.Group).Distinct().ToList();
-        var separators = new[] { TraySeparator1, TraySeparator2, TraySeparator3 };
+        var separators = new[] { TraySeparator1, TraySeparator2, TraySeparator3, TraySeparator4, TraySeparator5 };
         for (int i = 0; i < separators.Length && i + 1 < groups.Count; i++)
         {
             bool before = groups.Take(i + 1).Any(g => groupVisible[g]);
             bool after = groupVisible[groups[i + 1]];
             separators[i].Visibility = before && after ? Visibility.Visible : Visibility.Collapsed;
         }
-    }
-
-    private void TraySecondMonitor_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel vm)
-        {
-            vm.NavigateCommand.Execute("PhoneControl");
-            _ = vm.PhoneHubVm.SpaceDeskActionAsync();
-        }
-        OpenApp_Click(sender, e);
     }
 
     private bool _isExplicitShutdown;

@@ -94,6 +94,13 @@ public partial class ToolsViewModel : ObservableObject
 
     internal async Task OpenAsync(ToolCard card)
     {
+        if (card.Definition.Id == ToolsService.BcUninstaller)
+        {
+            var launch = _tools.OpenBcUninstaller();
+            if (!launch.Started) Notify(launch.Message);
+            return;
+        }
+
         if (card.Definition.Id == "afterburner" && _afterburner != null)
         {
             // Same as the old sidebar entry: sets up monitoring and starts RTSS for Game Mode
@@ -260,7 +267,7 @@ public partial class ToolCard : ObservableObject
             try { await _owner.OpenAsync(this); } finally { BusyText = null; Refresh(); }
             return;
         }
-        await RunAsync("install", "Installing...", $"{Name} installed.", $"{Name} couldn't be installed. Its official download page is open instead.");
+        await RunAsync("install", "Installing...", $"{Name} installed.", $"{Name} couldn't be installed. Use its website button for other download options.");
     }
 
     [RelayCommand(CanExecute = nameof(IsIdle))]

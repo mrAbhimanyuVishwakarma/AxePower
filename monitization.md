@@ -34,7 +34,6 @@ Market references:
 | Per-app power rules and Routines | Very high recurring utility | **Pro** | Automation is sticky, differentiated, and costs almost nothing per customer. Routines are not commercially ready until their real-PC verification is complete; see [ROUTINES_PLAN.md](skillsMD/ROUTINES_PLAN.md). |
 | Uninstaller Pro | Very high willingness to pay | **Freemium split** | Keep inventory and normal single-app uninstall free. Put batch uninstall, broken-entry recovery, deep leftovers, history, and resumable cleanup in Pro. Never gate the safety backups separately from cleanup. See [uninstaller.md](skillsMD/uninstaller.md). |
 | Game Mode | High, but competitive | **Freemium split** | Keep scanning, launching, and manual Game Mode free. Put automatic per-game profiles, service throttling, advanced GPU behavior, and reusable optimization profiles in Pro. |
-| Friends and Share Screen | High future value | **Free network, Pro host capabilities** | Accounts, friends, invitations, joining, and basic LAN view-only sharing should be free to preserve network effects. Host-side 1080p60, audio, remote control, multiple viewers, and future internet relay belong in Pro. |
 | System Doctor and Optimizer | Medium | **Manual free; automation Pro later** | SFC, DISM, DNS, repair, and essential maintenance are commoditized Windows capabilities. Future scheduled care, policy profiles, fleet reporting, and automatic remediation can be Pro. |
 | Music | Medium engagement, weak monetization foundation | **Local playback free; do not monetize YouTube yet** | Local playback adds product breadth. YouTube streaming has unresolved Terms-of-Service risk documented in [MUSIC_FIX_PLAN.md](skillsMD/MUSIC_FIX_PLAN.md), so it should not be a paid-tier promise. |
 | Phone Control, LAN Drop, third-party launchers | Low-to-medium | **Free** | Much of the value is orchestration around scrcpy, SpaceDesk, Phone Link, winget, and other third-party tools. Charging directly for those wrappers is commercially and reputationally weak. |
@@ -86,7 +85,7 @@ Use the existing Supabase identity rather than making users repeatedly type a li
 
 ### Why not subscription now?
 
-The current Share Screen topology explicitly has no AxePower relay, TURN service, or hosted media infrastructure; see [SHARE_SOCIAL_PLAN.md](skillsMD/SHARE_SOCIAL_PLAN.md). Desktop encoding, media playback, scanning, maintenance, and automation are local. Supabase presence traffic is too small to establish a fair usage meter.
+Media playback, scanning, maintenance, and automation run locally.
 
 Introduce a subscription only when there is an ongoing hosted benefit, for example:
 
@@ -224,7 +223,7 @@ Never collect by default:
 - Installed application lists.
 - Process/game names.
 - Music titles or searches.
-- Chat, room links, clipboard contents, or IP addresses.
+- Clipboard contents or IP addresses.
 - Hardware serial numbers.
 
 Queue events locally, batch them periodically, apply exponential backoff, and cap disk usage. Keep raw events briefly—such as 90 days—and retain only aggregates longer.
@@ -267,7 +266,6 @@ Do not ship the current mobile cloud bridge. The folder is untracked, the app bo
 19. Gate advanced Auto Switch and Routines only after real-PC validation.
 20. Split the Uninstaller experience cleanly between standard removal and Pro deep cleanup.
 21. Introduce reusable Game Profiles rather than charging for the existing manual Game Mode alone.
-22. Make advanced Share Screen host capabilities Pro while keeping viewers and joining free.
 23. Move premium-only implementations into a private or separately licensed assembly if meaningful enforcement is required.
 
 ### Phase 4 — Telemetry and launch

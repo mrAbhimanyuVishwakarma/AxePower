@@ -79,9 +79,9 @@ so only averages over 30 s or more mean anything.
 - **Game Mode's page** is built once and reused (`Helpers/CachedView`, `CachedViewTests`). It
   keeps its scroll position between visits.
 - **Shutdown** is one ordered routine, `Services/AppShutdown`:
-  - Existing steps first: the music queue is saved, routines are undone and friends see you leave.
+  - Existing steps first: the music queue is saved and routines are undone.
   - Periodic work stops before any service is disposed.
-  - Then the controller poller, LAN Drop listener, Share Screen, Terminal shell, hotkeys, sampler,
+  - Then the controller poller, LAN Drop listener, Terminal shell, hotkeys, sampler,
     hardware sensors and battery history are released, and finally everything else the container
     created.
   - Each step is isolated, and the release stage has a 5-second limit, past which the process

@@ -2,12 +2,12 @@
 
 <div align="center">
 
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%20(1809+)%20%7C%20Windows%2011-0078D4?logo=windows&logoColor=white)
-![Framework](https://img.shields.io/badge/Framework-.NET%208%20WPF-512BD4?logo=dotnet&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows%20x64-0078D4?logo=windows&logoColor=white)
+![Framework](https://img.shields.io/badge/Framework-.NET%2010%20WPF-512BD4?logo=dotnet&logoColor=white)
 ![Language](https://img.shields.io/badge/Language-C%23%2012-239120?logo=csharp&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%7C%20DDD-blue)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-![Version](https://img.shields.io/badge/Version-2.1.0-blueviolet)
+![Source version](https://img.shields.io/badge/Source%20version-2.1.5-blueviolet)
 
 [Security Policy](SECURITY.md) | [Contributing](CONTRIBUTING.md) | [Third-Party Notices](THIRD_PARTY_NOTICES.md)
 
@@ -17,22 +17,29 @@
 
 </div>
 
+## What's new in v2.1.5
+
+- **Windows Update** groups Windows, WinGet, optional drivers, and firmware into sections that start collapsed. Review and confirm exact WinGet upgrades or run a separate bulk update. Detected NVIDIA, Intel, and AMD cards open the matching graphics software.
+- **Gaming Runtimes & Tools** includes Veyra for NVIDIA and AMD, plus official download links for DLSS 5 Manager and PushFPS. **What's New** highlights Veyra and DLSS 5 Manager first.
+- **Connection** includes Phone Control, Second Monitor, LAN Drop, and Phone Link. Second Monitor uses Android and iOS viewer apps. Sidebar groups and tray shortcuts remember each user's choices. BCUninstaller is available from Uninstaller and Tools.
+
+[Full release notes and setup requirements](RELEASE_README.md#whats-new-in-v215)
+
 ## 🚀 Key Features
 
 - 🧰 **System Care Workspace**: Optimizer and Doctor are unified behind a collapsible category rail, with recommended tweaks, repair actions, restore points, junk cleanup, DNS switching, and live terminal output in one place.
-- 🛡️ **Windows Update Controls That Perform Real Work**: Apply the recommended security-updates-only policy, block forced reboots while signed in, repair the Windows Update cache and services, and create a restore point before changes.
+- 🛡️ **Windows Update and Update Shield**: Review available Windows, app, and device updates from one page. Update Shield lets you configure feature-update deferral and signed-in restart protection where Windows policy allows, repair the update download cache, and request a restore point.
 - 🗂️ **Table-Based Uninstaller Pro**: Full-width Win32 and Windows Apps views with file-type badges, sortable columns, ascending/descending alphabetical order, batch selection, broken-entry filtering, and a Select All action for detected leftovers.
 - 🧭 **Responsive Software Hub**: A collapsible category rail for runtimes, gaming, hardware tuning, and utilities. Install controls stay inline when space permits and move below content only in compact layouts.
 - 🎵 **Integrated Music Player & Media Hub**: Built-in high-fidelity audio engine supporting local libraries and YouTube Music streaming. Features an aesthetic Header Player matching the dashboard design and automatically follows default Windows audio output device switches.
-- 🖥️ **Share Screen & GameStream**: Low-latency desktop and game display sharing directly to friends in their web browser without requiring them to install third-party clients.
 - 🗑️ **Next-Gen Uninstaller Pro**: Deep leftover scanner with confidence scoring, registry backup manifests, broken uninstaller recovery, and PowerShell execution safety nets.
 - 🖥️ **Built-In Terminal (CMD & PowerShell)**: A persistent interactive shell inside the app, and the single place every command AxePower runs reports to — Software Hub installs and System Doctor diagnostics stream their live output here, with a **Stop** button that cancels the running task.
-- 🛡️ **Administrator Mode Without the UAC Nagging**: A **Run as administrator** setting (on by default) plus a title-bar **Relaunch with Admin** button. The app ships an `asInvoker` manifest and registers its logon task at `HighestAvailable`, so it starts elevated at boot with **no UAC prompt** — and the toggle can still be switched off.
+- 🛡️ **Optional Administrator Mode**: Fresh installs ask before enabling elevation. Use **Run as administrator** in Settings or **Relaunch with Admin** from the title bar. The Windows logon task follows that setting.
 - 🌡️ **Real CPU & GPU Temperatures (Driver-Free)**: A three-tier sensor stack — Lenovo's ACPI-WMI firmware interface, MSI Afterburner's shared memory, then LibreHardwareMonitor — so readings keep working on machines with **Memory Integrity / the vulnerable-driver blocklist enabled**, where MSR-only tools silently return nothing.
 - 💾 **One-Click System Restore Point**: Create a Windows restore point straight from the Software Hub before you change anything, with the 24-hour creation throttle lifted so the checkpoint is actually written.
 - 🪟 **Glass Theme (Mica & Acrylic)**: True Windows 11 DWM backdrops with an Acrylic blur-behind fallback for Windows 10, alongside System / Dark / Light.
 - ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, **Beast**, and **Game** modes tailored for battery savings or extreme performance.
-- 🎮 **Game Mode Overhaul & Multi-Platform Library Scanner**: Comprehensive automatic scanner for **Steam**, **Epic Games**, **Xbox / PC Game Pass**, **Ubisoft Connect**, **EA App**, and **GOG Galaxy**. Dynamic high-resolution poster art (**SteamGridDB**) with aspect-ratio adaptive cards and responsive hover zoom.
+- 🎮 **Game Mode**: Discover games from Steam, Epic, GOG, Xbox game folders, and other common install folders. The Dashboard shortcut opens the Game Mode page, where you can apply the mode and manage per-game settings. Game art comes from Steam.
 - 🕹️ **Controller Navigation (Xbox & PlayStation DualSense)**: Full gamepad-to-mouse emulation supporting Xbox (360 / One / Series X|S) and PlayStation (DualShock 4 / DualSense) controllers with in-app visual shortcut guides.
 - ⚡ **GPU Control Companion Integration**: Seamless 1-click companion launcher and auto-detection for **Lenovo Legion Toolkit**, **Lenovo Vantage**, **ASUS Armoury Crate**, and **MSI Center**.
 - 📊 **Live Hardware & Task Manager Performance Monitor**: Real-time 2x2 performance grid tracking **CPU** clock, **GPU** 3D engine utilization & temperature, **RAM** allocation, and **Internet** transfer speeds with precise zero-baseline sparkline graphs.
@@ -45,13 +52,13 @@
   - **Ninite Integration**: Bundled local multi-installer + online custom package builder for zero-click multi-app setups.
   - **Expanded Suite**: Audacity, OBS Studio, DaVinci Resolve, GIMP, Canva, Blender, HandBrake, PowerToys, ShareX, Peace Equalizer, Dolby Access, SteelSeries GG Sonar, and hardware diagnostic utilities.
 - 📱 **Phone Control (All-in-One Mobile Suite)**:
-  - 🖥️ **SpaceDesk Second Monitor**: Turn any Android tablet, iPad, or browser into an extended PC display with 1-click driver installation and QR code downloads *(Credit to DATRONICSOFT)*.
+  - 🖥️ **spacedesk Second Monitor**: Use an Android device, iPhone, or iPad as an extended PC display. Install the Windows driver and scan a QR code for the viewer app *(Credit to DATRONICSOFT)*.
   - 🔗 **Microsoft Phone Link**: Instant launch integration and companion QR pairing modals for Link to Windows on Android and iOS.
   - 📂 **LAN Drop (Wi-Fi Quick Share)**: Instant offline file drop and clipboard note sync between PC and phone via dynamic QR code without requiring apps on the phone *(Credit to yadavnikhil03)*.
   - 📱 **Android Screen Mirroring (scrcpy)**: Ultra-low latency device mirroring, stay-awake / screen-off power toggles, resolution & FPS presets, and 1-click APK sideloading *(Credit to Genymobile)*.
 - 📖 **Dedicated Help & Documentation Center**: Direct in-app `? Help` title bar button and "Learn More" links connecting to the official [AxePower Help Center](https://axepower.vercel.app/help.html).
 - 🔄 **Smart Auto-Switch**: Automatically applies power plans and adjusts display refresh rates (e.g. 60Hz on battery vs 144Hz/165Hz/240Hz on AC power) whenever power states change.
-- 🔄 **Update PC Utility & BIOS Checks**: Elevated one-click driver and Windows update management via Windows Package Manager (`winget`) and BIOS/firmware version checks.
+- 🔄 **WinGet and device updates**: Confirm exact app upgrades or run a separate bulk upgrade, then review the results and any restart requirement. Windows Settings, Microsoft Store, and official vendor tools handle their own Windows, Store, driver, and firmware installs.
 - 🧹 **Win11Debloat Integration**: Launches Raphire's Win11Debloat script with administrator rights after a confirmation that says plainly what it is: a third-party script whose changes AxePower cannot list or undo *(Credit to Raphire)*.
 - 📊 **MSI Afterburner Companion**: Fast-launch and focus integration for GPU tuning, fan curves, and in-game statistics *(Credit to MSI / Guru3D)*.
 - 🔒 **Private by Default, Honest About the Network**: No ads and no usage analytics. Accounts are optional; without one, nothing about you is stored in AxePower's cloud. Every connection AxePower makes, what triggers it and what it sends is listed in [docs/security/PRIVACY.md](docs/security/PRIVACY.md) and on the in-app **Trust & Permissions** page.
@@ -71,10 +78,12 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends with custom icon cards. |
 | **Music** | 🎵 | Integrated music playback, local library scanning, YouTube Music streaming, and a sleek header player. |
 | **CONNECTION** | | |
-| **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
-| **🖥️ Share Screen** | 🖥️ | Low-latency display and gameplay streaming to any browser with audio. |
+| **Phone Control** | 📱 | Android screen mirroring and control with scrcpy. |
+| **Second Monitor** | 🖥️ | Extend the Windows display with a spacedesk viewer on Android or iOS. |
+| **LAN Drop** | 📂 | Share files and clipboard text over a local network. |
+| **Phone Link** | 🔗 | Launch Microsoft's Phone Link and get its companion app. |
 | **MAINTENANCE** | | |
-| **🛡️ Windows Update** | 🛡️ | Driver/package checks, security-only update policy, forced-reboot protection, cache/service repair, and restore points. |
+| **🛡️ Windows Update** | 🛡️ | Discover Windows, app, and device updates, confirm WinGet upgrades, review results, and open Update Shield for policy, repair, and restore points. |
 | **🧰 System Care** | 🧰 | Recommended optimizations, SFC/DISM health repair, junk cleanup, DNS tools, and other guarded maintenance actions. |
 | **🗑️ Uninstaller** | 🗑️ | Sortable Win32/Windows Apps inventory, batch uninstall, broken-entry handling, and selectable leftovers. |
 | **🧹 Debloat** | 🧹 | Win11Debloat by Raphire integration. |
@@ -197,26 +206,27 @@ sequenceDiagram
 ## 💻 Development & Build Guide
 
 ### Prerequisites
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (or Visual Studio 2022 v17.8+)
-- Windows 10 (Build 1809+) or Windows 11 (64-bit)
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). Local release verification uses SDK 10.0.404.
+- The release targets Intel and AMD x64 Windows 11 desktops. Windows 10 build 17763 is the minimum API version declared in source. Windows 10 coverage depends on OS servicing, the .NET 10 prerequisites, and release validation. Windows 11 on Arm may run the x64 build under emulation. Arm64 coverage requires separate validation. [Microsoft's Windows requirements for .NET 10](https://learn.microsoft.com/en-us/dotnet/core/install/windows#supported-versions)
+- The framework-dependent app uses the x64 .NET 10 Desktop Runtime. Setup checks for 10.0.15 or a newer 10.0.x patch and downloads a verified Microsoft installer when needed. For offline setup, install the x64 Desktop Runtime first. [Microsoft .NET 10 downloads](https://dotnet.microsoft.com/download/dotnet/10.0)
+- WinGet actions require a usable App Installer/WinGet setup in the current Windows session. Sources, hardware features, and policy controls depend on the device and account. See the [Windows Update compatibility and rollout plan](docs/engineering/WINDOWS_UPDATE_PLAN.md).
 
 ### Running Locally
-```bash
+```powershell
 # Clone the repository
 git clone https://github.com/mrAbhimanyuVishwakarma/AxePower.git
 cd AxePower
 
-# Restore and build the solution
-dotnet restore AxePower.sln
-dotnet build AxePower.sln -c Release --no-restore
-
-# Run the WPF application
-dotnet run --project AxePower.App/AxePower.App.csproj
+# Build and open the app from this checkout
+powershell -ExecutionPolicy Bypass -File scripts/run-latest.ps1
 ```
+
+The script prints the checked-out branch, commit, and executable version. If AxePower is already running, exit it through the tray first. See [AGENTS.md](AGENTS.md) for the current development branch and [CONTRIBUTING.md](CONTRIBUTING.md) for locked restore, build, and test commands.
 
 ### Running Unit Tests
 ```bash
-dotnet test AxePower.sln -c Release --no-build
+dotnet test AxePower.sln -c Release -p:RestoreLockedMode=true
 ```
 
 ### Publishing a Release Build
@@ -225,10 +235,24 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 ```
 
 ### Creating the Inno Setup Installer
-1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
-2. Publish first (the script packages `AxePower.App/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish/`).
-3. Open `Installer/AxePower.iss` — the full script, which also bootstraps the .NET 8 Desktop Runtime and removes older installs.
-4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v<version>-Setup.exe`.
+
+Install [Inno Setup 6](https://jrsoftware.org/isinfo.php), then run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1
+```
+
+The [release pipeline](docs/engineering/RELEASE_PIPELINE.md) builds Setup from a fresh x64 publish and copies it to `Installer/Output/AxePower-v<version>-Setup.exe`. Setup checks for the x64 .NET 10 Desktop Runtime and downloads the Microsoft installer when needed.
+
+### Repository guide
+
+| Path | Contents |
+|---|---|
+| `AxePower.App/`, `AxePower.Core/`, `AxePower.Tests/` | WPF app, Windows and feature services, and xUnit tests |
+| `Installer/`, `scripts/`, `tools/` | Setup, development and release commands, and update-signing tool |
+| `AppWebsite/` | Static product website. Use `localtest.bat` to preview it locally. |
+| `supabase/` | Account functions, database migrations, and policy tests |
+| `skins/`, `skillsMD/`, `docs/` | Skins, feature guides, and engineering, security, and release documentation |
 
 ---
 

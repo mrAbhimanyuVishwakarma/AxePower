@@ -69,24 +69,6 @@ test). It must not come back before the fix plan in [REMOTE_ACCESS.md](REMOTE_AC
 - **Residual risk:** same-user malware can still do anything a user can do. The fix only removes
   the free route to administrator rights.
 
-### M2 — Share Screen viewer page could navigate anywhere inside AxePower (Medium, fixed)
-- **Area:** WebView2 navigation and script-injection boundaries.
-- **Prerequisites:** the user joins a room or watch link from a hostile host. The host's page,
-  shown in AxePower's embedded browser, can then navigate the view to any website or open
-  pop-ups. It could show a convincing fake sign-in form "inside AxePower".
-- **Evidence:** `ShareScreenView.xaml.cs` set no `NavigationStarting` or `NewWindowRequested`
-  handlers. Dev tools and context menus were already off. There is no host object or
-  `WebMessageReceived` bridge, so the page never had access to native code. The injected scripts
-  are fixed text, and the one value they carry is JSON-encoded.
-- **Fixed:**
-  - Navigation is limited to the origin AxePower opened, plus `about:blank`
-    (`WebViewNavigationPolicy`).
-  - Pop-ups are blocked.
-  - Script dialogs are off.
-  - Test: `WebViewNavigationPolicyTests`.
-- **Residual risk:** the host still controls the page content of its own room, which is the
-  point of watching a stream.
-
 ### M3 — Debloat runs third-party scripts from the internet as administrator, unpinned (Medium, accepted)
 - **Area:** elevation and command execution.
 - **Prerequisites:** a compromise of `debloat.raphi.re` or `christitus.com` at the moment the
@@ -120,7 +102,6 @@ test). It must not come back before the fix plan in [REMOTE_ACCESS.md](REMOTE_AC
 
 | Id | Finding | Status |
 |---|---|---|
-| L1 | Friends' realtime feed joins a shared public topic (`realtime:axepower-friends`) with broadcast and presence on. Row data still follows RLS per subscriber, and the client acts only on `postgres_changes`, so others' broadcasts are ignored. | Accepted; move to a private channel with the remote-access work. Owner; 2027-01-08 |
 | L2 | The installer adds an inbound firewall rule for port 5050 (Private and Domain) at install, before LAN Drop is ever used. Nothing listens until the user starts the server. | Accepted; a future version can add the rule on first start instead. Owner; 2027-01-08 |
 | L3 | `Installer/AxePowerSetup.iss` (a second, legacy script; the pipeline uses `AxePower.iss`) launched AxePower after install without `runasoriginaluser`, so it would start elevated, possibly under another account. | **Fixed:** flag added |
 | L4 | LAN Drop does not validate the `Host` header. A DNS-rebinding page could reach the server but has no access token, so every request is refused. | Accepted. Owner; 2027-01-08 |
@@ -131,7 +112,6 @@ test). It must not come back before the fix plan in [REMOTE_ACCESS.md](REMOTE_AC
 
 - **Trust boundaries and threat models.** Covered by:
   - `docs/engineering/ARCHITECTURE.md`;
-  - `SHARE_SCREEN_THREAT_MODEL.md`;
   - `REMOTE_ACCESS.md`;
   - Trust & Permissions' inventory, which lists every listener, connection and data store and is
     kept complete by `TrustInventoryTests`.
@@ -150,10 +130,6 @@ test). It must not come back before the fix plan in [REMOTE_ACCESS.md](REMOTE_AC
     scanning (`LeftoverCleanupService` line 135).
   - It backs up registry items and tasks first, and verifies afterwards
     (`EndToEndSafetyValidationTests`, `ProtectionServiceTests`).
-- **Share Screen.**
-  - Chat, voice and control are end-to-end encrypted.
-  - The viewer handshake uses a single-use nonce with HMAC, plus Origin and Host checks
-    (`ShareViewerHost`, Prompts 14 and 18).
 - **OAuth and tokens.**
   - PKCE S256 on every provider; the loopback listener on 127.0.0.1 accepts one callback.
   - Tokens are stored with DPAPI for the current user (`AccountSessionStore`).
@@ -163,7 +139,6 @@ test). It must not come back before the fix plan in [REMOTE_ACCESS.md](REMOTE_AC
   - Every table has RLS, and anon access is revoked.
   - Every `security definer` function sets `search_path`.
   - Functions are granted to `authenticated` only.
-  - Abuse caps: 100 pending friend requests, 30 invites an hour, invites expire.
   - `delete-account` verifies the caller's token.
 - **Secrets and logs.**
   - No secrets in tracked files; only the public publishable key.
@@ -180,7 +155,6 @@ test). It must not come back before the fix plan in [REMOTE_ACCESS.md](REMOTE_AC
 ## Changes made by this review
 
 1. **M1:** `UpdateService` re-verifies the installer's SHA-256 under a no-write lock at launch.
-2. **M2:** Share Screen's WebView2 is held to its own origin; pop-ups and dialogs are blocked.
 3. **L3:** `AxePowerSetup.iss` launches AxePower as the original user.
 4. **Found while fixing M1:** About › Install update closed AxePower even when the installer was
    refused, leaving the user with no app and no update. It now closes only once the installer is

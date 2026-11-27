@@ -117,6 +117,16 @@ public sealed class PackageDiscovery : IPackageDiscovery
     {
         try
         {
+            if (PortableTools.Find(pkg.Id) is { } portable)
+            {
+                var executable = Path.Combine(toolsRoot ?? DefaultToolsRoot, portable.FolderName, portable.ExeName);
+                if (File.Exists(executable))
+                {
+                    pkg.LaunchProtocolOrExe = executable;
+                    return true;
+                }
+            }
+
             // Direct file existence check if specified
             if (!string.IsNullOrEmpty(pkg.LaunchProtocolOrExe) && !pkg.LaunchProtocolOrExe.Contains("://"))
             {
@@ -172,14 +182,6 @@ public sealed class PackageDiscovery : IPackageDiscovery
                     if (camFound != null)
                     {
                         pkg.LaunchProtocolOrExe = camFound;
-                        return true;
-                    }
-                    break;
-                case "dlss5swapper":
-                    string dlssExe = Path.Combine(toolsRoot ?? DefaultToolsRoot, PortableTools.Dlss5SwapperFolder, PortableTools.Dlss5SwapperExe);
-                    if (File.Exists(dlssExe))
-                    {
-                        pkg.LaunchProtocolOrExe = dlssExe;
                         return true;
                     }
                     break;

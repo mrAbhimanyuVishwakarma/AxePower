@@ -4,7 +4,7 @@ namespace AxePower.Core.Services.Operations;
 public enum RiskLevel { Low, Medium, High }
 
 /// <summary>What has to happen before the change fully takes effect.</summary>
-public enum RestartNeed { None, SignOut, Restart, RestartApp }
+public enum RestartNeed { None, SignOut, Restart, RestartApp, MayRestart }
 
 /// <summary>
 /// Everything a confirmation for a destructive or system-wide action must show (Prompt 27). Built
@@ -23,6 +23,8 @@ public sealed record ActionConfirmation
     public IReadOnlyList<string> Affected { get; init; } = Array.Empty<string>();
 
     public bool RequiresAdministrator { get; init; }
+
+    public bool InstallerMayRequestAdministrator { get; init; }
 
     public RiskLevel Risk { get; init; } = RiskLevel.Medium;
 
@@ -52,6 +54,7 @@ public sealed record ActionConfirmation
         RestartNeed.SignOut => "You need to sign out of Windows and back in for it to take full effect.",
         RestartNeed.Restart => "You need to restart the PC for it to take full effect.",
         RestartNeed.RestartApp => "AxePower restarts to finish.",
+        RestartNeed.MayRestart => "An installer may require or initiate a restart. Save your work before updating.",
         _ => "No restart or sign-out needed.",
     };
 
@@ -62,7 +65,9 @@ public sealed record ActionConfirmation
         _ => "Low risk",
     };
 
-    public string AdministratorText => RequiresAdministrator ? "Needs administrator rights." : "No administrator rights needed.";
+    public string AdministratorText => RequiresAdministrator
+        ? "Needs administrator rights."
+        : InstallerMayRequestAdministrator ? "An installer may request administrator rights." : "No administrator rights needed.";
 
     public string ReversibilityText => Reversibility switch
     {

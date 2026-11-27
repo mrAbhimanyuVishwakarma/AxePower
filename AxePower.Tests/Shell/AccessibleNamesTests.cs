@@ -31,7 +31,7 @@ public class AccessibleNamesTests
     /// <summary>Every page reachable from the sidebar.</summary>
     private static readonly string[] Pages =
     {
-        "Dashboard", "GameMode", "Battery", "Music", "Friends", "PhoneHub", "SecondMonitor", "UpdatePc", "SoftwareHub",
+        "Dashboard", "GameMode", "Battery", "Music", "PhoneHub", "SecondMonitor", "LanDrop", "PhoneLink", "UpdatePc", "SoftwareHub",
         "SystemCare", "Doctor", "Uninstaller", "Debloat", "Terminal", "Tools", "Routines", "Trust", "Settings", "Profile", "Logs",
     };
 

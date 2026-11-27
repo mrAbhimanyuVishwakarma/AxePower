@@ -11,9 +11,16 @@
 _ReSharper*/
 *.dotCover
 
-## Installer intermediate files
-Installer/Output/*.tmp
+## Local builds and release packages
 build/
+/artifacts/
+/publish/
+/Installer/Output/*.tmp
+/Installer/Output/*.exe
+/debug.log
+
+## Website preview browser profiles
+/.tmp-preview/chrome-*/
 
 ## Secrets & Automation
 .env

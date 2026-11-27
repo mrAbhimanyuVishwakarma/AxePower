@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using AxePower.Core.Services.Processes;
 using Microsoft.Win32;
 
 namespace AxePower.Core.Services;
@@ -29,6 +30,11 @@ public class ToolsService
     public const string Monitoring = "Monitoring";
     public const string HardwareInfo = "Hardware info";
     public const string Cleanup = "Cleanup";
+    public const string BcUninstaller = "bcuninstaller";
+
+    private readonly IUserShellLauncher _launcher;
+
+    public ToolsService(IUserShellLauncher? launcher = null) => _launcher = launcher ?? new UserShellLauncher();
 
     /// <summary>The page's group order. The page fills two columns in this order, each group going to the shorter one.</summary>
     public static IReadOnlyList<string> GroupOrder { get; } = new[] { Monitoring, Cleanup, HardwareInfo };
@@ -64,6 +70,12 @@ public class ToolsService
             new[] { "RevoUnin.exe" },
             new[] { Path.Combine(ProgramFiles, "VS Revo Group", "Revo Uninstaller", "RevoUnin.exe"), Path.Combine(ProgramFilesX86, "VS Revo Group", "Revo Uninstaller", "RevoUnin.exe") },
             "Revo Uninstaller"),
+        new ToolDefinition(BcUninstaller, "BCUninstaller", "Remove multiple apps and review the files and registry entries they leave behind.",
+            Cleanup, "Klocman.BulkCrapUninstaller", "https://www.bcuninstaller.com/",
+            new[] { "BCUninstaller.exe" },
+            new[] { ProgramFiles, ProgramFilesX86 }.Where(Path.IsPathFullyQualified)
+                .Select(folder => Path.Combine(folder, "BCUninstaller", "BCUninstaller.exe")).ToArray(),
+            "BCUninstaller"),
         new ToolDefinition("wiztree", "WizTree", "Shows what is filling your drives in seconds, biggest folders and files first.",
             Cleanup, "AntibodySoftware.WizTree", "https://diskanalyzer.com/",
             new[] { "WizTree64.exe", "WizTree.exe" },
@@ -72,6 +84,15 @@ public class ToolsService
     };
 
     public static ToolDefinition Get(string id) => Tools.First(t => t.Id == id);
+
+    public ShellLaunchResult OpenBcUninstaller()
+    {
+        var tool = Get(BcUninstaller);
+        var path = FindExe(tool);
+        return path is null
+            ? new(ShellLaunchStatus.Failed, "BCUninstaller was not found. Install it from Tools, then try again.")
+            : _launcher.OpenProgram(path);
+    }
 
     /// <summary>The app's program file, or null when it isn't installed.</summary>
     public virtual string? FindExe(ToolDefinition tool)

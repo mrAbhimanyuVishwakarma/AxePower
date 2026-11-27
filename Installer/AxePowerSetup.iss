@@ -2,7 +2,7 @@
 ; The published app. scripts\package-release.ps1 passes the folder it just published to
 ; (/DPublishDir=...), so the installer can never pick up an older build left in bin\.
 #ifndef PublishDir
-  #define PublishDir "..\AxePower.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
+  #define PublishDir "..\AxePower.App\bin\Release\net10.0-windows10.0.19041.0\win-x64\publish"
 #endif
 
 [Setup]
@@ -13,13 +13,15 @@ DefaultGroupName=AxePower
 OutputBaseFilename=AxePower-v{#AppVersion}-Setup
 Compression=lzma
 SolidCompression=yes
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+PrivilegesRequired=admin
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
+Source: "install-dotnet.ps1"; Flags: dontcopy
 Source: "{#PublishDir}\AxePower.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
@@ -40,3 +42,11 @@ Filename: "{app}\AxePower.exe"; Description: "{cm:LaunchProgram,AxePower}"; Flag
 
 [UninstallRun]
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""AxePower LAN Drop"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveLanDropFirewallRule"
+
+[Code]
+#include "DotNetRuntime.iss"
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := EnsureDotNetDesktopRuntime();
+end;

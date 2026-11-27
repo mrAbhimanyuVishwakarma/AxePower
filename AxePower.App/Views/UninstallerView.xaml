@@ -82,9 +82,13 @@
                                 <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                             </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsChecked" Value="False"/>
+                                </MultiTrigger.Conditions>
                                 <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                            </Trigger>
+                            </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -155,7 +159,7 @@
             <TextBlock Text="🗑️ Uninstaller" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
             <TextBlock Text="Remove applications, verify they are gone, and clean their leftovers safely." FontSize="13.5" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,0"/>
 
-            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+            <WrapPanel Margin="0,16,0,0">
                 <RadioButton Style="{StaticResource AppSectionTabStyle}"
                              IsChecked="{Binding IsDesktopSection, Mode=OneWay}"
                              Command="{Binding SelectAppSectionCommand}"
@@ -163,21 +167,34 @@
                              Margin="0,0,8,0"
                              AutomationProperties.Name="Desktop application uninstaller">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"/>
-                        <TextBlock Text="Uninstaller" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                        <TextBlock Text="Uninstaller" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource AppSectionTabStyle}"
                              IsChecked="{Binding IsWindowsAppsSection, Mode=OneWay}"
                              Command="{Binding SelectAppSectionCommand}"
                              CommandParameter="WindowsApps"
+                             Margin="0,0,8,0"
                              AutomationProperties.Name="Windows Store applications">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE71D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"/>
-                        <TextBlock Text="Windows Apps" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="&#xE71D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                        <TextBlock Text="Windows Apps" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
                     </StackPanel>
                 </RadioButton>
-            </StackPanel>
+                <Button x:Name="BcUninstallerShortcut" Style="{DynamicResource SecondaryButtonStyle}"
+                        Command="{Binding OpenBcUninstallerCommand}" Padding="16,9" FontSize="13" FontWeight="SemiBold"
+                        ToolTip="Open Bulk Crap Uninstaller" AutomationProperties.Name="Open BCUninstaller">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"/>
+                        <TextBlock Text="BCUninstaller"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
         </StackPanel>
 
         <!-- ─── Toolbar ────────────────────────────────────────────────────── -->

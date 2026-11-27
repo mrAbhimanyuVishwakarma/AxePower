@@ -59,6 +59,7 @@ public class SkinCompilerTests : IDisposable
         // Changes made on purpose after the move to skins; anything else that differs is a regression
         foreach (var (key, value) in DeliberateChanges.GetValueOrDefault(id, new()))
             expected[key] = value;
+        expected["SidebarIconBrush"] = id == "light" ? expected["PrimaryTextBrush"] : "Solid #FFFFFFFF";
 
         var differences = expected.Keys.Union(actual.Keys)
             .Where(k => !expected.TryGetValue(k, out var e) || !actual.TryGetValue(k, out var a) || e != a)
@@ -66,7 +67,7 @@ public class SkinCompilerTests : IDisposable
             .ToList();
 
         Assert.True(differences.Count == 0, string.Join(Environment.NewLine, differences));
-        Assert.Equal(63, actual.Count);
+        Assert.Equal(52, actual.Count);
     }
 
     [Theory]
@@ -164,7 +165,7 @@ public class SkinCompilerTests : IDisposable
 
         var compiled = SkinCompiler.Compile(def, dark);
 
-        Assert.Equal(63, compiled.Resources.Count);
+        Assert.Equal(52, compiled.Resources.Count);
     }
 
     [Fact]

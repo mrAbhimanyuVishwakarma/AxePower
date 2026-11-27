@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,20 +18,19 @@ namespace AxePower.App.ViewModels;
 
 public partial class AboutViewModel : ObservableObject
 {
-    private readonly DriverUpdateService? _driverUpdateService;
     private readonly NotificationService? _notificationService;
     private readonly UpdateService? _updateService;
     private CancellationTokenSource? _downloadCts;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReleaseVersionWithDate))]
-    private string _version = "1.4.0";
+    private string _version = string.Empty;
 
     [ObservableProperty]
     private UpdateManifest? _manifest;
 
     [ObservableProperty]
-    private string _runtime = ".NET 8.0";
+    private string _runtime = RuntimeInformation.FrameworkDescription;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReleaseVersionWithDate))]
@@ -70,7 +70,7 @@ public partial class AboutViewModel : ObservableObject
     private bool _isUpdateAvailable;
 
     [ObservableProperty]
-    private string _latestVersionTag = "2.0.3";
+    private string _latestVersionTag = string.Empty;
 
     [ObservableProperty]
     private string _releaseTitle = "";
@@ -214,13 +214,11 @@ public partial class AboutViewModel : ObservableObject
     public AccountViewModel? Account { get; init; }
 
     public AboutViewModel(
-        DriverUpdateService driverUpdateService, 
         NotificationService notificationService,
         UpdateService updateService,
         AccountViewModel? account = null) : this()
     {
         Account = account;
-        _driverUpdateService = driverUpdateService;
         _notificationService = notificationService;
         _updateService = updateService;
         _updateService.DownloadProgressChanged += OnDownloadProgressChanged;
@@ -602,28 +600,6 @@ public partial class AboutViewModel : ObservableObject
 
     [RelayCommand]
     private void CloseTerms() => IsTermsOpen = false;
-
-    [RelayCommand]
-    private void UpdateDrivers()
-    {
-        if (_driverUpdateService == null) return;
-        var result = _driverUpdateService.LaunchDriverAndSystemUpdate();
-        switch (result)
-        {
-            case DriverUpdateLaunchResult.StartedNew:
-                _notificationService?.Show("Update PC started in background (minimized).");
-                break;
-            case DriverUpdateLaunchResult.FocusedExisting:
-                _notificationService?.Show("Update PC is already running. Showing active window.");
-                break;
-            case DriverUpdateLaunchResult.CancelledByUser:
-                _notificationService?.Show("Update PC administrator request was cancelled.");
-                break;
-            case DriverUpdateLaunchResult.Failed:
-                _notificationService?.Show("Failed to launch Update PC.");
-                break;
-        }
-    }
 
     private void OpenUrl(string url)
     {

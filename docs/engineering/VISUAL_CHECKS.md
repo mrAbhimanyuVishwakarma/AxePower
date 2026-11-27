@@ -70,9 +70,13 @@ and pressed states, popups (the tray menu), focus rectangles, and how it feels w
       Monitor, Exit). Double-clicking the tray icon brings the window back.
 
 ### Software Hub (Update PC)
-- [ ] 14. The header and the three tabs look as before; switch between them.
-- [ ] 15. **System & Driver Updaters**: the hero banner, graphics driver cards (with the NVIDIA picker
-      button on NVIDIA), BIOS & firmware panel, the driver updater card and "Upgrade All Apps".
+- [ ] 14. Switch between **Updates overview**, **Gaming Runtimes & Tools**, and **Windows Update Shield**.
+- [ ] 15. **Updates overview**: check the monitor illustration, pill-shaped scan button, and graphics cards.
+      Expand and collapse Windows, WinGet, optional drivers, and BIOS at the regular width. Select a WinGet
+      app and resize to a narrow window. The graphics cards move below the scan controls and the sections
+      open as stacked cards. Widen the window and confirm the app selection and expanded sections are restored.
+      Check the action for an unavailable source. Open and cancel the confirmation for an exact WinGet selection
+      and for **Update all eligible apps** in **Bulk upgrade**.
 - [ ] 16. **Gaming Runtimes & Tools**: the category rail expands and collapses, categories filter,
       search filters, and the selection toolbar wraps below on a narrow window.
 - [ ] 17. Select packages: the "N Selected" pill updates, and Install Selected (Direct) and Install

@@ -175,6 +175,7 @@
     <!-- Sidebar item label: hidden when the sidebar is collapsed to its icon rail -->
     <Style TargetType="TextBlock" x:Key="SidebarLabelStyle" BasedOn="{StaticResource {x:Type TextBlock}}">
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="13" />
         <Style.Triggers>
             <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                 <Setter Property="Visibility" Value="Collapsed" />
@@ -186,9 +187,9 @@
     <Style TargetType="TextBlock" x:Key="SidebarGroupHeaderTextStyle">
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="10" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Margin" Value="20,10,20,3" />
+        <Setter Property="Margin" Value="20,8,20,3" />
         <Style.Triggers>
             <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                 <Setter Property="Visibility" Value="Collapsed" />
@@ -209,23 +210,34 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Sidebar Expander Header Button (UTILITIES / SYSTEM) -->
+    <!-- Collapsible groups use the same label baseline and inset as Control. -->
     <Style TargetType="Button" x:Key="SidebarExpanderHeaderButtonStyle">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
-        <Setter Property="Height" Value="30" />
-        <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
-        <Setter Property="FontSize" Value="11" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,6,0,1" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" Style="{StaticResource SidebarGroupHeaderTextStyle}" Margin="0" VerticalAlignment="Center"/>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid Background="Transparent">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Margin="10,2" Padding="12,0">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Margin="10,2"/>
+                        <Grid Margin="20,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
                             <ContentPresenter VerticalAlignment="Center" />
-                        </Border>
+                            <TextBlock Grid.Column="1" Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                        </Grid>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -255,10 +267,9 @@
     <Style TargetType="Button" x:Key="SidebarButtonStyle">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-        <!-- Sized so the whole navigation fits the sidebar without a scrollbar; see MainWindow.xaml -->
-        <Setter Property="Height" Value="36" />
+        <Setter Property="Height" Value="31" />
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="Regular" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -308,69 +319,6 @@
                         <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
                         <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                             <Setter TargetName="content" Property="Margin" Value="27,0,0,0" />
-                        </DataTrigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- Sidebar Sub-Item Button (Indented for nested items) -->
-    <Style TargetType="Button" x:Key="SidebarSubItemButtonStyle" BasedOn="{StaticResource SidebarButtonStyle}">
-        <Setter Property="Height" Value="32" />
-        <Setter Property="FontSize" Value="13.5" />
-        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Grid Background="Transparent">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Margin="16,2,10,2" />
-                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
-                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                            <Setter TargetName="content" Property="Margin" Value="28,0,0,0" />
-                            <Setter TargetName="border" Property="Margin" Value="10,2" />
-                        </DataTrigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
-                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{DynamicResource ElevatedCardBackgroundBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
-                            <Setter TargetName="border" Property="BorderThickness" Value="1" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- Active Sidebar Sub-Item Button -->
-    <Style TargetType="Button" x:Key="SidebarSubItemActiveButtonStyle" BasedOn="{StaticResource SidebarSubItemButtonStyle}">
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Grid Background="Transparent">
-                        <Border x:Name="border" Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Margin="16,2,10,2">
-                            <Border Width="3" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentBrush}" Margin="0,6" />
-                        </Border>
-                        <ContentPresenter x:Name="content" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="28,0,12,0" />
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <!-- Icon rail: the sidebar is 72 px, so the icon sits on its centre line -->
-                        <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                            <Setter TargetName="content" Property="Margin" Value="28,0,0,0" />
-                            <Setter TargetName="border" Property="Margin" Value="10,2" />
                         </DataTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusBrush}" />
@@ -515,7 +463,9 @@
                                     <Border.Effect>
                                         <DropShadowEffect BlurRadius="18" ShadowDepth="5" Opacity="0.55" Color="#000000"/>
                                     </Border.Effect>
-                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                    <ScrollViewer Margin="4,4,4,4" SnapsToDevicePixels="True"
+                                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                                  CanContentScroll="False">
                                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
                                     </ScrollViewer>
                                 </Border>

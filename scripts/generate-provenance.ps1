@@ -11,7 +11,10 @@ param(
     [string]$OutputPath = "artifacts/release/provenance.json",
 
     [Parameter(Mandatory = $false)]
-    [string[]]$ArtifactPaths = @()
+    [string[]]$ArtifactPaths = @(),
+
+    [Parameter(Mandatory = $false)]
+    [string]$DotnetPath = "dotnet"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -37,7 +40,7 @@ try {
 }
 
 # 2. .NET SDK Version
-$dotnetVersion = (& dotnet --version).Trim()
+$dotnetVersion = (& $DotnetPath --version).Trim()
 
 # 3. Dependency Lock Hash
 $appLock = Join-Path $repoRoot "AxePower.App/packages.lock.json"
@@ -87,7 +90,7 @@ $provenance = @{
         }
         environment = @{
             dotnetSdkVersion = $dotnetVersion
-            runtime = ".NET 8.0 (win-x64)"
+            runtime = ".NET 10.0 (win-x64)"
             os = if ($env:RUNNER_OS) { $env:RUNNER_OS } else { [System.Environment]::OSVersion.ToString() }
             dependencyLockSha256 = $lockHash
         }

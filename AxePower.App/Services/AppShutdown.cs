@@ -5,17 +5,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using AxePower.App.ViewModels;
 using AxePower.Core.Services;
-using AxePower.Core.Services.Friends;
 using AxePower.Core.Services.Music;
 using AxePower.Core.Services.Routines;
-using AxePower.Core.Services.ShareScreen;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AxePower.App.Services;
 
 /// <summary>
 /// Everything AxePower does on exit, in order (Prompt 29). First what the user would notice if
-/// skipped (the music queue is saved, routines are undone, friends see you leave), each with its
+/// skipped (the music queue is saved and routines are undone), each with its
 /// own wait. Then every resource is released: periodic work stops before the services it reads
 /// are disposed, then listeners, child-process hosts, hotkeys, sensors and the driver, and finally
 /// everything else the container created. That second stage has a hard limit, so exit can
@@ -64,10 +62,6 @@ public static class AppShutdown
         // Running routines are undone (previous mode, reopened apps) before the timer goes
         if (services.GetService<RoutineEngine>() is { } routines) Wait("Routines", routines.StopAsync, TimeSpan.FromSeconds(5));
         Do("Power timer", () => services.GetService<PowerTimerService>()?.Dispose()); // closing AxePower cancels the timer
-        // Friends see you leave straight away instead of when the heartbeat runs out
-        if (services.GetService<FriendsService>() is { IsActive: true } friends)
-            Wait("Friends offline", () => friends.GoOfflineAsync(TimeSpan.FromSeconds(2)), TimeSpan.FromSeconds(3));
-        Do("Friends", () => services.GetService<FriendsService>()?.Dispose());
         Do("Auto-switch", () => services.GetService<AutoSwitchService>()?.Stop());
         Do("App monitor", () => services.GetService<AppMonitorService>()?.Stop());
 
@@ -84,7 +78,6 @@ public static class AppShutdown
         if (services.GetService<ControllerNavigationService>() is { } controller)
             Wait("Controller navigation", controller.StopAsync, TimeSpan.FromSeconds(1));
         Do("LAN Drop listener", () => services.GetService<LanDropService>()?.Dispose());
-        Do("Share Screen", () => services.GetService<ShareScreenService>()?.Dispose());
         Do("Terminal shell", () => services.GetService<TerminalService>()?.StopSession());
         Do("Hotkeys", () => services.GetService<HotkeyService>()?.Dispose());
         Do("Telemetry", () => services.GetService<SystemTelemetryService>()?.Dispose());

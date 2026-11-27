@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using AxePower.App.Models;
 using AxePower.Core.Models;
 
@@ -42,9 +43,31 @@ public class TrayMenuPreferencesTests
     }
 
     [Fact]
+    public void DefaultsShowTheRequestedShortcuts()
+    {
+        var defaults = AppSettings.CreateForNewInstall();
+        var visibleItems = TrayMenuCatalog.Entries.Where(entry => !defaults.HiddenTrayMenuItems.Contains(entry.Id));
+        Assert.Equal(new[]
+        {
+            "Eco", "Smart", "Beast", "GameMode", "Dashboard", "GameModePage", "Battery", "Music",
+            "UpdatePc", "Uninstaller", "Tools", "Settings", "Exit"
+        }, visibleItems.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public void SavedChoicesTakePrecedenceOverTheDefaults()
+    {
+        var settings = JsonSerializer.Deserialize<AppSettings>("""{"hiddenTrayMenuItems":["Music"]}""")!;
+        var reloaded = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings.Clone()))!;
+        Assert.Equal(new[] { "Music" }, reloaded.HiddenTrayMenuItems);
+        Assert.Equal(new AppSettings().HiddenTrayMenuItems, JsonSerializer.Deserialize<AppSettings>("{}")!.HiddenTrayMenuItems);
+        Assert.Empty(JsonSerializer.Deserialize<AppSettings>("""{"hiddenTrayMenuItems":[]}""")!.HiddenTrayMenuItems);
+    }
+
+    [Fact]
     public void HiddenItems_SurviveASettingsCopy_AsTheirOwnList()
     {
-        var original = new AppSettings { HiddenTrayMenuItems = { "Beast", "UpdatePc" } };
+        var original = new AppSettings { HiddenTrayMenuItems = new() { "Beast", "UpdatePc" } };
         var copy = original.Clone();
 
         Assert.Equal(new[] { "Beast", "UpdatePc" }, copy.HiddenTrayMenuItems);

@@ -4,14 +4,13 @@ using System.Threading;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Accounts;
 using AxePower.Core.Services.LanDrop;
-using AxePower.Core.Services.ShareScreen;
 using Xunit;
 
 namespace AxePower.Tests.Fuzzing;
 
 /// <summary>
 /// Deterministic fuzz and property tests for custom query-string parsers across
-/// LanDropService, ShareViewerHost, and OAuthLoopback.
+/// LAN Drop and OAuthLoopback.
 /// </summary>
 public class QueryStringParserFuzzTests
 {
@@ -20,17 +19,12 @@ public class QueryStringParserFuzzTests
     {
         foreach (var query in FuzzTestCorpus.MinimizedQueryStringRegressions)
         {
-            // 1. LanDropHttp.ParseQueryString
+            // LanDropHttp.ParseQueryString
             var lanDropDict = LanDropHttp.ParseQueryString(query);
             Assert.NotNull(lanDropDict);
             Assert.True(lanDropDict.Count <= LanDropHttp.MaxQueryParameters);
 
-            // 2. ShareViewerHost.ParseQuery
-            var shareDict = ShareViewerHost.ParseQuery(query);
-            Assert.NotNull(shareDict);
-            Assert.True(shareDict.Count <= ShareViewerHost.MaxQueryParameters);
-
-            // 3. OAuthLoopback.ParseQuery
+            // OAuthLoopback.ParseQuery
             var target = $"/callback?{query}";
             var oauthDict = OAuthLoopback.ParseQuery(target);
             Assert.NotNull(oauthDict);
@@ -64,9 +58,6 @@ public class QueryStringParserFuzzTests
 
             var lanDropResult = LanDropHttp.ParseQueryString(malformed);
             Assert.NotNull(lanDropResult);
-
-            var shareResult = ShareViewerHost.ParseQuery(malformed);
-            Assert.NotNull(shareResult);
         }
     }
 
@@ -83,9 +74,6 @@ public class QueryStringParserFuzzTests
 
         var lanDrop = LanDropHttp.ParseQueryString(massiveQuery);
         Assert.Equal(LanDropHttp.MaxQueryParameters, lanDrop.Count);
-
-        var share = ShareViewerHost.ParseQuery(massiveQuery);
-        Assert.Equal(ShareViewerHost.MaxQueryParameters, share.Count);
 
         var oauth = OAuthLoopback.ParseQuery($"/callback?{massiveQuery}");
         Assert.Equal(200, oauth.Count);
@@ -104,9 +92,6 @@ public class QueryStringParserFuzzTests
 
             var ld = LanDropHttp.ParseQueryString(query);
             Assert.NotNull(ld);
-
-            var sh = ShareViewerHost.ParseQuery(query);
-            Assert.NotNull(sh);
 
             var oa = OAuthLoopback.ParseQuery($"/auth?{query}");
             Assert.NotNull(oa);

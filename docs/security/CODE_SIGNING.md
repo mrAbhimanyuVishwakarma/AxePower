@@ -122,6 +122,6 @@ pwsh scripts/release-gate.ps1 -PublishDir "publish" -InstallerDir "Installer/Out
 
 | Script | Purpose |
 |---|---|
-| [`scripts/sign-file.ps1`](file:///d:/Projects/AxePower/scripts/sign-file.ps1) | Signs a single file using `signtool.exe` or `Set-AuthenticodeSignature` with SHA-256 + RFC 3161 timestamping. Fails closed when `-RequireSigned` is set. |
-| [`scripts/verify-signature.ps1`](file:///d:/Projects/AxePower/scripts/verify-signature.ps1) | Verifies Authenticode status, publisher identity, timestamp, and runs `signtool verify /pa`. |
-| [`scripts/release-gate.ps1`](file:///d:/Projects/AxePower/scripts/release-gate.ps1) | Release gate that iterates through all release binaries and installers, failing closed if any artifact fails signature validation. |
+| [`scripts/sign-file.ps1`](../../scripts/sign-file.ps1) | Signs a single file using `signtool.exe` or `Set-AuthenticodeSignature` with SHA-256 + RFC 3161 timestamping. Fails closed when `-RequireSigned` is set. |
+| [`scripts/verify-signature.ps1`](../../scripts/verify-signature.ps1) | Verifies Authenticode status, publisher identity, timestamp, and runs `signtool verify /pa`. |
+| [`scripts/release-gate.ps1`](../../scripts/release-gate.ps1) | Release gate that iterates through all release binaries and installers, failing closed if any artifact fails signature validation. |

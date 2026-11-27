@@ -107,7 +107,7 @@ flowchart TD
 ```text
 Social Media/
 ├── socialautomation.md       # Complete documentation & workflow guide (this file)
-├── requirements.txt          # Python dependencies (tweepy, praw, discord.py, etc.)
+├── requirements.txt          # Python dependencies, including Requests for the Discord APIs
 ├── .env.example              # Template for API keys
 ├── .env                      # Local secret keys (git-ignored)
 ├── config.py                 # Configuration loader & validation

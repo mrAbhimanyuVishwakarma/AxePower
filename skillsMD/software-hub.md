@@ -22,8 +22,8 @@ The catalog is hardcoded in `WinGetHubService.InitializeCatalog()`. Categories a
 
 | `PackageCategory` | Label | Examples |
 |---|---|---|
-| `Runtimes` | Runtimes & DirectX | VC++ 2015+ x64, DirectX, .NET 8 Desktop Runtime |
-| `Gaming` | Launchers & Gaming | Steam, Epic, Rockstar, Ubisoft, Battle.net, GOG, EA, WeMod, DLSS 5 Swapper |
+| `Runtimes` | Runtimes & DirectX | VC++ 2015+ x64, DirectX, .NET 10 Desktop Runtime |
+| `Gaming` | Launchers & Gaming | Steam, Epic, Rockstar, Ubisoft, Battle.net, GOG, EA, WeMod, DLSS 5 Swapper, Veyra, DLSS 5 Manager, PushFPS |
 | `Monitoring` | Hardware & Tuning | MSI Afterburner, CPU-Z, GPU-Z, HWiNFO, CrystalDiskInfo |
 | `Utilities` | Tools & Productivity | Ninite, 7-Zip, OBS, Discord, VLC, Notepad++, DaVinci Resolve, Audacity, GIMP, Canva, Blender, HandBrake, PowerToys, ShareX, Peace EQ, Dolby Access, SteelSeries GG, CamStudio |
 
@@ -38,6 +38,8 @@ To add a package, append a `SoftwarePackageItem` in `InitializeCatalog()`. Set:
 - `IsWebLinkOnly`: only an external link, which opens after a warning modal (`ShowWebLinkWarning`).
 - `HasCustomInstaller` (`LocalInstallerPath` or `CustomWebUrl` set): shows "run local installer" and "open website" buttons instead of install/update/uninstall. Ninite uses this path.
 - `dlss5swapper`: the button reads "Download & Run". It downloads the latest portable GitHub release to `%LOCALAPPDATA%\AxePower\Tools\DLSS5-Swapper\` instead of using winget.
+- `veyra-nvidia` and `veyra-amd`: choose the build for the GPU running Veyra on Windows 11 x64. **Download & Run** verifies the archive against the publisher's SHA-256 before extracting it to the corresponding `Veyra-NVIDIA` or `Veyra-AMD` directory under AxePower's Tools folder. It launches as the signed-in user. Veyra handles updates to preserve its presets, settings, and LUTs.
+- `dlss5manager` and `pushfps`: **Download page** opens the publisher's GitHub Releases page for manual setup.
 - `camstudio`: detected in `%LOCALAPPDATA%\AxePower\Tools\CamStudio\` or Program Files. Uninstalling it deletes the local folder.
 
 ## Install detection
@@ -60,6 +62,7 @@ All actions run `winget.exe` directly (no shell), stream stdout/stderr through `
 ## Batch install
 - Selection helpers: `SelectAll`, `SelectUninstalled`, `ClearSelection`. Web-link-only cards are never selected.
 - **Install selected** (`InstallSelectedDirectAsync`) installs the packages one at a time and logs progress to the Terminal.
+- Veyra variants are individual downloads so that batch selection does not install both GPU builds.
 - **Install via Terminal** (`InstallSelectedViaTerminal`) builds a PowerShell script of `winget install` lines, switches to the Terminal page and sends the script to the live shell. That shell inherits AxePower's elevation.
 
 ## Filtering

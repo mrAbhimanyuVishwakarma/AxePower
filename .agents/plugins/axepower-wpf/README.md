@@ -5,15 +5,14 @@ This is a workspace-specific Antigravity plugin for the AxePower repository. It 
 ## What it does
 
 This plugin configures Antigravity to strictly adhere to the AxePower engineering standards:
-* **Architecture**: Enforces .NET 8 WPF, CommunityToolkit.Mvvm, and strict separation between `AxePower.App` and `AxePower.Core`.
+* **Architecture**: Covers .NET 10 WPF, CommunityToolkit.Mvvm, and the separation between `AxePower.App` and `AxePower.Core`.
 * **UI Quality**: Enforces responsive, accessible, Fluent-inspired UI without fake data or hard-coded assumptions.
 * **Safety**: Protects Windows power-plans and local environments from destructive commands.
 * **Testing & Release**: Enforces rigorous verification via builds, tests, and installer checks prior to claiming success.
 
 ## Installation Location
 
-This plugin is installed in the repository's workspace customizations directory:
-`C:\Users\Abhimanyu Vishwakarm\GitHub\AxePower\.agents\plugins\axepower-wpf`
+This plugin lives in the workspace under `.agents/plugins/axepower-wpf/`. Start with the repository's [AGENTS.md](../../../AGENTS.md) for the current branch and build.
 
 ## Skills Provided
 

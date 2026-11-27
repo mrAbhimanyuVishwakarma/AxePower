@@ -1,5 +1,7 @@
 # AxePower Engineering Baseline
 
+For the v2.1.5 baseline and handoff, see [WORK_LOG.md](../../WORK_LOG.md). This report records the October 2026 audit.
+
 - **Captured:** 2026-10-03 19:21 IST (`2026-10-03T19:21:00+05:30`)
 - **Branch:** `v2.1.1---monitization-features`
 - **Commit:** `b68f0019f850a051a736b60277a57c922ec581cc` (`b68f001`)
@@ -162,7 +164,6 @@ This proves the test run did not alter that settings file. It does not prove tha
 
 ### Supabase backend
 
-`supabase/tests/friends.test.mjs` successfully loaded every migration into PGlite and passed 48/48 authorization and behavior assertions covering friend requests, RLS isolation, presence, invitations, blocking, profile search, anonymous denial, and account-deletion cascades.
 
 This is a PostgreSQL-in-WASM stand-in. It does **not** verify the deployed Supabase project's migrations, grants, environment variables, Edge Function settings, JWT verification settings, or live provider configuration.
 
@@ -180,7 +181,7 @@ Coverage was collected with Coverlet's XPlat collector and then deleted after pa
 | `AxePower` (WPF app) | 35.60% | 21.12% |
 | **Overall** | **50.37%** (16,260 / 32,279) | **39.60%** (6,775 / 17,108) |
 
-Important low/zero-coverage areas include live Share Screen startup/tool acquisition, LAN download handling, Android tool acquisition, real media/provider paths, Windows power actions, battery polling, DNS operations, and several WPF view-model workflows. Coverage measures executed code, not correctness; the lower WPF number is expected in part because visual and native Windows behavior needs additional integration/manual verification.
+Important low/zero-coverage areas include LAN download handling, Android tool acquisition, real media/provider paths, Windows power actions, battery polling, DNS operations, and several WPF view-model workflows. Coverage measures executed code, not correctness; the lower WPF number is expected in part because visual and native Windows behavior needs additional integration/manual verification.
 
 ## NuGet dependency baseline
 
@@ -219,7 +220,6 @@ The unconstrained audit reported these direct updates:
 | Core | `System.ServiceProcess.ServiceController` | 10.0.10 | 10.0.12 |
 | App | `CommunityToolkit.Mvvm` | 8.2.2 | 8.4.2 |
 | App | `Microsoft.Extensions.DependencyInjection` | 8.0.0 | 10.0.12 |
-| App | `Microsoft.Web.WebView2` | 1.0.3485.44 | 1.0.4258.31 |
 | Tests | `coverlet.collector` | 6.0.4 | 10.1.0 |
 | Tests | `Microsoft.NET.Test.Sdk` | 17.14.1 | 18.10.1 |
 | Tests | `Moq` | 4.20.70 | 4.21.0 |
@@ -238,25 +238,18 @@ No NuGet lock files or central package-management file are present, so restore r
 | Single-instance named pipe | `AxePower.Desktop.Singleton.Pipe` | Local process activation/argument forwarding; created without explicit `PipeSecurity` in `App.xaml.cs` |
 | OAuth loopback | `127.0.0.1:53682` | One-shot browser callback; loopback-only; OAuth uses PKCE |
 | LAN Drop / Phone portal | `0.0.0.0:5050` by default | Raw HTTP server; requires portal token; offers file upload/download, clipboard text, media actions, music controls, and workstation lock |
-| Share viewer host | `0.0.0.0:8890` or next available | Raw HTTP and WebSocket; session path/token gates viewing/chat/voice, separate eight-character code gates optional remote input |
-| MediaMTX WebRTC | TCP `0.0.0.0:8889`, UDP `0.0.0.0:9189` by default | Viewer media transport; generated config disables HTTPS for WHEP/WebRTC signaling (`webrtcEncryption: no`), allows every origin, and grants anonymous read access to the unguessable session path. WebRTC media encryption is protocol-level and is distinct from this signaling setting. |
-| MediaMTX control API | `127.0.0.1:9997` or next available | Loopback-only control/status API |
-| MediaMTX RTSP ingest | `127.0.0.1:8554` | Loopback-only publisher ingest with a per-room publisher token |
 
 ### Outbound and hosted services
 
-- `Friends/RealtimeFeed` is a WebSocket **client** to Supabase Realtime over `wss://`; it is not a local listener.
-- Account, profile, and Friends APIs call the configured Supabase HTTPS project using its public publishable key plus user bearer tokens.
+- Account and profile APIs call the configured Supabase HTTPS project using its public publishable key plus user bearer tokens.
 - `supabase/functions/delete-account` and `supabase/functions/steam-login` are cloud-side `Deno.serve` handlers. They are not desktop listeners.
 - The application also makes outbound HTTPS requests to GitHub releases, Steam, music/lyrics providers, game-art sources, vendor driver pages, WinGet sources, and tool download sources.
 
 ### Listener-related risks observed
 
 1. `LanDropService` binds every interface and uses plain HTTP. Its authenticated upload/text/action handlers trust declared `Content-Length`; file uploads are buffered fully into a `MemoryStream` without an explicit maximum before being written. This permits memory/disk exhaustion after token compromise or by an authorized but malfunctioning client.
-2. Share viewer/control uses `http://` and `ws://`; viewer/control credentials and content do not receive TLS transport protection from the app itself.
-3. MediaMTX serves WHEP/WebRTC signaling without HTTPS and allows every origin. WebRTC media is normally protected by its protocol, but access signaling still relies on the secrecy of the room path/token rather than TLS and an origin allow-list.
 4. The eight-character remote-control code has no observed server-side attempt rate limit.
-5. LAN portal and Share Screen have automated loopback/unit coverage, but the repository's live verification ledger says the phone portal and several real Share Screen paths have not been verified end to end on separate devices.
+5. The LAN portal has automated loopback and unit coverage. Verify it from a separate device during acceptance testing.
 
 ## Elevation paths
 
@@ -276,7 +269,6 @@ The optional elevation architecture is deliberate and safer than an always-admin
 
 1. **AxePower self-update:** `UpdateService` queries two GitHub latest-release endpoints, downloads the selected asset to `%TEMP%\AxePower_Update`, checks length and the two-byte `MZ` header, then launches it with `Process.Start`. It does not currently verify SHA-256, a signed manifest, Authenticode status/publisher, an explicit download-host allow-list, or downgrade provenance.
 2. **.NET Desktop Runtime bootstrap:** `Installer/install-dotnet.ps1` downloads Microsoft's redirect URL and checks only the `MZ` header before executing the installer. It does not validate Authenticode publisher or a pinned hash.
-3. **Share Screen tools:** `ShareToolProvider` downloads FFmpeg from gyan.dev and MediaMTX from the latest GitHub release, extracts them, and later executes the binaries. No checksum/signature verification was found.
 4. **Android control:** `AndroidControlService` downloads and extracts the latest `Genymobile/scrcpy` release and launches tools from the extracted directory. No checksum/signature verification was found.
 5. **Graphics drivers:** `GraphicsDriverService` downloads vendor installers and executes them. PE/MZ-style validation is present in paths inspected, but expected publisher/signature verification was not found.
 6. **MSI Afterburner/tool acquisition:** uses WinGet and PowerShell download/extraction paths before launching acquired executables.
@@ -322,13 +314,12 @@ This is a capability inventory, not a finding that each operation is unsafe.
 
 - Uninstaller cleanup deletes or recycles application leftovers and maintains backup manifests/history.
 - LAN Drop/Phone Hub UI can delete received files.
-- Update, driver, Android, Share Screen tool, music cache/art, log rotation, Windows Update reset, and installer paths create, replace, and delete files/directories.
+- Update, driver, Android tool, music cache/art, log rotation, Windows Update reset, and installer paths create, replace, and delete files/directories.
 - Inno Setup removes stale application files and previous install directories during upgrade.
 
 ### Processes and applications
 
 - The uninstaller launches Win32/MSI/AppX/WinGet uninstallers and can terminate related process trees.
-- `AppKillerService`, Game Mode/routines, the terminal, system doctor, encoders, MediaMTX, and single-instance cleanup can stop, suspend, resume, or kill processes.
 - Software Hub installs/upgrades/uninstalls packages.
 - Debloat and tool workflows can execute third-party code.
 
@@ -357,7 +348,6 @@ Safety mechanisms already present include dry-run modes, protected-item classifi
 
 4. **Unsigned release artifacts:** all tracked installer binaries are unsigned, weakening publisher identity and update trust.
 5. **LAN resource limits:** LAN Drop buffers uploads in memory and lacks explicit body/storage/concurrency limits in the inspected server path.
-6. **Plain local-network transports:** LAN Drop and the viewer/control channels use HTTP/ws; MediaMTX signaling is HTTP and all WebRTC origins are accepted.
 7. **No enforced CI/release gate:** no `.github` workflow, package lock, central build policy, automated signing check, SBOM, or provenance generation is present.
 8. **Moderate coverage:** half of instrumented lines and roughly two-fifths of branches ran; several native, network, tool-download, and UI workflows remain unverified.
 9. **Self-test side effect:** the documented read-only self-test may persist a portal secret.
@@ -368,7 +358,7 @@ Safety mechanisms already present include dry-run modes, protected-item classifi
 11. A fresh rebuild emits two distinct warnings.
 12. No root `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `.editorconfig`, `Directory.Build.props`, or package lock is present, although public pages claim the MIT license.
 13. README's absolute “100% Local” / “zero remote data collection” headline is broader than the actual optional accounts, update, provider, tool-download, and peer-network behavior described elsewhere.
-14. Several Music, portal, and Share Screen flows remain explicitly marked unverified in `skillsMD/MUSIC_FIX_PLAN.md` despite compiling and passing fake/loopback tests.
+14. Several Music and portal flows remain explicitly marked unverified in `skillsMD/MUSIC_FIX_PLAN.md` despite compiling and passing fake/loopback tests.
 
 ## Baseline limitations
 
@@ -377,7 +367,7 @@ Safety mechanisms already present include dry-run modes, protected-item classifi
 - The application self-test was not run because inspection found a potential write to real portal-secret storage.
 - The installer was not rebuilt, installed, upgraded, repaired, or uninstalled in a clean VM.
 - A normal Release-build host and the tracked installers were checked for signatures; a clean `dotnet publish`/installer compilation was not performed.
-- The live Supabase deployment, OAuth providers, Steam API, GitHub releases, WebRTC across devices, LAN portal on a phone, music providers, WinGet, driver vendors, and remote scripts were not exercised.
+- The live Supabase deployment, OAuth providers, Steam API, GitHub releases, LAN portal on a phone, music providers, WinGet, driver vendors, and remote scripts were not exercised.
 - The website has no automated browser/accessibility/link test in the repository and was not deployed or rendered.
 - This was not a penetration test, fuzz test, malware analysis, legal review, or independent audit.
 

@@ -81,7 +81,7 @@ public class LegalPagesTests(WpfApplicationFixture wpf)
             Assert.DoesNotMatch(noAccounts, app);
             Assert.Contains("Your AxePower account (optional)", app);
             Assert.Contains("Supabase", app);
-            Assert.Contains("Your account and friends", app);
+            Assert.Contains("Your account", app);
 
             foreach (var page in Directory.GetFiles(WebsiteFolder(), "*.html"))
             {

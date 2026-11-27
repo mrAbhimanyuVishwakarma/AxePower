@@ -4,14 +4,13 @@
                     xmlns:views="clr-namespace:AxePower.App.Views"
                     xmlns:musicvm="clr-namespace:AxePower.App.ViewModels.Music"
                     xmlns:musicviews="clr-namespace:AxePower.App.Views.Music"
-                    xmlns:sharevm="clr-namespace:AxePower.App.ViewModels.ShareScreen"
-                    xmlns:shareviews="clr-namespace:AxePower.App.Views.ShareScreen"
                     xmlns:helpers="clr-namespace:AxePower.App.Helpers">
     <!-- Which view shows each page view model in MainWindow's content area. Moved out of
          MainWindow.xaml unchanged (Prompt 20). -->
     <DataTemplate DataType="{x:Type viewmodels:DashboardViewModel}">
         <views:DashboardView />
     </DataTemplate>
+
     <!-- Built once and reused: rebuilding Game Mode took 134 ms on every visit (Prompt 29) -->
     <DataTemplate DataType="{x:Type viewmodels:GameModeViewModel}">
         <helpers:CachedView ViewType="{x:Type views:GameModeView}" />
@@ -66,8 +65,5 @@
     </DataTemplate>
     <DataTemplate DataType="{x:Type musicvm:MusicViewModel}">
         <musicviews:MusicView />
-    </DataTemplate>
-    <DataTemplate DataType="{x:Type sharevm:ShareScreenViewModel}">
-        <shareviews:ShareScreenView />
     </DataTemplate>
 </ResourceDictionary>

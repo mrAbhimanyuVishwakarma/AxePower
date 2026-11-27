@@ -94,12 +94,18 @@ public sealed class InstallPlanner
         InstallPlan Make(params PlanStep[] steps) => new(action, targetId, name, pkg, steps);
         InstallPlan Refuse(string reason) => new(action, targetId, name, pkg, Array.Empty<PlanStep>(), reason);
 
+        if (PortableTools.Find(pkg?.Id) is { } portable)
+        {
+            var folder = Path.Combine(_toolsRoot, portable.FolderName);
+            if (portable.ZipRelease != null && action != PackageAction.Install)
+                return Refuse("Use Veyra's built-in updater. AxePower keeps the portable folder and its saved settings.");
+            return action is PackageAction.Install or PackageAction.Upgrade
+                ? Make(new DownloadPortableToolStep(portable, folder))
+                : Make(new RemoveToolFolderStep(folder, true, portable.DisplayName));
+        }
+
         switch (pkg?.Id)
         {
-            case "dlss5swapper" when action is PackageAction.Install or PackageAction.Upgrade:
-                return Make(new DownloadPortableToolStep(PortableTools.Dlss5Swapper, Path.Combine(_toolsRoot, PortableTools.Dlss5SwapperFolder)));
-            case "dlss5swapper":
-                return Make(new RemoveToolFolderStep(Path.Combine(_toolsRoot, PortableTools.Dlss5SwapperFolder), true, "DLSS 5 Swapper"));
             case "camstudio" when action == PackageAction.Install:
                 // Not published on WinGet, so a winget attempt can only fail. Send the user to the
                 // official download instead; the card flips to Open once the install is detected.
@@ -171,6 +177,13 @@ public sealed class InstallPlanner
         "--accept-source-agreements", "--accept-package-agreements", "--silent"
     }, InstallTimeout);
 
+    internal static ProcessCommand WinGetUpgrade(string id, string source, string version) =>
+        new(AllowedTool.WinGet, new[]
+        {
+            "upgrade", "--id", RequireValid(id), "--exact", "--source", source, "--version", version,
+            "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"
+        }, InstallTimeout);
+
     public static ProcessCommand WinGetUninstall(string id, bool silent)
     {
         var args = new List<string> { "uninstall", "--id", RequireValid(id), "--exact" };
@@ -178,10 +191,16 @@ public sealed class InstallPlanner
         return new ProcessCommand(AllowedTool.WinGet, args, UninstallTimeout);
     }
 
-    public static ProcessCommand WinGetUpgradeAll() => new(AllowedTool.WinGet, new[]
+    public static ProcessCommand WinGetUpgradeAll() => WinGetUpgradeAll(includeUnknown: true);
+
+    public static ProcessCommand WinGetUpgradeAll(bool includeUnknown)
     {
-        "upgrade", "--all", "--include-unknown", "--accept-source-agreements", "--accept-package-agreements"
-    }, UpgradeAllTimeout);
+        var arguments = new List<string> { "upgrade", "--all" };
+        if (includeUnknown) arguments.Add("--include-unknown");
+        arguments.Add("--accept-package-agreements");
+        arguments.Add("--accept-source-agreements");
+        return new ProcessCommand(AllowedTool.WinGet, arguments, UpgradeAllTimeout);
+    }
 
     private static string RequireValid(string id) =>
         PackageInput.IsValidWinGetId(id) ? id : throw new ArgumentException($"'{id}' is not a valid package identifier.", nameof(id));

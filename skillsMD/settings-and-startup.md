@@ -23,14 +23,15 @@ This covers the Settings page and the shell behaviour every other feature depend
 | Log | [LogService.cs](../AxePower.Core/Services/LogService.cs), [LogsViewModel.cs](../AxePower.App/ViewModels/LogsViewModel.cs) |
 
 ## Settings persistence
-- **File:** `%LOCALAPPDATA%\AxePower\settings.json`, plain indented JSON with enums stored as strings. The README calls it "encrypted"; it is not.
+- **File:** `%LOCALAPPDATA%\AxePower\settings.json`, JSON with enums stored as strings.
 - **Save:** write `settings.temp.json`, then `File.Replace(temp, settings, settings.backup.json)`, which is atomic and keeps the previous file as a backup.
 - **Load:** reads `settings.json` and falls back to `settings.backup.json`, then to defaults.
 - `SettingsService.OnSettingsChanged` fires after every save. `AutoSwitchService`, `AppMonitorService` and `StartupService` listen to it.
 - Adding a setting: add a `[JsonPropertyName]` property with a default in `AppSettings` **and** copy it in `AppSettings.Clone()`. A missing key in an old file falls back to the default.
+- The sidebar saves the expanded state of Connection, Maintenance, and Utilities. Those groups default to expanded. Control stays open.
 
 ## Elevation model
-The goal is to run elevated by default, keep that switchable, and avoid a UAC prompt at boot.
+Fresh installs start with elevation off. The first-run screen lets the user opt in, and existing users keep their saved choice.
 
 1. The manifest is `asInvoker`. Using `requireAdministrator` would make the toggle impossible to switch off and would prompt on every launch.
 2. At startup (`App.TryElevateAndExit`), if `RunAsAdministrator` is on, the process isn't elevated, and `--elevation-attempted` isn't in the arguments, AxePower relaunches itself with the `runas` verb (plus `--force`) and exits.
@@ -64,12 +65,13 @@ Turning off `StartWithWindows` deletes the task. The task is re-registered on ev
   - `AskEveryTime`: a Yes/No dialog.
   - `ExitAxePower`: exit.
 - A Windows logoff or shutdown always closes the app (`SessionEnding` → `AllowClose()`).
-- **Tray menu** (Hardcodet TaskbarIcon): Eco / Smart / Beast / Game Mode, Dashboard, Battery, Phone Control, Second Monitor, Maintenance, Utilities, Update PC, Settings, Exit.
+- **Tray menu** (Hardcodet TaskbarIcon): the four power mode actions, all sidebar pages in sidebar order, and Exit AxePower. **Game Mode** in Control opens the page. **Game Mode** in the power group applies that mode. **Second Monitor** opens the same page as the sidebar shortcut.
+- **Settings → Taskbar preferences** remembers each user's choices. New profiles show the power actions, all four Control pages, Windows Update, Uninstaller, and Tools. Connection shortcuts, System Care, Debloat, Terminal, Trust & Permissions, and Profile are off by default. Settings and Exit AxePower stay available.
 - Telemetry sampling pauses while the window is hidden (see [cpu-gpu-telemetry.md](cpu-gpu-telemetry.md)).
 
 ## Themes (skins)
 - Every theme is a **skin**: `skins/<id>/skin.json`, with ~20 core colours and glass switches. The guide is [skins/README.md](../skins/README.md).
-- [SkinCompiler.cs](../AxePower.Core/Services/Skins/SkinCompiler.cs) derives the 61 theme resources.
+- [SkinCompiler.cs](../AxePower.Core/Services/Skins/SkinCompiler.cs) derives the theme resources. Dashboard, Game Mode, and Battery use white sidebar icons on dark skins and the primary foreground on light skins.
 - [SkinCatalog.cs](../AxePower.Core/Services/Skins/SkinCatalog.cs) finds skins in three places:
   - Built-in `dark`, `light` and `glass`, embedded in Core.
   - `skins\` next to the exe.

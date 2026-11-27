@@ -33,7 +33,6 @@ public sealed class DiagnosticsBundleBuilder
         "appRules", "appsToClose", "routines", "gpuPreferenceBackups",
         "libraryFolders", "playlistFolder", "lastFmUsername", "outputDeviceId",
         "excludedRegistryPaths", "excludedFilePaths",
-        "savedFriends", "systemAudioDeviceId", "microphoneDeviceId", "viewerHostOverride",
     };
 
     public const int MaxUninstallLogs = 10;
