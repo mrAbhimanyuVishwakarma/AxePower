@@ -88,7 +88,7 @@
                     <Button Style="{Binding DashboardActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" ToolTip="Dashboard: choose your power mode" AutomationProperties.Name="Dashboard">
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
-                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                       Fill="{DynamicResource SidebarIconBrush}">
                                 <Rectangle.OpacityMask>
                                     <ImageBrush ImageSource="/Resources/icons/Dashboards.png" Stretch="Uniform"/>
                                 </Rectangle.OpacityMask>
@@ -101,7 +101,7 @@
                     <Button Style="{Binding GameModeActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="GameMode" ToolTip="Game Mode: your games and Game Mode" AutomationProperties.Name="Game Mode">
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
-                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                       Fill="{DynamicResource SidebarIconBrush}">
                                 <Rectangle.OpacityMask>
                                     <ImageBrush ImageSource="/Resources/icons/controller.png" Stretch="Uniform"/>
                                 </Rectangle.OpacityMask>
@@ -114,7 +114,7 @@
                     <Button Style="{Binding BatteryActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="Battery" ToolTip="Battery: health, history and charging" AutomationProperties.Name="Battery">
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="18" Height="18" Margin="0,0,14,0" VerticalAlignment="Center"
-                                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">
+                                       Fill="{DynamicResource SidebarIconBrush}">
                                 <Rectangle.OpacityMask>
                                     <ImageBrush ImageSource="/Resources/icons/battery.png" Stretch="Uniform"/>
                                 </Rectangle.OpacityMask>
@@ -158,7 +158,7 @@
                         <Button Style="{Binding LanDropActiveStyle}" Command="{Binding NavigateCommand}" CommandParameter="LanDrop"
                                 ToolTip="LAN Drop: transfer files and text over your local network" AutomationProperties.Name="LAN Drop">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8B5;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" TextAlignment="Center" Margin="0,0,14,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="LAN Drop" Style="{StaticResource SidebarLabelStyle}"/>
                             </StackPanel>
                         </Button>

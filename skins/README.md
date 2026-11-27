@@ -1,7 +1,7 @@
 # AxePower skins
 
 A skin is one folder with one file, `skin.json`. About twenty core colours describe the look, and
-AxePower works out the rest of its 61 theme resources from them when the skin is applied.
+AxePower derives its theme resources from them when the skin is applied.
 
 ```
 skins/
@@ -93,9 +93,9 @@ A brush or colour takes one hex value. A gradient takes one colour per stop, com
 unknown name is an error, so a typo is reported instead of silently ignored. The built-in skins show
 real examples.
 
-All 63 names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarBackgroundColor`
+Available resource names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarBackgroundColor`
 `TitleBarBackgroundColor` `WindowBackgroundBrush` `WindowSecondaryBackgroundBrush`
-`SidebarBackgroundBrush` `TitleBarBackgroundBrush` `CardBackgroundColor`
+`SidebarBackgroundBrush` `SidebarIconBrush` `TitleBarBackgroundBrush` `CardBackgroundColor`
 `ElevatedCardBackgroundColor` `HoverSurfaceColor` `CardBackgroundBrush`
 `ElevatedCardBackgroundBrush` `PopupBackgroundBrush` `CardHoverBrush` `HoverBackgroundBrush` `CtaButtonBackgroundBrush`
 `CtaButtonForegroundBrush` `CardBorderColor` `DividerColor` `CardBorderBrush` `CardShadowEffect`
@@ -105,10 +105,7 @@ All 63 names: `WindowBackgroundColor` `WindowSecondaryBackgroundColor` `SidebarB
 `TrayMenuBackgroundBrush` `TrayMenuBorderBrush` `TrayMenuForegroundBrush`
 `TrayMenuHoverBackgroundBrush` `TrayMenuHoverForegroundBrush` `TrayMenuSeparatorBrush`
 `AppIconImage` `MusicAccentBrush` `MusicGlassSurfaceBrush` `MusicTrackBrush` `MusicPlayGlyphBrush`
-`MusicPlaceholderArtBrush` `ShareStageBackgroundBrush` `ShareTileBackgroundBrush`
-`ShareTileBorderBrush` `ShareControlBarBrush` `ShareControlButtonBrush`
-`ShareControlButtonHoverBrush` `ShareControlForegroundBrush` `ShareControlMutedBrush`
-`ShareNamePillBrush` `ShareDangerBrush` `ShareDangerHoverBrush` `ShareLiveBrush`
+`MusicPlaceholderArtBrush`
 (`CardShadowEffect` and `AppIconImage` are not colours and can't be overridden. `AccentForegroundBrush`, the text on accent buttons, defaults to black, or white when the accent is too dark for black.)
 
 ## Asking for a skin

@@ -71,7 +71,7 @@ Turning off `StartWithWindows` deletes the task. The task is re-registered on ev
 
 ## Themes (skins)
 - Every theme is a **skin**: `skins/<id>/skin.json`, with ~20 core colours and glass switches. The guide is [skins/README.md](../skins/README.md).
-- [SkinCompiler.cs](../AxePower.Core/Services/Skins/SkinCompiler.cs) derives the 61 theme resources.
+- [SkinCompiler.cs](../AxePower.Core/Services/Skins/SkinCompiler.cs) derives the theme resources. Dashboard, Game Mode, and Battery use white sidebar icons on dark skins and the primary foreground on light skins.
 - [SkinCatalog.cs](../AxePower.Core/Services/Skins/SkinCatalog.cs) finds skins in three places:
   - Built-in `dark`, `light` and `glass`, embedded in Core.
   - `skins\` next to the exe.
