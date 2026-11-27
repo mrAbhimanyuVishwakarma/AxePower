@@ -253,7 +253,7 @@
 
                         <!-- Control -->
                         <MenuItem x:Name="TrayItem_Dashboard" Header="Dashboard" Tag="Dashboard" Click="OpenAppAndNavigate_Click"/>
-                        <MenuItem x:Name="TrayItem_GameModePage" Header="Open Game Mode" Tag="GameMode" Click="OpenAppAndNavigate_Click"/>
+                        <MenuItem x:Name="TrayItem_GameModePage" Header="Game Mode" Tag="GameMode" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Battery" Header="Battery" Tag="Battery" Click="OpenAppAndNavigate_Click"/>
                         <MenuItem x:Name="TrayItem_Music" Header="Music" Tag="Music" Click="OpenAppAndNavigate_Click"/>
 

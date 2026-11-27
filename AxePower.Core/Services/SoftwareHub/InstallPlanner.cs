@@ -94,12 +94,18 @@ public sealed class InstallPlanner
         InstallPlan Make(params PlanStep[] steps) => new(action, targetId, name, pkg, steps);
         InstallPlan Refuse(string reason) => new(action, targetId, name, pkg, Array.Empty<PlanStep>(), reason);
 
+        if (PortableTools.Find(pkg?.Id) is { } portable)
+        {
+            var folder = Path.Combine(_toolsRoot, portable.FolderName);
+            if (portable.ZipRelease != null && action != PackageAction.Install)
+                return Refuse("Use Veyra's built-in updater. AxePower keeps the portable folder and its saved settings.");
+            return action is PackageAction.Install or PackageAction.Upgrade
+                ? Make(new DownloadPortableToolStep(portable, folder))
+                : Make(new RemoveToolFolderStep(folder, true, portable.DisplayName));
+        }
+
         switch (pkg?.Id)
         {
-            case "dlss5swapper" when action is PackageAction.Install or PackageAction.Upgrade:
-                return Make(new DownloadPortableToolStep(PortableTools.Dlss5Swapper, Path.Combine(_toolsRoot, PortableTools.Dlss5SwapperFolder)));
-            case "dlss5swapper":
-                return Make(new RemoveToolFolderStep(Path.Combine(_toolsRoot, PortableTools.Dlss5SwapperFolder), true, "DLSS 5 Swapper"));
             case "camstudio" when action == PackageAction.Install:
                 // Not published on WinGet, so a winget attempt can only fail. Send the user to the
                 // official download instead; the card flips to Open once the install is detected.

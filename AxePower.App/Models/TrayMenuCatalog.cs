@@ -24,7 +24,7 @@ public static class TrayMenuCatalog
         new Entry("Beast", "Beast", PowerModes),
         new Entry("GameMode", "Game Mode", PowerModes),
         new Entry("Dashboard", "Dashboard", Control),
-        new Entry("GameModePage", "Open Game Mode", Control),
+        new Entry("GameModePage", "Game Mode", Control),
         new Entry("Battery", "Battery", Control),
         new Entry("Music", "Music", Control),
         new Entry("PhoneControl", "Phone Control", Connection),

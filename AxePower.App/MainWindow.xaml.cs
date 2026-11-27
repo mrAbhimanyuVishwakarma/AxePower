@@ -271,7 +271,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void TrayMenu_Opened(object sender, RoutedEventArgs e)
     {
-        var hidden = new HashSet<string>(_settingsService.GetSettings().HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        var hidden = new HashSet<string>(_settingsService.GetSettings().HiddenTrayMenuItems, StringComparer.OrdinalIgnoreCase);
         var groupVisible = new Dictionary<string, bool>();
 
         foreach (var entry in Models.TrayMenuCatalog.Entries)

@@ -212,6 +212,43 @@ public sealed class SoftwareCatalog
             WebUrl = "https://github.com/rakanki911/DLSS5-Swapper/releases"
         });
 
+        foreach (var id in new[] { "veyra-nvidia", "veyra-amd" })
+        {
+            var tool = PortableTools.Find(id)!;
+            items.Add(new SoftwarePackageItem
+            {
+                Id = id,
+                Name = tool.DisplayName,
+                Description = "Real-time video and capture-card enhancement with upscaling and frame generation. Windows 11 x64. Choose the build for the GPU running Veyra.",
+                Category = PackageCategory.Gaming,
+                Glyph = "\uE714",
+                LaunchProtocolOrExe = Path.Combine(PackageDiscovery.DefaultToolsRoot, tool.FolderName, tool.ExeName),
+                WebUrl = PortableTools.VeyraReleases
+            });
+        }
+
+        items.Add(new SoftwarePackageItem
+        {
+            Id = "dlss5manager",
+            Name = "DLSS 5 Manager",
+            Description = "Manage DLSS game profiles and graphics components. Get the Windows installer or portable archive from the publisher.",
+            Category = PackageCategory.Gaming,
+            Glyph = "\uE7FC",
+            IsWebLinkOnly = true,
+            WebUrl = "https://github.com/NODIX-TECH/DLSS-5-MANAGER/releases/latest"
+        });
+
+        items.Add(new SoftwarePackageItem
+        {
+            Id = "pushfps",
+            Name = "PushFPS",
+            Description = "Add frame generation and picture enhancement to console capture. Get the Windows package and follow the publisher's setup guide.",
+            Category = PackageCategory.Gaming,
+            Glyph = "\uE714",
+            IsWebLinkOnly = true,
+            WebUrl = "https://github.com/DosukaSOL/PushFPS/releases/latest"
+        });
+
         items.Add(new SoftwarePackageItem
         {
             Id = "wemod",

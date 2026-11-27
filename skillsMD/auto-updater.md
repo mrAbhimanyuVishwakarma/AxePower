@@ -20,7 +20,7 @@ AxePower keeps itself up to date from GitHub Releases. This is separate from Upd
 1. **Check** (`CheckForUpdatesAsync`):
    - Calls `GET https://api.github.com/repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest`, falling back to the `AxePower` repo.
    - Compares the release tag with the running assembly version. `FallbackVersion` matches `Directory.Build.props` and is used only when there is no assembly version.
-   - Verifies the signed update manifest and matches it to the advertised installer.
+   - Loads the signed update manifest from the release assets. The download path verifies its signature, version, size, and hash before the installer can be applied.
    - Returns an `UpdateCheckResult`: HasUpdate, version, title, notes, download URL, size, release URL.
 2. **When it runs:** once at startup, then every hour, if `AutoCheckUpdates` is on. The About page's "Check for updates" button runs it on demand.
 3. **Download** (`DownloadUpdateAsync`, when `AutoDownloadUpdates` is on):
@@ -31,7 +31,7 @@ AxePower keeps itself up to date from GitHub Releases. This is separate from Upd
 The About page also shows community stats (`GetCommunityStatsAsync`: stars, open issues) from the GitHub API.
 
 ## Releasing a version the updater will pick up
-Follow the [versioning guide](../docs/engineering/VERSIONING.md), [release pipeline](../docs/engineering/RELEASE_PIPELINE.md), and [signed-update procedure](../docs/security/SIGNED_UPDATES.md). A local unsigned installer can be used for local verification. The updater requires the published installer and its signed manifest.
+Follow the [versioning guide](../docs/engineering/VERSIONING.md) and [signed-update procedure](../docs/security/SIGNED_UPDATES.md). The public stable release in `AxePower_Download` needs exactly one installer executable and its signed `update-manifest.json`. Sign the exact finished installer with the key already pinned in installed builds. See the [release checklist](../docs/engineering/RELEASE_PIPELINE.md#6-publish-an-in-app-update) for signing, upload, and upgrade verification.
 
 ## Gotchas
 - The check is unauthenticated, so it is limited to 60 requests per hour per IP. Hourly checks are fine; tight loops are not.

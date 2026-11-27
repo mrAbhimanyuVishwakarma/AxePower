@@ -147,7 +147,7 @@ public class PhoneControlTests
 
     [Theory]
     [InlineData("android", "https://play.google.com/store/apps/details?id=ph.spacedesk.beta")]
-    [InlineData("ios", "https://apps.apple.com/in/app/spacedesk-usb-display-for-pc/id1069217220")]
+    [InlineData("ios", "https://apps.apple.com/app/id1069217220")]
     [InlineData("phonelink_android", "https://play.google.com/store/apps/details?id=com.microsoft.appmanager")]
     [InlineData("phonelink_ios", "https://apps.apple.com/in/app/link-to-windows/id6443686328")]
     public void PhoneHubViewModel_ShowDownloadQr_SetsOfficialStoreUrls(string platform, string expectedUrl)
@@ -162,5 +162,6 @@ public class PhoneControlTests
 
         Assert.True(vm.IsQrModalOpen);
         Assert.Equal(expectedUrl, vm.QrModalUrl);
+        Assert.NotNull(vm.QrModalImage);
     }
 }

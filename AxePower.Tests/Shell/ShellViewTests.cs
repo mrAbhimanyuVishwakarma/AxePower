@@ -175,7 +175,7 @@ public class ShellViewTests
         var windows = Assert.IsType<Expander>(updates.FindName("WindowsGroup"));
         Assert.True(updates.IsVisible);
         Assert.True(shell.Window.ActualWidth < shell.Window.ActualHeight);
-        Assert.True(Assert.IsAssignableFrom<FrameworkElement>(windows.Template.FindName("GroupBody", windows)).IsVisible);
+        Assert.False(Assert.IsAssignableFrom<FrameworkElement>(windows.Template.FindName("GroupBody", windows)).IsVisible);
 
         shell.Vm.NavigateCommand.Execute("UpdatePc:Apps");
         Assert.Equal(regularMinWidth, shell.Window.MinWidth);
@@ -372,7 +372,13 @@ public class ShellViewTests
                 ("updates", () => vm.ActiveTab = "Updates", () => { }),
                 ("console", () => vm.ActiveTab = "Console", () => { }),
                 ("web link warning", () => vm.ShowWebLinkWarning("Open", "Message", "https://ninite.com/"), () => vm.CancelWebLinkWarning()),
-                ("nvidia picker", () => vm.OpenNvidiaPicker(null), () => vm.CloseNvidiaPicker()),
+                ("nvidia picker", () =>
+                    {
+                        vm.SelectedNvidiaAdapter = new GraphicsAdapterInfo { Vendor = GpuVendor.Nvidia, Name = "GeForce RTX 4060 Laptop GPU" };
+                        vm.NvidiaPickerStatus = "Checking NVIDIA for compatible drivers…";
+                        vm.IsNvidiaPickerOpen = true;
+                    },
+                    () => vm.CloseNvidiaPicker()),
             };
 
             var errors = new List<string>();

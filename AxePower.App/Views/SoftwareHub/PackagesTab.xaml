@@ -294,7 +294,7 @@
                                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                           VerticalAlignment="Center"
                                           Margin="0,0,14,0"
-                                          Visibility="{Binding IsWebLinkOnly, Converter={StaticResource InverseBoolToVis}}"
+                                          Visibility="{Binding CanSelectForBatch, Converter={StaticResource BoolToVis}}"
                                           AutomationProperties.Name="{Binding Name, StringFormat='Select {0}'}"/>
 
                                 <!-- Package Icon -->
@@ -366,10 +366,10 @@
                                     <Button Style="{DynamicResource PrimaryButtonStyle}"
                                             Command="{Binding OpenLinkWithWarningCommand}"
                                             Visibility="{Binding IsWebLinkOnly, Converter={StaticResource BoolToVis}}"
-                                            Padding="16,5" FontSize="12.5">
+                                            Padding="16,5" FontSize="12.5" ToolTip="Open the publisher's download page">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE71B;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Link" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&#xE71B;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource AccentForegroundBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Download page" FontWeight="SemiBold" Foreground="{DynamicResource AccentForegroundBrush}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
 

@@ -156,7 +156,7 @@
                                             <TextBlock FontSize="12" FontWeight="SemiBold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                                        <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                                                         <Setter Property="Text" Value="Start Server"/>
                                                         <Style.Triggers>
                                                              <DataTrigger Binding="{Binding IsServerRunning}" Value="True">
@@ -832,7 +832,7 @@
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="8,0,0,0">
                                             <TextBlock Text="Install SpaceDesk Viewer App on your Phone / Tablet" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                            <TextBlock Text="Available free for Android (Play Store), iOS (App Store), Windows, and HTML5 Web Viewer." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="Get spacedesk Viewer from Google Play on Android or the App Store on iPhone and iPad." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
                                         </StackPanel>
                                     </Grid>
 
@@ -845,8 +845,8 @@
                                             <TextBlock Text="3" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                            <TextBlock Text="Tap your PC's name on your phone to connect!" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                            <TextBlock Text="The phone screen instantly becomes your extended second monitor with full touchscreen support." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="Open the viewer and select your PC" FontWeight="SemiBold" FontSize="13.5" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="On iPhone or iPad, allow Local Network access when prompted so the viewer can find your PC." FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
@@ -860,7 +860,6 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
                                         <Button Grid.Column="0" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="android" Padding="10,8" Margin="0,0,6,0" ToolTip="Scan QR code with Android phone">
@@ -870,17 +869,10 @@
                                             </StackPanel>
                                         </Button>
 
-                                        <Button Grid.Column="1" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="ios" Padding="10,8" Margin="0,0,6,0" ToolTip="Scan QR code with iPhone or iPad">
+                                        <Button Grid.Column="1" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="ios" Padding="10,8" ToolTip="Scan QR code with iPhone or iPad">
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="App Store (iOS)" FontSize="11.5" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
-
-                                        <Button Grid.Column="2" Style="{DynamicResource SecondaryButtonStyle}" Command="{Binding ShowDownloadQrCommand}" CommandParameter="web" Padding="10,8" ToolTip="Scan QR code or open HTML5 Web Viewer">
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="HTML5 Web Viewer" FontSize="11.5" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
                                     </Grid>

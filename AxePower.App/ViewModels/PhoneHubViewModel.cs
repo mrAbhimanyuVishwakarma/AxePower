@@ -887,9 +887,9 @@ public partial class PhoneHubViewModel : ObservableObject
                 QrModalBadge = "GOOGLE PLAY";
                 break;
             case "ios":
-                QrModalTitle = "🍎 SpaceDesk for iOS (iPhone & iPad)";
+                QrModalTitle = "spacedesk for iPhone and iPad";
                 QrModalSubtitle = "Scan this QR code with your iPhone or iPad camera to install directly from the Apple App Store.";
-                QrModalUrl = "https://apps.apple.com/in/app/spacedesk-usb-display-for-pc/id1069217220";
+                QrModalUrl = "https://apps.apple.com/app/id1069217220";
                 QrModalBadge = "APP STORE";
                 break;
             case "phonelink_android":
@@ -904,13 +904,8 @@ public partial class PhoneHubViewModel : ObservableObject
                 QrModalUrl = "https://apps.apple.com/in/app/link-to-windows/id6443686328";
                 QrModalBadge = "APP STORE";
                 break;
-            case "web":
             default:
-                QrModalTitle = "🌐 SpaceDesk HTML5 Web Viewer";
-                QrModalSubtitle = "Scan to open the browser-based second display viewer directly on any device without installing any app.";
-                QrModalUrl = "https://viewer.spacedesk.net/";
-                QrModalBadge = "WEB VIEWER";
-                break;
+                return;
         }
 
         QrModalImage = GenerateQrImage(QrModalUrl);

@@ -107,7 +107,6 @@
                                         </ToggleButton.Template>
                                         <ContentPresenter ContentSource="Header"/>
                                     </ToggleButton>
-                                    <ContentPresenter x:Name="CardHeader" ContentSource="Header" Visibility="Collapsed"/>
                                     <ContentPresenter x:Name="GroupBody" Visibility="Collapsed" Margin="0,12,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -115,11 +114,6 @@
                                 <Trigger Property="IsExpanded" Value="True">
                                     <Setter TargetName="GroupBody" Property="Visibility" Value="Visible"/>
                                 </Trigger>
-                                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
-                                    <Setter TargetName="GroupToggle" Property="Visibility" Value="Collapsed"/>
-                                    <Setter TargetName="CardHeader" Property="Visibility" Value="Visible"/>
-                                    <Setter TargetName="GroupBody" Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
@@ -188,7 +182,13 @@
                                 <TextBlock Text="{Binding LastPcCheck}" Style="{StaticResource UpdateText}" Margin="0,0,0,16"/>
                                 <Button Content="Check for updates" Style="{StaticResource PillAccentButtonStyle}"
                                         Command="{Binding CheckAllUpdatesCommand}" IsEnabled="{Binding CanCheckForUpdates}"
-                                        HorizontalAlignment="Left"/>
+                                        HorizontalAlignment="Left">
+                                    <Button.ContentTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Foreground="{DynamicResource AccentForegroundBrush}"/>
+                                        </DataTemplate>
+                                    </Button.ContentTemplate>
+                                </Button>
                                 <TextBlock Text="{Binding PcUpdateProgress, TargetNullValue='', NotifyOnTargetUpdated=True}"
                                            AutomationProperties.LiveSetting="Polite" TargetUpdated="AnnounceStatus"
                                            Style="{StaticResource OptionalUpdateText}" Margin="0,8,0,0"/>
@@ -259,10 +259,11 @@
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                                                     <Button Style="{DynamicResource SecondaryButtonStyle}" Padding="9,7" Margin="0,0,6,0"
                                                             Command="{Binding DataContext.OpenGraphicsCompanionAppCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}" ToolTip="{Binding CompanionAppName, StringFormat='Open {0} in Microsoft Store'}"
+                                                            CommandParameter="{Binding}" ToolTip="{Binding CompanionAppName, StringFormat='Open {0}'}"
                                                             AutomationProperties.Name="{Binding CompanionAppName, StringFormat='Open {0}'}"
-                                                            Visibility="{Binding HasCompanionApp, Converter={StaticResource BoolToVis}}">
-                                                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                                            IsEnabled="{Binding DataContext.CanCheckForUpdates, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            Visibility="{Binding IsNvidia, Converter={StaticResource BoolToVis}}">
+                                                        <Image Source="/Resources/icons/nvidia_control_panel.png" Width="14" Height="14"/>
                                                     </Button>
                                                     <Button Style="{DynamicResource SecondaryButtonStyle}" Padding="9,7" Margin="0,0,6,0"
                                                             Command="{Binding DataContext.OpenNvidiaPickerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -272,22 +273,14 @@
                                                             Visibility="{Binding IsNvidia, Converter={StaticResource BoolToVis}}">
                                                         <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                                                     </Button>
-                                                    <Button Style="{DynamicResource SecondaryButtonStyle}" Padding="9,7"
-                                                            Command="{Binding DataContext.OpenGraphicsVendorSiteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}" ToolTip="Open the official driver download page"
-                                                            AutomationProperties.Name="{Binding VendorName, StringFormat='Open {0} driver site'}"
-                                                            Visibility="{Binding ShowOfficialSiteFallback, Converter={StaticResource BoolToVis}}">
-                                                        <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
-                                                    </Button>
                                                     <Button Style="{DynamicResource PrimaryButtonStyle}" Padding="14,7" FontSize="11.5"
                                                             Command="{Binding DataContext.UpdateGraphicsDriverCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}" ToolTip="{Binding ToolName, StringFormat='Open {0} in Microsoft Store'}"
-                                                            AutomationProperties.Name="{Binding ToolName, StringFormat='Open {0} in Microsoft Store'}"
-                                                            IsEnabled="{Binding DataContext.CanCheckForUpdates, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            Visibility="{Binding UsesStore, Converter={StaticResource BoolToVis}}">
+                                                            CommandParameter="{Binding}" ToolTip="{Binding ToolName, StringFormat='Open {0} or start setup if missing'}"
+                                                            AutomationProperties.Name="{Binding ToolName, StringFormat='Open {0}'}"
+                                                            IsEnabled="{Binding DataContext.CanCheckForUpdates, RelativeSource={RelativeSource AncestorType=UserControl}}">
                                                         <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="Open Store" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Open" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                                         </StackPanel>
                                                     </Button>
                                                 </StackPanel>
@@ -349,7 +342,7 @@
                     </Expander>
 
                     <Expander x:Name="AppsGroup" Style="{StaticResource UpdateGroup}" AutomationProperties.Name="Apps (WinGet)"
-                              Header="{Binding AppUpdateSummary}" IsExpanded="True" Grid.Row="1" KeyboardNavigation.TabIndex="1">
+                              Header="{Binding AppUpdateSummary}" Grid.Row="1" KeyboardNavigation.TabIndex="1">
                         <StackPanel>
                             <ItemsControl x:Name="AppUpdateRows" ItemsSource="{Binding AppUpdates}" IsEnabled="{Binding CanReviewAppUpdates}">
                                 <ItemsControl.ItemTemplate>

@@ -25,10 +25,20 @@ flowchart TD
 
 **Check for updates** reads the Windows Update catalog, WinGet inventory, and available device information. The page shows a separate status when a provider is unavailable, blocked, or returns an error. **Last checked** reflects an actual completed check.
 
+The Windows, Apps (WinGet), Optional drivers, and BIOS and UEFI firmware sections start collapsed. Expand any section to review its details. Open sections and selected apps retain their state when the window is resized.
+
 - **Windows and device updates.** Review the Windows Update catalog, optional entries, detected graphics, and firmware information. Open Windows Update or Optional updates in Settings to install the Windows catalog results. Use the available graphics actions or the device maker's website for vendor packages. Firmware installation takes place in vendor tools.
 - **Update selected apps.** Select eligible WinGet packages and review their exact identities and source before confirming. Excluded entries show the reason when AxePower can identify it. A failed scan or changed package list may require a new check.
 - **Update all eligible apps.** Confirm a separate bulk WinGet operation. The **Include unknown installed versions** checkbox is off by default. Turning it on adds `--include-unknown` to the bulk command. WinGet applies its source, eligibility, and pinning rules. Both modes accept source and package agreements after confirmation.
 - **Results.** The page keeps results for the current session, with per-package statuses for selected upgrades and a batch result for bulk mode. It shows failure, incomplete information, and restart requirements when available. You decide when to restart. Diagnostic output is also available in the [Terminal](terminal.md).
+
+## Graphics Drivers
+
+The cards list detected NVIDIA, Intel, and AMD adapters. Use **Open** to open the installed vendor app. If it is missing, AxePower checks the vendor's current download and opens its setup. Confirm installation in the vendor setup. A compatible Intel driver package includes Intel Graphics Software. AMD's Auto-Detect tool selects applicable AMD software and drivers. If setup or activation cannot complete, AxePower opens the appropriate vendor page.
+
+- **NVIDIA Control Panel** has a separate icon. AxePower opens the installed app or tries to install it from the Microsoft Store catalog. The Store listing is the fallback.
+- The NVIDIA version button checks NVIDIA's live catalog for the detected model and Windows version. It shows releases newest first, identifies Game Ready and Studio where available, and keeps **Nvidia Drivers** available for manual search.
+- Downloaded vendor installers must pass Windows signature and publisher checks before AxePower starts them.
 
 ## Update Shield
 
@@ -48,4 +58,5 @@ The policy, repair, and restore controls require administrator rights. Read-only
 | Page and update workflow | [UpdatersTab.xaml](../AxePower.App/Views/SoftwareHub/UpdatersTab.xaml), [SoftwareHubViewModel.PcUpdates.cs](../AxePower.App/ViewModels/SoftwareHubViewModel.PcUpdates.cs) | [PcUpdatesViewTests.cs](../AxePower.Tests/Shell/PcUpdatesViewTests.cs) |
 | Windows and firmware catalog | [WindowsUpdateCatalogService.cs](../AxePower.Core/Services/WindowsUpdateCatalogService.cs), [FirmwareUpdateService.cs](../AxePower.Core/Services/FirmwareUpdateService.cs) | [WindowsUpdateCatalogTests.cs](../AxePower.Tests/WindowsUpdateCatalogTests.cs), [FirmwareUpdateCatalogTests.cs](../AxePower.Tests/FirmwareUpdateCatalogTests.cs) |
 | WinGet review and execution | [WinGetUpdateService.cs](../AxePower.Core/Services/SoftwareHub/WinGetUpdateService.cs) | [WinGetUpdateServiceTests.cs](../AxePower.Tests/SoftwareHub/WinGetUpdateServiceTests.cs) |
+| Graphics card detection, app setup, and NVIDIA release lookup | [GraphicsDriverService.cs](../AxePower.Core/Services/GraphicsDriverService.cs), [companion app setup](../AxePower.Core/Services/GraphicsDriverService.CompanionApps.cs), [NVIDIA catalog](../AxePower.Core/Services/GraphicsDriverService.NvidiaCatalog.cs) | [SoftwareHubTests.cs](../AxePower.Tests/SoftwareHubTests.cs) |
 | Shield and restore points | [WindowsUpdateShieldService.cs](../AxePower.Core/Services/WindowsUpdateShieldService.cs), [RestorePointService.cs](../AxePower.Core/Services/RestorePointService.cs) | [WindowsUpdateShieldTests.cs](../AxePower.Tests/WindowsUpdateShieldTests.cs) |

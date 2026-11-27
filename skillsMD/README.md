@@ -22,7 +22,7 @@ Paths are relative to the repository. For the current branch and build, see [AGE
 | MAINTENANCE | System Doctor (SFC/DISM, cache cleaner, DNS) | [system-doctor.md](system-doctor.md) |
 | UTILITIES | Terminal (shell + shared output bus) | [terminal.md](terminal.md) |
 | MAINTENANCE | Windows Update (Windows, app, and device updates, plus Update Shield) | [update-pc.md](update-pc.md) |
-| UTILITIES | Software Hub (winget app catalog) | [software-hub.md](software-hub.md) |
+| MAINTENANCE | Gaming Runtimes & Tools (WinGet catalog, Veyra, DLSS 5 Manager, PushFPS) | [software-hub.md](software-hub.md) |
 | MAINTENANCE | Uninstaller and BCUninstaller shortcut | [uninstaller.md](uninstaller.md) |
 | UTILITIES | Tools → Timer & Routines: if-then routines plan | [ROUTINES_PLAN.md](ROUTINES_PLAN.md) |
 | UTILITIES | MSI Afterburner companion | [msi-afterburner.md](msi-afterburner.md) |

@@ -149,9 +149,15 @@ public class AppSettings
     [JsonPropertyName("settingsCategoriesCollapsed")]
     public bool SettingsCategoriesCollapsed { get; set; } = false;
 
-    /// <summary>Tray menu items the user hid in Settings → Taskbar preferences (by id).</summary>
+    /// <summary>Tray menu items hidden in Settings → Taskbar preferences (by id).</summary>
     [JsonPropertyName("hiddenTrayMenuItems")]
-    public List<string> HiddenTrayMenuItems { get; set; } = new();
+    public List<string> HiddenTrayMenuItems { get; set; } = CreateDefaultHiddenTrayMenuItems();
+
+    private static List<string> CreateDefaultHiddenTrayMenuItems() => new()
+    {
+        "PhoneControl", "SecondMonitor", "LanDrop", "PhoneLink",
+        "SystemCare", "Debloat", "Terminal", "Trust", "Profile"
+    };
 
     [JsonPropertyName("autoCheckUpdates")]
     public bool AutoCheckUpdates { get; set; } = true;
@@ -260,7 +266,9 @@ public class AppSettings
             FnLockEnabled = this.FnLockEnabled,
             TouchpadEnabled = this.TouchpadEnabled,
             SettingsCategoriesCollapsed = this.SettingsCategoriesCollapsed,
-            HiddenTrayMenuItems = new List<string>(this.HiddenTrayMenuItems ?? new List<string>()),
+            HiddenTrayMenuItems = this.HiddenTrayMenuItems is { } hiddenTrayItems
+                ? new List<string>(hiddenTrayItems)
+                : CreateDefaultHiddenTrayMenuItems(),
             AutoCheckUpdates = this.AutoCheckUpdates,
             AutoDownloadUpdates = this.AutoDownloadUpdates,
             NotifyOnNewRelease = this.NotifyOnNewRelease,

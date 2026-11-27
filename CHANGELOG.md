@@ -10,23 +10,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Windows Update** now opens a review page with expandable Windows, WinGet, optional driver, and BIOS sections. In a narrow window, the sections open as stacked cards and the graphics-driver cards move below the scan controls. App selections survive resizing.
+- **Windows Update** now opens a review page with Windows, WinGet, optional driver, and BIOS sections collapsed by default. In a narrow window, the graphics-driver cards move below the scan controls. Section state and app selections survive resizing.
 - **WinGet** previews eligible app upgrades. Users can confirm an exact selection or start a separate bulk upgrade. Including apps whose installed versions are unknown is opt-in. Progress, per-app outcomes, bulk results, and restart guidance are shown in the current session.
 - **Windows, optional driver, Store, and BIOS updates** use Windows Settings, Microsoft Store, or official vendor handoffs. A partial or unavailable scan is labeled separately from an empty result.
+- **Graphics cards** appear for detected NVIDIA, Intel, and AMD hardware. Open the matching vendor app, and use the NVIDIA Control Panel and NVIDIA driver list from the NVIDIA card.
 - **Update Shield** describes the Windows policy limits on feature-update deferral and signed-in restart protection. Cache repair and restore-point actions remain available.
 - **Runtime and installer** now target .NET 10 LTS for Windows x64. Setup checks for Desktop Runtime 10.0.15 or a newer 10.0.x x64 patch and verifies Microsoft's installer checksum and signature before running it.
 - **Sidebar** keeps Control visible and remembers the expanded state of Connection, Maintenance, and Utilities. New profiles start with all groups expanded.
 - Dashboard, Game Mode, and Battery use bright white sidebar icons on dark skins. LAN Drop uses an open-folder icon.
 - **Tray menu** offers the same pages in sidebar order. Settings → Taskbar preferences lets users choose which shortcuts appear.
 - **Dashboard** opens the Game Mode page from its Game Mode shortcut. GPU readouts display `0 GHz` when the clock cannot be read.
+- **Settings** category labels and the **LAN Drop** Start Server and Stop Server buttons follow the active skin's text colors. The Dashboard What's New dropdown uses a more compact layout.
+- **Second Monitor** provides Android and iOS viewer downloads. The iOS QR opens Apple's region-neutral listing, and the connection steps explain Local Network access.
 
 ### Added
 
 - **BCUninstaller** can be installed or opened from Tools. Uninstaller has a direct shortcut next to Windows Apps.
+- **Gaming Runtimes & Tools** adds Veyra for NVIDIA and AMD, with SHA-256 verification before launch. DLSS 5 Manager and PushFPS link to their official downloads. Veyra and DLSS 5 Manager appear first in Dashboard → What's New.
 
 ### Removed
 
 - Removed Friends and Share Screen rooms from the desktop app. Phone Control, Second Monitor, LAN Drop, and Phone Link are still available under Connection.
+- Removed the discontinued spacedesk HTML5 viewer shortcut.
 
 ## [2.1.3] - 2026-10-08
 

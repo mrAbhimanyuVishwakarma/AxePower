@@ -640,6 +640,24 @@ public partial class DashboardViewModel : ObservableObject
         // Entries are shown in this order.
         new()
         {
+            Title = "Veyra",
+            Badge = "PS5 FrameGen Upscaler",
+            BadgeColorHex = "#10B981",
+            Glyph = "\uE714",
+            Description = "Upscale video and capture-card feeds with real-time frame generation. Choose the NVIDIA or AMD build in Gaming Runtimes & Tools.",
+            TargetNavigation = "UpdatePc:Apps:Gaming"
+        },
+        new()
+        {
+            Title = "DLSS 5 Manager",
+            Badge = "NEW GAMING TOOL",
+            BadgeColorHex = "#10B981",
+            Glyph = "\uE7FC",
+            Description = "Manage DLSS and graphics components for supported games. Open the publisher's download page from Gaming Runtimes & Tools.",
+            TargetNavigation = "UpdatePc:Apps:Gaming"
+        },
+        new()
+        {
             Title = "DLSS 5 Swapper",
             Badge = "NEW GAMING TOOL",
             BadgeColorHex = "#10B981",

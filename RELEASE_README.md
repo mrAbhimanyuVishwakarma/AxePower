@@ -29,7 +29,7 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🎮 **Game Mode:** Automatically detects running games across any drive, suspends background bloat, locks maximum display refresh rate, and offers Controller Navigation (Gopher360).
 - 🎵 **Music Player:** In-app audio player supporting local audio libraries, YouTube Music streaming, and a dashboard-integrated Header Player.
 - 📱 **Phone Control:** All-in-one mobile suite with offline **LAN Drop** Wi-Fi file sharing and **scrcpy** Android screen mirroring.
-- 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
+- 🛍️ **Software Hub & Updaters:** Review Windows and WinGet updates, open graphics vendor tools, and find gaming apps and runtimes.
 - 🖥️ **Built-In Terminal:** A real CMD / PowerShell window inside AxePower, where every command the app runs shows its live output.
 - 🌡️ **True CPU & GPU Temperatures:** Reads your machine's real sensors — and keeps working on Windows 11 PCs with Memory Integrity turned on, where most monitoring tools show nothing.
 
@@ -39,21 +39,32 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 
 ## What's new in v2.1.5
 
-- Open **Maintenance → Windows Update → Updates overview** to check Windows, apps, and devices separately. This view supports a narrower window. At regular widths, use the expandable Windows, WinGet, optional driver, and BIOS sections. At narrow widths, the sections open as stacked cards and graphics drivers move below the scan controls. App selections survive resizing.
+- Open **Maintenance → Windows Update → Updates overview** to check Windows, apps, and devices separately. The Windows, WinGet, optional driver, and BIOS sections start collapsed at any width. In a narrow window, graphics drivers move below the scan controls. Section state and app selections survive resizing.
 - Select WinGet upgrades and confirm the exact packages, or confirm **Update all eligible apps** as a separate action. Including apps whose installed versions are unknown is off by default. Results stay visible for the session and show failures, partial completion, and restart requirements when available.
 - Use **Open Windows Update**, **Open Windows Optional Updates**, **Open Microsoft Store updates**, or the vendor support buttons for updates handled by those tools. Unavailable sources and missing or ambiguous package information are shown separately from a successful scan with no matches.
+- Detected NVIDIA, Intel, and AMD cards open the corresponding vendor's graphics software. NVIDIA also has a Control Panel shortcut and the **Nvidia Drivers** version list.
 - Update Shield explains when feature-update deferral and signed-in restart protection apply. It retains Windows Update cache repair and restore points. Windows policy and permissions govern the available actions.
 - The Windows x64 build targets .NET 10 LTS. Setup checks for Microsoft .NET Desktop Runtime 10.0.15 or a newer 10.0.x x64 patch. When needed, it downloads and validates the Microsoft installer before continuing. For offline setup, install the x64 Desktop Runtime first and rerun AxePower Setup. [Microsoft .NET 10 downloads](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Published releases are listed on the [downloads repository](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases).
 
+### Gaming tools
+
+- **Veyra** offers NVIDIA and AMD portable downloads for Windows 11 x64. AxePower verifies SHA-256 before extracting and launching either build. Choose the GPU you will use to run Veyra.
+- **DLSS 5 Manager** and **PushFPS** link to their official releases for manual setup. Dashboard → **What's New** starts with Veyra, DLSS 5 Manager, and DLSS 5 Swapper.
+
 ### Sidebar and shortcuts
 
 - Connection offers **Phone Control**, **Second Monitor**, **LAN Drop**, and **Phone Link**. Friends and Share Screen rooms were removed from the desktop app.
+- **Second Monitor** shows Android and iOS viewer QR codes. Allow Local Network access on iPhone or iPad. The discontinued HTML5 viewer shortcut was removed.
 - Connection, Maintenance, and Utilities start expanded and remember their state. Control is always expanded.
-- The tray menu includes the same pages as the sidebar. **Settings → Taskbar preferences** controls which shortcuts are shown.
+- The tray menu offers the same pages as the sidebar. **Settings → Taskbar preferences** remembers your shortcuts. By default it shows the power actions, the four Control pages, Windows Update, Uninstaller, and Tools. Settings and Exit AxePower are always available.
 - Click **Game Mode** on the Dashboard to open the Game Mode page. The Dashboard and Game Mode GPU readouts use `0 GHz` when the clock is unavailable.
 - Open **BCUninstaller** from the Uninstaller toolbar. Use **Tools** to install it if it is missing.
+
+### Updating AxePower
+
+Use **Settings → Updates & Maintenance → Check for updates**. In-app updates require a published release with both the installer and its signed update manifest. If an older build cannot verify the release, run the official Setup over your existing installation. See the [.NET 10 Windows support matrix](https://learn.microsoft.com/en-us/dotnet/core/install/windows#supported-versions) for Windows requirements.
 
 ## 🌟 What's New in v2.1.0
 
@@ -244,7 +255,7 @@ The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Publish
   - Configurable in *Settings &rarr; Updates* with interactive toggles for automatic checks and background downloads.
 - 🖥️ **SpaceDesk Wireless Second Display & Microsoft Phone Link**:
   - 1-Click SpaceDesk virtual display driver install (`Datronicsoft.SpacedeskDriver.Server`) and console launcher.
-  - Interactive QR code modals for Google Play (Android), App Store (iOS), and HTML5 Web Viewer.
+  - Introduced interactive viewer download QR codes. Current releases offer Android and iOS viewers.
   - Instant Microsoft Phone Link launcher and Link to Windows pairing modals.
 - 🎧 **Audio Suite & Creative Software Hub**:
   - 1-Click catalog integration for Dolby Access (Dolby Atmos 3D spatial surround sound), SteelSeries GG Sonar mixer, Peace Equalizer APO, DaVinci Resolve, OBS Studio, and Microsoft PowerToys.

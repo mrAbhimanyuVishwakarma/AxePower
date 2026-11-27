@@ -334,6 +334,13 @@ function initLegalModals() {
 /**
  * Dynamically fetch and trigger direct download of the latest GitHub Release installer
  */
+function findWindowsInstaller(release) {
+  const version = release?.tag_name?.match(/^v?(\d+\.\d+\.\d+)$/i)?.[1];
+  if (!version || !Array.isArray(release.assets)) return null;
+  const installerName = `axepower-v${version}-setup.exe`;
+  return release.assets.find(asset => asset.name?.toLowerCase() === installerName && asset.browser_download_url) || null;
+}
+
 function initLatestRelease() {
   const repo = 'mrAbhimanyuVishwakarma/AxePower_Download';
   const releasesApiUrl = `https://api.github.com/repos/${repo}/releases/latest`;
@@ -358,29 +365,26 @@ function initLatestRelease() {
   .then(release => {
     isFetching = false;
     window.AxePowerLatestRelease = release;
-    if (release && Array.isArray(release.assets) && release.assets.length > 0) {
-      // Find the Windows installer asset (.exe)
-      const exeAsset = release.assets.find(a => a.name && a.name.toLowerCase().endsWith('.exe')) || release.assets[0];
-      if (exeAsset && exeAsset.browser_download_url) {
-        resolvedDownloadUrl = exeAsset.browser_download_url;
-        resolvedFileName = exeAsset.name;
+    const installer = findWindowsInstaller(release);
+    if (installer) {
+      resolvedDownloadUrl = installer.browser_download_url;
+      resolvedFileName = installer.name;
 
-        // Update all download buttons on the page with direct file download URL
-        downloadLinks.forEach(link => {
-          link.href = resolvedDownloadUrl;
-          link.setAttribute('download', resolvedFileName);
-          link.setAttribute('title', `Download ${resolvedFileName}`);
-        });
-      }
+      downloadLinks.forEach(link => {
+        link.href = resolvedDownloadUrl;
+        link.setAttribute('download', resolvedFileName);
+        link.setAttribute('title', `Download ${resolvedFileName}`);
+      });
     }
 
-    if (versionText && (release.tag_name || release.name)) {
-      const vTag = release.tag_name || release.name;
+    const vTag = release?.tag_name;
+    if (vTag) {
       resolvedVTag = vTag;
-      versionText.textContent = `${vTag} (Latest)`;
+      if (versionText) versionText.textContent = `${vTag} (Latest)`;
       
-      // Sync all version indicators across headers, modals and footers
-      document.querySelectorAll('.js-version-num').forEach(el => el.textContent = vTag.replace(/^v/i, ''));
+      const version = vTag.replace(/^v/i, '');
+      document.querySelectorAll('.js-version-num').forEach(el => el.textContent = version);
+      document.querySelectorAll('.js-hero-version').forEach(el => el.textContent = `${version} is here!`);
       
       if (release.published_at) {
         const d = new Date(release.published_at);
@@ -550,9 +554,7 @@ function initReleasePage() {
     if (!release) return;
     const version = release.tag_name || release.name || 'Latest';
     const displayVersion = version.replace(/^v/i, '');
-    const installer = Array.isArray(release.assets)
-      ? release.assets.find(asset => /\.exe$/i.test(asset.name || '')) || release.assets[0]
-      : null;
+    const installer = findWindowsInstaller(release);
 
     versionEl.textContent = displayVersion;
     factVersionEl.textContent = version;
@@ -566,7 +568,7 @@ function initReleasePage() {
       installerMetaEl.textContent = formatBytes(installer.size);
     }
     if (release.html_url) githubLinkEl.href = release.html_url;
-    renderNotes(release.body);
+    if (release.body?.trim()) renderNotes(release.body);
     statusEl.hidden = true;
     document.title = `What's New in AxePower ${displayVersion}`;
   };

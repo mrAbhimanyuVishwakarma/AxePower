@@ -518,7 +518,7 @@ public partial class SettingsViewModel : ObservableObject
 
     private void LoadTrayMenuOptions()
     {
-        var hidden = new HashSet<string>(CurrentSettings.HiddenTrayMenuItems ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        var hidden = new HashSet<string>(CurrentSettings.HiddenTrayMenuItems, StringComparer.OrdinalIgnoreCase);
         string? previousGroup = null;
         TrayMenuOptions = AxePower.App.Models.TrayMenuCatalog.Entries.Select(entry =>
         {
@@ -533,10 +533,9 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (option.IsPermanent) return;
         var settings = _settingsService.GetSettings();
-        settings.HiddenTrayMenuItems ??= new List<string>();
         settings.HiddenTrayMenuItems.RemoveAll(id => string.Equals(id, option.Id, StringComparison.OrdinalIgnoreCase));
         if (!option.IsShown) settings.HiddenTrayMenuItems.Add(option.Id);
-        _settingsService.SaveSettings(settings);
+        _settingsService.SaveSettings(settings, notifyListeners: false);
     }
 
     private void SaveCurrentSettings()

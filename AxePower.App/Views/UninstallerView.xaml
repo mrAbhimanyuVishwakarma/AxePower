@@ -82,9 +82,13 @@
                                 <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                             </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsChecked" Value="False"/>
+                                </MultiTrigger.Conditions>
                                 <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource CardHoverBrush}"/>
-                            </Trigger>
+                            </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -163,8 +167,10 @@
                              Margin="0,0,8,0"
                              AutomationProperties.Name="Desktop application uninstaller">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"/>
-                        <TextBlock Text="Uninstaller" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                        <TextBlock Text="Uninstaller" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource AppSectionTabStyle}"
@@ -174,8 +180,10 @@
                              Margin="0,0,8,0"
                              AutomationProperties.Name="Windows Store applications">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE71D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"/>
-                        <TextBlock Text="Windows Apps" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="&#xE71D;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,8,0"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                        <TextBlock Text="Windows Apps" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
                     </StackPanel>
                 </RadioButton>
                 <Button x:Name="BcUninstallerShortcut" Style="{DynamicResource SecondaryButtonStyle}"

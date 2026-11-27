@@ -17,6 +17,14 @@
 
 </div>
 
+## What's new in v2.1.5
+
+- **Windows Update** groups Windows, WinGet, optional drivers, and firmware into sections that start collapsed. Review and confirm exact WinGet upgrades or run a separate bulk update. Detected NVIDIA, Intel, and AMD cards open the matching graphics software.
+- **Gaming Runtimes & Tools** includes Veyra for NVIDIA and AMD, plus official download links for DLSS 5 Manager and PushFPS. **What's New** highlights Veyra and DLSS 5 Manager first.
+- **Connection** includes Phone Control, Second Monitor, LAN Drop, and Phone Link. Second Monitor uses Android and iOS viewer apps. Sidebar groups and tray shortcuts remember each user's choices. BCUninstaller is available from Uninstaller and Tools.
+
+[Full release notes and setup requirements](RELEASE_README.md#whats-new-in-v215)
+
 ## 🚀 Key Features
 
 - 🧰 **System Care Workspace**: Optimizer and Doctor are unified behind a collapsible category rail, with recommended tweaks, repair actions, restore points, junk cleanup, DNS switching, and live terminal output in one place.
@@ -44,7 +52,7 @@
   - **Ninite Integration**: Bundled local multi-installer + online custom package builder for zero-click multi-app setups.
   - **Expanded Suite**: Audacity, OBS Studio, DaVinci Resolve, GIMP, Canva, Blender, HandBrake, PowerToys, ShareX, Peace Equalizer, Dolby Access, SteelSeries GG Sonar, and hardware diagnostic utilities.
 - 📱 **Phone Control (All-in-One Mobile Suite)**:
-  - 🖥️ **SpaceDesk Second Monitor**: Turn any Android tablet, iPad, or browser into an extended PC display with 1-click driver installation and QR code downloads *(Credit to DATRONICSOFT)*.
+  - 🖥️ **spacedesk Second Monitor**: Use an Android device, iPhone, or iPad as an extended PC display. Install the Windows driver and scan a QR code for the viewer app *(Credit to DATRONICSOFT)*.
   - 🔗 **Microsoft Phone Link**: Instant launch integration and companion QR pairing modals for Link to Windows on Android and iOS.
   - 📂 **LAN Drop (Wi-Fi Quick Share)**: Instant offline file drop and clipboard note sync between PC and phone via dynamic QR code without requiring apps on the phone *(Credit to yadavnikhil03)*.
   - 📱 **Android Screen Mirroring (scrcpy)**: Ultra-low latency device mirroring, stay-awake / screen-off power toggles, resolution & FPS presets, and 1-click APK sideloading *(Credit to Genymobile)*.
@@ -70,7 +78,10 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **Battery** | 🔋 | Comprehensive battery diagnostics, health percentages, and charging trends with custom icon cards. |
 | **Music** | 🎵 | Integrated music playback, local library scanning, YouTube Music streaming, and a sleek header player. |
 | **CONNECTION** | | |
-| **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
+| **Phone Control** | 📱 | Android screen mirroring and control with scrcpy. |
+| **Second Monitor** | 🖥️ | Extend the Windows display with a spacedesk viewer on Android or iOS. |
+| **LAN Drop** | 📂 | Share files and clipboard text over a local network. |
+| **Phone Link** | 🔗 | Launch Microsoft's Phone Link and get its companion app. |
 | **MAINTENANCE** | | |
 | **🛡️ Windows Update** | 🛡️ | Discover Windows, app, and device updates, confirm WinGet upgrades, review results, and open Update Shield for policy, repair, and restore points. |
 | **🧰 System Care** | 🧰 | Recommended optimizations, SFC/DISM health repair, junk cleanup, DNS tools, and other guarded maintenance actions. |

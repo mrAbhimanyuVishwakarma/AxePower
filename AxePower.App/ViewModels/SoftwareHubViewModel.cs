@@ -55,17 +55,20 @@ public partial class PackageCardViewModel : ObservableObject
     partial void OnIsBusyChanged(bool value) => _parent.NotifyPackageOperationStateChanged();
 
     private bool CanStartOperation => !IsBusy && _parent.CanStartToolPackageOperation;
+    private PortableToolSpec? PortableTool => PortableTools.Find(Id);
+    private bool IsPortableArchive => PortableTool?.ZipRelease != null;
 
     public bool IsNotInstalled => !IsInstalled && !IsWebLinkOnly && !HasCustomInstaller;
     public bool CanOpen => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
-    public bool CanUpdate => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
-    public bool CanUninstall => IsInstalled && !IsWebLinkOnly && !ShowCustomInstallerButtons;
+    public bool CanUpdate => CanOpen && !IsPortableArchive;
+    public bool CanUninstall => CanOpen && !IsPortableArchive;
+    public bool CanSelectForBatch => !IsWebLinkOnly && !IsPortableArchive;
     public bool ShowCustomInstallerButtons => HasCustomInstaller;
 
-    public string InstallButtonText => Id == "dlss5swapper" ? "Download & Run" : "Install";
-    public string InstallButtonTooltip => Id == "dlss5swapper" ? "Download latest portable release from GitHub and run it" : "Install this software with WinGet";
-    public string OpenButtonText => Id == "dlss5swapper" ? "Run" : "Open";
-    public string UpdateButtonTooltip => Id == "dlss5swapper" ? "Update to the newest portable release from GitHub" : "Update this software to the latest release with WinGet";
+    public string InstallButtonText => PortableTool != null ? "Download & Run" : "Install";
+    public string InstallButtonTooltip => PortableTool != null ? "Download the portable release from GitHub and run it" : "Install this software with WinGet";
+    public string OpenButtonText => PortableTool != null ? "Run" : "Open";
+    public string UpdateButtonTooltip => PortableTool != null ? "Update to the newest portable release from GitHub" : "Update this software to the latest release with WinGet";
 
     public PackageCardViewModel(SoftwarePackageItem item, IWinGetHubService hubService, SoftwareHubViewModel parent)
     {
@@ -191,6 +194,10 @@ public partial class PackageCardViewModel : ObservableObject
             IsInstalled = true;
             _parent.Notify($"✓ {Name} is now installed and ready!");
             _parent.AppendLog($"\n[Success] {Name} is now installed.");
+        }
+        else if (IsPortableArchive)
+        {
+            _parent.Notify($"Could not prepare {Name}. Check the download log for details.");
         }
         else
         {
@@ -404,49 +411,37 @@ public partial class SoftwareHubViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task UpdateGraphicsDriverAsync(GraphicsAdapterInfo? adapter)
+    public Task UpdateGraphicsDriverAsync(GraphicsAdapterInfo? adapter) =>
+        OpenGraphicsAppAsync(adapter, controlPanel: false);
+
+    [RelayCommand]
+    public Task OpenGraphicsCompanionAppAsync(GraphicsAdapterInfo? adapter) =>
+        adapter?.IsNvidia == true ? OpenGraphicsAppAsync(adapter, controlPanel: true) : Task.CompletedTask;
+
+    private async Task OpenGraphicsAppAsync(GraphicsAdapterInfo? adapter, bool controlPanel)
     {
         if (adapter == null || !CanCheckForUpdates) return;
-        if (!adapter.UsesStore)
-        {
-            OpenGraphicsVendorSite(adapter);
-            return;
-        }
-
         IsInstallingGraphicsDriver = true;
         try
         {
-            AppendLog($"\n>>> [Graphics Drivers] {adapter.VendorName} — {adapter.Name} via {adapter.ToolName}");
+            var name = controlPanel ? adapter.CompanionAppName : adapter.ToolName;
+            AppendLog($"\n>>> [Graphics Drivers] {adapter.Name}: {name}");
             var progress = new Progress<string>(AppendLog);
-            var (_, message) = await _graphicsDriverService.InstallOrUpdateAsync(adapter, progress);
+            var (_, message) = controlPanel
+                ? await _graphicsDriverService.OpenControlPanelAsync(adapter, progress)
+                : await _graphicsDriverService.InstallOrUpdateAsync(adapter, progress);
             Notify(message);
             AppendLog($"[Graphics Drivers] {message}");
         }
         catch (Exception ex)
         {
-            NotifyFailure("Update the graphics driver", ex);
+            NotifyFailure("Open graphics software", ex);
             AppendLog($"[Graphics Drivers Error] {AxePower.Core.Services.Outcomes.OutcomeClassifier.Detail(ex)}");
         }
         finally
         {
             IsInstallingGraphicsDriver = false;
         }
-    }
-
-    [RelayCommand]
-    public void OpenGraphicsVendorSite(GraphicsAdapterInfo? adapter)
-    {
-        if (adapter == null) return;
-        _graphicsDriverService.OpenOfficialPage(adapter);
-        Notify($"Opening the official {adapter.VendorName} driver site...");
-    }
-
-    [RelayCommand]
-    public void OpenGraphicsCompanionApp(GraphicsAdapterInfo? adapter)
-    {
-        if (adapter == null || !adapter.HasCompanionApp) return;
-        _graphicsDriverService.OpenCompanionApp(adapter);
-        Notify($"Opening {adapter.CompanionAppName} in the Microsoft Store...");
     }
 
     [ObservableProperty]
@@ -456,55 +451,73 @@ public partial class SoftwareHubViewModel : ObservableObject
     private GraphicsAdapterInfo? _selectedNvidiaAdapter;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstallSelectedNvidiaDriver))]
     private NvidiaDriverRelease? _selectedNvidiaDriver;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstallSelectedNvidiaDriver))]
     private bool _isDownloadingNvidiaDriver;
 
     [ObservableProperty]
-    private bool _isNotebookVariant = true;
+    private string _nvidiaPickerStatus = string.Empty;
 
-    public ObservableCollection<NvidiaDriverRelease> CuratedNvidiaDrivers { get; } = new();
+    public ObservableCollection<NvidiaDriverRelease> NvidiaDrivers { get; } = new();
+    public bool CanInstallSelectedNvidiaDriver => SelectedNvidiaDriver != null && !IsDownloadingNvidiaDriver;
 
     [RelayCommand]
-    public void OpenNvidiaPicker(GraphicsAdapterInfo? adapter)
+    public async Task OpenNvidiaPickerAsync(GraphicsAdapterInfo? adapter, CancellationToken ct)
     {
-        SelectedNvidiaAdapter = adapter ?? GraphicsAdapters.FirstOrDefault(a => a.IsNvidia);
-        IsNotebookVariant = SelectedNvidiaAdapter?.IsNotebook ?? true;
+        if (adapter?.IsNvidia != true || !CanCheckForUpdates) return;
 
-        CuratedNvidiaDrivers.Clear();
-        foreach (var driver in _graphicsDriverService.GetCuratedNvidiaDrivers())
-        {
-            CuratedNvidiaDrivers.Add(driver);
-        }
-
-        SelectedNvidiaDriver = CuratedNvidiaDrivers.FirstOrDefault(d => d.Badge.Contains("RECOMMENDED"))
-                               ?? CuratedNvidiaDrivers.FirstOrDefault();
-
+        SelectedNvidiaAdapter = adapter;
+        SelectedNvidiaDriver = null;
+        NvidiaDrivers.Clear();
+        NvidiaPickerStatus = "Checking NVIDIA for compatible drivers…";
         IsNvidiaPickerOpen = true;
+        try
+        {
+            var releases = await _graphicsDriverService.GetNvidiaDriversAsync(adapter, ct);
+            if (ct.IsCancellationRequested || !IsNvidiaPickerOpen) return;
+            foreach (var release in releases) NvidiaDrivers.Add(release);
+            SelectedNvidiaDriver = NvidiaDrivers.FirstOrDefault();
+            NvidiaPickerStatus = NvidiaDrivers.Count == 0
+                ? "No matching releases were found. Use Nvidia Drivers to search the official catalog."
+                : "Newest releases first.";
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogWarning("Could not load the NVIDIA driver list.", ex);
+            NvidiaPickerStatus = "The live driver list is unavailable. Use Nvidia Drivers to search on NVIDIA’s site.";
+        }
     }
 
     [RelayCommand]
     public void CloseNvidiaPicker()
     {
         IsNvidiaPickerOpen = false;
+        OpenNvidiaPickerCommand.Cancel();
     }
 
     [RelayCommand]
     public async Task InstallSelectedNvidiaDriverAsync()
     {
-        if (SelectedNvidiaDriver == null || !CanCheckForUpdates) return;
+        if (SelectedNvidiaDriver is not { } driver || SelectedNvidiaAdapter is not { IsNvidia: true } adapter ||
+            !CanCheckForUpdates) return;
 
         IsDownloadingNvidiaDriver = true;
         try
         {
-            string downloadUrl = SelectedNvidiaDriver.GetDownloadUrl(IsNotebookVariant);
-            AppendLog($"\n>>> [NVIDIA Driver Rollback/Install] Version: {SelectedNvidiaDriver.Version} ({SelectedNvidiaDriver.Badge})");
-            Notify($"Starting download for NVIDIA Driver {SelectedNvidiaDriver.Version}...");
+            string downloadUrl = driver.GetDownloadUrl(adapter.IsNotebook);
+            AppendLog($"\n>>> [NVIDIA Driver Install] Version: {driver.Version} ({driver.Badge})");
+            Notify($"Starting download for NVIDIA driver {driver.Version}...");
 
             var progress = new Progress<string>(AppendLog);
             var (success, message) = await _graphicsDriverService.DownloadAndRunNvidiaDriverAsync(
-                downloadUrl, SelectedNvidiaDriver.Version, progress);
+                downloadUrl, driver.Version, progress);
 
             Notify(message);
             if (success)
@@ -654,7 +667,7 @@ public partial class SoftwareHubViewModel : ObservableObject
 
     public void NotifySelectionChanged()
     {
-        SelectedCount = AllPackages.Count(p => p.IsSelected);
+        SelectedCount = AllPackages.Count(p => p.IsSelected && p.CanSelectForBatch);
         HasSelectedPackages = SelectedCount > 0;
     }
 
@@ -663,7 +676,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     {
         foreach (var pkg in FilteredPackages)
         {
-            if (!pkg.IsWebLinkOnly)
+            if (pkg.CanSelectForBatch)
             {
                 pkg.IsSelected = true;
             }
@@ -676,7 +689,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     {
         foreach (var pkg in FilteredPackages)
         {
-            if (!pkg.IsInstalled && !pkg.IsWebLinkOnly)
+            if (!pkg.IsInstalled && pkg.CanSelectForBatch)
             {
                 pkg.IsSelected = true;
             }
@@ -716,7 +729,7 @@ public partial class SoftwareHubViewModel : ObservableObject
     {
         if (!CanCheckForUpdates) return;
 
-        var toInstall = AllPackages.Where(p => p.IsSelected && !p.IsInstalled && !p.IsWebLinkOnly).ToList();
+        var toInstall = AllPackages.Where(p => p.IsSelected && !p.IsInstalled && p.CanSelectForBatch).ToList();
         if (toInstall.Count == 0)
         {
             Notify(showTerminal ? "No uninstalled packages selected for terminal installation." : "No uninstalled packages selected for installation.");

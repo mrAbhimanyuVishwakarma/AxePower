@@ -5,7 +5,7 @@ description: Live list of open issues and unverified work in AxePower Music and 
 
 # AxePower Music — Fix Plan & Verification Ledger
 
-> **Branch:** `windowsupdatepage-rework` · **Last updated:** 2026-11-27 · **Last commit covered:** `c7d64ee` plus the v2.1.5 repository cleanup. The LAN Drop guide was checked against the current server and authenticator. The live checks below still apply.
+> **Branch:** `windowsupdatepage-rework` · **Last updated:** 2026-11-27 · **Last commit covered:** `1fb822d` plus the LAN Drop button contrast update. The live checks below still apply.
 
 This file is the running list of what is **not** finished or **not** proven in AxePower Music
 and the LAN portal it shares with Phone Hub. It exists because a lot of this work compiles and
@@ -78,7 +78,8 @@ network name and "Start anyway for this session" starts the server. Connect a ph
 under Connected Devices; "Disconnect All & Rotate Access" empties the list and changes the QR.
 Check the layout against `ui reference/` in every skin. Prompt 20 (2026-10-05) replaced this
 view's references to `SurfaceBrush` (a key no skin defines) with `Transparent`, which is how they
-already drew, so nothing should change. Look anyway in the same pass.
+already drew, so nothing should change. In the same pass, check that Start Server and Stop Server
+use the primary button text color in each skin.
 **Found:** 2026-10-04 / working tree after `b68f001`
 
 ### P7 — The installer's private-only firewall rule has never been installed

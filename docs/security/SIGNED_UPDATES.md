@@ -26,7 +26,9 @@ graph TD
     H -->|Length Mismatch| X
     H -->|Length Matches| I[Verify SHA-256 Hash Against Manifest]
     I -->|Hash Mismatch| X
-    I -->|Hash Matches| J[Verify Authenticode Signature & Publisher Identity]
+    I -->|Hash Matches| T{Authenticode required by installed build?}
+    T -->|Yes| J[Verify Authenticode Signature & Publisher Identity]
+    T -->|No| K
     J -->|Unsigned or Wrong Publisher| X
     J -->|Valid Authenticode Signature| K[Atomic Promotion: Move Temp File to Final Destination]
     K --> L[Launch Verified Installer]
@@ -37,7 +39,7 @@ graph TD
   - `version`: Target semantic version.
   - `assetName`: Installer filename (e.g. `AxePower-v2.1.1-Setup.exe`).
   - `byteLength`: Exact payload length in bytes.
-  - `sha256`: Lowercase hexadecimal SHA-256 digest of the final signed installer.
+  - `sha256`: Lowercase hexadecimal SHA-256 digest of the final installer, after Authenticode signing if used.
   - `signature`: Base64-encoded digital signature computed over canonical UTF-8 bytes:
     `"{version}\n{assetName}\n{byteLength}\n{sha256}"`.
 - Verified using NIST P-256 (ECDSA with SHA-256) against the pinned public key.
@@ -54,6 +56,7 @@ graph TD
   - `api.github.com`
   - `objects.githubusercontent.com`
   - `github-releases.githubusercontent.com`
+  - `release-assets.githubusercontent.com`
 - Repository paths are restricted to:
   - `/mrAbhimanyuVishwakarma/AxePower/`
   - `/mrAbhimanyuVishwakarma/AxePower_Download/`
@@ -70,7 +73,7 @@ graph TD
 - Verifies that computed SHA-256 matches `manifest.sha256`.
 
 ### Layer 6: Authenticode & Publisher Identity Verification
-- Even with a valid manifest, the downloaded `.exe` must be Authenticode-signed.
+- When the installed build requires Authenticode, the downloaded `.exe` must also satisfy the publisher check.
 - Verified on Windows via `WinVerifyTrust` and `X509Certificate` inspection:
   - Validates that the file has an embedded Authenticode signature.
   - Validates that the certificate subject matches the expected publisher identity (`CN=Abhimanyu Vishwakarma`).
@@ -101,7 +104,7 @@ and pinned on 2026-10-06. A build with an empty key fails closed: it accepts no 
    This writes `update-manifest.json` (file name, size, SHA-256, signature). It refuses to write a
    manifest that does not verify with the pinned public key. `scripts/package-release.ps1` calls
    it automatically when the key is present.
-3. Upload `update-manifest.json` to the same GitHub release as the installer.
+3. Upload `update-manifest.json` and the exact installer to the same stable `vX.Y.Z` release in `AxePower_Download`. Keep a single `.exe` asset so older updater versions choose the installer. See [the publication checklist](../engineering/RELEASE_PIPELINE.md#6-publish-an-in-app-update).
 
 **Unsigned releases.** There is no code-signing certificate yet, so
 `UpdateSigningKey.ReleasesAreAuthenticodeSigned` is `false` and Layer 6 is off by default. An

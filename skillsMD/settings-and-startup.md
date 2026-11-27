@@ -65,8 +65,8 @@ Turning off `StartWithWindows` deletes the task. The task is re-registered on ev
   - `AskEveryTime`: a Yes/No dialog.
   - `ExitAxePower`: exit.
 - A Windows logoff or shutdown always closes the app (`SessionEnding` → `AllowClose()`).
-- **Tray menu** (Hardcodet TaskbarIcon): the four power mode actions, all sidebar pages in sidebar order, and Exit AxePower. **Open Game Mode** opens the page. **Game Mode** in the power group applies that mode. **Second Monitor** opens the same page as the sidebar shortcut.
-- **Settings → Taskbar preferences** stores the visibility of each tray shortcut. Settings and Exit AxePower stay available.
+- **Tray menu** (Hardcodet TaskbarIcon): the four power mode actions, all sidebar pages in sidebar order, and Exit AxePower. **Game Mode** in Control opens the page. **Game Mode** in the power group applies that mode. **Second Monitor** opens the same page as the sidebar shortcut.
+- **Settings → Taskbar preferences** remembers each user's choices. New profiles show the power actions, all four Control pages, Windows Update, Uninstaller, and Tools. Connection shortcuts, System Care, Debloat, Terminal, Trust & Permissions, and Profile are off by default. Settings and Exit AxePower stay available.
 - Telemetry sampling pauses while the window is hidden (see [cpu-gpu-telemetry.md](cpu-gpu-telemetry.md)).
 
 ## Themes (skins)

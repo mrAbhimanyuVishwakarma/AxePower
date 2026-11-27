@@ -64,7 +64,7 @@ Current entry points
 
 - The [sidebar](../../AxePower.App/Views/Shell/ShellSidebar.xaml), [tray](../../AxePower.App/MainWindow.xaml), and tool guide open the Updates overview through the shared navigation. [MainViewModel](../../AxePower.App/ViewModels/MainViewModel.cs)
 - **Check for updates** combines separately reported Windows catalog, WinGet, and firmware checks. **Last checked** is derived from the check result. [Update page view model](../../AxePower.App/ViewModels/SoftwareHubViewModel.PcUpdates.cs)
-- The overview uses expandable groups at regular widths and open stacked cards at narrow widths. Resizing preserves app selections and restores each group’s expanded state when the window widens. [Updates overview view](../../AxePower.App/Views/SoftwareHub/UpdatersTab.xaml)
+- The overview uses expandable groups that start collapsed at every width. Resizing preserves app selections and each group’s expanded state. [Updates overview view](../../AxePower.App/Views/SoftwareHub/UpdatersTab.xaml)
 - **Update selected apps** uses exact WinGet targets. **Update all eligible apps** keeps `--include-unknown` available as an explicit opt-in, and the page asks for confirmation in either mode. [WinGet update service](../../AxePower.Core/Services/SoftwareHub/WinGetUpdateService.cs)
 - Update Shield retains the policy controls, guarded cache repair, and the restore point action. Policy behavior depends on the Windows version, edition, user privileges, and effective management policy. [Update Shield service](../../AxePower.Core/Services/WindowsUpdateShieldService.cs)
 

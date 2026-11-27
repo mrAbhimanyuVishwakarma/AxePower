@@ -118,13 +118,14 @@ To increment the product version (e.g., from `2.1.0` to `2.1.1` or `2.2.0`):
    *The test suite executes `VersionPolicyTests` to verify that `Directory.Build.props`, assemblies, installer scripts, and updater fallbacks match.*
 
 5. **Update Release Documentation** (for public releases):
-   Update version badges and highlights in `README.md` and `RELEASE_README.md`.
+   Update the changelog, release highlights, in-app patch notes, and website copy. The website reads the latest published version and installer name from GitHub. Prepare the release description for `AxePower_Download`.
 
 6. **Publish and Build Installer**:
    ```powershell
    powershell -ExecutionPolicy Bypass -File scripts\package-release.ps1
    ```
    This publishes from fresh x64 output and copies the installer to `Installer/Output/AxePower-v2.2.0-Setup.exe` in this example. See the [release pipeline](RELEASE_PIPELINE.md) for the output and signing options.
+   Publish the installer with its signed `update-manifest.json` using the [in-app update checklist](RELEASE_PIPELINE.md#6-publish-an-in-app-update).
 
 ---
 

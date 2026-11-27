@@ -58,6 +58,11 @@ Write-Host "===============================================================" -Fo
 if ($RequireSigned -and -not ($env:SIGNING_CERT_PATH -or $env:SIGNING_CERT_BASE64 -or $env:SIGNING_CERT_THUMBPRINT)) {
     throw "FAIL-CLOSED: Production mode requires a configured Authenticode signing certificate."
 }
+$defaultUpdateKey = Join-Path $env:USERPROFILE "AxePower-update-signing\update-signing.key.pem"
+$hasUpdateKey = $env:UPDATE_SIGNING_KEY -or (Test-Path -LiteralPath $defaultUpdateKey -PathType Leaf)
+if ($RequireSigned -and -not $hasUpdateKey) {
+    throw "FAIL-CLOSED: Production mode requires the update-signing key matching the key pinned in AxePower."
+}
 if ([string]::IsNullOrWhiteSpace($DotnetPath)) {
     $dotnet = (Get-Command dotnet.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
 } else {
@@ -183,8 +188,7 @@ $releaseArtifacts = [System.Collections.Generic.List[string]]::new()
 $releaseArtifacts.Add($installerOutput)
 
 # Signed update manifest: installed copies offer this release as an update only when it verifies.
-$defaultUpdateKey = Join-Path $env:USERPROFILE "AxePower-update-signing\update-signing.key.pem"
-if ($env:UPDATE_SIGNING_KEY -or (Test-Path -LiteralPath $defaultUpdateKey)) {
+if ($hasUpdateKey) {
     $manifestPath = Join-Path $resolvedOut "update-manifest.json"
     & (Join-Path $scriptRoot "sign-update-manifest.ps1") -Installer $installerOutput -Version $Version -OutFile $manifestPath
     $releaseArtifacts.Add($manifestPath)

@@ -154,6 +154,12 @@ public class SoftwareHubPlanningTests
         var remove = Assert.IsType<RemoveToolFolderStep>(Assert.Single(planner.Plan(PackageAction.Uninstall, "dlss5swapper").Steps));
         Assert.True(remove.MissingCountsAsRemoved);
 
+        var veyra = Assert.IsType<DownloadPortableToolStep>(Assert.Single(planner.Plan(PackageAction.Install, "veyra-nvidia").Steps));
+        Assert.Equal(RunAs.StandardUser, veyra.RunAs);
+        Assert.Equal(Path.Combine(root, "Tools", "Veyra-NVIDIA"), veyra.Folder);
+        Assert.True(planner.Plan(PackageAction.Upgrade, "veyra-nvidia").IsRefused);
+        Assert.True(planner.Plan(PackageAction.Uninstall, "veyra-nvidia").IsRefused);
+
         // Ninite's installer path is next to the real app, not this test's app folder: not used.
         var ninite = Assert.IsType<LocalInstallerStep>(Assert.Single(planner.Plan(PackageAction.Install, "ninite").Steps));
         Assert.Equal(string.Empty, ninite.InstallerPath);

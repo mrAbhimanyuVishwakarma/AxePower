@@ -190,7 +190,7 @@ unit-tested on their own.
 | `WindowsUpdateShieldService` (`IWindowsUpdateShieldService`) / `WindowsUpdateSystem` | Native integration (services, registry) | `ServiceController` |
 | `WindowsUpdateCatalogService` | Read-only discovery of Windows and device updates and reboot status through Windows Update Agent | Windows Update Agent |
 | `WinGetUpdateService` | Reviewed app upgrade candidates, exact selected or explicit bulk upgrades, typed outcomes | `IProcessRunner`, `InstallPlanner` |
-| `FirmwareUpdateService`, `GraphicsDriverService` | WMI and firmware/driver discovery, official vendor and Store handoffs, curated NVIDIA driver choices | Windows Update Agent, `IUserShellLauncher`, `IProcessRunner` |
+| `FirmwareUpdateService`, `GraphicsDriverService` | WMI and firmware/driver discovery, installed graphics apps, verified vendor setup, and live NVIDIA catalog results | Windows Update Agent, `IUserShellLauncher`, `IProcessRunner`, `IAuthenticodeVerifier` |
 | `RestorePointService` | Native integration (PowerShell `Checkpoint-Computer`) | `IProcessRunner` |
 | `TerminalService` | Infrastructure (PowerShell host) | — |
 | `UpdateService` + `Update/*` | Application + infrastructure (GitHub, Authenticode, manifest signature) | `IManifestVerifier`, `IAuthenticodeVerifier` |

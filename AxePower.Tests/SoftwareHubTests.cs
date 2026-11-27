@@ -276,25 +276,63 @@ public class SoftwareHubTests
         Assert.NotNull(card);
         Assert.Equal("Download & Run", card.InstallButtonText);
         Assert.Equal("Run", card.OpenButtonText);
+
+        foreach (var id in new[] { "veyra-nvidia", "veyra-amd" })
+        {
+            var veyra = Assert.Single(vm.AllPackages, package => package.Id == id);
+            Assert.Equal(PackageCategory.Gaming, veyra.Category);
+            Assert.Equal("Download & Run", veyra.InstallButtonText);
+            Assert.False(veyra.CanSelectForBatch);
+            veyra.IsInstalled = true;
+            Assert.True(veyra.CanOpen);
+            Assert.False(veyra.CanUpdate);
+            Assert.False(veyra.CanUninstall);
+        }
+
+        var manager = Assert.Single(vm.AllPackages, package => package.Id == "dlss5manager");
+        Assert.True(manager.IsWebLinkOnly);
+        Assert.Equal("https://github.com/NODIX-TECH/DLSS-5-MANAGER/releases/latest", manager.WebUrl);
+        var pushFps = Assert.Single(vm.AllPackages, package => package.Id == "pushfps");
+        Assert.True(pushFps.IsWebLinkOnly);
+        Assert.Equal("https://github.com/DosukaSOL/PushFPS/releases/latest", pushFps.WebUrl);
     }
 
     [Fact]
-    public void GraphicsDriverService_GetCuratedNvidiaDrivers_ReturnsValidReleases()
+    public void NvidiaDriverCatalog_UsesOnlyOfficialDriverPackages()
     {
-        var drivers = _graphicsDriverService.GetCuratedNvidiaDrivers();
+        const string response = """
+        { "IDS": [
+          { "downloadInfo": { "Version":"621.40", "Name":"NVIDIA%20Studio%20Driver",
+            "ReleaseDateTime":"Tue Nov 24, 2026", "IsWHQL":"0", "IsBeta":"0",
+            "DownloadURL":"https://us.download.nvidia.com/Windows/621.40/621.40-notebook-whql.exe" } },
+          { "downloadInfo": { "Version":"621.14", "Name":"GeForce%20Game%20Ready%20Driver",
+            "ReleaseDateTime":"Wed Nov 04, 2026", "IsWHQL":"1", "IsBeta":"0",
+            "DownloadURL":"https://us.download.nvidia.com.invalid/Windows/621.14/621.14-notebook-whql.exe" } },
+          { "downloadInfo": { "Version":"621.01", "Name":"GeForce%20Game%20Ready%20Driver",
+            "ReleaseDateTime":"Wed Nov 04, 2026", "IsWHQL":"1", "IsBeta":"0",
+            "DownloadURL":"https://us.download.nvidia.com/nvapp/client/621.01-other.exe" } }
+        ] }
+        """;
 
-        Assert.NotNull(drivers);
-        Assert.True(drivers.Count >= 5, "Expected at least 5 curated NVIDIA driver releases");
+        var release = Assert.Single(GraphicsDriverService.ReadNvidiaReleases(response, notebook: true)).Driver;
+        Assert.Equal("621.40", release.Version);
+        Assert.Equal("STUDIO", release.Badge);
+        Assert.Equal("Nov 24, 2026", release.ReleaseDate);
+        Assert.EndsWith("/621.40-notebook-whql.exe", release.GetDownloadUrl(isNotebook: true));
+        Assert.Empty(release.GetDownloadUrl(isNotebook: false));
+    }
 
-        foreach (var driver in drivers)
-        {
-            Assert.False(string.IsNullOrWhiteSpace(driver.Version));
-            Assert.False(string.IsNullOrWhiteSpace(driver.Badge));
-            Assert.False(string.IsNullOrWhiteSpace(driver.Description));
-            Assert.StartsWith("https://us.download.nvidia.com/Windows/", driver.DownloadUrlDesktop);
-            Assert.StartsWith("https://us.download.nvidia.com/Windows/", driver.DownloadUrlNotebook);
-            Assert.Contains(driver.Version, driver.DownloadUrlDesktop);
-        }
+    [Theory]
+    [InlineData("32.0.101.7088", "https://downloadmirror.intel.com/929468/gfx_win_101.7092.exe")]
+    [InlineData("32.0.101.7093", null)]
+    public void IntelDriverDownload_UsesNewestOfficialPackageWithoutDowngrading(string installed, string? expected)
+    {
+        const string page = """
+        <a href="https://downloadmirror.intel.com/920001/gfx_win_101.7088.exe">Previous version</a>
+        <a href="https://downloadmirror.intel.com/929468/gfx_win_101.7092.exe">Latest version</a>
+        <a href="https://downloadmirror.intel.com.invalid/929468/gfx_win_101.9999.exe">Invalid host</a>
+        """;
+        Assert.Equal(expected, GraphicsDriverService.FindIntelInstallerLink(page, installed));
     }
 
     [Fact]

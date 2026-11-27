@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -389,6 +391,66 @@ public class SoftwareHubOperationsTests
     }
 
     private static byte[] FakeExe() => Encoding.ASCII.GetBytes("MZ" + new string('x', 200));
+
+    [Theory]
+    [InlineData("veyra-nvidia", "NVIDIA", true, true)]
+    [InlineData("veyra-amd", "AMD", true, true)]
+    [InlineData("veyra-amd", "AMD", true, false)]
+    [InlineData("veyra-amd", "AMD", false, true)]
+    public async Task Veyra_DownloadsMatchingVariant_AndRequiresTheOfficialChecksum(string id, string gpu, bool validChecksum, bool nested)
+    {
+        var tool = Assert.IsType<PortableToolSpec>(PortableTools.Find(id));
+        var asset = $"Veyra-9.1.2-{gpu}-win64-portable.zip";
+        var prefix = nested ? Path.GetFileNameWithoutExtension(asset) + "/" : "";
+        using var data = new MemoryStream();
+        using (var zip = new ZipArchive(data, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            using (var exe = zip.CreateEntry(prefix + tool.ExeName).Open()) exe.Write(FakeExe());
+            using var dll = zip.CreateEntry(prefix + "runtime/helper.dll").Open();
+            dll.WriteByte(42);
+        }
+        var bytes = data.ToArray();
+        var checksum = validChecksum ? Convert.ToHexString(SHA256.HashData(bytes)) : new string('0', 64);
+        const string release = PortableTools.VeyraReleases + "/download/v9.1.2/";
+        var http = new FakeHttp
+        {
+            Answer = request => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = request.RequestUri!.AbsoluteUri switch
+                {
+                    var url when url == tool.ReleasesApiUrl => new StringContent($$"""
+                        {"tag_name":"v9.1.2","assets":[{"name":"{{asset}}","browser_download_url":"{{release}}{{asset}}"}]}
+                        """),
+                    release + "SHA256SUMS.txt" => new StringContent($"{checksum} *{asset}\r\n"),
+                    var url when url == release + asset => new ByteArrayContent(bytes),
+                    _ => throw new InvalidOperationException("Unexpected release URL.")
+                }
+            }
+        };
+
+        var root = Path.Combine(Path.GetTempPath(), "AxePower_Veyra_" + Guid.NewGuid().ToString("N"));
+        var folder = Path.Combine(root, tool.FolderName);
+        try
+        {
+            var path = await new GitHubPortableToolDownloader(null, http).DownloadAsync(tool, folder, new LineSink());
+            Assert.Equal(new[] { tool.ReleasesApiUrl, release + "SHA256SUMS.txt", release + asset }, http.Requests.Select(uri => uri.AbsoluteUri));
+            if (validChecksum)
+            {
+                Assert.Equal(Path.Combine(folder, tool.ExeName), path);
+                Assert.Equal(42, Assert.Single(File.ReadAllBytes(Path.Combine(folder, "runtime", "helper.dll"))));
+                Assert.Equal(new[] { folder }, Directory.GetFileSystemEntries(root));
+            }
+            else
+            {
+                Assert.Null(path);
+                Assert.Empty(Directory.GetFileSystemEntries(root));
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
 
     [Theory]
     [InlineData("https://evil.example/DLSS5-Swapper-portable.exe")]

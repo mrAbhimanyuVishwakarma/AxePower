@@ -38,7 +38,7 @@ Navigation keys: `PhoneHub`, `PhoneControl` and `AndroidControl` open ScreenMirr
 ## Second Monitor (SpaceDesk)
 - **Detection** (`GetSpaceDeskExePath`): looks for `spacedeskServiceTray.exe` / `spacedeskDriverConsole.exe` under Program Files (x86 too) `\datronicsoft\spacedesk\`, then the uninstall registry key "spacedesk Windows DRIVER".
 - **Install:** `winget install --id Datronicsoft.SpacedeskDriver.Server --silent`. If that fails, it opens spacedesk.net.
-- **QR modal** (`ShowDownloadQr`) links to the Android and iOS viewer apps and the HTML5 viewer (`viewer.spacedesk.net`).
+- **QR modal** (`ShowDownloadQr`) links to the Android and iOS viewer apps. On iPhone or iPad, allow the viewer to access the local network so it can find the PC.
 - `OpenWindowsDisplaySettings` opens Windows display settings so the user can arrange the new monitor.
 
 ## LAN Drop

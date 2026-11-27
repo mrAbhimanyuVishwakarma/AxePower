@@ -212,6 +212,21 @@ public sealed class PcUpdatesViewTests
             var firmware = Assert.IsType<Expander>(updater.FindName("FirmwareGroup"));
             var rows = Assert.IsAssignableFrom<ItemsControl>(updater.FindName("AppUpdateRows"));
             Capture("idle", graphics);
+            foreach (int width in new[] { 760, 1100 })
+            {
+                SizeSurface(width);
+                Assert.All(new[] { windows, apps, drivers, firmware }, group =>
+                {
+                    Assert.False(group.IsExpanded);
+                    Assert.False(Body(group).IsVisible);
+                    Assert.True(Assert.IsType<ToggleButton>(group.Template.FindName("GroupToggle", group)).IsVisible);
+                });
+            }
+            var check = Assert.Single(ShellTestHost.Descendants(updater).OfType<Button>(),
+                button => Equals(button.Content, "Check for updates"));
+            var checkLabel = Assert.Single(ShellTestHost.Descendants(check).OfType<TextBlock>());
+            Assert.Same(check.FindResource("AccentForegroundBrush"), checkLabel.Foreground);
+
             await vm.CheckAllUpdatesCommand.ExecuteAsync(null);
             Assert.True(vm.CanReviewAppUpdates);
             vm.AppUpdates[0].IsSelected = true;
@@ -224,24 +239,24 @@ public sealed class PcUpdatesViewTests
             Assert.False(rows.IsVisible);
 
             SizeSurface(760);
-            Assert.True(rows.IsVisible);
-            Assert.True(SelectedApp().IsChecked);
-            Assert.False(appsToggle.IsVisible);
-            Assert.True(Body(windows).IsVisible);
-            Assert.True(Body(firmware).IsVisible);
-            Assert.True(Body(drivers).IsVisible);
+            Assert.False(rows.IsVisible);
+            Assert.True(appsToggle.IsVisible);
+            Assert.False(Body(windows).IsVisible);
+            Assert.False(Body(firmware).IsVisible);
+            Assert.False(Body(drivers).IsVisible);
             Assert.Equal(2, Grid.GetRow(firmware));
             Assert.Equal(3, Grid.GetRow(drivers));
+            appsToggle.SetCurrentValue(ToggleButton.IsCheckedProperty, true);
+            SizeSurface(760);
+            Assert.True(rows.IsVisible);
+            Assert.True(SelectedApp().IsChecked);
 
             SizeSurface(1100);
-            Assert.False(rows.IsVisible);
+            Assert.True(rows.IsVisible);
             Assert.True(appsToggle.IsVisible);
             Assert.False(Body(windows).IsVisible);
             Assert.Equal(2, Grid.GetRow(drivers));
             Assert.Equal(3, Grid.GetRow(firmware));
-            appsToggle.SetCurrentValue(ToggleButton.IsCheckedProperty, true);
-            SizeSurface(1100);
-            Assert.True(rows.IsVisible);
             Assert.True(SelectedApp().IsChecked);
 
             await vm.UpgradeSelectedAppsCommand.ExecuteAsync(null);

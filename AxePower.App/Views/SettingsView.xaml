@@ -105,14 +105,13 @@
                                                         <TextBlock x:Name="glyph" Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="20"
                                                                    Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
                                                         <TextBlock x:Name="title" Text="{Binding Title}" FontSize="12.5" Margin="12,0,0,0"
-                                                                   Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                                    Visibility="{Binding DataContext.IsCategoryListCollapsed, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBoolToVis}}"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
-                                                        <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsKeyboardFocused" Value="True">
                                                         <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
@@ -120,7 +119,6 @@
                                                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                                         <Setter TargetName="row" Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
                                                         <Setter TargetName="row" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                                        <Setter TargetName="title" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
                                                         <Setter TargetName="title" Property="FontWeight" Value="SemiBold"/>
                                                         <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                                                     </DataTrigger>
