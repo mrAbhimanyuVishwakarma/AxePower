@@ -285,7 +285,7 @@
                         <TextBlock Style="{StaticResource FieldLabel}" Text="Display name"/>
                         <TextBox Style="{StaticResource FieldBox}" Text="{Binding NewDisplayName, UpdateSourceTrigger=PropertyChanged}"
                                  MaxLength="32" AutomationProperties.Name="Display name"/>
-                        <TextBlock Text="Shown in the sidebar and to friends. Leave empty to use your username." FontSize="11.5"
+                        <TextBlock Text="Shown in the sidebar and on your profile. Leave empty to use your username." FontSize="11.5"
                                    Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" Margin="2,6,0,0"
                                    Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVis}}"/>
                     </StackPanel>

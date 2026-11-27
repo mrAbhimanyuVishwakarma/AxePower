@@ -42,10 +42,9 @@ says otherwise, these defaults apply.
   - it deletes files.
 - **It runs network listeners only on request:**
   - the LAN Drop / Phone Hub HTTP server (port 5050);
-  - the Share Screen room server (WebSocket, HTTP(S)) and a MediaMTX WebRTC server;
   - a one-shot OAuth callback on 127.0.0.1.
 - **It talks to:**
-  - Supabase (optional accounts, Friends);
+  - Supabase (optional accounts);
   - GitHub (updates, tools);
   - YouTube (Music);
   - lyrics sites, Steam's image CDN, and NVIDIA/AMD driver sites;
@@ -60,7 +59,6 @@ says otherwise, these defaults apply.
     stores. Its source is `AxePower.Core/Services/Trust/TrustInventory.cs`, kept complete by
     `TrustInventoryTests`.
 - **Threat models:**
-  - [SHARE_SCREEN_THREAT_MODEL.md](../security/SHARE_SCREEN_THREAT_MODEL.md)
   - [REMOTE_ACCESS.md](../security/REMOTE_ACCESS.md): a known High, with the feature disabled in
     code.
   - [SIGNED_UPDATES.md](../security/SIGNED_UPDATES.md) and
@@ -88,7 +86,6 @@ says otherwise, these defaults apply.
 
 - **Tests:** about 1,900 automated tests in `AxePower.Tests`. Security-relevant suites include:
   - `LanDrop*Tests`, including fuzzing and abuse tests (`Fuzzing/`);
-  - `ShareScreen/*`;
   - `UpdateSecurityTests` and `UpdateSigningSetupTests`;
   - `Trust/*`;
   - `Operations/*` (change journal and rollback);
@@ -110,13 +107,10 @@ says otherwise, these defaults apply.
 3. **LAN Drop.**
    - Authentication, session handling, path traversal in uploads and downloads, size limits,
      lockout, behaviour on Public networks.
-4. **Share Screen.**
-   - The room handshake (nonce/HMAC), Origin and Host checks, end-to-end encryption of chat, voice
-     and control, remote-input approval, WebView2 confinement (M2).
 5. **Updates.**
    - Manifest signature bypass, downgrade, the hash and size checks, the launch-time re-check.
 6. **Accounts and Supabase (test project only).**
-   - RLS on profiles, friendships, presence and invites.
+   - RLS on profiles and devices.
    - `security definer` functions.
    - The `steam-login` and `delete-account` functions.
    - PKCE and the loopback callback.

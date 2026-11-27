@@ -4,7 +4,7 @@
 The AxePower Release Candidate Pipeline automates the compilation, testing, signing, SBOM generation, checksumming, and provenance verification of release artifacts.
 
 To guarantee security and supply-chain integrity:
-- **Clean Tagged Builds**: Every candidate release is triggered from an explicit Git tag (e.g. `v2.1.0-rc1` or `v2.1.1`).
+- **Clean Tagged Builds**: Build a production candidate from a tag such as `v2.1.5` that matches `Directory.Build.props`. The workflow can also be dispatched manually with the declared version.
 - **Deterministic Settings**: Built with `-p:ContinuousIntegrationBuild=true -p:Deterministic=true` and locked dependencies (`dotnet restore --locked-mode`).
 - **Verifiable Artifacts**: Generates CycloneDX 1.5 SBOM, SHA-256 checksums, and machine-readable provenance.
 - **Fail-Closed Release Gate**: Production releases fail closed if Authenticode signing is missing, invalid, or mismatched.
@@ -20,7 +20,7 @@ graph TD
     B --> C[Restore Dependencies: dotnet restore --locked-mode]
     C --> D[Deterministic Build: ContinuousIntegrationBuild=true]
     D --> E[Run Full Test Suite: AxePower.Tests]
-    E --> F[Publish x64 Application to publish/win-x64]
+    E --> F[Publish x64 Application to a fresh build directory]
     F --> G[Authenticode Sign Application Binaries]
     G --> H[Build Inno Setup Installer: ISCC.exe]
     H --> I[Authenticode Sign Inno Setup Installer]
@@ -80,12 +80,14 @@ pwsh scripts/release-gate.ps1 -Artifacts (Get-ChildItem artifacts/release/*.exe)
 Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) and [Inno Setup 6](https://jrsoftware.org/isinfo.php) to run the release packaging pipeline locally:
 
 ```powershell
-# Run local release packaging in permissive dev mode
-powershell -ExecutionPolicy Bypass -File scripts\package-release.ps1 -Version "2.1.5"
+# Run local packaging using the checkout's declared version
+powershell -ExecutionPolicy Bypass -File scripts\package-release.ps1
 ```
 In permissive dev mode:
 - Dependencies are restored and built deterministically.
 - Tests are executed.
-- The x64 application is published. Inno Setup compiles `Installer/Output/AxePower-v2.1.5-Setup.exe` and the packaging script stages a copy in `artifacts/release/`.
+- The script publishes the x64 application to a fresh directory under `build/release-publish/` and passes that path to Inno Setup. The validated installer from `artifacts/release/` is copied to `Installer/Output/`.
 - CycloneDX SBOM, SHA-256 checksums, provenance, and release notes are generated.
 - Unsigned binaries emit a `[SKIP]` notice and allow developers to inspect the output package in `artifacts/release/`.
+
+To rebuild the same version, archive the existing installer copy and pass a fresh path with `-OutputDir`. The script rejects existing installers or nonempty output directories to protect earlier builds. Keep generated outputs local.

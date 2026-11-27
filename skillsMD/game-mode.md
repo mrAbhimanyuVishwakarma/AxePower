@@ -7,6 +7,8 @@ description: Game Mode page — Steam/Epic/GOG/Xbox game library scanner, Steam-
 
 The Game Mode page is the gaming hub: a scanned game library with poster art, a one-click manual Game Mode, per-game rules, and background-load controls.
 
+Click the Game Mode button on the Dashboard or in the sidebar to open this page. The manual switch is on the Game Mode page.
+
 ## Where it lives
 
 | Piece | File |
@@ -35,7 +37,7 @@ Related features documented separately: [controller-navigation.md](controller-na
   - On every drive root: `SteamLibrary\steamapps\common`, `Epic Games`, `GOG Games`, `XboxGames` (Game Pass), and `Games`.
 - `IsSoftwareOrUtility(name)` filters out redistributables, tools and launchers so they don't appear as games.
 
-> The README lists Ubisoft Connect and EA App as scanned. Neither is: their games appear only if they were installed under one of the folders above.
+Games from other launchers can appear when installed in one of the scanned folders.
 
 ## Poster art
 `GamePosterService.FetchCoverArtAsync(exeName, steamAppId)` tries, in order:
@@ -46,7 +48,6 @@ Related features documented separately: [controller-navigation.md](controller-na
 
 The HTTP timeout is 5 s. Downloaded images are cached.
 
-> The README mentions SteamGridDB. The code does not call SteamGridDB; all art comes from Steam.
 
 ## Manual Game Mode (`ToggleManualGameMode`)
 **Turning it on** (`ApplyGameModeStateAsync(true)`):

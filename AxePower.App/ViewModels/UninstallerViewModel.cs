@@ -33,6 +33,7 @@ public sealed partial class UninstallerViewModel : ObservableObject
     private readonly IUninstallerPrompts _prompts;
     private readonly NotificationService _notification;
     private readonly LogService _log;
+    private readonly ToolsService _tools;
 
     private readonly ObservableCollection<InstalledApplicationViewModel> _allApplications = new();
     private readonly ICollectionView _applicationsView;
@@ -150,7 +151,8 @@ public sealed partial class UninstallerViewModel : ObservableObject
         ElevationService elevation,
         IUninstallerPrompts prompts,
         NotificationService notification,
-        LogService log)
+        LogService log,
+        ToolsService? tools = null)
     {
         _discoveryService = discoveryService;
         _batchService     = batchService;
@@ -167,6 +169,7 @@ public sealed partial class UninstallerViewModel : ObservableObject
         _prompts          = prompts;
         _notification     = notification;
         _log              = log;
+        _tools            = tools ?? new ToolsService();
 
         _settings = (settingsService.GetSettings().Uninstaller ?? new UninstallerSettings()).Clone();
         LoadSettingProperties();
@@ -179,6 +182,13 @@ public sealed partial class UninstallerViewModel : ObservableObject
     }
 
     private bool CanStartWork() => !IsBusy && !IsLoading;
+
+    [RelayCommand]
+    private void OpenBcUninstaller()
+    {
+        var result = _tools.OpenBcUninstaller();
+        if (!result.Started) _notification.Show(result.Message);
+    }
 
     // ── Discovery ─────────────────────────────────────────────────────────────
 

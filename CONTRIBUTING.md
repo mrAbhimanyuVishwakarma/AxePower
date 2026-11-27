@@ -5,7 +5,7 @@ Thank you for improving AxePower. This is a Windows desktop application that can
 ## Before opening a change
 
 - Use the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) on Windows x64. CI and local release verification use SDK 10.0.404.
-- Before starting AxePower work, verify the active branch, source version, and path and version of the executable you intend to use. If the latest published release and the latest branch build differ and both fit the request, ask which to use. Exit an installed instance normally before reviewing a checkout build.
+- Follow [AGENTS.md](AGENTS.md) to resume from the current release branch and launch its source build. Exit an installed instance normally before reviewing the checkout build.
 - Search existing issues and pull requests before starting substantial work.
 - For a security vulnerability, follow [SECURITY.md](SECURITY.md) and report it privately.
 - Discuss large features, new external services, new privileges, or installer changes with the maintainer before implementation.

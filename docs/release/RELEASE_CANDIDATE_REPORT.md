@@ -1,7 +1,7 @@
 # Release candidate report: AxePower 2.1.2
 
 **For:** the owner deciding on release, and whoever runs the manual sign-offs.
-**Date:** 2026-10-08 (Prompt 33). Nothing was published, tagged, pushed or uploaded.
+**Date:** 2026-10-08 (Prompt 33). This report covers v2.1.2. See [WORK_LOG.md](../../WORK_LOG.md) for v2.1.5.
 
 ## Candidate
 

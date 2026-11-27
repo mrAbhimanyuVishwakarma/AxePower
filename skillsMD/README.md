@@ -2,7 +2,7 @@
 
 One file per AxePower feature. Each file explains what the feature does, where its code lives, how it works internally, what it changes on the system, what it needs (admin, internet, tools), and its known gaps. Each file starts with YAML front matter (`name`, `description`), so it can also be loaded as a skill or reference file for an AI coding agent.
 
-The original guides were written from the `v1.8` working tree on September 22, 2026. Individual guides are updated with feature changes. Paths are relative to the repository.
+Paths are relative to the repository. For the current branch and build, see [AGENTS.md](../AGENTS.md) and [WORK_LOG.md](../WORK_LOG.md). Dated plans describe their original scope. Check the feature guide and current source before following an implementation plan.
 
 ## Index
 
@@ -17,17 +17,16 @@ The original guides were written from the `v1.8` working tree on September 22, 2
 | CONTROL | Music (player, title-bar player, media keys) | [music-player.md](music-player.md) |
 | CONTROL | Music — build spec, phase by phase | [MUSIC_PLAYER_PLAN.md](MUSIC_PLAYER_PLAN.md) |
 | CONTROL | Music — open issues and what is still unproven | [MUSIC_FIX_PLAN.md](MUSIC_FIX_PLAN.md) |
-| CONNECTION | Friends (chat, voice, screen share, stream watch, gamer hub) | [friends.md](friends.md) |
 | CONNECTION | Phone Control (scrcpy, SpaceDesk, LAN Drop, Phone Link) | [phone-control.md](phone-control.md) |
 | MAINTENANCE | System Optimizer (registry tweaks) | [system-optimizer.md](system-optimizer.md) |
 | MAINTENANCE | System Doctor (SFC/DISM, cache cleaner, DNS) | [system-doctor.md](system-doctor.md) |
-| MAINTENANCE | Terminal (shell + shared output bus) | [terminal.md](terminal.md) |
+| UTILITIES | Terminal (shell + shared output bus) | [terminal.md](terminal.md) |
 | MAINTENANCE | Windows Update (Windows, app, and device updates, plus Update Shield) | [update-pc.md](update-pc.md) |
 | UTILITIES | Software Hub (winget app catalog) | [software-hub.md](software-hub.md) |
-| UTILITIES | Uninstaller | [uninstaller.md](uninstaller.md) |
+| MAINTENANCE | Uninstaller and BCUninstaller shortcut | [uninstaller.md](uninstaller.md) |
 | UTILITIES | Tools → Timer & Routines: if-then routines plan | [ROUTINES_PLAN.md](ROUTINES_PLAN.md) |
 | UTILITIES | MSI Afterburner companion | [msi-afterburner.md](msi-afterburner.md) |
-| UTILITIES | Debloat (Win11Debloat) | [debloat.md](debloat.md) |
+| MAINTENANCE | Debloat (Win11Debloat) | [debloat.md](debloat.md) |
 | FOOTER | Settings, elevation, startup, tray, themes | [settings-and-startup.md](settings-and-startup.md) |
 | FOOTER | Account (optional sign-in, Profile page, Supabase) | [account.md](account.md) |
 | FOOTER | Auto-updater (AxePower self-update) | [auto-updater.md](auto-updater.md) |
@@ -37,29 +36,13 @@ The original guides were written from the `v1.8` working tree on September 22, 2
   - `AxePower.Core` holds services, models and native interop, with no WPF.
   - `AxePower.App` holds the WPF views, CommunityToolkit.Mvvm ViewModels and app-only services.
   - `AxePower.Tests` holds xUnit tests.
-- **DI:** every service is a singleton and every ViewModel is transient, registered in `App.ConfigureServices()` ([App.xaml.cs](../AxePower.App/App.xaml.cs)).
-- **Navigation:** `MainViewModel.Navigate("<Key>[:arg1[:arg2]]")` swaps `CurrentView`. Views bind through `DataTemplate`s in [MainWindow.xaml](../AxePower.App/MainWindow.xaml).
+- **DI:** see `App.ConfigureServices()` for the actual service and ViewModel lifetimes ([App.xaml.cs](../AxePower.App/App.xaml.cs)).
+- **Navigation:** `MainViewModel.Navigate("<Key>[:arg1[:arg2]]")` swaps `CurrentView`. The shell uses [ViewTemplates.xaml](../AxePower.App/Resources/ViewTemplates.xaml) to render each page.
 - **User feedback:** `NotificationService.Show(msg)` shows the in-app toast. Long-running output goes to the Terminal ([terminal.md](terminal.md)).
 - **Admin:** many features need elevation. See the elevation model in [settings-and-startup.md](settings-and-startup.md).
 - **Data locations:**
   - `%LOCALAPPDATA%\AxePower\`: `settings.json`, `BatteryHistory\`, `tools\scrcpy\`, `Tools\`, `Scripts\`.
   - `%APPDATA%\AxePower\`: `AxePower.log`, `CoverArt\`, `UninstallerHistory\`.
 
-## Known gaps found while writing these docs
-These gaps are in the code today, and each one is also described in its feature file:
-1. **Uninstaller:** registry backups are never written to disk, and there is no restore path ([uninstaller.md](uninstaller.md)).
-2. **Battery:** health % is synthetic, because design capacity is set to full-charge capacity × 1.02 ([battery.md](battery.md)).
-3. **Settings:** `StartMinimised` / `--background` are never honoured at launch ([settings-and-startup.md](settings-and-startup.md)).
-4. **LAN Drop:** there is no authentication, so anyone on the LAN can upload, download, or lock the PC ([phone-control.md](phone-control.md)).
-5. **Game Mode:** services set to manual start are not restored when Game Mode is turned off ([game-mode.md](game-mode.md)).
-6. **Auto-updater:** it re-downloads the installer every hour until it is installed ([auto-updater.md](auto-updater.md)).
-7. **Power modes:** the display refresh rate only syncs when the `powercfg` fallback was used, because the native success path returns early ([power-modes.md](power-modes.md)).
-8. **README claims the code doesn't back up:**
-   - SteamGridDB posters (art comes from Steam only).
-   - Ubisoft and EA library scanning.
-   - Legion Toolkit, Vantage, Armoury Crate and MSI Center launchers.
-   - "Encrypted" settings (they are plain JSON).
-   - A reachable `AutoSwitchView` (`Navigate("AutoSwitch")` shows the Dashboard).
-
 ## Keeping these current
-When you change a feature, update its file in the same PR: the file table, the behaviour, and the "Known gaps" section. Remove a gap from this README once it is fixed.
+When you change a feature, update its guide with the source paths, behavior, and current limitations.

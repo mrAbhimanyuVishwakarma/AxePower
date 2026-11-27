@@ -6,12 +6,11 @@ description: AxePower Account — optional sign-in (email, Google, GitHub, Disco
 # AxePower Account
 
 An **optional** account. Everything in AxePower works without one. Signing in gives you a profile
-(unique `@username`, display name, picture) that Friends uses, and later AxePower Mobile and Remote
+(unique `@username`, display name, picture) for the desktop app, with AxePower Mobile and Remote
 Play. The account lives on **Supabase** (hosted auth + Postgres). There is no AxePower server of our
 own.
 
 The build plan and its status per step are in [ACCOUNTS_PROFILE_PLAN.md](ACCOUNTS_PROFILE_PLAN.md).
-Friends on the account are covered in [SHARE_SOCIAL_PLAN.md](SHARE_SOCIAL_PLAN.md) and [friends.md](friends.md).
 
 ## Where it lives
 
@@ -20,7 +19,7 @@ Friends on the account are covered in [SHARE_SOCIAL_PLAN.md](SHARE_SOCIAL_PLAN.m
 | Project URL + publishable key | `SupabaseProject.AxePower` in [AccountModels.cs](../AxePower.Core/Services/Accounts/AccountModels.cs) |
 | State, errors, providers | [AccountModels.cs](../AxePower.Core/Services/Accounts/AccountModels.cs) |
 | Username / display name / avatar rules | [UsernameRules.cs](../AxePower.Core/Services/Accounts/UsernameRules.cs) |
-| HTTP client (Auth, PostgREST, Edge Functions) | [SupabaseAccountApi.cs](../AxePower.Core/Services/Accounts/SupabaseAccountApi.cs), Friends calls in [SupabaseAccountApi.Friends.cs](../AxePower.Core/Services/Accounts/SupabaseAccountApi.Friends.cs) |
+| HTTP client (Auth, PostgREST, Edge Functions) | [SupabaseAccountApi.cs](../AxePower.Core/Services/Accounts/SupabaseAccountApi.cs) |
 | Browser sign-in (PKCE + loopback listener) | [OAuthLoopback.cs](../AxePower.Core/Services/Accounts/OAuthLoopback.cs) |
 | Saved sign-in (DPAPI) | [AccountSessionStore.cs](../AxePower.Core/Services/Accounts/AccountSessionStore.cs) |
 | The account itself | [AccountService.cs](../AxePower.Core/Services/Accounts/AccountService.cs) |
@@ -81,12 +80,11 @@ The function is deployed with **verify_jwt off** (`[functions.steam-login]` in
   token, which comes back as `validation_failed`.
 - **Tokens:** refreshed 2 minutes before expiry, and once more if the server calls a token expired.
   All account operations are serialized, because a refresh token is single-use.
-- **Other services** (Friends) call `AccountService.GetAccessTokenAsync()`.
 - **Sign out** uses `POST /auth/v1/logout?scope=local`: only this PC; other devices stay signed in.
   It always succeeds locally.
 - **Delete account:** the dialog asks the user to type `DELETE`, then calls the `delete-account` Edge
   Function as the user. The function verifies the caller with Supabase Auth and deletes only that user.
-  The profile, devices, friends, presence and invites go with them (`on delete cascade`).
+  The profile and devices go with them (`on delete cascade`).
 
 ## Profile rules
 
@@ -96,7 +94,7 @@ The function is deployed with **verify_jwt off** (`[functions.steam-login]` in
 | Reserved names (`admin`, `axepower`, `steam`, `support`, …) | the `reserved_usernames` table (unreadable by apps) and the `profiles_guard` trigger |
 | Username change at most once every 30 days (the sign-up pick is free) | the `profiles_guard` trigger; the UI shows the date it unlocks |
 | Display name: 1-32 characters, trimmed, no control or invisible/bidirectional characters | DB checks; `UsernameRules.IsValidDisplayName` |
-| Avatar only from Google, GitHub, Discord or Steam picture servers | DB check `profiles_avatar_url_provider`; `UsernameRules.IsAllowedAvatarUrl`. Friends' apps load each other's avatars, so an arbitrary URL would log viewers' IPs. |
+| Avatar only from Google, GitHub, Discord or Steam picture servers | DB check `profiles_avatar_url_provider`; `UsernameRules.IsAllowedAvatarUrl`. |
 
 `username_available(name)` is callable signed out, for the live "available" check while signing up.
 It answers only yes or no.
@@ -106,8 +104,6 @@ It answers only yes or no.
   8 people whose @username or display name starts with what was typed (2+ characters, `_` taken
   literally). Each comes with its state: `none`, `incoming`, `outgoing`, `friend` or `blocked` (you
   blocked them). People who blocked you never appear.
-- `profiles.discoverable` ("Let people find me by name" in Settings → Friends) hides you from
-  suggestions. An exact @username still finds you.
 - Declined requests disappear from the sender's list, and they can ask again (the owner's choice).
 
 ## UI
@@ -151,7 +147,7 @@ It answers only yes or no.
 
 - **Database changes:** add a migration with `npx supabase migration new <name>`.
   - Test it with `cd supabase/tests && npm install && npm test`. This runs every migration on PGlite
-    over a stub `auth` schema and checks the Friends rules as three users.
+    over a stub `auth` schema and checks account access and the schema upgrade.
   - `npx supabase db push` applies it to the live project; ask the owner first.
   - Afterwards run `npx supabase db lint --linked`.
 - **Functions:** `npx supabase functions deploy <name> --use-api` (no Docker needed). Add
@@ -165,8 +161,7 @@ It answers only yes or no.
 - **Self-test:** `AxePower.exe --self-test` prints
   `Account: signed out | @user (saved session, not refreshed); backend <host>`. It decrypts the saved
   session only; it makes no network call and writes nothing.
-- **Settings:** the account does not use `settings.json`. The Friends privacy switches do
-  (`shareScreen.shareActivityWithFriends`, `shareScreen.appearOffline`).
+- **Settings:** the account does not use `settings.json`.
 
 ## Requirements
 

@@ -91,7 +91,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <!-- Header, with the Game Mode toggle lined up over the Beast column -->
+            <!-- Header, with Game Mode lined up over the Beast column -->
             <Grid Grid.Row="0" Margin="0,0,0,32">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -105,58 +105,24 @@
                     <TextBlock Text="Balance performance, battery life, and fan noise." Foreground="{DynamicResource SecondaryTextBrush}" FontSize="15"/>
                 </StackPanel>
 
-                <!-- The same Game Mode as the Game Mode page: one toggle, mirrored. The negative bottom
-                     margin drops it into the header's gap, clear of the header music player -->
-                <Border x:Name="GameModeCard" Grid.Column="4" Margin="0,0,0,-16" VerticalAlignment="Bottom" CornerRadius="12" Padding="12,9"
-                        SizeChanged="GameModeCard_SizeChanged"
-                        Background="{DynamicResource ElevatedCardBackgroundBrush}" BorderThickness="1"
-                        DataContext="{Binding DataContext.GameModeVm, RelativeSource={RelativeSource AncestorType=Window}}">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
-                                    <Setter Property="BorderBrush" Value="#8B5CF6"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <!-- Two rows so a narrow card can move the switch under the title (see GameModeCard_SizeChanged) -->
+                <Button x:Name="GameModeCard" Grid.Column="4" Margin="0,0,0,-16" VerticalAlignment="Bottom"
+                        Style="{DynamicResource SecondaryButtonStyle}" Padding="12,9"
+                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="GameMode" ToolTip="Open Game Mode" AutomationProperties.Name="Open Game Mode">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Image x:Name="GameModeIcon" Grid.Column="0" Grid.RowSpan="2" Source="/Resources/Gamemode.png" Width="42" Height="42" Margin="0,0,10,0"
+                        <Image Source="/Resources/Gamemode.png" Width="42" Height="42" Margin="0,0,10,0"
                                Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock x:Name="GameModeTitle" Grid.Column="1" Grid.Row="0" Text="Game Mode" Foreground="{DynamicResource PrimaryTextBrush}"
-                                   FontSize="13.5" FontWeight="SemiBold" TextWrapping="NoWrap" VerticalAlignment="Bottom"/>
-                        <TextBlock Grid.Column="1" Grid.Row="1" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="Off"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsManualGameModeActive}" Value="True">
-                                            <Setter Property="Text" Value="On"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <!-- The shared switch is 54 px wide; at 75% the title fits in a narrow column -->
-                        <CheckBox x:Name="GameModeSwitch" Grid.Column="2" Grid.RowSpan="2" Style="{DynamicResource ToggleSwitchStyle}" VerticalAlignment="Center" Margin="8,0,0,0"
-                                  IsChecked="{Binding IsManualGameModeActive}" AutomationProperties.Name="Game Mode">
-                            <CheckBox.LayoutTransform>
-                                <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
-                            </CheckBox.LayoutTransform>
-                        </CheckBox>
+                        <TextBlock Grid.Column="1" Text="Game Mode" FontSize="13.5" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" Margin="6,0,0,0" VerticalAlignment="Center"/>
                     </Grid>
-                </Border>
+                </Button>
             </Grid>
             
             <!-- Cards: three equal star columns with fixed 24 px gutters and no card margins, so the

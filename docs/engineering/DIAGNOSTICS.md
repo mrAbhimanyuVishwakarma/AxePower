@@ -46,7 +46,7 @@ Retention runs at every start and whenever a file rolls.
 again on every line when a bundle is exported, which catches lines written before a rule existed.
 It removes:
 
-- **URLs:** query strings and fragments (LAN Drop `?t=`, room links `#v=`, OAuth codes and
+- **URLs:** query strings and fragments (LAN Drop `?t=`, OAuth codes and
   tokens), and `user:password@` inside a URL.
 - **Headers:** `Authorization` values (Bearer, Basic, Token, Digest), whole `Cookie` and
   `Set-Cookie` headers, and `key=value` / JSON secrets (password, token, api key, client secret, …).

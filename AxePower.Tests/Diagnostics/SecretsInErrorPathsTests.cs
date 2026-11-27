@@ -51,14 +51,14 @@ public class SecretsInErrorPathsTests : IDisposable
     public void FailuresThatEchoSecrets_LeaveNoneOnDisk()
     {
         const string lanToken = "Zm9vYmFyQmF6UXV4MTIzNDU2Nzg5MEFCQ0RFRkdISUpLTE0";
-        const string roomSecret = "0123456789abcdef0123456789abcdef";
+        const string fragmentSecret = "0123456789abcdef0123456789abcdef";
         const string jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1LTEiLCJyb2xlIjoiYXV0aGVudGljYXRlZCJ9.c2lnbmF0dXJlc2lnbmF0dXJl";
         const string refresh = "v1.refresh-token-AbCdEf123456";
         const string email = "someone.private@example.com";
         var profilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents", "notes.txt");
 
         _log.LogError("[LanDrop] Request failed", Thrown(() => new HttpRequestException($"Response status code does not indicate success: 500 for http://192.168.1.23:5050/api/download?id=1&t={lanToken}")));
-        _log.LogWarning("[ShareScreen] Room connection dropped", Thrown(() => new WebSocketException($"Unable to connect to wss://host.example/room/abc/chat?n=nonce123&p=proof456#v={roomSecret}")));
+        _log.LogWarning("[Network] Connection dropped", Thrown(() => new WebSocketException($"Unable to connect to wss://host.example/session?n=nonce123&p=proof456#v={fragmentSecret}")));
         _log.LogError("[Account] Unexpected reply", Thrown(() => new JsonException($"{{\"access_token\":\"{jwt}\",\"refresh_token\":\"{refresh}\",\"user\":{{\"email\":\"{email}\"}}}}")));
         _log.LogWarning($"[CloudBridge] Handshake failed: Authorization: Bearer {jwt}");
         _log.LogWarning($"[Account] Signed in as {email}");
@@ -68,7 +68,7 @@ public class SecretsInErrorPathsTests : IDisposable
 
         var disk = OnDisk();
         Assert.Equal(8, _store.ReadEntries().Count);
-        foreach (var secret in new[] { lanToken, roomSecret, "nonce123", "proof456", jwt, refresh, email, Environment.MachineName })
+        foreach (var secret in new[] { lanToken, fragmentSecret, "nonce123", "proof456", jwt, refresh, email, Environment.MachineName })
             Assert.DoesNotContain(secret, disk, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), disk.Replace("\\\\", "\\"), StringComparison.OrdinalIgnoreCase);
         Assert.Contains(@"%USERPROFILE%\\Documents\\notes.txt", disk); // the useful part survives (JSON-escaped)

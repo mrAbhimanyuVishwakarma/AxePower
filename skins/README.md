@@ -77,7 +77,6 @@ Comments (`//`) and trailing commas are allowed.
 | `MusicPlayGlyphBrush` | buttonPrimaryText |
 | `MusicPlaceholderArtBrush` | accent → violet → pink |
 | `TrayMenu*`, `AppIconImage`, `MusicTrackBrush` | fixed per base |
-| `Share*` | fixed: the Share Screen video stage stays dark in every skin |
 
 ## Overrides
 

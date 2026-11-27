@@ -66,7 +66,7 @@ public class SkinCompilerTests : IDisposable
             .ToList();
 
         Assert.True(differences.Count == 0, string.Join(Environment.NewLine, differences));
-        Assert.Equal(63, actual.Count);
+        Assert.Equal(51, actual.Count);
     }
 
     [Theory]
@@ -164,7 +164,7 @@ public class SkinCompilerTests : IDisposable
 
         var compiled = SkinCompiler.Compile(def, dark);
 
-        Assert.Equal(63, compiled.Resources.Count);
+        Assert.Equal(51, compiled.Resources.Count);
     }
 
     [Fact]

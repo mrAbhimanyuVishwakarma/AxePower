@@ -5,6 +5,8 @@ description: Uninstaller Pro — registry/AppX discovery with uninstaller-kind d
 
 # Uninstaller Pro
 
+The toolbar's **BCUninstaller** button opens the installed Bulk Crap Uninstaller as the signed-in user. Its Tools entry handles installation and opening. These shortcuts use `ToolsService`.
+
 Uninstaller Pro removes installed apps with their own uninstallers, **verifies** each removal against the registry / Windows Installer / AppX, and only then offers leftovers it can tie to the removed app by **evidence**. It is an app-specific cleaner, not a registry cleaner. The design and its rationale are in [uninstaller.md](../uninstaller.md) (the fix plan); ideas and parts of the code are adapted from [Bulk Crap Uninstaller](https://github.com/BCUninstaller/Bulk-Crap-Uninstaller) (Apache-2.0, see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)).
 
 ## Where it lives

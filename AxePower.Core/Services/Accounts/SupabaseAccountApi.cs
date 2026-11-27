@@ -35,9 +35,6 @@ public interface IAccountApi
     Task<AccountProfile> UpdateProfileAsync(string accessToken, string userId, string? displayName, string? username, CancellationToken ct);
     Task<bool> IsUsernameAvailableAsync(string username, CancellationToken ct);
 
-    /// <summary>Whether others can find this profile by name in "Add a friend" suggestions.</summary>
-    Task<AccountProfile> SetDiscoverableAsync(string accessToken, string userId, bool discoverable, CancellationToken ct);
-
     /// <summary>Deletes the caller's account through the <c>delete-account</c> Edge Function.</summary>
     Task DeleteAccountAsync(string accessToken, CancellationToken ct);
 }
@@ -50,9 +47,9 @@ public interface IAccountApi
 /// goes only in the <c>apikey</c> header. It is not a JWT, so it must never be sent as a bearer
 /// token; the bearer is always the user's own access token.
 /// </summary>
-public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
+public sealed class SupabaseAccountApi : IAccountApi, IDisposable
 {
-    private const string ProfileColumns = "id,username,display_name,avatar_url,created_at,username_changed_at,discoverable";
+    private const string ProfileColumns = "id,username,display_name,avatar_url,created_at,username_changed_at";
 
     private readonly SupabaseProject _project;
     private readonly HttpClient _http;
@@ -187,14 +184,6 @@ public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
         return SingleProfile(json);
     }
 
-    public async Task<AccountProfile> SetDiscoverableAsync(string accessToken, string userId, bool discoverable, CancellationToken ct)
-    {
-        var json = await SendAsync(
-            HttpMethod.Patch, $"rest/v1/profiles?id=eq.{Uri.EscapeDataString(userId)}&select={ProfileColumns}",
-            new JsonObject { ["discoverable"] = discoverable }, accessToken, ct, returnRepresentation: true);
-        return SingleProfile(json);
-    }
-
     public async Task<bool> IsUsernameAvailableAsync(string username, CancellationToken ct)
     {
         var json = await SendAsync(HttpMethod.Post, "rest/v1/rpc/username_available", new JsonObject { ["name"] = username }, null, ct);
@@ -290,20 +279,6 @@ public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
                 return Fail(AccountError.SessionExpired, "Your session has ended. Sign in again.");
             case "23505":
                 return Fail(AccountError.UsernameTaken, "That username is taken.");
-            case "P0001" when message == "USER_NOT_FOUND":
-                return Fail(AccountError.FriendNotFound, "No one has that username.");
-            case "P0001" when message == "CANNOT_ADD_SELF":
-                return Fail(AccountError.CannotAddSelf, "That's you.");
-            case "P0001" when message == "YOU_BLOCKED_THEM":
-                return Fail(AccountError.YouBlockedThem, "You blocked this person. Unblock them first.");
-            case "P0001" when message == "TOO_MANY_REQUESTS":
-                return Fail(AccountError.RateLimited, "You have too many requests waiting. Cancel some first.");
-            case "P0001" when message == "TOO_MANY_INVITES":
-                return Fail(AccountError.RateLimited, "Too many invites in the last hour. Try again later.");
-            case "P0001" when message == "REQUEST_NOT_FOUND":
-                return Fail(AccountError.RequestNotFound, "That request is no longer there.");
-            case "42501" when message.Contains("friend_invites", StringComparison.Ordinal):
-                return Fail(AccountError.NotFriends, "You can only invite friends.");
             case "P0001" when message == "USERNAME_RESERVED":
                 return Fail(AccountError.UsernameReserved, "That username is reserved.");
             case "P0001" when message == "USERNAME_CHANGE_TOO_SOON":
@@ -358,8 +333,7 @@ public sealed partial class SupabaseAccountApi : IAccountApi, IDisposable
         DisplayName: Str(row, "display_name") ?? string.Empty,
         AvatarUrl: Str(row, "avatar_url"),
         CreatedAtUtc: Date(row, "created_at") ?? DateTime.MinValue,
-        UsernameChangedAtUtc: Date(row, "username_changed_at"),
-        Discoverable: row["discoverable"] is not JsonValue d || d.GetValueKind() != JsonValueKind.False);
+        UsernameChangedAtUtc: Date(row, "username_changed_at"));
 
     private static string? Str(JsonNode node, string name) =>
         node[name] is JsonValue v && v.GetValueKind() == JsonValueKind.String ? v.GetValue<string>() : null;

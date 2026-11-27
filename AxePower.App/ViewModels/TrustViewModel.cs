@@ -12,12 +12,9 @@ using Microsoft.Win32;
 using AxePower.App.Services;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Accounts;
-using AxePower.Core.Services.Friends;
 using AxePower.Core.Services.Music;
 using AxePower.Core.Services.Operations;
 using AxePower.Core.Services.Processes;
-using AxePower.Core.Models.ShareScreen;
-using AxePower.Core.Services.ShareScreen;
 using AxePower.Core.Services.Trust;
 
 namespace AxePower.App.ViewModels;
@@ -95,16 +92,11 @@ public partial class TrustViewModel : ObservableObject, IDisposable
     private readonly ElevationService? _elevation;
     private readonly SettingsService _settings;
     private readonly LanDropService? _lanDrop;
-    private readonly IShareScreenService? _share;
-    private readonly ShareViewerHost? _viewerHost;
-    private readonly MediaMtxServer? _mediaServer;
     private readonly AccountService? _account;
-    private readonly FriendsService? _friends;
     private readonly LogService _log;
     private readonly RecentlyPlayedService? _recentPlays;
     private readonly RecentSearchesService? _recentSearches;
     private readonly StreamCache? _streamCache;
-    private readonly ShareChatStore? _chat;
     private readonly BatteryService? _battery;
     private readonly IUserShellLauncher? _shell;
     private readonly IConfirmationPrompts _confirm;
@@ -116,15 +108,10 @@ public partial class TrustViewModel : ObservableObject, IDisposable
         IConfirmationPrompts confirm,
         ElevationService? elevation = null,
         LanDropService? lanDrop = null,
-        IShareScreenService? share = null,
-        ShareViewerHost? viewerHost = null,
-        MediaMtxServer? mediaServer = null,
         AccountService? account = null,
-        FriendsService? friends = null,
         RecentlyPlayedService? recentPlays = null,
         RecentSearchesService? recentSearches = null,
         StreamCache? streamCache = null,
-        ShareChatStore? chat = null,
         BatteryService? battery = null,
         IUserShellLauncher? shell = null,
         bool startTimer = true)
@@ -134,15 +121,10 @@ public partial class TrustViewModel : ObservableObject, IDisposable
         _confirm = confirm;
         _elevation = elevation;
         _lanDrop = lanDrop;
-        _share = share;
-        _viewerHost = viewerHost;
-        _mediaServer = mediaServer;
         _account = account;
-        _friends = friends;
         _recentPlays = recentPlays;
         _recentSearches = recentSearches;
         _streamCache = streamCache;
-        _chat = chat;
         _battery = battery;
         _shell = shell;
 
@@ -152,7 +134,6 @@ public partial class TrustViewModel : ObservableObject, IDisposable
         CloudData = TrustInventory.CloudData;
 
         if (_lanDrop is not null) _lanDrop.OnClientsChanged += OnServiceChanged;
-        if (_share is not null) _share.StatusChanged += OnShareChanged;
         if (_account is not null) _account.StateChanged += OnAccountChanged;
 
         if (startTimer && System.Windows.Application.Current?.Dispatcher is { } dispatcher)
@@ -262,21 +243,6 @@ public partial class TrustViewModel : ObservableObject, IDisposable
                     row.CanStop = running;
                     row.CanRotate = running;
                     break;
-                case "share-viewer":
-                    bool hosting = _viewerHost?.IsRunning == true;
-                    row.IsOpen = hosting;
-                    row.Address = hosting ? $"port {_viewerHost!.Port}" : row.Listener.Address;
-                    var participants = hosting ? _share?.GetParticipants() ?? Array.Empty<ShareParticipant>() : Array.Empty<ShareParticipant>();
-                    row.Clients = participants.Select(p => new TrustClientRow(p.Id, p.Role, p.Endpoint, p.ConnectedAt.ToString("HH:mm"))).ToList();
-                    row.State = hosting ? $"Open · {participants.Count} participant(s)" : "Closed";
-                    row.CanStop = hosting;
-                    break;
-                case "media-server":
-                    bool media = _mediaServer?.IsRunning == true;
-                    row.IsOpen = media;
-                    row.State = media ? "Running" : "Not running";
-                    row.CanStop = media;
-                    break;
                 case "adb":
                     bool adb = IsProcessRunning("adb");
                     row.IsOpen = adb;
@@ -298,41 +264,23 @@ public partial class TrustViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task StopListenerAsync(TrustListenerRow? row)
+    private void StopListener(TrustListenerRow? row)
     {
-        if (row is null) return;
-        if (row.Id == "landrop")
+        if (row?.Id != "landrop") return;
+
+        var clients = row.Clients.Select(c => $"{c.Name} ({c.Address})").ToList();
+        if (!_confirm.Confirm(new ActionConfirmation
         {
-            var clients = row.Clients.Select(c => $"{c.Name} ({c.Address})").ToList();
-            if (!_confirm.Confirm(new ActionConfirmation
-            {
-                Action = "Stop the Phone Hub / LAN Drop server",
-                Source = "Trust & Permissions",
-                Affected = clients.Count == 0 ? new[] { "No devices are connected." } : clients,
-                Risk = RiskLevel.Low,
-                Backup = "Nothing is deleted. Received files stay where they are.",
-                Reversibility = Reversibility.FullyReversible,
-                ConfirmLabel = "Stop the server",
-            })) return;
-            _lanDrop?.StopServer();
-            StatusText = "Phone Hub / LAN Drop server stopped; its access link no longer works.";
-        }
-        else if (row.Id is "share-viewer" or "media-server" && _share is not null)
-        {
-            if (!_confirm.Confirm(new ActionConfirmation
-            {
-                Action = "End the Friends room",
-                Source = "Trust & Permissions",
-                Affected = row.Clients.Select(c => c.Name).DefaultIfEmpty("No one else is in the room.").ToList(),
-                Risk = RiskLevel.Low,
-                Backup = "Saved chat stays on this PC.",
-                Reversibility = Reversibility.FullyReversible,
-                ReversibilityNote = null,
-                ConfirmLabel = "End the room",
-            })) return;
-            await _share.StopAsync();
-            StatusText = "Room ended; its link no longer works.";
-        }
+            Action = "Stop the Phone Hub / LAN Drop server",
+            Source = "Trust & Permissions",
+            Affected = clients.Count == 0 ? new[] { "No devices are connected." } : clients,
+            Risk = RiskLevel.Low,
+            Backup = "Nothing is deleted. Received files stay where they are.",
+            Reversibility = Reversibility.FullyReversible,
+            ConfirmLabel = "Stop the server",
+        })) return;
+        _lanDrop?.StopServer();
+        StatusText = "Phone Hub / LAN Drop server stopped; its access link no longer works.";
         RefreshLive();
     }
 
@@ -374,14 +322,12 @@ public partial class TrustViewModel : ObservableObject, IDisposable
         AccountFacts.Clear();
         if (!IsSignedIn)
         {
-            AccountFacts.Add(new TrustFact("Account", "Not signed in", "Without an account nothing about you is stored in AxePower's cloud. Accounts are optional; they add Friends."));
+            AccountFacts.Add(new TrustFact("Account", "Not signed in", "Without an account nothing about you is stored in AxePower's cloud. Accounts are optional."));
             return;
         }
 
         AccountFacts.Add(new TrustFact("Account", state.Profile is { } profile ? $"Signed in as @{profile.Username}" : "Signed in (no username yet)",
             $"{state.Email ?? "No email"}{(state.Provider is { } provider ? $" · via {provider}" : string.Empty)}{(state.IsOffline ? " · offline right now" : string.Empty)}"));
-        AccountFacts.Add(new TrustFact("Friends connection", _friends?.IsLive == true ? "Connected" : "Not connected",
-            _friends is null ? null : (_friends.AppearOffline ? "You appear offline to friends." : _friends.ShareActivity ? "Friends see what you are doing." : "Friends see only online or away.")));
         AccountFacts.Add(new TrustFact("Remote access (AxePower Mobile)", CloudBridgeService.IsAvailable ? "Available" : "Turned off in this version",
             CloudBridgeService.IsAvailable ? null : CloudBridgeService.UnavailableReason));
     }
@@ -394,9 +340,9 @@ public partial class TrustViewModel : ObservableObject, IDisposable
         {
             Action = "Sign out of AxePower on this PC",
             Source = "Trust & Permissions",
-            Affected = new[] { "The saved session on this PC is deleted.", "Friends and presence stop until you sign in again." },
+            Affected = new[] { "The saved session on this PC is deleted." },
             Risk = RiskLevel.Low,
-            Backup = "Your account and friends stay in the cloud; sign in again to get them back.",
+            Backup = "You can sign in again to access your account.",
             Reversibility = Reversibility.FullyReversible,
             ConfirmLabel = "Sign out",
         })) return;
@@ -418,7 +364,7 @@ public partial class TrustViewModel : ObservableObject, IDisposable
             Risk = RiskLevel.High,
             Backup = "None. Everything listed is deleted from AxePower's cloud at once. Data on this PC (settings, music, logs) is not touched.",
             Reversibility = Reversibility.Irreversible,
-            ReversibilityNote = "a deleted account and its friends cannot be restored.",
+            ReversibilityNote = "a deleted account cannot be restored.",
             ConfirmLabel = "Delete my account",
         })) return;
         try
@@ -437,7 +383,6 @@ public partial class TrustViewModel : ObservableObject, IDisposable
 
     private void OnServiceChanged(object? sender, EventArgs e) => Dispatch(RefreshLive);
 
-    private void OnShareChanged(object? sender, ShareSessionStatus e) => Dispatch(RefreshLive);
 
     // -- Local data -------------------------------------------------------------------
 
@@ -535,9 +480,6 @@ public partial class TrustViewModel : ObservableObject, IDisposable
             case "music-cache":
                 _streamCache?.Clear();
                 return DeleteContents(System.IO.Path.Combine(row.Path, "covers"));
-            case "chat":
-                _chat?.Clear();
-                return DeleteContents(System.IO.Path.Combine(row.Path, "Attachments"));
             case "battery":
                 if (_battery is not null) await _battery.ClearHistoryAsync();
                 return 0;
@@ -576,11 +518,9 @@ public partial class TrustViewModel : ObservableObject, IDisposable
             {
                 "updates" => settings.AutoCheckUpdates ? "Checks automatically at start-up" : "Only when you click Check for updates",
                 "account" => signedIn ? "In use: you are signed in" : "Not used: you are not signed in",
-                "friends" => _friends?.IsLive == true ? "Connected now" : "Not connected",
                 "remote-access" => CloudBridgeService.IsAvailable ? "Available" : "Off in this version",
                 "youtube" => settings.Music.Providers.Enabled.Contains("youtube", StringComparer.OrdinalIgnoreCase) ? "Enabled as a music source" : "Turned off as a music source",
                 "phone-hub" => _lanDrop?.IsRunning == true ? "Server running now" : "Server stopped",
-                "share-peers" => _viewerHost?.IsRunning == true ? "Room open now" : "No room open",
                 _ => "Only when used",
             };
         }
@@ -618,7 +558,6 @@ public partial class TrustViewModel : ObservableObject, IDisposable
     {
         _timer?.Stop();
         if (_lanDrop is not null) _lanDrop.OnClientsChanged -= OnServiceChanged;
-        if (_share is not null) _share.StatusChanged -= OnShareChanged;
         if (_account is not null) _account.StateChanged -= OnAccountChanged;
     }
 }

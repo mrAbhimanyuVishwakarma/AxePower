@@ -4,10 +4,8 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using AxePower.Core.Models.ShareScreen;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Accounts;
-using AxePower.Core.Services.ShareScreen;
 using AxePower.Core.Services.Update;
 using Xunit;
 
@@ -19,60 +17,6 @@ namespace AxePower.Tests.Nullability;
 /// </summary>
 public class NetworkMissingFieldTests
 {
-    private const string Secret = "room-secret-for-tests";
-
-    private static ShareChatMessage Chunk() => new(
-        "m1", "Ana", string.Empty, new DateTime(2026, 10, 6, 10, 0, 0),
-        Kind: ShareChatKinds.FileChunk, AttachmentId: "0123456789abcdef0123456789abcdef",
-        AttachmentName: "a.txt", AttachmentSize: 10, AttachmentSha256: new string('a', 64),
-        ChunkIndex: 0, ChunkCount: 1, ChunkData: "aGVsbG8=");
-
-    [Fact]
-    public void RoomChat_AComplete_Message_StillDecrypts()
-    {
-        var wire = RoomMessageCrypto.Encrypt(Chunk(), Secret, sequence: 1, sender: "0011223344556677");
-
-        Assert.True(RoomMessageCrypto.TryDecrypt(wire, Secret, new ReplayFilter(), out var message, out _));
-        Assert.Equal("aGVsbG8=", message!.ChunkData);
-    }
-
-    [Theory]
-    [InlineData("ChunkData")]
-    [InlineData("AttachmentSha256")]
-    [InlineData("Kind")]
-    [InlineData("Sender")]
-    public void RoomChat_AMessageWithANullField_IsRefused(string field)
-    {
-        // Authenticated (it carries the room key) but malformed: the chat loops read these fields
-        // without checking, so before Prompt 22 a null here threw inside the host's chat loop.
-        var broken = field switch
-        {
-            "ChunkData" => Chunk() with { ChunkData = null! },
-            "AttachmentSha256" => Chunk() with { AttachmentSha256 = null! },
-            "Kind" => Chunk() with { Kind = null! },
-            _ => Chunk() with { Sender = null! },
-        };
-        var wire = RoomMessageCrypto.Encrypt(broken, Secret, sequence: 1, sender: "0011223344556677");
-
-        Assert.False(RoomMessageCrypto.TryDecrypt(wire, Secret, new ReplayFilter(), out var message, out _));
-        Assert.Null(message);
-    }
-
-    [Theory]
-    [InlineData("""{"v":1}""")]
-    [InlineData("""{"n":null}""")]
-    [InlineData("""{"n":42}""")]
-    [InlineData("""{"n":""}""")]
-    [InlineData("""["n"]""")]
-    public async Task RoomJoin_AHostReplyWithoutANonce_IsAClearError(string reply)
-    {
-        using var http = new HttpClient(new Reply(reply));
-
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            ShareRoomClient.BuildAdmittedSocketUriAsync(new Uri("https://host.example/room/abc"), Secret, "chat", CancellationToken.None, http));
-        Assert.Equal("The host returned no nonce.", ex.Message);
-    }
-
     [Fact]
     public async Task UpdateManifest_WithNullFields_LoadsAsEmpty_AndTheSignatureCheckRefusesIt()
     {
@@ -113,7 +57,6 @@ public class NetworkMissingFieldTests
         Assert.Equal(string.Empty, profile.DisplayName);
         Assert.Null(profile.AvatarUrl);
         Assert.Equal(DateTime.MinValue, profile.CreatedAtUtc);
-        Assert.True(profile.Discoverable);
     }
 
     private sealed class Reply(string body) : HttpMessageHandler

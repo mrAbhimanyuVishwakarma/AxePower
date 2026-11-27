@@ -188,14 +188,13 @@
         Everything else happens only when you use that feature:
       </p>
       <ul style="margin: 0 0 12px 22px;">
-        <li>signing in, your profile and Friends (online status, friend requests, invites), with Supabase, only if you
-          have an account;</li>
+        <li>signing in and saving your profile with Supabase, only if you have an account;</li>
         <li>searching and streaming music on YouTube, which sends your search text and the song being played;</li>
         <li>finding lyrics (LRCLIB, KuGou), which sends the song's title, artist, album and length;</li>
         <li>posters for your installed games, from Steam's image servers;</li>
         <li>pings: to 1.1.1.1 (Cloudflare) every 5 seconds while the Dashboard is on screen, for its latency reading,
           and to four public DNS servers when you run the DNS benchmark;</li>
-        <li>downloading AxePower updates, graphics drivers (NVIDIA, AMD), the Share Screen tools and portable apps
+        <li>downloading AxePower updates, graphics drivers (NVIDIA, AMD) and portable apps
           (GitHub and the publishers' sites), and installing software through WinGet, when you ask;</li>
         <li>links, downloads and help pages, which open in your web browser.</li>
       </ul>
@@ -211,11 +210,9 @@
       </p>
       <p style="margin-bottom: 12px;">
         <strong style="color: var(--text-primary);">Your devices and connections.</strong> Phone control, file
-        transfer, remote playback control, calls and screen sharing work over your local network or an address you
-        choose to connect to, and data goes directly between those devices, not through AxePower's servers.
+        transfer, and remote playback control work over your local network. Data goes directly between the devices.
         Local-network access is protected by a private link shared by QR code, and nothing is shared until you
-        start it. When you invite a friend through your account, the invite carries your room's link to that
-        friend only.
+        start it.
       </p>
       <p style="margin-bottom: 28px;">
         <strong style="color: var(--text-primary);">System access.</strong> By default the app runs with
@@ -236,24 +233,14 @@
           name and email if it has one). Passwords are kept only as a secure hash;</li>
         <li>your profile: @username, display name, the link to your profile picture from that service, and when
           you joined;</li>
-        <li>friends: your friends and friend requests, the people you blocked, and invites you send, which expire
-          after 10 minutes;</li>
-        <li>while the app is open and you're signed in: whether you're online or away and, unless you turn it
-          off, what you're doing (the game you're playing, in a call, sharing your screen).</li>
       </ul>
-      <p style="margin-bottom: 12px;">
-        <strong style="color: var(--text-primary);">Who can see it.</strong> Anyone signed in to AxePower can see
-        your @username, display name and picture, so friends can find you. Your friends list, status, activity
-        and invites are visible only to you and the friends involved. Settings &rarr; Friends lets you hide your
-        activity or appear offline.
-      </p>
       <p style="margin-bottom: 12px;">
         When you sign in with Google, Discord, GitHub or Steam, that service's own privacy policy covers the
         sign-in. For Steam, AxePower also looks up your public Steam name and picture.
       </p>
       <p style="margin-bottom: 28px;">
         <strong style="color: var(--text-primary);">Deleting it.</strong> Deleting your account on the app's
-        Profile page removes your account, profile, friends, status and invites. The services involved may keep
+        Profile page removes your account and profile. The services involved may keep
         short-lived technical logs under their own policies.
       </p>
 

@@ -28,7 +28,6 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - 🚀 **Beast Mode:** Gives you maximum power and sustained clocks for gaming or heavy tasks when plugged in.
 - 🎮 **Game Mode:** Automatically detects running games across any drive, suspends background bloat, locks maximum display refresh rate, and offers Controller Navigation (Gopher360).
 - 🎵 **Music Player:** In-app audio player supporting local audio libraries, YouTube Music streaming, and a dashboard-integrated Header Player.
-- 🖥️ **Share Screen:** Browser-based low-latency desktop and gameplay streaming with zero setup for viewers.
 - 📱 **Phone Control:** All-in-one mobile suite with offline **LAN Drop** Wi-Fi file sharing and **scrcpy** Android screen mirroring.
 - 🛍️ **Software Hub & Updaters:** 1-click installer and launcher for gaming stores, hardware monitoring tools, Ninite multi-installer, drivers, and runtimes.
 - 🖥️ **Built-In Terminal:** A real CMD / PowerShell window inside AxePower, where every command the app runs shows its live output.
@@ -47,6 +46,13 @@ Have you ever noticed your laptop running slowly when unplugged, or your battery
 - The Windows x64 build targets .NET 10 LTS. Setup checks for Microsoft .NET Desktop Runtime 10.0.15 or a newer 10.0.x x64 patch. When needed, it downloads and validates the Microsoft installer before continuing. For offline setup, install the x64 Desktop Runtime first and rerun AxePower Setup. [Microsoft .NET 10 downloads](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Published releases are listed on the [downloads repository](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download/releases).
+
+### Sidebar and shortcuts
+
+- Connection offers **Phone Control**, **Second Monitor**, **LAN Drop**, and **Phone Link**. Friends and Share Screen rooms were removed from the desktop app.
+- Connection, Maintenance, and Utilities start expanded and remember their state. Control is always expanded.
+- Click **Game Mode** on the Dashboard to open the Game Mode page. The Dashboard and Game Mode GPU readouts use `0 GHz` when the clock is unavailable.
+- Open **BCUninstaller** from the Uninstaller toolbar. Use **Tools** to install it if it is missing.
 
 ## 🌟 What's New in v2.1.0
 
@@ -78,14 +84,8 @@ The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Publish
   - A unique **@username** and a display name. The username can change once every 30 days.
   - Your sign-in is saved encrypted for your Windows user. Offline, AxePower keeps showing your profile.
 - 🪪 **Profile**: About is now **Profile**: your account, plus version, updates, release notes, support and the legal pages in one place. Edit your profile, sign out, or delete your account there.
-- 👥 **Friends on your account**:
-  - Add friends by **@username**, with **suggestions as you type**. Accept or decline requests.
-  - See who is **online, away or offline**, and what they're doing: "Playing Valorant", "In a call", "Sharing screen".
-  - **Invite** a friend to a call or to watch your screen: they get a pop-up with **Join** on any page. Calls still connect directly (same Wi-Fi or Tailscale).
-  - Your old contacts stay as **Saved rooms**. The name under the friends list is gone (the sidebar shows who you are), and the settings gear moved to the top.
-- 🔒 **Privacy controls** in Settings → Friends: hide what you're doing, appear offline, choose whether people can find you by name, and manage blocked people. Blocking ends a friendship, and the other person isn't told.
 - 📜 **Privacy Policy and Terms** now describe what an optional account stores, who can see it, and how to delete it.
-- 🧹 **Fixes**: the Game Mode card's name no longer disappears in small windows, a muted microphone shows a crossed-out mic (it showed a magnifier), and primary buttons have readable text in the Light skin.
+- 🧹 **Fixes**: the Game Mode card's name no longer disappears in small windows, and primary buttons have readable text in the Light skin.
 - 📦 **Packaging**: ships as **`AxePower-v2.0.8-Setup.exe`**.
 
 ## What's New in v2.0.7
@@ -99,7 +99,6 @@ The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Publish
   - The Theme list shows skin names, sorted with each glass version under its skin, and the mouse wheel no longer flicks through themes.
 - 🔋 **Battery**: plugged in but not charging (for example with Conservation Mode) is shown as such; temperature comes from the battery's own sensor in °C or °F; the serial number and manufacture date are the battery's own. Chemistry shows "Not reported" when the battery doesn't say.
 - 🖱️ **Touchpad**: the Settings switch really turns the touchpad off and on, using the same switch as Windows, and stays in step with it.
-- 👥 **Friends**: the page follows every skin, glass included. Its settings category is renamed Friends.
 - 🧹 **Fixes**: About page icons and Check for updates follow every skin; tray menu modes keep their colours (Eco green, Smart blue, Beast red, Game Mode purple).
 - 📦 **Packaging**: ships as **`AxePower-v2.0.7-Setup.exe`**.
 
@@ -133,13 +132,6 @@ The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Publish
 
 ## 🌟 What's New in v2.0.0
 
-- 🖥️ **Share Screen — the real thing**:
-  - Share any display to a friend's **browser**. They click a link; there is nothing to install on their side.
-  - **Hardware encoding** on NVIDIA (NVENC), AMD (AMF) and Intel (QSV), picked automatically, with a software path only as a last resort.
-  - **60 FPS is held by dropping resolution, not frames** — 1080p60 steps down to 900p60 and 720p60 when the link tightens, because motion matters more than pixels when a game is moving.
-  - **System audio or microphone** rides along with the picture, following your default output device.
-  - **In-app preview** shows the real stream through the real pipeline, so what you see is the delay your viewer sees.
-  - **Remote control**, off by default: granted per session, and the code is never part of the watch link, so passing someone the link does not pass them your keyboard.
 - 🎵 **Music — sources, discovery and a real library**:
   - **Provider-based sources** for YouTube Music and local files, with better track matching and a way to pick a different take when the match is wrong.
   - **Discovery** keeps the queue going when you reach the end, adding only to the end and never touching what you queued.
@@ -159,10 +151,6 @@ The local setup filename for this branch is `AxePower-v2.1.5-Setup.exe`. Publish
   - **YouTube Music Integration**: Stream audio directly from YouTube Music inside AxePower.
   - **Dashboard Header Player**: Sleek mini-player embedded seamlessly in the top header matching the dashboard aesthetic.
   - **Dynamic Audio Device Following**: Automatically follows default Windows output audio device transitions without requiring an app restart.
-- 🖥️ **Share Screen & GameStream**:
-  - Stream your active desktop or gaming session directly to friends via a local web link.
-  - Viewers connect straight from any modern browser with low latency and synchronized audio — no external client downloads required.
-  - Stability fixes for CamStudio and spacedesk virtual display resets.
 - 🗑️ **Next-Gen Uninstaller Pro Engine**:
   - Overhauled leftover scanner featuring confidence scoring, deep registry/filesystem probes, and pre-clean safety backup manifests.
   - Dedicated **Broken Entry Executor** to purge corrupted and orphaned Windows registry uninstallation remnants.

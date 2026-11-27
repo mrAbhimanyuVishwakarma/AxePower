@@ -19,12 +19,11 @@
 
 ---
 
-### ✅ 👥 AxePower Cloud Accounts & Social Friends Engine
-* **Implemented In:** `AxePower.Core/Services/Accounts/`, `AxePower.Core/Services/Friends/`, `AxePower.App/Views/AccountDialogView.xaml`
+### ✅ 👥 AxePower Cloud Accounts
+* **Implemented In:** `AxePower.Core/Services/Accounts/`, `AxePower.App/Views/AccountDialogView.xaml`
 * **Features Delivered:**
   * **Supabase Authentication:** Secure OAuth2 sign-in via Google, GitHub, Discord, and Steam.
   * **Profile Management:** User handle, avatar URL resolution from trusted provider CDNs, device registry, and hardware profiles.
-  * **Friends & Live Presence:** Real-time online/in-game status indicators, friend search with live suggestions, invite links, and voice mic status.
   * **Cross-Device Settings Sync:** Cloud-synced user preferences, custom power presets, and account entitlement tiers.
 
 ---

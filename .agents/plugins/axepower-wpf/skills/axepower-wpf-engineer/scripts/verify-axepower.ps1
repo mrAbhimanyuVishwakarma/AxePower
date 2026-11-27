@@ -24,27 +24,23 @@ dotnet --info
 
 Write-Host "`n[Stage 2] Restoring solution"
 Write-Host "-----------------------------------------"
-dotnet restore
+dotnet restore AxePower.sln --locked-mode
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "`n[Stage 3] Building Debug configuration"
 Write-Host "-----------------------------------------"
-dotnet build -c Debug
+dotnet build AxePower.sln -c Debug --no-restore
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "`n[Stage 4] Building Release configuration"
 Write-Host "-----------------------------------------"
-dotnet build -c Release
+dotnet build AxePower.sln -c Release --no-restore -p:ContinuousIntegrationBuild=true
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "`n[Stage 5] Running Tests"
 Write-Host "-----------------------------------------"
-if (Test-Path "AxePower.Tests\AxePower.Tests.csproj") {
-    dotnet test -c Release
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-} else {
-    Write-Host "No test project found at AxePower.Tests\AxePower.Tests.csproj. Skipping tests."
-}
+dotnet test AxePower.Tests/AxePower.Tests.csproj -c Release --no-build
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "`n========================================="
 Write-Host "All verification stages passed successfully!"

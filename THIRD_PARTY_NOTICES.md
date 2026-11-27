@@ -34,7 +34,6 @@ LGPL components (TagLib#) are shipped as separate, unmodified DLLs (`TagLibSharp
 | Mono.Posix.NETStandard (dependency of LibreHardwareMonitorLib) | 1.0.0 | MIT | https://github.com/mono/mono |
 | Microsoft.Extensions.DependencyInjection.Abstractions | 8.0.0 | MIT | https://github.com/dotnet/runtime |
 | Microsoft.Management.Infrastructure.Runtime.Win / .Unix (dependencies of Microsoft.Management.Infrastructure) | 3.0.0 | MIT | https://github.com/PowerShell/MMI |
-| Microsoft.Web.WebView2 | 1.0.3485.44 | BSD-3-Clause (Microsoft) | https://www.nuget.org/packages/Microsoft.Web.WebView2 |
 | YoutubeExplode | 6.6.2 | MIT | https://github.com/Tyrrrz/YoutubeExplode |
 | QRCoder | 1.8.0 | MIT | https://github.com/Shane32/QRCoder |
 | Microsoft.Data.Sqlite, Microsoft.Data.Sqlite.Core | 8.0.11 | MIT | https://github.com/dotnet/efcore |
@@ -43,13 +42,6 @@ LGPL components (TagLib#) are shipped as separate, unmodified DLLs (`TagLibSharp
 | .NET platform packages: Microsoft.Win32.SystemEvents, System.CodeDom, System.Drawing.Common, System.Diagnostics.EventLog, System.IO.Ports (with its runtime.*.runtime.native.System.IO.Ports helpers), System.Management, System.Security.Cryptography.ProtectedData, System.ServiceProcess.ServiceController, System.Threading.AccessControl, System.Memory, System.Numerics.Vectors, System.ValueTuple | 4.5.0 – 10.0.10 | MIT | https://github.com/dotnet/runtime |
 
 The source code of the MPL-2.0 components is available at the source links above. AxePower does not modify them.
-
-### Share Screen viewer page (served to viewers' browsers)
-
-| Component | Version | License | Source | How it is used |
-|---|---|---|---|---|
-| @noble/ciphers (AES-GCM) | 2.4.0 | MIT | https://github.com/paulmillr/noble-ciphers | Bundled unmodified, with @noble/hashes, into `AxePower.Core/Services/ShareScreen/Vendor/noble.min.js` and served inside the viewer page to encrypt remote-control input. |
-| @noble/hashes (SHA-256, HMAC, HKDF) | 2.4.0 | MIT | https://github.com/paulmillr/noble-hashes | As above. |
 
 ### Brand icons (account sign-in)
 
@@ -68,7 +60,6 @@ The source code of the MPL-2.0 components is available at the source links above
 ### MIT License
 
 Applies to:
-- @noble/ciphers, @noble/hashes: Copyright (c) 2022 Paul Miller (https://paulmillr.com)
 - NAudio.Core, NAudio.Wasapi: Copyright (c) Mark Heath
 - NAudio.Vorbis: Copyright (c) Andrew Ward
 - NVorbis: Copyright (c) 2020 Andrew Ward
@@ -141,40 +132,6 @@ versions of the Opus C reference library, which is maintained by Xiph.org and th
 Opus open-source contributors. The source code for these libraries is freely available
 at https://gitlab.xiph.org/xiph/opus/-/tags/v1.5.2, and all binaries are being
 redistributed to you under the same terms of the general Opus license dictated above.
-```
-
-### Microsoft.Web.WebView2 (BSD-3-Clause)
-
-Reproduced from the license shipped in the Microsoft.Web.WebView2 package.
-
-```text
-Copyright (C) Microsoft Corporation. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * The name of Microsoft Corporation, or the names of its contributors 
-may not be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
 ### SQLitePCLRaw (Apache-2.0) and SQLite (public domain)
@@ -589,6 +546,8 @@ Full text of the Apache License, Version 2.0:
 ```
 
 ### Bulk Crap Uninstaller (Apache-2.0)
+
+The BCUninstaller card on the Tools page uses the upstream project’s application icon.
 
 Portions of Uninstaller Pro are adapted from Bulk Crap Uninstaller and modified for AxePower.
 Each such file carries this header:

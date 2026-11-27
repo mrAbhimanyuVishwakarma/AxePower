@@ -190,7 +190,7 @@ public partial class GameModeViewModel : ObservableObject
     private string _gpuName = "GPU";
 
     [ObservableProperty]
-    private string _gpuDisplay = "—";
+    private string _gpuDisplay = "0 GHz";
 
     [ObservableProperty]
     private string _memoryDisplay = "—";

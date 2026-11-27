@@ -23,14 +23,15 @@ This covers the Settings page and the shell behaviour every other feature depend
 | Log | [LogService.cs](../AxePower.Core/Services/LogService.cs), [LogsViewModel.cs](../AxePower.App/ViewModels/LogsViewModel.cs) |
 
 ## Settings persistence
-- **File:** `%LOCALAPPDATA%\AxePower\settings.json`, plain indented JSON with enums stored as strings. The README calls it "encrypted"; it is not.
+- **File:** `%LOCALAPPDATA%\AxePower\settings.json`, JSON with enums stored as strings.
 - **Save:** write `settings.temp.json`, then `File.Replace(temp, settings, settings.backup.json)`, which is atomic and keeps the previous file as a backup.
 - **Load:** reads `settings.json` and falls back to `settings.backup.json`, then to defaults.
 - `SettingsService.OnSettingsChanged` fires after every save. `AutoSwitchService`, `AppMonitorService` and `StartupService` listen to it.
 - Adding a setting: add a `[JsonPropertyName]` property with a default in `AppSettings` **and** copy it in `AppSettings.Clone()`. A missing key in an old file falls back to the default.
+- The sidebar saves the expanded state of Connection, Maintenance, and Utilities. Those groups default to expanded. Control stays open.
 
 ## Elevation model
-The goal is to run elevated by default, keep that switchable, and avoid a UAC prompt at boot.
+Fresh installs start with elevation off. The first-run screen lets the user opt in, and existing users keep their saved choice.
 
 1. The manifest is `asInvoker`. Using `requireAdministrator` would make the toggle impossible to switch off and would prompt on every launch.
 2. At startup (`App.TryElevateAndExit`), if `RunAsAdministrator` is on, the process isn't elevated, and `--elevation-attempted` isn't in the arguments, AxePower relaunches itself with the `runas` verb (plus `--force`) and exits.

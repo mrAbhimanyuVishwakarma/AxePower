@@ -1,14 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using AxePower.App.ViewModels;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Processes;
+using AxePower.Tests.Uninstaller;
 
 namespace AxePower.Tests;
 
 public class ToolsTests
 {
-    private sealed class FakeTools : ToolsService
+    private sealed class FakeTools(IUserShellLauncher? launcher = null) : ToolsService(launcher)
     {
         public Dictionary<string, string> Installed { get; } = new();
         public HashSet<string> Running { get; } = new();
@@ -19,8 +24,8 @@ public class ToolsTests
     [Fact]
     public void Catalog_IsTheAgreedApps_EachFromItsPublisher()
     {
-        Assert.Equal(new[] { "MSI Afterburner", "CPU-Z", "GPU-Z", "CrystalDiskInfo", "Revo Uninstaller", "WizTree" }, ToolsService.Tools.Select(t => t.Name));
-        Assert.Equal(new[] { "Guru3D.Afterburner", "CPUID.CPU-Z", "TechPowerUp.GPU-Z", "CrystalDewWorld.CrystalDiskInfo", "RevoUninstaller.RevoUninstaller", "AntibodySoftware.WizTree" }, ToolsService.Tools.Select(t => t.WinGetId));
+        Assert.Equal(new[] { "MSI Afterburner", "CPU-Z", "GPU-Z", "CrystalDiskInfo", "Revo Uninstaller", "BCUninstaller", "WizTree" }, ToolsService.Tools.Select(t => t.Name));
+        Assert.Equal(new[] { "Guru3D.Afterburner", "CPUID.CPU-Z", "TechPowerUp.GPU-Z", "CrystalDewWorld.CrystalDiskInfo", "RevoUninstaller.RevoUninstaller", "Klocman.BulkCrapUninstaller", "AntibodySoftware.WizTree" }, ToolsService.Tools.Select(t => t.WinGetId));
         Assert.All(ToolsService.Tools, t =>
         {
             Assert.StartsWith("https://", t.WebUrl);
@@ -91,7 +96,7 @@ public class ToolsTests
         var page = new ToolsViewModel(new FakeTools());
         Assert.Equal(new[] { "Monitoring", "Cleanup", "Hardware info", "Timer & Routines" }, page.Groups.Select(g => g.Title));
         Assert.Equal(new[] { "MSI Afterburner" }, page.Groups[0].Cards.Select(c => c.Name));
-        Assert.Equal(new[] { "Revo Uninstaller", "WizTree" }, page.Groups[1].Cards.Select(c => c.Name));
+        Assert.Equal(new[] { "Revo Uninstaller", "BCUninstaller", "WizTree" }, page.Groups[1].Cards.Select(c => c.Name));
         Assert.Equal(new object[] { page.TimerCard, page.RoutinesCard }, page.Groups[3].Items);
     }
 
@@ -101,6 +106,29 @@ public class ToolsTests
         var page = new ToolsViewModel(new FakeTools());
         Assert.Equal(new[] { "Monitoring", "Hardware info" }, page.LeftColumn.Select(g => g.Title));
         Assert.Equal(new[] { "Cleanup", "Timer & Routines" }, page.RightColumn.Select(g => g.Title));
-        Assert.Equal(page.LeftColumn.Sum(g => g.Items.Count), page.RightColumn.Sum(g => g.Items.Count));
+        Assert.InRange(Math.Abs(page.LeftColumn.Sum(g => g.Items.Count) - page.RightColumn.Sum(g => g.Items.Count)), 0, 1);
+    }
+
+    [Fact]
+    public async Task InstalledBcUninstallerCard_UsesTheSharedLauncher()
+    {
+        using var folder = new TempFolder();
+        var executable = Path.Combine(folder.Path, "BCUninstaller.exe");
+        File.WriteAllBytes(executable, []);
+        var launches = new List<ProcessStartInfo>();
+        var service = new FakeTools(new UserShellLauncher(isElevated: () => false, start: launches.Add));
+        var page = new ToolsViewModel(service);
+        var card = page.Cards.Single(c => c.Definition.Id == ToolsService.BcUninstaller);
+
+        page.Refresh();
+        Assert.Equal("Install", card.PrimaryText);
+        Assert.False(service.OpenBcUninstaller().Started);
+        Assert.Empty(launches);
+
+        service.Installed[ToolsService.BcUninstaller] = executable;
+        page.Refresh();
+        Assert.Equal("Open", card.PrimaryText);
+        await card.PrimaryCommand.ExecuteAsync(null);
+        Assert.Equal(executable, Assert.Single(launches).FileName);
     }
 }

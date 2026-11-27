@@ -179,7 +179,6 @@ password, and a live "username available" check.
 >   About had. Its modals are unchanged.
 > - The "Profile" nav key opens the sign-in dialog when signed out; "About" still works as an alias.
 >
-> **Not done yet:** the Friends GamerTag → @username link. **Not yet seen:** the sidebar item and the
 > 72 px rail (they were not in the off-screen renders), and whether the taller item (52 px) still fits
 > the sidebar without a scrollbar on a 760 px window.
 - **Sidebar (bottom):** avatar + display name + `@username`. Signed out, it shows a generic avatar
@@ -192,15 +191,12 @@ password, and a live "username available" check.
   - Delete account, with confirmation.
   - The **AxePower card** moved from About.
 - `About` navigation keys and tray/menu links go to Profile, so nothing that links to About breaks.
-- Friends: when signed in, `FriendsProfile.GamerTag` shows `@username` instead of the Windows user
-  name.
 
 ### A7 — Privacy Policy, Terms, What's New
 > **Status 2026-09-26: policy and terms done** in the app (Profile → Privacy Policy / Terms) and on the
 > website (privacy.html, terms.html, about.html), dated 26 September 2026.
 > - Privacy gets "Your AxePower account (optional)": what is stored and by whom (Supabase, the sign-in
 >   services), who sees what, deletion, and a note on children's accounts.
-> - Terms get "Your account and friends".
 > - Tests now fail if any page says "no accounts", or if the app's and website's dates differ.
 > **Still to do:** the owner picks the What's New entries for 2.0.8; the SMTP sender for account emails
 > (decided at release).
@@ -225,5 +221,3 @@ password, and a live "username available" check.
 - **A0:** the layouts (previews to pick from).
 - **A7:** the domain and SMTP provider for account emails.
 - **Before any iOS release:** Sign in with Apple (skipped for now).
-- **Later:** whether Friends moves from account-free room links to finding friends by `@username`.
-  That changes the product decision in [SHARE_SOCIAL_PLAN.md](SHARE_SOCIAL_PLAN.md).

@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.1.5] - 2026-11-26
+## [2.1.5] - 2026-11-27
 
 ### Changed
 
@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Windows, optional driver, Store, and BIOS updates** use Windows Settings, Microsoft Store, or official vendor handoffs. A partial or unavailable scan is labeled separately from an empty result.
 - **Update Shield** describes the Windows policy limits on feature-update deferral and signed-in restart protection. Cache repair and restore-point actions remain available.
 - **Runtime and installer** now target .NET 10 LTS for Windows x64. Setup checks for Desktop Runtime 10.0.15 or a newer 10.0.x x64 patch and verifies Microsoft's installer checksum and signature before running it.
+- **Sidebar** keeps Control visible and remembers the expanded state of Connection, Maintenance, and Utilities. New profiles start with all groups expanded.
+- **Dashboard** opens the Game Mode page from its Game Mode shortcut. GPU readouts display `0 GHz` when the clock cannot be read.
+
+### Added
+
+- **BCUninstaller** can be installed or opened from Tools. Uninstaller has a direct shortcut next to Windows Apps.
+
+### Removed
+
+- Removed Friends and Share Screen rooms from the desktop app. Phone Control, Second Monitor, LAN Drop, and Phone Link are still available under Connection.
 
 ## [2.1.3] - 2026-10-08
 
@@ -60,7 +70,6 @@ and 2.1.2 builds.
 ### Security
 - Updates are verified against a signed manifest (pinned key), their size and SHA-256, and the
   downloaded installer is checked again right before it runs.
-- The Share Screen viewer can no longer be sent to other websites or open pop-ups.
 - Phone Hub / LAN Drop hardened: authenticated sessions, size limits, lockout after wrong tries,
   and a warning on Public networks.
 - Remote access for AxePower Mobile is turned off until its connection is private to your account.

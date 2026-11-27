@@ -6,13 +6,13 @@ on:
       - main
       - master
       - 'v*'
-      - 'v2.1.1---monitization-features'
+      - windowsupdatepage-rework
   pull_request:
     branches:
       - main
       - master
       - 'v*'
-      - 'v2.1.1---monitization-features'
+      - windowsupdatepage-rework
   schedule:
     - cron: '0 6 * * 1'
   workflow_dispatch:

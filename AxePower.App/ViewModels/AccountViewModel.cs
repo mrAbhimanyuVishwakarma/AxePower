@@ -176,7 +176,7 @@ public partial class AccountViewModel : ObservableObject
     public string DialogSubtitle => Mode switch
     {
         AccountDialogMode.SignIn => "Optional. Everything in AxePower works without an account.",
-        AccountDialogMode.SignUp => "Your @username is how friends find you.",
+        AccountDialogMode.SignUp => "Choose a unique username for your AxePower profile.",
         AccountDialogMode.ForgotPassword => "We'll email you a link to set a new password.",
         AccountDialogMode.ChooseUsername => "One last step: pick the @username others will see.",
         AccountDialogMode.EditProfile => UsernameLockNote,

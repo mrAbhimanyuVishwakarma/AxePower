@@ -23,28 +23,13 @@ installed copy from the tray, then build the current checkout with the .NET 10 S
 list in Light, Glass and one accent skin.
 **Tell me:** "A1 pass", or the item numbers that look wrong.
 
-### A2. "Chat ended" message on the Friends page (Prompt 21)
-**Need:** this PC.
-**Do:**
-1. Friends → Invite, to open a room. Copy the room link.
-2. Stop sharing, then Invite again, so a **new** room with a new link is open.
-3. Friends → Join, paste the **old** link from step 1, and join.
-4. Within a few seconds a message should say the room refused this link, and to ask for a new one.
-5. Stop sharing completely, then join the old link again. This time nothing is listening, so the
-   message should say the connection to the room was lost.
-6. Open a room, join it with its **current** link, then leave: **no** message should appear.
-
-**Tell me:** the messages you saw in steps 4 and 5, and whether step 6 was silent.
-
-### A3. LAN Drop and Share Screen warning banners on a Public network (P6, P10)
+### A3. LAN Drop warning on a Public network (P6)
 **Need:** this PC, connected to a network that Windows calls *Public*. Check in Settings →
 Network & internet → your Wi-Fi → Properties.
 **Do:**
 1. Phone Control → LAN Drop → Start. A red banner should name the network and refuse to start.
    Click **Start anyway for this session**: the server should start.
-2. Friends → Invite. A banner should appear; click **Share anyway for this session**: the room
-   should open.
-3. Compare both pages with the images in `ui reference/` in Dark and Light.
+2. Compare the page with the images in `ui reference/` in Dark and Light.
 
 **Tell me:** pass, or a screenshot of what is off.
 
@@ -57,8 +42,8 @@ Network & internet → your Wi-Fi → Properties.
 2. Settings → **Diagnostics & Privacy**. The card should say how many files are stored, since
    when, and "Kept on this PC for 14 days or 20 MB … Never uploaded."
 3. Click **Open…**. Click through the files on the left: each one shows its full text on the
-   right. Tick **Include my settings**: a `settings.json` appears, and your folders, app lists and
-   friends show as `[removed: N item(s)]`. Search the log text for your Windows user name or this
+   right. Tick **Include my settings**: a `settings.json` appears, and your folders and app lists
+   show as `[removed: N item(s)]`. Search the log text for your Windows user name or this
    PC's name: neither should appear.
 4. Click **Save bundle…**, save it to the Desktop, open the .zip: it holds exactly the files you
    saw. Cancel the Save dialog once too: nothing should be written.
@@ -209,42 +194,6 @@ firewall rules that Windows created from earlier prompts. List them with
 
 ---
 
-## C. Checks that need a second PC (about 45 minutes)
-
-### C1. Share Screen between two PCs on your LAN (Prompt 14; P9, P10)
-**Need:** two Windows PCs on the same Private network, both running this build (copy the
-`bin\Release` folder or install the built installer on the second PC). Chrome and Edge on the
-second PC.
-**Do:**
-1. PC 1: Friends → Invite, and copy the link.
-2. PC 2: open the link in **Chrome**: the stream plays. Repeat in **Edge**.
-3. PC 2 (browser): ask for control, and type the control code in **lowercase**.
-4. PC 1: an Allow/Deny prompt appears. Click **Allow**. On PC 2, move the mouse and type: PC 1
-   responds.
-5. Repeat step 3, but click **Deny** on PC 1: the browser is refused.
-6. PC 2: in AxePower, Friends → Join with the same link. Send chat both ways, send a file both
-   ways, and talk on voice both ways.
-7. PC 1: "In your room" lists the browser as "Video viewer" and highlights the controller.
-
-**Tell me:** pass, or the step that failed. If a step fails, send me
-`%APPDATA%\AxePower\AxePower.log` from both PCs (secrets are now removed from it automatically).
-
-### C2. Share Screen over Tailscale with HTTPS (Prompt 14; P11)
-**Need:** the two PCs in one Tailscale network. In the Tailscale admin console, under DNS, turn on
-**MagicDNS** and **HTTPS Certificates**.
-**Do:**
-1. PC 1: Friends → Settings → **Viewer address**, and enter PC 1's name ending in `.ts.net`
-   (shown by `tailscale status`).
-2. Friends → Invite: the link should start with `https://`.
-3. PC 2: open it. There should be no certificate warning, and the stream, chat, voice and control
-   all work.
-4. Turn HTTPS Certificates off in the admin console, then open a new room: the link falls back to
-   `http://`, and the log has a line saying why.
-
-**Tell me:** pass, or the step that failed, plus both log files.
-
----
-
 ## D. Things only you can get or decide
 
 ### D1. Code-signing certificate (Prompt 8): **decided 2026-10-06: stay unsigned for now**
@@ -291,7 +240,7 @@ Nothing since `b68f001` is committed. Tell me the branch name (for example a new
 steps, one per prompt where possible, without pushing.
 
 ### D4. HTTPS on a plain LAN (P4) (a decision; it can wait)
-On a normal Wi-Fi (not Tailscale), LAN Drop and the Share Screen viewer page are still plain HTTP.
+LAN Drop still uses HTTP over the local network.
 That's fine at home, but someone on the same network could read or alter that traffic. The options
 need their own design pass (threat model §5). Say if you want this before release, and I'll bring
 choices.
@@ -303,7 +252,6 @@ choices.
 | Item | Needs | Status |
 |---|---|---|
 | A1 Visual check | this PC | waiting |
-| A2 Chat ended | this PC | waiting |
 | A3 Public-network banners | this PC on a Public network | waiting |
 | A4 Diagnostics & Privacy | this PC | waiting |
 | A5 Change preview and history | this PC | waiting |
@@ -315,7 +263,6 @@ choices.
 | A11 First run | this PC | waiting |
 | B1 LAN Drop on a phone | phone | waiting |
 | B2 Firewall rule | installer build | waiting |
-| C1 Share Screen, two PCs | second PC | waiting |
 | C2 Tailscale HTTPS | second PC, Tailscale | waiting |
 | D1 Code signing | decision | decided: unsigned for now; buy a certificate once AxePower earns (2026-10-08) |
 | D2 Update key | run one script | done 2026-10-06 (key pinned and committed) |

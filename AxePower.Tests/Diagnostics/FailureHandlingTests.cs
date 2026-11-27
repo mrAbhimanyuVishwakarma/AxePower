@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AxePower.Core.Models.Uninstaller;
 using AxePower.Core.Services;
-using AxePower.Core.Services.ShareScreen;
 using AxePower.Core.Services.Uninstaller;
 using Xunit;
 
@@ -80,66 +79,6 @@ public class FailureHandlingTests : IDisposable
         Assert.Equal("old", Assert.Single(await history.GetSessionsAsync()).SessionId);
     }
 
-    // -- A joined room's chat says why it stopped -------------------------------------------------
-
-    private const string RoomLink = "http://127.0.0.1:1/axe0011#v=0123456789abcdef0123456789abcdef";
-
-    [Theory]
-    [InlineData(HttpStatusCode.Unauthorized, "refused")]
-    [InlineData(HttpStatusCode.NotFound, "refused")]
-    [InlineData(HttpStatusCode.Conflict, "busy")]
-    [InlineData(HttpStatusCode.ServiceUnavailable, "busy")]
-    public async Task RefusedAdmission_EndsChatWithAReasonForTheUser(HttpStatusCode status, string expected)
-    {
-        var ended = new TaskCompletionSource<string>();
-        using var session = new ShareRoomSession(new LogService(),
-            (_, _, _, _) => throw new HttpRequestException("refused", null, status));
-        session.ChatEnded += (_, reason) => ended.TrySetResult(reason);
-
-        session.JoinChat(new Uri(RoomLink));
-
-        Assert.Contains(expected, await ended.Task.WaitAsync(TimeSpan.FromSeconds(5)), StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task LeavingTheRoom_IsNotReportedAsAFailure()
-    {
-        var admitted = new TaskCompletionSource();
-        bool ended = false;
-        using var session = new ShareRoomSession(new LogService(), async (_, _, _, ct) =>
-        {
-            admitted.TrySetResult();
-            await Task.Delay(Timeout.Infinite, ct);
-            return new Uri("ws://127.0.0.1:1/");
-        });
-        session.ChatEnded += (_, _) => ended = true;
-
-        session.JoinChat(new Uri(RoomLink));
-        await admitted.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        session.Leave();
-        await Task.Delay(300);
-
-        Assert.False(ended);
-    }
-
-    [Fact]
-    public void ChatFailureMessages_AreActionable_AndNameNoSecrets()
-    {
-        foreach (var ex in new Exception[]
-        {
-            new HttpRequestException("x", null, HttpStatusCode.Forbidden),
-            new HttpRequestException("x", null, HttpStatusCode.TooManyRequests),
-            new System.Net.WebSockets.WebSocketException("reset"),
-            new IOException("broken pipe"),
-            new InvalidOperationException("bug " + RoomLink),
-        })
-        {
-            var text = ShareRoomSession.DescribeChatFailure(ex);
-            Assert.False(string.IsNullOrWhiteSpace(text));
-            Assert.DoesNotContain("0123456789abcdef", text);
-        }
-    }
-
     // -- The filters swallow what they should, and nothing else -----------------------------------
 
     [Fact]
@@ -152,14 +91,11 @@ public class FailureHandlingTests : IDisposable
         Assert.False(ExpectedFailures.Com(defect));
         Assert.False(ExpectedFailures.Wmi(defect));
         Assert.False(ExpectedFailures.Path(defect));
-        Assert.False(Connection.IsGone(defect));
 
         Assert.True(ExpectedFailures.Registry(new UnauthorizedAccessException()));
         Assert.True(ExpectedFailures.FileSystem(new IOException()));
         Assert.True(ExpectedFailures.Process(new Win32Exception()));
         Assert.True(ExpectedFailures.Com(new COMException()));
         Assert.True(ExpectedFailures.Path(new ArgumentException()));
-        Assert.True(Connection.IsGone(new SocketException()));
-        Assert.True(Connection.IsGone(new ObjectDisposedException("socket")));
     }
 }

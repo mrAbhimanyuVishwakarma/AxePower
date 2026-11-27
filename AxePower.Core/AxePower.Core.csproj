@@ -44,7 +44,6 @@
     <EmbeddedResource Include="..\skins\dark\skin.json" LogicalName="AxePower.Skins.dark.json" />
     <EmbeddedResource Include="..\skins\light\skin.json" LogicalName="AxePower.Skins.light.json" />
     <EmbeddedResource Include="..\skins\glass\skin.json" LogicalName="AxePower.Skins.glass.json" />
-    <EmbeddedResource Include="Services\ShareScreen\Vendor\noble.min.js" LogicalName="AxePower.ShareScreen.noble.min.js" />
   </ItemGroup>
 
 </Project>

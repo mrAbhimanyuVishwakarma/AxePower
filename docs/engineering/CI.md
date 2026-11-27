@@ -18,7 +18,7 @@ The workflow automatically triggers on `push` and `pull_request` events targetin
 - `main`
 - `master`
 - Version/release branches matching pattern `v*` (e.g., `v2.0`, `v2.1`)
-- Current active release branch `v2.1.1---monitization-features`
+- Current development branch `windowsupdatepage-rework`
 - Manual trigger via `workflow_dispatch`
 
 ---
@@ -50,16 +50,12 @@ dotnet list AxePower.sln package --deprecated --include-transitive
 
 ### 4. Restore Dependencies
 ```powershell
-if (Test-Path "packages.lock.json") {
-    dotnet restore AxePower.sln --locked-mode
-} else {
-    dotnet restore AxePower.sln
-}
+dotnet restore AxePower.sln --locked-mode
 ```
 
 ### 5. Build in Release Mode
 ```powershell
-dotnet build AxePower.sln -c Release --no-restore
+dotnet build AxePower.sln -c Release --no-restore -p:ContinuousIntegrationBuild=true
 ```
 
 ### 6. Run Complete Test Suite with Isolated State & Code Coverage

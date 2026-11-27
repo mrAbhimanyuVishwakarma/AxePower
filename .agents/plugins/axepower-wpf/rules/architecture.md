@@ -1,6 +1,6 @@
 # AxePower Architecture
 
-* **.NET 8 WPF**: AxePower is built on .NET 8 for Windows Desktop.
+* **.NET 10 WPF**: Use the SDK pinned in the repository's `global.json`.
 * **C# 12**: Use modern C# features appropriately.
 * **Strict MVVM**: 
   * `AxePower.App` contains Views (UI) and ViewModels.

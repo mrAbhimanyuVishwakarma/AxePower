@@ -15,7 +15,7 @@ together with Microsoft.Extensions.DependencyInjection.
 
 | Project | Target | Role | References |
 |---|---|---|---|
-| `AxePower.App` | `net10.0-windows10.0.19041.0`, WPF (`UseWPF`) | Windows, views, view models, UI-only services (themes, hotkeys, tray, WebView2), the composition root (`App.ConfigureServices`) | `AxePower.Core`, CommunityToolkit.Mvvm, Hardcodet.NotifyIcon.Wpf, WebView2, MS DI |
+| `AxePower.App` | `net10.0-windows10.0.19041.0`, WPF (`UseWPF`) | Windows, views, view models, UI-only services (themes, hotkeys and tray), the composition root (`App.ConfigureServices`) | `AxePower.Core`, CommunityToolkit.Mvvm, Hardcodet.NotifyIcon.Wpf, MS DI |
 | `AxePower.Core` | `net10.0-windows10.0.19041.0`, no UI framework | Every feature's logic **and** its Windows integration: registry, WMI, P/Invoke, processes, sockets, HTTP, SQLite, audio | NuGet only (LibreHardwareMonitorLib, Microsoft.Data.Sqlite, System.Management, MMI, YoutubeExplode, NAudio, Concentus, TagLibSharp, …) |
 | `AxePower.Tests` | xUnit | Unit, integration, policy and fuzz tests | App and Core |
 
@@ -33,29 +33,26 @@ and `AxePower Mobile/` (a separate Flutter app, not covered here).
  ┌──────────────────────────── AxePower.exe (one process, usually ELEVATED) ────────────────────────────┐
  │  WPF UI (App)  ──calls──►  Core services  ──►  registry · WMI · services · P/Invoke · SendInput     │
  │       │                         │                                                                    │
- │       │ WebView2 (Share Screen preview)          listeners:  LAN Drop  :5050 (chosen adapter)       │
- │       │                                                      Share viewer host :8890+ (all IPv4)    │
+ │       │ WPF window and views                    listeners:  LAN Drop  :5050 (chosen adapter)       │
  │       │                                                      OAuth loopback (127.0.0.1, one shot)   │
  │       ▼                                                      single-instance named pipe            │
- │  child processes (inherit elevation): MediaMTX, FFmpeg, adb/scrcpy, winget, powershell, netsh,     │
- │  powercfg, reg, sc, schtasks, msiexec, uninstallers, tailscale, third-party tools                  │
+ │  child processes (inherit elevation): adb/scrcpy, winget, powershell, netsh,     │
+ │  powercfg, reg, sc, schtasks, msiexec, uninstallers, third-party tools                  │
  └────────────────────────────────────────────────────────────────────────────────────────────────────┘
-        │ HTTPS out                    │ LAN / tailnet in                         │ local files
+        │ HTTPS out                    │ LAN in                         │ local files
         ▼                              ▼                                          ▼
-  Supabase (accounts, friends,   phones and browsers on the LAN,          %LOCALAPPDATA%\AxePower,
-  presence, realtime), GitHub    friends' AxePower over LAN or             %APPDATA%\AxePower,
-  (updates, tools), YouTube,     Tailscale                                 Downloads\AxePower_LanDrop
-  LRCLIB, Kugou, NVIDIA, vendors
+  Supabase accounts, updates,   Phones and browsers on the LAN,       %LOCALAPPDATA%\AxePower,
+  music and vendor services      OAuth callbacks on loopback           %APPDATA%\AxePower, Downloads
 ```
 
 ### 2.1 Elevation boundary
 
-- `app.manifest` asks for `asInvoker`. Elevation comes from the `RunAsAdministrator` setting,
-  **which defaults to `true`**. At startup `App.TryElevateAndExit` relaunches through
+- `app.manifest` asks for `asInvoker`. The first-run screen lets users opt into
+  `RunAsAdministrator`. At startup `App.TryElevateAndExit` relaunches through
   `ElevationService.TryRelaunchElevated` (UAC). A refused prompt keeps the app running as a
   standard user, and a sentinel argument stops a relaunch loop.
-- So in the default configuration **the whole process is elevated**, including the two network
-  listeners, the WebView2 host, the YouTube and lyrics HTTP clients, and every child process.
+- When elevation is enabled, **the whole process is elevated**, including the two network
+  listeners, the YouTube and lyrics HTTP clients, and every child process.
   There is no split between a low-privilege UI and a privileged broker.
 - A few services also start single processes with `Verb = "runas"` for the case where the app
   is not elevated: Debloat, DNS optimizer, driver update, MSI Afterburner, service optimizer, and
@@ -79,19 +76,15 @@ That is why Prompts 12–15 hardened those parsers so heavily. It is also why st
 | Direction | Endpoint | Owner | Exposure |
 |---|---|---|---|
 | Inbound | LAN Drop / phone portal, TCP 5050 (configurable) | `LanDropService` | Bound to the chosen adapter only; refused on Public/unclassified networks unless allowed per session; session token, cookie, rate limit (see `docs/security/`) |
-| Inbound | Share Screen viewer host, TCP 8890 (next free port up to +50) | `ShareViewerHost` | All IPv4 interfaces (LAN plus Tailscale); refused on untrusted networks unless allowed; nonce/HMAC admission; HTTPS over Tailscale |
-| Inbound | MediaMTX WebRTC/WHEP TCP 8889 and UDP 9189 (WebRTC port + 300) | `MediaMtxServer` (child process) | All interfaces; every read and publish checked by the viewer host |
-| Loopback | MediaMTX RTSP ingest (8554), API (9997+) | `MediaMtxServer` | 127.0.0.1 only |
 | Loopback | OAuth callback | `OAuthLoopback` | 127.0.0.1, one callback, then closed |
 | Local IPC | single-instance pipe | `App` | named pipe, same user |
-| Outbound | `kjnqsgdlcytpooueymdt.supabase.co` (REST, Auth, Realtime) | `SupabaseAccountApi`, `RealtimeFeed`, `FriendsService` | presence heartbeat every 60 s while signed in |
-| Outbound | `api.github.com`, `github.com` | `UpdateService`, `ShareToolProvider`, `WinGetHubService`, tools | signed update manifest (see `docs/security/SIGNED_UPDATES.md`) |
+| Outbound | `kjnqsgdlcytpooueymdt.supabase.co` (REST and Auth) | `SupabaseAccountApi` | Account sign-in and profile requests |
+| Outbound | `api.github.com`, `github.com` | `UpdateService`, `WinGetHubService`, tool downloads | signed update manifest and tool downloads (see [Signed Updates](../security/SIGNED_UPDATES.md)) |
 | Outbound | YouTube / YouTube Music, `lrclib.net`, `lyrics.kugou.com`, cover-art hosts | Music providers and lyrics | only when Music uses them |
 | Outbound | NVIDIA, MSI, vendor and tool download sites | `GraphicsDriverService`, `DriverUpdateService`, `ToolsService`, Software Hub | user-initiated |
 
 There is **no product analytics or crash reporting**. Nothing in App or Core sends usage data.
-"Telemetry" in the code means local hardware readings (§4, Power & telemetry) and Share
-Screen's encoder statistics. Neither leaves the PC.
+"Telemetry" in the desktop UI means local hardware readings (§4, Power & telemetry).
 
 ## 3. Responsibilities by layer (as the code actually divides them)
 
@@ -101,10 +94,10 @@ followed unevenly. These are the roles a type plays, whatever folder it lives in
 | Role | What belongs there | Where it lives today |
 |---|---|---|
 | **Presentation** | Views, view models, converters, controls; UI-thread marshalling; prompts and dialogs | `App/Views`, `App/ViewModels`, `App/Converters`, `App/Controls`, `App/Windows` |
-| **UI integration** | Things only a UI process does: themes/skins into resources, global hotkeys, tray, taskbar media buttons, WebView2, ambient window | `App/Services` (`ThemeService`, `HotkeyService`, `TaskbarMediaIntegration`, `AmbientWindowService`, `SkinResourceFactory`, prompt implementations) |
-| **Application (orchestration)** | Use-case flow: start a share, sign in, run a batch uninstall, play a queue. Calls policy and adapters; holds session state | Core `*Service` classes such as `ShareScreenService`, `AccountService`, `FriendsService`, `MusicPlayerService`, `BatchUninstallService`, `RoutineEngine`, `DynamicModeAutomationService` |
-| **Policy (pure logic)** | Decisions with no I/O: parsers, classifiers, catalogs, crypto formats, argument builders | Scattered: `UninstallCommandParser`, `ExitCodeInterpreter`, `UninstallEntryClassifier`, `PowerPlanCatalog`, `PlaybackQueue`, `QualityPreset`, `FfmpegArgumentBuilder`, `ShareScreenCrypto`, `RoomMessageCrypto`, `LanDropPathSanitizer`, `UsernameRules`, `AppNameNormalizer` |
-| **Infrastructure adapters** | Files, SQLite, HTTP, sockets, child processes | `SettingsService`, `LogService`, `LibraryDatabase`, `*Store` classes, `SupabaseAccountApi`, `OAuthLoopback`, `MediaMtxServer`, `ShareToolProvider`, `LrcLibLyricsService`, `CoverArtService`, `CommandRunner`, `PowerShellRunner`, `TerminalService` |
+| **UI integration** | Things only a UI process does: themes/skins into resources, global hotkeys, tray, taskbar media buttons, ambient window | `App/Services` (`ThemeService`, `HotkeyService`, `TaskbarMediaIntegration`, `AmbientWindowService`, `SkinResourceFactory`, prompt implementations) |
+| **Application (orchestration)** | Use-case flow: sign in, run a batch uninstall, play a queue. Calls policy and adapters; holds session state | Core `*Service` classes such as `AccountService`, `MusicPlayerService`, `BatchUninstallService`, `RoutineEngine`, `DynamicModeAutomationService` |
+| **Policy (pure logic)** | Decisions with no I/O: parsers, classifiers, catalogs, crypto formats, argument builders | Scattered: `UninstallCommandParser`, `ExitCodeInterpreter`, `UninstallEntryClassifier`, `PowerPlanCatalog`, `PlaybackQueue`, `LanDropPathSanitizer`, `UsernameRules`, `AppNameNormalizer` |
+| **Infrastructure adapters** | Files, SQLite, HTTP, sockets, child processes | `SettingsService`, `LogService`, `LibraryDatabase`, `*Store` classes, `SupabaseAccountApi`, `OAuthLoopback`, `LrcLibLyricsService`, `CoverArtService`, `CommandRunner`, `PowerShellRunner`, `TerminalService` |
 | **Native integration** | P/Invoke, WMI/CIM, registry, Service Control Manager, `SendInput`, job objects, LibreHardwareMonitor | About 25 Core files declare P/Invoke; 8 use WMI; about 30 touch the registry; 3 use `ServiceController`. Only `Core/Native/PowerInterop.cs` is a dedicated native file |
 
 The honest summary: Core mixes orchestration, policy and native calls inside the same classes.
@@ -113,7 +106,7 @@ The large ones (`BatteryService` 840, `UpdateService` 770, `SystemTelemetryServi
 `LanDropService` (1,950 lines) was split by role on 2026-10-05; see LAN Drop below. So was
 `WinGetHubService` (980 lines, now a 300-line coordinator); see Software Hub below. Feature folders that already separate them reasonably well are **Uninstaller**
 (interfaces, executors, finders, policy types), **Music** (Engine, Providers, Library, Lyrics,
-Integrations), and **Share Screen** (crypto, host, media server, pipeline as separate types).
+Integrations).
 
 ## 4. Feature areas: owners, layers and dependencies
 
@@ -126,21 +119,11 @@ are singletons unless noted.
 | Type | Role | Depends on |
 |---|---|---|
 | `AccountService` (owner) | Application | `IAccountApi`, `AccountSessionStore`, `IClock`, `IOAuthLoopback` |
-| `SupabaseAccountApi` (`IAccountApi`, `IFriendsApi`) | Infrastructure (HTTPS) | `SupabaseProject` (URL and publishable key) |
+| `SupabaseAccountApi` (`IAccountApi`) | Infrastructure (HTTPS) | `SupabaseProject` (URL and publishable key) |
 | `AccountSessionStore` | Infrastructure (DPAPI file) | `LogService` |
 | `OAuthLoopback` | Infrastructure (loopback socket) | — |
 | `UsernameRules` | Policy | — |
 | Presentation | `AccountViewModel` (singleton), Profile views | `AccountService`, `IClock` |
-
-### Friends
-| Type | Role | Depends on |
-|---|---|---|
-| `FriendsService` (owner) | Application (presence heartbeat, requests, realtime) | `AccountService`, `IFriendsApi`, a `SupabaseRealtimeFeed` factory, `IClock`, `SettingsService`, and a delegate that asks `GameModeGuard` for the running game |
-| `SupabaseRealtimeFeed` (`RealtimeFeed.cs`) | Infrastructure (Supabase Realtime over `ClientWebSocket`) | `SupabaseProject` |
-| Presentation | `FriendsHubViewModel` (singleton) | `FriendsService`, `AccountViewModel` |
-
-Depends on **Accounts** (sign-in session) and, through a delegate, on **Game Mode** (presence
-shows the running game). Share Screen's settings view model reads it for activity sharing.
 
 ### Music
 | Type | Role | Depends on |
@@ -159,7 +142,7 @@ shows the running game). Share Screen's settings view model reads it for activit
 | Presentation | `NowPlayingViewModel`, `LyricsViewModel`, `AmbientModeViewModel`, `SourcesViewModel`, `ShortcutsViewModel` (singletons); `MusicViewModel`, `MusicSettingsViewModel` (transient) | |
 
 Misplaced shared abstractions: `IClock` and `ISecretStore` live in the Music namespace but are
-used by Accounts, Friends and `PortalAccessToken`.
+used by Accounts and `PortalAccessToken`.
 
 ### LAN Drop and Phone Hub
 | Type | Role | Depends on |
@@ -177,28 +160,7 @@ used by Accounts, Friends and `PortalAccessToken`.
 | `AndroidControlService` | Infrastructure (adb, scrcpy child processes) | — |
 | Presentation | `PhoneHubViewModel` (the reachable UI); `LanDropViewModel`/`LanDropView` (registered but **not reachable** from navigation) | |
 
-Depends on **Music** (`MusicRemote`). **Share Screen** reuses `AuthenticationRateLimiter` and
-`NetworkProfileClassifier` from here; they are shared network utilities living in a feature folder.
-
-### Share Screen (with room chat, voice and remote control)
-| Type | Role | Depends on |
-|---|---|---|
-| `ShareScreenService` / `IShareScreenService` (owner) | Application | everything below, `TailscaleCertificateProvider`, `NetworkProfileClassifier` |
-| `ShareViewerHost` | Infrastructure (HTTP/WebSocket/TLS server) + policy (admission) | `RemoteInputService`, `ShareScreenCrypto`, `AdmissionNonces`, `ReplayFilter`, `AuthenticationRateLimiter` |
-| `MediaMtxServer`, `ShareEncodePipeline`, `ShareToolProvider` (`IShareToolProvider`), `ShareEncoderProbe` (`IShareEncoderProbe`) | Infrastructure (child processes, downloads) | `ChildProcessJob` |
-| `ShareAudioPump`, `RoomVoiceService` (`IRoomVoiceService`), `ShareDeviceProvider` (`IShareDeviceProvider`) | Native integration (WASAPI, Opus) | NAudio, Concentus |
-| `RemoteInputService` | Native integration (`SendInput`) | — |
-| `ShareScreenCrypto`, `RoomMessageCrypto`, `RoomVoiceCrypto`, `QualityPreset`, `FfmpegArgumentBuilder` | Policy | — |
-| `ShareChatStore`, `ShareAttachmentStore` | Infrastructure (DPAPI files) | — |
-| `TailscaleCertificateProvider` | Infrastructure (`tailscale` CLI) | — |
-| `ShareRoomSession` (joining client), `ShareRoomLink` | Infrastructure (`ClientWebSocket`s, admission, decryption, replay windows) | `ShareRoomClient`, `RoomMessageCrypto`, `RoomVoiceCrypto`, `ReplayFilter` |
-| `ShareRoomConversation`, `ShareRoomRouter`, `ShareAttachmentChunker`, `ShareAttachmentAssembler`, `ShareVoiceCoordinator` | Application (chat history, file chunking and reassembly, voice routing; no UI) | `IShareScreenService` or `ShareRoomSession`, `ShareChatStore`, `ShareAttachmentStore`, `IRoomVoiceService` |
-| Presentation | `ShareScreenViewModel`, `ShareScreenSettingsViewModel` (singletons, so a live share survives navigation) | |
-
-`ShareScreenViewModel` and `ShareRoomSession` are created per page, not registered: the view model
-builds a `ShareRoomSession` when the user joins a room, and routes chat and voice through
-`ShareRoomRouter` to either the host service or that session. The view model holds no sockets,
-crypto, file or `Task.Run` code (moved to Core in Prompt 18, 2026-10-05).
+Depends on **Music** (`MusicRemote`).
 
 ### Uninstaller
 | Type | Role | Depends on |
@@ -265,7 +227,7 @@ out a command.
 ### Shell and cross-cutting
 | Type | Role | Notes |
 |---|---|---|
-| `SettingsService` | Infrastructure (one JSON file) | Owns `AppSettings`, a single object of 49 properties plus `Music`, `Uninstaller`, `ShareScreen` and `Routines` sections. Almost every view model and many services take the whole service. |
+| `SettingsService` | Infrastructure (one JSON file) | Owns `AppSettings`, a single object of 49 properties plus `Music`, `Uninstaller` and `Routines` sections. Almost every view model and many services take the whole service. |
 | `LogService`, `LogRedactor` | Infrastructure (log file + in-memory list) | Shown by `LogsViewModel`. Every line is redacted (tokens, links, codes, cookies, emails) before it is shown or written. Catch-block rules and the remaining debt: `docs/engineering/EXCEPTION_DEBT.md`, enforced by `ExceptionHandlingPolicyTests`. |
 | `NotificationService`, `WindowsAlertSoundService` (`IAlertSoundService`) | Presentation support (in Core, so services can raise toasts) | |
 | `ElevationService` | Native integration (token query, UAC relaunch) | |
@@ -292,14 +254,12 @@ Each file has one owning type. Nothing else should read or write it directly.
 | Music library | `%LOCALAPPDATA%\AxePower\Music\library.db` | `LibraryDatabase` / `MusicLibraryRepository` | SQLite |
 | Music state | `…\Music\playback-state.json`, `recently-played.json`, `recent-searches.json`, `covers\`, `stream-cache\` | `PlaybackStateStore`, `RecentlyPlayedService`, `RecentSearchesService`, `CoverArtService`, `StreamCache` | JSON / files |
 | Music provider secrets | `…\Music\secrets.dat` | `DpapiSecretStore` | DPAPI |
-| Room chat history and attachments | `%LOCALAPPDATA%\AxePower\Chat\share-chat.json`, `Chat\Attachments\` | `ShareChatStore`, `ShareAttachmentStore` | DPAPI |
-| Share Screen runtime | `%LOCALAPPDATA%\AxePower\share\mediamtx.yml` (rewritten per session), `share\tls\room.crt/.key` | `MediaMtxServer`, `TailscaleCertificateProvider` | generated |
-| Downloaded tools | `%LOCALAPPDATA%\AxePower\tools\` (MediaMTX, FFmpeg, scrcpy, …) | `ShareToolProvider`, `ToolsService`, `AndroidControlService` | binaries |
+| Downloaded tools | `%LOCALAPPDATA%\AxePower\tools\` (scrcpy and portable tools) | `ToolsService`, `AndroidControlService` | binaries |
 | Uninstall history and backups | `%LOCALAPPDATA%\AxePower\UninstallerHistory\` (`sessions.json`, per-session `manifest.json` and `.reg` exports); legacy `%APPDATA%` copy migrated | `UninstallHistoryService`, `BackupManifestStore`, `RegistryBackupService` | JSON, `.reg` |
 | User skins | `%APPDATA%\AxePower\Skins\` | `SkinCatalog` | JSON |
 | Game cover art | `%APPDATA%\AxePower\CoverArt\` | `GamePosterService` (App) | images |
 | LAN Drop received files | `%USERPROFILE%\Downloads\AxePower_LanDrop\` (configurable) | `LanDropService` | user files; staging `.landrop_*.tmp` |
-| Cloud data | Supabase: `profiles`, `devices`, friends tables (see `supabase/migrations`) | `SupabaseAccountApi` | RLS policies server-side |
+| Cloud data | Supabase: `profiles`, `devices` (see `supabase/migrations`) | `SupabaseAccountApi` | RLS policies server-side |
 
 Gaps to know about:
 - Settings and uninstall history are plain JSON (no secrets belong in them). `settings.json` is
@@ -337,7 +297,7 @@ numbers and fails on any increase):
 | Processes | PhoneHubViewModel (16), BatteryViewModel (6), MainViewModel (5), LanDropViewModel (4), GameCardViewModel (3), SettingsViewModel (2), UninstallerViewModel, ToolsViewModel, DebloatViewModel, AccountViewModel, AboutViewModel (1 each) |
 | Registry | PhoneHubViewModel (3) |
 | Files | PhoneHubViewModel (8), MusicViewModel (7), LanDropViewModel (5), AboutViewModel (3), UninstallerViewModel, SettingsViewModel, LyricsViewModel, GameCardViewModel (1 each) |
-| Sockets / protocol | none (ShareScreenViewModel's joining client moved to Core `ShareRoomSession`, 2026-10-05) |
+| Sockets / protocol | none |
 | PowerShell | TerminalViewModel (10), MainViewModel, DashboardViewModel (1 each) |
 | P/Invoke | ToolsViewModel (2) |
 
@@ -351,7 +311,7 @@ and `IRoutineWorld` are the existing models), not inline in an orchestration ser
  App (presentation, UI integration)
    │  depends on
    ▼
- Core feature modules:  Accounts · Friends · Music · LanDrop · ShareScreen · Uninstaller ·
+ Core feature modules:  Accounts · Music · LanDrop · Uninstaller ·
                         SoftwareHub · Power · SystemCare · Routines · Shell
    │  depend on                         ▲
    ▼                                    │ may reference another feature only through an
@@ -363,13 +323,9 @@ and `IRoutineWorld` are the existing models), not inline in an orchestration ser
 ```
 
 Allowed cross-feature edges today, each to be expressed as an interface the provider owns:
-- Friends → Accounts (session, `IFriendsApi`)
-- Friends → Game Mode (running game for presence, already a delegate)
 - LanDrop → Music (`MusicRemote`, as an `IMusicRemote`)
-- ShareScreen → network utilities (rate limiter, network classifier, moved to Common)
-- ShareScreen settings → Friends (activity sharing)
 - Routines and Game Mode → Power, Display, process control (already through `IRoutineActions`
-  and friends)
+  and related services)
 
 Anything else that appears is a mistake to fix, not a precedent.
 
@@ -401,8 +357,6 @@ folder at a time.
 
 **Stage 4. Pull infrastructure out of view models (medium risk, one view model per change).**
 In order of size:
-- ~~`ShareScreenViewModel`'s joining client~~: done (Prompt 18): `ShareRoomSession`,
-  `ShareRoomConversation`, `ShareAttachmentAssembler`, `ShareVoiceCoordinator`.
 - `PhoneHubViewModel`'s process, registry and file work into `AndroidControlService` and a new
   SpaceDesk adapter.
 - `MusicViewModel`'s file I/O into a library service.

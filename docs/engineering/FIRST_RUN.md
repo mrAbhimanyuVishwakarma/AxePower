@@ -41,7 +41,6 @@ is asked for, pre-set to the recommended choice, and applied only on **Continue*
 **Always off until the user turns them on, as before:**
 
 - Phone Hub / LAN Drop listener.
-- Share Screen rooms.
 - Account sign-in.
 - Remote access (disabled in code).
 - Diagnostics upload: there is none; a bundle is only saved when asked.

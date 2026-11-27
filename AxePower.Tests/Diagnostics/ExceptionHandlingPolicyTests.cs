@@ -25,7 +25,7 @@ public class ExceptionHandlingPolicyTests
     private const int MaxUnexplainedBroadCatches = 43;
     private const int MaxUnfilteredBroadCatches = 417; // 415 after Prompt 21; +2 logging catch-alls in CloudBridgeService (merged from 385b0d9)
 
-    private static readonly Regex SecurityArea = new(@"ShareScreen/(ShareViewerHost|ShareScreenCrypto|RoomMessageCrypto|RoomVoiceCrypto|ShareRoomClient|ShareRoomSession|TailscaleCertificates|RemoteInput)|Accounts/|LanDrop/|ShareScreen/ShareScreenService|LanDropService|PortalAccessToken|Update/|UpdateService|Friends/|AuthenticationRateLimiter|ElevationService|RemoteInputService|LogService|LogRedactor|Processes/|CloudBridgeService");
+    private static readonly Regex SecurityArea = new(@"Accounts/|LanDrop/|LanDropService|PortalAccessToken|Update/|UpdateService|AuthenticationRateLimiter|ElevationService|LogService|LogRedactor|Processes/|CloudBridgeService");
     private static readonly Regex DestructiveArea = new(@"Uninstaller/|CacheCleaner|Debloat|TweakService|AppKiller|SystemServiceOptimizer|ServiceThrottler|MemoryOptimizer|DnsOptimizer|RestorePoint|SystemRestore|PowerPlanService|StartupService|WindowsUpdateShield|SystemDoctor|GameModeGuard|GameModeGpu|ScheduledTask|RegistryBackup|FileCleanup|Leftover|SoftwareHub/|WinGetHubService|WindowsUpdateSystem");
 
     private readonly ITestOutputHelper _output;
@@ -37,7 +37,7 @@ public class ExceptionHandlingPolicyTests
         public string Code => Regex.Replace(Body, @"//[^\n]*|/\*.*?\*/", "", RegexOptions.Singleline).Trim();
         public bool HasComment => Regex.IsMatch(Body, @"//|/\*");
         public bool IsEmpty => Code.Length == 0;
-        public bool Reports => Regex.IsMatch(Code, @"\bthrow\b|\.Log(Warning|Error|Info)\(|\bLog(Warning|Error|Info)\(|Notify|ShowError|MessageBox|StatusMessage|ErrorMessage|Report\(|\.Show\(|Failure\(|failureReason|Reason =|ChatEnded");
+        public bool Reports => Regex.IsMatch(Code, @"\bthrow\b|\.Log(Warning|Error|Info)\(|\bLog(Warning|Error|Info)\(|Notify|ShowError|MessageBox|StatusMessage|ErrorMessage|Report\(|\.Show\(|Failure\(|failureReason|Reason =");
         public override string ToString() => $"{File}:{Line} catch ({Declaration})";
     }
 

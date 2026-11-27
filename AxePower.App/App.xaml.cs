@@ -15,10 +15,7 @@ using AxePower.Core.Services.Music;
 using AxePower.App.Services;
 using AxePower.App.ViewModels;
 using AxePower.App.ViewModels.Music;
-using AxePower.App.ViewModels.ShareScreen;
-using AxePower.Core.Services.ShareScreen;
 using AxePower.Core.Services.Accounts;
-using AxePower.Core.Services.Friends;
 using AxePower.App.Helpers;
 
 namespace AxePower.App;
@@ -203,8 +200,6 @@ public partial class App : Application
             // Restores a saved sign-in in the background; signed out, it does nothing and needs no network
             _ = Services.GetRequiredService<AccountService>().InitializeAsync();
 
-            // Friends follows the account: starts on sign-in, stops on sign-out, idle while signed out
-            Services.GetRequiredService<FriendsService>().Attach();
         }
         catch (Exception ex)
         {
@@ -352,20 +347,6 @@ public partial class App : Application
         services.AddSingleton<TerminalService>();
         services.AddSingleton<RestorePointService>();
 
-        // Share Screen: capture, encode and route one display to remote viewers
-        services.AddSingleton<IShareToolProvider, ShareToolProvider>();
-        services.AddSingleton<IShareDeviceProvider, ShareDeviceProvider>();
-        services.AddSingleton<IShareEncoderProbe, ShareEncoderProbe>();
-        services.AddSingleton<MediaMtxServer>();
-        services.AddSingleton<ShareEncodePipeline>();
-        services.AddSingleton<ShareAudioPump>();
-        services.AddSingleton<RemoteInputService>();
-        services.AddSingleton<ShareViewerHost>();
-        services.AddSingleton<IShareScreenService, ShareScreenService>();
-        services.AddSingleton<ShareChatStore>();
-        services.AddSingleton<ShareAttachmentStore>();
-        services.AddSingleton<IRoomVoiceService, RoomVoiceService>();
-
         // Uninstaller Pro — Core Services
         services.AddSingleton<IFileSystemProbe, FileSystemProbe>();
         services.AddSingleton<IMsiProductStateReader, MsiProductStateReader>();
@@ -405,22 +386,9 @@ public partial class App : Application
         services.AddSingleton(SupabaseProject.AxePower);
         services.AddSingleton(sp => new SupabaseAccountApi(sp.GetRequiredService<SupabaseProject>()));
         services.AddSingleton<IAccountApi>(sp => sp.GetRequiredService<SupabaseAccountApi>());
-        services.AddSingleton<IFriendsApi>(sp => sp.GetRequiredService<SupabaseAccountApi>());
         services.AddSingleton(sp => new AccountSessionStore(sp.GetRequiredService<LogService>()));
         services.AddSingleton<AccountService>();
         services.AddSingleton<AccountViewModel>();
-
-        // Friends on the account (SHARE_SOCIAL_PLAN.md, F2). "Playing …" comes from Game Mode's detection.
-        services.AddSingleton(sp => new FriendsService(
-            sp.GetRequiredService<AccountService>(),
-            sp.GetRequiredService<IFriendsApi>(),
-            () => new SupabaseRealtimeFeed(sp.GetRequiredService<SupabaseProject>(), sp.GetRequiredService<LogService>()),
-            sp.GetRequiredService<IClock>(),
-            sp.GetRequiredService<LogService>(),
-            sp.GetRequiredService<SettingsService>(),
-            runningGame: async () => await sp.GetRequiredService<GameModeGuard>().FindRunningGameAsync() is { } exe
-                ? GamePosterService.GetCleanTitle(exe)
-                : null));
 
         // AxePower Music — Core (each phase registers the services it implements)
         services.AddSingleton<IClock, SystemClock>();
@@ -493,10 +461,9 @@ public partial class App : Application
         services.AddSingleton<IConfirmationPrompts, ConfirmationPrompts>();
         services.AddSingleton<TrustViewModel>(sp => new TrustViewModel(
             sp.GetRequiredService<SettingsService>(), sp.GetRequiredService<LogService>(), sp.GetRequiredService<IConfirmationPrompts>(),
-            sp.GetService<ElevationService>(), sp.GetService<LanDropService>(), sp.GetService<IShareScreenService>(),
-            sp.GetService<ShareViewerHost>(), sp.GetService<MediaMtxServer>(), sp.GetService<AccountService>(),
-            sp.GetService<FriendsService>(), sp.GetService<RecentlyPlayedService>(), sp.GetService<RecentSearchesService>(),
-            sp.GetService<StreamCache>(), sp.GetService<ShareChatStore>(), sp.GetService<BatteryService>(),
+            sp.GetService<ElevationService>(), sp.GetService<LanDropService>(), sp.GetService<AccountService>(),
+            sp.GetService<RecentlyPlayedService>(), sp.GetService<RecentSearchesService>(),
+            sp.GetService<StreamCache>(), sp.GetService<BatteryService>(),
             sp.GetService<AxePower.Core.Services.Processes.IUserShellLauncher>()));
         services.AddSingleton<IDiagnosticsPrompts, DiagnosticsPrompts>();
         services.AddTransient<DiagnosticsViewModel>(sp => new DiagnosticsViewModel(
@@ -515,9 +482,6 @@ public partial class App : Application
         services.AddTransient<PhoneHubViewModel>();
         services.AddTransient<LanDropViewModel>();
         services.AddTransient<TerminalViewModel>();
-        services.AddSingleton<ShareScreenSettingsViewModel>();   // shared by the stage and the Settings page
-        services.AddSingleton<FriendsHubViewModel>();
-        services.AddSingleton<ShareScreenViewModel>();   // singleton: a live stream must survive page switches
 
         // Views
         services.AddSingleton<MainWindow>();
@@ -645,25 +609,9 @@ public partial class App : Application
             $"Ambient screensaver {(music.AmbientAutoEnter ? $"on after {music.AmbientIdleMinutes} min" : "off")}, " +
             $"window service {sp.GetRequiredService<AmbientWindowService>().GetType().Name} (not started).");
 
-        var shareDevices = sp.GetRequiredService<IShareDeviceProvider>();
-        var shareTools = sp.GetRequiredService<IShareToolProvider>();
-        var ffmpeg = shareTools.FindFfmpeg();
-        Console.WriteLine(
-            $"Share Screen Initialized: {shareDevices.GetDisplays().Count} display(s), " +
-            $"{shareDevices.GetRenderDevices().Count} output(s), {shareDevices.GetCaptureDevices().Count} mic(s); " +
-            $"FFmpeg {(ffmpeg.IsAvailable ? ffmpeg.Version : "not found")}, " +
-            $"media server {(shareTools.FindMediaMtx().IsAvailable ? "ready" : "not downloaded")}.");
-        Console.WriteLine(
-            $"Friends room services resolved: {sp.GetRequiredService<IShareScreenService>().GetType().Name}, " +
-            $"voice {sp.GetRequiredService<IRoomVoiceService>().GetType().Name} (devices not opened).");
-
         // Read-only: decrypts the saved session to report it, never refreshes it or calls the network
         var savedAccount = sp.GetRequiredService<AccountSessionStore>().Load();
         sp.GetRequiredService<AccountService>();
-        var friendsService = sp.GetRequiredService<FriendsService>(); // not attached: no network, no presence
-        Console.WriteLine(
-            $"Friends: {(friendsService.IsActive ? "running" : "idle")}; share activity {(friendsService.ShareActivity ? "on" : "off")}, " +
-            $"appear offline {(friendsService.AppearOffline ? "on" : "off")}.");
         Console.WriteLine(
             "Account: " + (savedAccount is null ? "signed out"
                 : savedAccount.Profile is { } accountProfile ? $"@{accountProfile.Username} (saved session, not refreshed)"

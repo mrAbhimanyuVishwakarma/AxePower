@@ -123,7 +123,7 @@ When any security check fails, AxePower displays an informative explanation and 
 
 ## 4. Automated Test Matrix
 
-The test suite in [`AxePower.Tests/UpdateSecurityTests.cs`](file:///d:/Projects/AxePower/AxePower.Tests/UpdateSecurityTests.cs) validates the following scenarios:
+The test suite in [`AxePower.Tests/UpdateSecurityTests.cs`](../../AxePower.Tests/UpdateSecurityTests.cs) validates the following scenarios:
 
 | Test Case | Scenario | Expected Outcome |
 |---|---|---|

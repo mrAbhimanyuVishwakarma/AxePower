@@ -88,7 +88,7 @@ public partial class DashboardViewModel : ObservableObject
     private string _gpuName = "GPU";
 
     [ObservableProperty]
-    private string _gpuDisplay = "—";
+    private string _gpuDisplay = "0 GHz";
 
     [ObservableProperty]
     private string _memoryDisplay = "—";
@@ -637,7 +637,7 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     public static IReadOnlyList<AppFeatureItem> BuildNewFeatures() => new List<AppFeatureItem>
     {
-        // The seven the owner chose (2026-09-26), plus Timer & Routines second (2026-09-27), in their order.
+        // Entries are shown in this order.
         new()
         {
             Title = "DLSS 5 Swapper",
@@ -655,15 +655,6 @@ public partial class DashboardViewModel : ObservableObject
             Glyph = "\uE916",
             Description = "Shut down, restart or sleep on a timer, and if-then routines that run on their own: Beast when a game starts, Eco on battery, sleep at bedtime. Both are in Tools.",
             TargetNavigation = "Tools"
-        },
-        new()
-        {
-            Title = "Share Screen",
-            Badge = "NEW IN 2.0",
-            BadgeColorHex = "#8B5CF6",
-            Glyph = "\uE72D",
-            Description = "Share a display to anyone on your network, in their browser, with no install. Hardware encoding on NVIDIA, AMD and Intel, and 60 FPS held by dropping resolution instead of frames.",
-            TargetNavigation = "ShareScreen"
         },
         new()
         {

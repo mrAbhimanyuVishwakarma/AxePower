@@ -19,26 +19,22 @@ AxePower keeps itself up to date from GitHub Releases. This is separate from Upd
 ## Flow
 1. **Check** (`CheckForUpdatesAsync`):
    - Calls `GET https://api.github.com/repos/mrAbhimanyuVishwakarma/AxePower_Download/releases/latest`, falling back to the `AxePower` repo.
-   - Parses the tag (`ParseSemanticVersion`) and compares it with the running assembly version. `FallbackVersion = "1.8.0"` is used only when there is no assembly version.
-   - `FindBestAsset` prefers an `.exe` asset.
+   - Compares the release tag with the running assembly version. `FallbackVersion` matches `Directory.Build.props` and is used only when there is no assembly version.
+   - Verifies the signed update manifest and matches it to the advertised installer.
    - Returns an `UpdateCheckResult`: HasUpdate, version, title, notes, download URL, size, release URL.
 2. **When it runs:** once at startup, then every hour, if `AutoCheckUpdates` is on. The About page's "Check for updates" button runs it on demand.
-3. **Download** (`DownloadUpdateAsync`, when `AutoDownloadUpdates` is on and the asset is `.exe` or `.msi`):
-   - Streams the file to `%TEMP%\AxePower_Update\<asset name>` (default name `AxePower_Setup.exe`), reporting progress.
+3. **Download** (`DownloadUpdateAsync`, when `AutoDownloadUpdates` is on):
+   - Downloads the manifest's installer to `%TEMP%\AxePower_Update\` and checks its size and SHA-256.
    - When it finishes, the VM shows the Steam-style bottom banner ("downloaded and ready to install") with the scrollable patch notes.
-4. **Apply** (`ApplyUpdate`) starts the installer with `UseShellExecute`, and the app then calls `Application.Current.Shutdown()`. The Inno Setup installer ([Installer/AxePower.iss](../Installer/AxePower.iss)) handles the upgrade.
+4. **Apply** (`ApplyUpdate`) re-verifies the installer before launch. After launch succeeds, the app shuts down and [Inno Setup](../Installer/AxePower.iss) handles the upgrade.
 
 The About page also shows community stats (`GetCommunityStatsAsync`: stars, open issues) from the GitHub API.
 
 ## Releasing a version the updater will pick up
-1. Bump the assembly version in [AxePower.App.csproj](../AxePower.App/AxePower.App.csproj), and update `FallbackVersion`.
-2. Publish, then compile `Installer/AxePower.iss` (see the README's build section).
-3. Create a GitHub Release on **AxePower_Download** with a tag such as `v1.8.1`, and attach the `.exe` installer as an asset.
+Follow the [versioning guide](../docs/engineering/VERSIONING.md), [release pipeline](../docs/engineering/RELEASE_PIPELINE.md), and [signed-update procedure](../docs/security/SIGNED_UPDATES.md). A local unsigned installer can be used for local verification. The updater requires the published installer and its signed manifest.
 
 ## Gotchas
 - The check is unauthenticated, so it is limited to 60 requests per hour per IP. Hourly checks are fine; tight loops are not.
-- The hourly loop does not check `IsUpdateDownloaded`, so it downloads the same installer again every hour until the user installs it.
-- The installer is not signature-checked before it runs. AxePower trusts whatever asset the release carries.
 
 ## Tests
 [UpdateServiceTests.cs](../AxePower.Tests/UpdateServiceTests.cs)

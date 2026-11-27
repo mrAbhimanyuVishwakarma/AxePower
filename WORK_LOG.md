@@ -4,9 +4,21 @@
 **Downloads & Releases Repository:** [AxePower_Download](https://github.com/mrAbhimanyuVishwakarma/AxePower_Download)  
 **Website:** [AxePower.com](https://axepower.com) (`AppWebsite/`)  
 **Primary Architect & Developer:** [Abhimanyu Vishwakarma](https://github.com/mrAbhimanyuVishwakarma)  
-**Last Updated:** September 30, 2026
+**Last Updated:** November 27, 2026
+
+## v2.1.5 development handoff
+
+- Continue from `windowsupdatepage-rework`. Check the current commit and source version before making changes. Follow [AGENTS.md](AGENTS.md) to build and launch the checkout. SDK 10.0.404 is pinned in [global.json](global.json).
+- v2.1.5 includes the Windows Update review page, the BCUninstaller shortcuts, saved sidebar groups, the Game Mode page shortcut, and the GPU clock fallback. Friends and Share Screen rooms were removed. Phone Control, Second Monitor, LAN Drop, and Phone Link remain in Connection. The database migration preserves earlier records and retires their API access.
+- Repository cleanup removed two old XAML rewrite scripts and untracked the old publish output, debug log, and generated Chromium profiles. Local copies of the generated files were preserved. Two images no longer ship as unused WPF resources. Discord automation still uses Requests directly, so its unused `discord.py` requirement was removed.
+- Pre-cleanup baseline passed locked NuGet restore, Debug and CI Release builds, and 1,667 desktop tests with one optional live uninstall test skipped. The Supabase policy test passed. A first run with outputs outside the checkout could not locate the repository in source-aware tests, so verification uses a build directory inside the checkout. C# formatting already reported line endings, whitespace, encoding, and import ordering before cleanup.
+- Post-cleanup checks matched the desktop and Supabase baselines. Locked restore, Debug and CI Release builds, the source launcher's build check, Python CLI and mocked Discord checks, PowerShell and website JavaScript syntax, and repository-relative Markdown links passed. The C# format check reported the same findings as before.
+- Historical installers and curated QA screenshots remain tracked. Current release artifacts and generated previews stay local. The desktop NuGet dependencies were retained because the app, tools, or tests still use them.
+- The local installer path is `Installer/Output/AxePower-v2.1.5-Setup.exe`. Build from a fresh publish directory with [the release pipeline](docs/engineering/RELEASE_PIPELINE.md). It checks the x64 .NET 10 Desktop Runtime and acquires the Microsoft installer when needed.
 
 ---
+
+The sections below record earlier work.
 
 ## 🎯 Executive Summary
 
@@ -80,14 +92,14 @@ AxePower/
 - **Desktop Application Integration (`AxePower.App`)**:
   - **Official Website Integration**:
     - Added dedicated **`axepower.vercel.app ↗`** interactive button directly in the **Hero Card** of the **About** section next to the developer credit.
-    - Updated `VisitWebsiteCommand` and `ViewAllReleasesCommand` in [`AboutViewModel.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/ViewModels/AboutViewModel.cs) to open the official AxePower website: **`https://axepower.vercel.app/`**.
+    - Updated `VisitWebsiteCommand` and `ViewAllReleasesCommand` in [`AboutViewModel.cs`](AxePower.App/ViewModels/AboutViewModel.cs) to open the official AxePower website: **`https://axepower.vercel.app/`**.
     - Clicking the website button, **"View release notes"**, or **"Visit website"** from the in-app **About** page opens `https://axepower.vercel.app/` directly in the default browser.
   - **License Card Updated**:
     - **Licensed to**: Automatically reads and displays the active Windows device name via **`Environment.MachineName`** (e.g. your PC's desktop name).
     - **License type**: Set to **`AxePower Pro`** in clear emerald green text.
   - **Game Mode Icon Modernization**:
     - Replaced the GameMode header badge with the purple cybernetic lion crest (`Gamemode.png`) in `GameModeView.xaml` and `AppWebsite`.
-    - Set the **left sidebar navigation** Game Mode icon to the clean white `controller.png` in [`MainWindow.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/MainWindow.xaml) to maintain perfect visual consistency with all other white sidebar icons.
+    - Set the **left sidebar navigation** Game Mode icon to the clean white `controller.png` in [`MainWindow.xaml`](AxePower.App/MainWindow.xaml) to maintain perfect visual consistency with all other white sidebar icons.
     - Replaced the card icons in `GameModeView.xaml`:
       - **Game Mode & App Switch**: Updated to `Resources/icons/controller.png` with blue backdrop.
       - **Game Booster (Background Apps)**: Updated to `Resources/icons/boost.png` with warning accent backdrop.
@@ -111,20 +123,20 @@ AxePower/
     - **Temperature**: `Resources/icons/thermometer_beast.png`
     - **Current Power Usage**: `Resources/icons/bolt_beast.png`
   - **Header Battery Status Pill Scaled (3x Prominent Size)**:
-    - Expanded the header battery status pill in [`MainWindow.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/MainWindow.xaml):
+    - Expanded the header battery status pill in [`MainWindow.xaml`](AxePower.App/MainWindow.xaml):
       - **3x Vector Battery Shell**: Scaled to `68x32px` with a `3.5px` border stroke and `14px` positive terminal notch.
-      - **Expanded Fill Range**: Scaled live charge bar from `0` to `55px` in [`BatteryViewModel.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/ViewModels/BatteryViewModel.cs).
+      - **Expanded Fill Range**: Scaled live charge bar from `0` to `55px` in [`BatteryViewModel.cs`](AxePower.App/ViewModels/BatteryViewModel.cs).
       - **Bold Prominent Typography**: Increased font size to `20px` bold for crystal-clear readability across all displays.
       - **Pill Cushioning**: Generous `24x14px` padding with `16px` rounded corners.
   - **Sidebar Tools Reordering & Android Control Integration**:
-    - Arranged bottom tools in [`MainWindow.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/MainWindow.xaml) strictly in requested order:
+    - Arranged bottom tools in [`MainWindow.xaml`](AxePower.App/MainWindow.xaml) strictly in requested order:
       1. **Android Control** (`scrcpy` live mirroring & control)
       2. **MSI Afterburner** (hardware monitoring & tuning)
       3. **Uninstaller Pro** (deep uninstall & leftover cleaning)
       4. **Update PC** (system driver & package updates)
       5. **Debloat** (Win11Debloat by Raphire)
       6. **About** (device license & updates)
-    - Created **[`AndroidControlService.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.Core/Services/AndroidControlService.cs)**:
+    - Created **[`AndroidControlService.cs`](AxePower.Core/Services/AndroidControlService.cs)**:
       - Automatically detects or downloads the latest official Windows 64-bit release of [scrcpy](https://github.com/Genymobile/scrcpy.git) from GitHub.
       - Launches scrcpy directly to mirror and control connected Android devices.
       - Restores/focuses active instance if already running.
@@ -147,18 +159,18 @@ AxePower/
       6. **Documentation**: Update `README.md`, `RELEASE_README.md`, and `WORK_LOG.md`.
   - **Performance Defaults & "Start with Last Selected Power Mode" Support**:
     - Set out-of-the-box performance defaults in `AppSettings.cs` to **Smart Mode** for both `UnpluggedMode` (battery) and `PluggedInMode` (AC plugged in).
-    - Upgraded **Performance Defaults** in [`SettingsView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/SettingsView.xaml) to fully interactive ComboBoxes with custom styled icons and colors:
+    - Upgraded **Performance Defaults** in [`SettingsView.xaml`](AxePower.App/Views/SettingsView.xaml) to fully interactive ComboBoxes with custom styled icons and colors:
       - **Default mode on battery**: `Eco Mode`, `Smart Mode`, `Beast Mode`, `Game Mode` (defaults to Smart).
       - **Default mode when plugged in**: `Eco Mode`, `Smart Mode`, `Beast Mode`, `Game Mode` (defaults to Smart).
       - **Fan mode on battery**: `Smart`, `Eco (Quiet)`, `Beast (Turbo)`.
-    - Bound and implemented **"Start with last selected power mode"** toggle in [`SettingsView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/SettingsView.xaml):
+    - Bound and implemented **"Start with last selected power mode"** toggle in [`SettingsView.xaml`](AxePower.App/Views/SettingsView.xaml):
       - When toggled ON: Tracks and remembers the last manually chosen power mode from the Dashboard/Tray menu (persisted in `settings.json` under `LastSelectedPowerMode`).
       - On application startup: If enabled, immediately restores and applies `LastSelectedPowerMode` and synchronizes AutoSwitch hardware state without overriding user's selection until a subsequent power event.
-    - Upgraded all footer/header **"? Help"** buttons across the application ([`DashboardView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/DashboardView.xaml), [`AutoSwitchView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/AutoSwitchView.xaml), [`SettingsView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/SettingsView.xaml), [`AboutView.xaml`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/Views/AboutView.xaml)) to trigger the interactive in-app **Tool Instructions & Guide Modal**.
+    - Upgraded all footer/header **"? Help"** buttons across the application ([`DashboardView.xaml`](AxePower.App/Views/DashboardView.xaml), [`AutoSwitchView.xaml`](AxePower.App/Views/AutoSwitchView.xaml), [`SettingsView.xaml`](AxePower.App/Views/SettingsView.xaml), [`AboutView.xaml`](AxePower.App/Views/AboutView.xaml)) to trigger the interactive in-app **Tool Instructions & Guide Modal**.
   - **Release v1.3.0 & Inno Setup Compilation**:
-    - Bumped project version to `1.3.0` across [`AxePower.Core.csproj`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.Core/AxePower.Core.csproj), [`AxePower.App.csproj`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/AxePower.App.csproj), [`UpdateService.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.Core/Services/UpdateService.cs), and [`SettingsViewModel.cs`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/AxePower.App/ViewModels/SettingsViewModel.cs).
+    - Bumped project version to `1.3.0` across [`AxePower.Core.csproj`](AxePower.Core/AxePower.Core.csproj), [`AxePower.App.csproj`](AxePower.App/AxePower.App.csproj), [`UpdateService.cs`](AxePower.Core/Services/UpdateService.cs), and [`SettingsViewModel.cs`](AxePower.App/ViewModels/SettingsViewModel.cs).
     - Executed `dotnet publish -c Release -r win-x64` to compile standalone win-x64 binaries.
-    - Compiled Inno Setup installer script [`Installer/AxePower.iss`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/Installer/AxePower.iss) generating **`Installer/Output/AxePower-v1.3-Setup.exe`** (10.59 MB).
+    - Compiled Inno Setup installer script [`Installer/AxePower.iss`](Installer/AxePower.iss) generating **`Installer/Output/AxePower-v1.3-Setup.exe`** (10.59 MB).
   - **Verification**:
     - `dotnet build -c Release` succeeded (0 errors, 0 warnings).
     - `dotnet test -c Release` passed all 76 unit tests.
@@ -274,10 +286,6 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
    - **YouTube & Spotify Integration**: Seamless YouTube audio query/streaming and Spotify playback controller.
    - **Header Player**: Minimalist mini-player integrated right into the top header matching dashboard aesthetics.
    - **Dynamic Audio Output Switching**: Automatically detects and switches audio output device when the Windows default device changes without requiring an app restart.
-2. **Share Screen & GameStream**:
-   - Low-latency browser-based desktop and gameplay sharing over local network.
-   - Viewers connect seamlessly via any standard browser without installing external software.
-   - Display reset fixes for CamStudio and spacedesk virtual displays.
 3. **Next-Gen Uninstaller Pro Overhaul**:
    - Deep leftover scanner equipped with heuristic confidence scoring, safety registry backup manifests, and file system probes.
    - **Broken Entry Executor** for safely cleaning broken or orphaned Windows uninstaller registry records.
@@ -293,12 +301,6 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 ## 🚀 Version 2.0.0 Release Summary
 
-1. **Share Screen — shipped for real**:
-   - Browser-based sharing of any display, hardware encoded on NVIDIA (NVENC), AMD (AMF) or Intel (QSV), with a software path only as last resort.
-   - Quality ladder holds 60 FPS by stepping resolution down (1080p60 → 900p60 → 720p60) rather than dropping frames.
-   - System audio or microphone carried alongside the picture, following the default output device.
-   - In-app preview renders through the real viewer pipeline, so the tile shows the latency a viewer actually gets.
-   - **Remote control**: off by default, granted per session, gated by a code that the watch link never carries.
 2. **Music — sources, discovery and library**:
    - Provider-based YouTube and Spotify sources with improved track matching and alternate-take selection.
    - Discovery extends the queue at the end only, never disturbing queued items.
@@ -312,9 +314,8 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 5. **Verification at release**:
    - `dotnet build AxePower.sln`: 0 warnings, 0 errors.
    - `dotnet test`: 716 passed, 1 skipped, 0 failed.
-   - `AxePower.exe --self-test`: every subsystem initialised; Share Screen reported 1 display, 1 output, 1 mic, FFmpeg 9.0.1 and media server ready.
+   - `AxePower.exe --self-test`: every subsystem initialised.
    - `settings.json` byte-identical before and after the run.
-   - **Not verified**: no live stream was watched end to end, and no UI was rendered — the app relaunches elevated, so both need the owner. See `SHARE_SOCIAL_PLAN.md` item SS-1.
 
 ---
 

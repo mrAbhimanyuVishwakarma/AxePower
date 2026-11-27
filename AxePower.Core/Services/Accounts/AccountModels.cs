@@ -41,8 +41,7 @@ public sealed record AccountProfile(
     string DisplayName,
     string? AvatarUrl,
     DateTime CreatedAtUtc,
-    DateTime? UsernameChangedAtUtc,
-    bool Discoverable = true);
+    DateTime? UsernameChangedAtUtc);
 
 /// <summary>What the UI shows. Immutable; <see cref="AccountService.StateChanged"/> hands out a new one.</summary>
 public sealed record AccountState(
@@ -113,12 +112,6 @@ public enum AccountError
     UsernameReserved,
     UsernameChangeTooSoon,
     DisplayNameInvalid,
-
-    FriendNotFound,
-    CannotAddSelf,
-    YouBlockedThem,
-    RequestNotFound,
-    NotFriends,
 
     Unknown
 }

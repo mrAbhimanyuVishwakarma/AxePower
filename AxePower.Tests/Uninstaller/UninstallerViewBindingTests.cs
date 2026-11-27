@@ -7,6 +7,7 @@ using AxePower.App.ViewModels;
 using AxePower.App.Views;
 using AxePower.Core.Models.Uninstaller;
 using AxePower.Core.Services;
+using AxePower.Core.Services.Processes;
 using AxePower.Core.Services.Uninstaller;
 using AxePower.Core.Services.Uninstaller.Leftovers;
 
@@ -60,6 +61,8 @@ public class UninstallerViewBindingTests
                 var temp = tempFolder.Path;
                 var log = new LogService();
                 var discovery = new FakeDiscovery();
+                var bcUninstaller = Path.Combine(temp, "BCUninstaller.exe");
+                File.WriteAllBytes(bcUninstaller, []);
                 discovery.Apps.AddRange(
                 [
                     new InstalledApplication { Id = "a", DisplayName = "Normal App", Publisher = "Vendor", UninstallerKind = UninstallerKind.Nsis, RegistryKeyPath = @"HKCU\X\a", InstallLocation = @"C:\Program Files\Normal" },
@@ -83,11 +86,12 @@ public class UninstallerViewBindingTests
                 var manifests = new BackupManifestStore(temp);
                 var backup = new RegistryBackupService(manifests);
                 var protection = new ProtectionService();
+                var launches = new List<ProcessStartInfo>();
                 var vm = new UninstallerViewModel(discovery, new BatchUninstallServiceStub(), new FakeScanner(),
                     new LeftoverCleanupService(protection, backup, new FileCleanupService(), manifests),
                     history, backup, protection, new FakeVerifier(), new FakeFileSystemProbe(), manifests,
                     new SettingsService(log, Path.Combine(temp, "settings")), new ElevationService(), new SilentPrompts(),
-                    new NotificationService(), log);
+                    new NotificationService(), log, new InstalledBcUninstaller(bcUninstaller, new UserShellLauncher(isElevated: () => false, start: launches.Add)));
 
                 // Canary: prove the listener sees binding errors before trusting an empty list
                 var canary = new TextBlock { DataContext = vm };
@@ -122,6 +126,13 @@ public class UninstallerViewBindingTests
                 Layout();
 
                 Assert.True(vm.IsLeftoverReviewVisible);
+                var shortcut = Assert.IsType<Button>(view.FindName("BcUninstallerShortcut"));
+                var tabs = Assert.IsType<WrapPanel>(shortcut.Parent);
+                var windowsApps = Assert.IsType<RadioButton>(tabs.Children[tabs.Children.IndexOf(shortcut) - 1]);
+                windowsApps.Command.Execute(windowsApps.CommandParameter);
+                shortcut.Command.Execute(shortcut.CommandParameter);
+                Assert.Equal(bcUninstaller, Assert.Single(launches).FileName);
+                Assert.True(vm.IsWindowsAppsSection);
                 Assert.True(collector.Errors.Count == 0, string.Join(Environment.NewLine, collector.Errors));
             }
             finally
@@ -129,6 +140,11 @@ public class UninstallerViewBindingTests
                 PresentationTraceSources.DataBindingSource.Listeners.Remove(collector);
             }
         });
+    }
+
+    private sealed class InstalledBcUninstaller(string path, IUserShellLauncher launcher) : ToolsService(launcher)
+    {
+        public override string? FindExe(ToolDefinition tool) => tool.Id == BcUninstaller ? path : null;
     }
 
     private sealed class BatchUninstallServiceStub : IBatchUninstallService

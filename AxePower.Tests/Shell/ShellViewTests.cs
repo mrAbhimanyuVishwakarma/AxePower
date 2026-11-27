@@ -14,6 +14,7 @@ using AxePower.App.ViewModels;
 using AxePower.App.Views;
 using AxePower.App.Views.Shell;
 using AxePower.App.Views.SoftwareHub;
+using AxePower.Core.Models;
 using AxePower.Core.Services;
 using AxePower.Tests.SoftwareHub;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +61,13 @@ public class ShellViewTests
 
         public FrameworkElement Root => (FrameworkElement)Window.Content;
 
+        public AppSettings ReloadSettings()
+        {
+            var store = new SettingsService(new LogService(), _settings);
+            store.LoadSettings();
+            return store.GetSettings();
+        }
+
         public void Dispose()
         {
             (Window.FindName("AppTrayIcon") as IDisposable)?.Dispose();
@@ -76,6 +84,79 @@ public class ShellViewTests
         await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
         element.UpdateLayout();
     }
+
+    [Fact]
+    public Task SidebarGroups_StartExpanded_AndKeepControlAlignmentAndRailAccess() => _wpf.RunAsync(async () =>
+    {
+        using var shell = new Shell();
+        using var skin = ShellTestHost.ApplySkin("dark");
+        await Settle(shell.Window);
+        var sidebar = Assert.Single(ShellTestHost.Descendants(shell.Root).OfType<ShellSidebar>());
+        var dashboard = ShellTestHost.TabStops(sidebar).OfType<Button>().Single(button => Equals(button.CommandParameter, "Dashboard"));
+        var controlHeader = ShellTestHost.Descendants(sidebar).OfType<TextBlock>().Single(text => text.Text == "CONTROL");
+        var controlLabel = Label(dashboard);
+        var groups = new[] { "Connection", "Maintenance", "Utilities" }.Select(name => (
+            Toggle: Assert.IsType<Button>(sidebar.FindName(name + "Toggle")),
+            Items: Assert.IsType<StackPanel>(sidebar.FindName(name + "Items")))).ToArray();
+
+        foreach (var (toggle, items) in groups)
+        {
+            Assert.True(items.IsVisible);
+            var header = ShellTestHost.Descendants(toggle).OfType<TextBlock>().Single(text => text.Text == (string)toggle.Content);
+            Assert.Equal(controlHeader.TranslatePoint(new Point(), sidebar).X, header.TranslatePoint(new Point(), sidebar).X, precision: 0);
+            Assert.Equal(controlHeader.Foreground, header.Foreground);
+            foreach (var item in items.Children.OfType<Button>())
+                Assert.Equal(controlLabel.TranslatePoint(new Point(), sidebar).X, Label(item).TranslatePoint(new Point(), sidebar).X, precision: 0);
+        }
+
+        foreach (var (toggle, items) in groups)
+        {
+            toggle.Command.Execute(null);
+            await Settle(sidebar);
+            Assert.False(items.IsVisible);
+            Assert.True(dashboard.IsVisible);
+        }
+
+        var saved = shell.ReloadSettings();
+        Assert.False(saved.SidebarConnectionExpanded);
+        Assert.False(saved.SidebarMaintenanceExpanded);
+        Assert.False(saved.SidebarUtilitiesExpanded);
+
+        shell.Vm.OnWindowWidthChanged(900);
+        await Settle(sidebar);
+        Assert.All(groups, group => { Assert.False(group.Toggle.IsVisible); Assert.True(group.Items.IsVisible); });
+
+        shell.Vm.OnWindowWidthChanged(1290);
+        await Settle(sidebar);
+        Assert.All(groups, group => { Assert.True(group.Toggle.IsVisible); Assert.False(group.Items.IsVisible); });
+        foreach (var (toggle, items) in groups)
+        {
+            toggle.Command.Execute(null);
+            await Settle(sidebar);
+            Assert.True(items.IsVisible);
+        }
+
+        static TextBlock Label(Button button) => ((StackPanel)button.Content).Children.OfType<TextBlock>().Last();
+    });
+
+    [Fact]
+    public Task DashboardGameModeButtonOpensGameModePage() => _wpf.RunAsync(async () =>
+    {
+        using var shell = new Shell();
+        using var skin = ShellTestHost.ApplySkin("dark");
+        shell.Vm.NavigateCommand.Execute("Dashboard");
+        await Settle(shell.Window);
+
+        var dashboard = Assert.Single(ShellTestHost.Descendants(shell.Root).OfType<DashboardView>());
+        var button = Assert.IsType<Button>(dashboard.FindName("GameModeCard"));
+        Assert.True(button.IsVisible && button.IsEnabled);
+        Assert.Same(shell.Vm.NavigateCommand, button.Command);
+        button.Command.Execute(button.CommandParameter);
+        await Settle(shell.Window);
+
+        Assert.Same(shell.Vm.GameModeVm, shell.Vm.CurrentView);
+        Assert.True(Assert.Single(ShellTestHost.Descendants(shell.Root).OfType<GameModeView>()).IsVisible);
+    });
 
     [Fact]
     public Task UpdatesOverviewAllowsPortraitWindowAndOtherPagesRestoreTheirMinimums() => _wpf.RunAsync(async () =>
@@ -210,7 +291,7 @@ public class ShellViewTests
         // Sidebar: Up and Down walk every entry in order and wrap, as the D-pad does.
         var sidebar = ShellTestHost.Descendants(shell.Root).OfType<ShellSidebar>().Single();
         var entries = ShellTestHost.TabStops(sidebar);
-        Assert.Equal(19, entries.Count); // 18 + Trust & Permissions (Prompt 25)
+        Assert.Equal(21, entries.Count);
         for (int i = 0; i < entries.Count; i++)
         {
             Assert.Same(entries[(i + 1) % entries.Count], entries[i].PredictFocus(FocusNavigationDirection.Down));
@@ -219,8 +300,24 @@ public class ShellViewTests
         }
         // The navigation entries keep their order (and so their tab order).
         var navigation = entries.OfType<Button>().Where(b => b.CommandParameter is string).Select(b => (string)b.CommandParameter).ToList();
-        Assert.Equal(new[] { "Dashboard", "GameMode", "Battery", "Music", "Friends", "PhoneHub", "SecondMonitor", "UpdatePc",
+        Assert.Equal(new[] { "Dashboard", "GameMode", "Battery", "Music", "PhoneHub", "SecondMonitor", "LanDrop", "PhoneLink", "UpdatePc",
                              "SystemCare", "Uninstaller", "Debloat", "Terminal", "Tools", "Trust", "Settings", "Profile" }, navigation);
+
+        var scroller = Assert.Single(ShellTestHost.Descendants(sidebar).OfType<ScrollViewer>());
+        Assert.Equal(0, scroller.ScrollableHeight);
+        var active = (Style)shell.Window.FindResource("SidebarActiveButtonStyle");
+        Button Connection(string target) => entries.OfType<Button>().Single(b => Equals(b.CommandParameter, target));
+        foreach (var (target, tab) in new[] { ("PhoneHub", "ScreenMirror"), ("SecondMonitor", "SecondMonitor"), ("PhoneLink", "PhoneLink") })
+        {
+            Connection(target).Command.Execute(target);
+            Assert.Equal(tab, shell.Vm.PhoneHubVm.ActiveTab);
+            Assert.Same(active, Connection(target).Style);
+        }
+        // Reflect a change inside the Phone Hub without starting a server in this layout test.
+        shell.Vm.PhoneHubVm.ActiveTab = "LanDrop";
+        Assert.Same(active, Connection("LanDrop").Style);
+        Assert.NotSame(active, Connection("PhoneLink").Style);
+        shell.Vm.NavigateCommand.Execute("Tools");
 
         // Title bar: Left and Right step across the window buttons.
         var controls = (Panel)shell.Window.FindName("WindowControls");

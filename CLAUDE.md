@@ -1,5 +1,7 @@
 # Working notes for AI coding agents
 
+Start with [AGENTS.md](AGENTS.md) and the latest entry in [WORK_LOG.md](WORK_LOG.md).
+
 ## Music, providers and the LAN portal: keep the fix plan current
 
 [`skillsMD/MUSIC_FIX_PLAN.md`](skillsMD/MUSIC_FIX_PLAN.md) is the live ledger of what is broken
@@ -25,7 +27,7 @@ something as working because its tests are green.
 
 ## Verifying changes in this repo
 
-- `dotnet build AxePower.sln` then `dotnet test AxePower.Tests/AxePower.Tests.csproj`.
+- Run the locked restore, Release build, and test commands in [CONTRIBUTING.md](CONTRIBUTING.md).
 - `AxePower.exe --self-test` resolves the real container and prints a line per subsystem. Add a
   line when you add a subsystem; keep it read-only, so a self-test never creates user data.
 - **Snapshot `%LOCALAPPDATA%\AxePower\settings.json` before a test run and compare it after.**
@@ -36,7 +38,7 @@ something as working because its tests are green.
 
 ## Conventions
 
-- Branch `v2.0` (one branch per release line). Do not push; commit locally unless told otherwise.
+- Use the release-line branch named in [AGENTS.md](AGENTS.md) unless the maintainer specifies another branch. Commit locally and wait for authorization before pushing.
 - Leave the untracked reference clones (`LenovoLegionToolkit/`, `lenovo_vantage/`) out of commits.
 - UI must match the images in `ui reference/` closely.
 - Themes are skins: `skins/<id>/skin.json`. To add or change a look, follow

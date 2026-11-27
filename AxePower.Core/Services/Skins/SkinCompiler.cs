@@ -192,20 +192,6 @@ public static class SkinCompiler
             new GradientStopValue(accent, 0), new GradientStopValue("#FF7C5CE6", 0.55), new GradientStopValue("#FFEC4899", 1)
         }));
 
-        // Share Screen: a video surface stays dark in every skin, so it recedes around the picture
-        Solid("ShareStageBackgroundBrush", "#FF0A0B0D");
-        Solid("ShareTileBackgroundBrush", "#FF16181C");
-        Solid("ShareTileBorderBrush", "#FF2A2E37");
-        Solid("ShareControlBarBrush", "#F21E2129");
-        Solid("ShareControlButtonBrush", "#2EFFFFFF");
-        Solid("ShareControlButtonHoverBrush", "#52FFFFFF");
-        Solid("ShareControlForegroundBrush", "#FFF2F3F5");
-        Solid("ShareControlMutedBrush", "#FF9BA3AF");
-        Solid("ShareNamePillBrush", "#B3000000");
-        Solid("ShareDangerBrush", "#FFDA373C");
-        Solid("ShareDangerHoverBrush", "#FFB02B2F");
-        Solid("ShareLiveBrush", "#FF23A55A");
-
         ApplyOverrides(skin, r);
 
         var windowArgb = ((ColorResource)r.First(x => x.Key == "WindowBackgroundColor")).Argb;

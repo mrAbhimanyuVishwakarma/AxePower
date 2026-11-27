@@ -11,11 +11,9 @@ using System.Text.Json.Serialization;
 using AxePower.Core.Helpers;
 using AxePower.Core.Models;
 using AxePower.Core.Models.Music;
-using AxePower.Core.Models.ShareScreen;
 using AxePower.Core.Services;
 using AxePower.Core.Services.Accounts;
 using AxePower.Core.Services.Music;
-using AxePower.Core.Services.ShareScreen;
 using AxePower.Core.Services.Skins;
 using AxePower.Core.Services.Uninstaller;
 using Xunit;
@@ -74,12 +72,12 @@ public class JsonNullRepairTests : IDisposable
     public void Repair_ReportsWhatHasNoDefault_AndDescribeNamesFieldsNotValues()
     {
         // A positional record has no parameterless constructor, so nothing can be restored.
-        var message = JsonSerializer.Deserialize<ShareChatMessage>("""{"id":"secret-id","sender":null,"text":"hello"}""")!;
+        var message = JsonSerializer.Deserialize<RequiredFields>("""{"id":"secret-id","label":null,"text":"hello"}""")!;
 
         var result = JsonNullRepair.Repair(message);
 
         Assert.False(result.IsComplete);
-        Assert.Equal(new[] { "ShareChatMessage.Sender" }, result.Missing);
+        Assert.Equal(new[] { "RequiredFields.Label" }, result.Missing);
         Assert.DoesNotContain("secret-id", result.Describe());
         Assert.DoesNotContain("hello", result.Describe());
     }
@@ -87,11 +85,11 @@ public class JsonNullRepairTests : IDisposable
     [Fact]
     public void RepairItems_DropsNullAndIncompleteItems_KeepsTheRest()
     {
-        var messages = JsonSerializer.Deserialize<List<ShareChatMessage>>("""
-            [{"id":"1","sender":"Ana","text":"first","timestamp":"2026-10-06T10:00:00"},
+        var messages = JsonSerializer.Deserialize<List<RequiredFields>>("""
+            [{"id":"1","label":"Ana","text":"first","timestamp":"2026-10-06T10:00:00"},
              null,
-             {"id":"2","sender":"Ana","text":null,"timestamp":"2026-10-06T10:01:00"},
-             {"id":"3","sender":"Ben","text":"third","timestamp":"2026-10-06T10:02:00"}]
+             {"id":"2","label":"Ana","text":null,"timestamp":"2026-10-06T10:01:00"},
+             {"id":"3","label":"Ben","text":"third","timestamp":"2026-10-06T10:02:00"}]
             """)!;
 
         var result = JsonNullRepair.RepairItems(messages);
@@ -202,7 +200,7 @@ public class JsonNullRepairTests : IDisposable
         Assert.Empty(entry.Stream!.Artists);
     }
 
-    // -- Account, chat, uninstaller backups, skins ------------------------------
+    // -- Account, uninstaller backups, skins ------------------------------
 
     [Fact]
     public void AccountSession_WithANullAccessToken_LoadsAndRefreshes_ButANullRefreshTokenIsSignedOut()
@@ -216,20 +214,6 @@ public class JsonNullRepairTests : IDisposable
 
         File.WriteAllText(store.FilePath, """{"v":1,"accessToken":"a","refreshToken":null,"userId":"u"}""");
         Assert.Null(store.Load());
-    }
-
-    [Fact]
-    public void SavedChat_DropsMessagesWithMissingFields_KeepsTheRest()
-    {
-        var store = new ShareChatStore(_dir, null, b => b, b => b);
-        File.WriteAllText(store.ChatFilePath, """
-            [{"id":"1","sender":"Ana","text":"kept","timestamp":"2026-10-06T10:00:00"},
-             {"id":"2","sender":null,"text":"lost","timestamp":"2026-10-06T10:01:00"}]
-            """);
-
-        var messages = store.LoadMessages();
-
-        Assert.Equal("kept", Assert.Single(messages).Text);
     }
 
     [Fact]
@@ -307,6 +291,11 @@ public class JsonNullRepairTests : IDisposable
         Walk(root, name, 0);
         return found;
     }
+
+    private sealed record RequiredFields(
+        [property: JsonPropertyName("id")] string Id,
+        [property: JsonPropertyName("label")] string Label,
+        [property: JsonPropertyName("text")] string Text);
 
     private sealed class FixedClock : IClock
     {

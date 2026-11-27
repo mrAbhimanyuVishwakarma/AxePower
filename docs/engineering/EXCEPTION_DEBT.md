@@ -30,7 +30,7 @@ Handling by area now (catch clauses):
 
 | Area | Logs | Reports or rethrows | Typed or filtered | Documented | Unexplained |
 |---|---|---|---|---|---|
-| Security (Share Screen host and session, LAN Drop, accounts, Friends, updates, elevation, logging, process runner) | 51 | 12 | 70 | 10 | **0** |
+| Security (LAN Drop, accounts, updates, elevation, logging, process runner) | 51 | 12 | 70 | 10 | **0** |
 | Destructive (uninstaller, cleaners, tweaks, services, Game Mode guards, Software Hub) | 47 | 23 | 79 | 22 | **0** |
 | Everything else | 132 | 83 | 98 | 83 | 43 |
 
@@ -47,8 +47,6 @@ Handling by area now (catch clauses):
 ## Highest-risk cases fixed (in order of risk)
 
 **Security**
-- `ShareViewerHost`: if watching for the PC locking fails, it is now logged. That watch is what stops remote control on lock. The 23 silent socket catches are narrowed to `Connection.IsGone`, and `Connection.Close` is made safe so callers need no catch.
-- `ShareRoomSession`: a refused admission or a dropped chat used to vanish. It is now logged and raised as `ChatEnded` with a plain reason, which the Friends page shows. Messages that are authenticated but malformed are logged, without their content.
 - `LanDropService`: if watching for network changes fails, it is now logged (protection falls back to the periodic session check). The request time-outs and refusal sends are narrowed.
 - `LanDropClientRegistry.EndAll`: one device's failing cancellation can no longer stop the others from being cut off.
 - `UpdateService`: an update whose verification throws is now logged as "will not be installed". The Authenticode and manifest verifiers were already failing closed and are documented.
@@ -102,7 +100,6 @@ is next touched; lower `MaxUnexplainedBroadCatches` in the policy test when you 
 | `AxePower.App/ViewModels/SettingsViewModel.GameMode.cs` | 1 | 89 |
 | `AxePower.App/ViewModels/SoftwareHubViewModel.cs` | 1 | 1027 |
 | `AxePower.App/ViewModels/ToolsViewModel.cs` | 1 | 344 |
-| `AxePower.App/Views/ShareScreen/ShareScreenView.xaml.cs` | 1 | 233 |
 | `AxePower.Core/Helpers/CommandRunner.cs` | 1 | 84 |
 | `AxePower.Core/Services/AfterburnerSensorReader.cs` | 1 | 98 |
 | `AxePower.Core/Services/AndroidControlService.cs` | 1 | 280 |
@@ -112,9 +109,6 @@ is next touched; lower `MaxUnexplainedBroadCatches` in the policy test when you 
 | `AxePower.Core/Services/Music/Engine/NAudioEngine.cs` | 1 | 366 |
 | `AxePower.Core/Services/Music/Library/LibraryDatabase.cs` | 1 | 96 |
 | `AxePower.Core/Services/Music/Providers/StreamCache.cs` | 1 | 116 |
-| `AxePower.Core/Services/ShareScreen/ShareAttachmentTransfer.cs` | 1 | 97 |
-| `AxePower.Core/Services/ShareScreen/ShareAudioPump.cs` | 1 | 144 |
-| `AxePower.Core/Services/ShareScreen/ShareEncoderProbe.cs` | 1 | 139 |
 
 **Known issues found but not fixed here**
 - `PhoneHubViewModel` still builds a winget command line in UI code as a fallback when the
@@ -128,8 +122,7 @@ is next touched; lower `MaxUnexplainedBroadCatches` in the policy test when you 
   test's security area), but the service itself has not had a security review: who may send
   commands, what is validated, and what is logged. Prompt 32's security review should cover it.
 - Untested on a real system: the throttler's net.exe results, the resume retry in
-  `AppKillerService`, tweak-revert failures (no access-denied registry in tests), and the Friends
-  page's "chat ended" toast (owner to see; it is a visible change).
+  `AppKillerService`, tweak-revert failures (no access-denied registry in tests), and related UI checks.
 
 ## Keeping it this way
 

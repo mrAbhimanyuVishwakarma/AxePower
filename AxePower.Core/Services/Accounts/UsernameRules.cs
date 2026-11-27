@@ -62,7 +62,7 @@ public static class UsernameRules
 
     /// <summary>
     /// Avatars may only come from the sign-in providers' picture servers; the database enforces the
-    /// same list (profiles_avatar_url_provider), because friends' apps load each other's avatars.
+    /// same list (profiles_avatar_url_provider).
     /// </summary>
     public static bool IsAllowedAvatarUrl(string? url) =>
         url is not null && url.Length <= 1024 && AvatarHosts.IsMatch(url);

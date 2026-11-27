@@ -2,8 +2,9 @@
 
 > **Target Platform:** Android & iOS (React Native / Flutter / Jetpack Compose / SwiftUI)  
 > **Design Language:** Obsidian Fluent Dark with Cyberpunk Neon Accents  
-> **Reference UI Screenshot:** [`AxePower mobile Dashboard UI.png`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/present%20ui%20screenshot/AxePower%20mobile%20Dashboard%20UI.png)  
-> **Light Mode Reference:** [`AxePower mobile Dashboard UI white.png`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/present%20ui%20screenshot/AxePower%20mobile%20Dashboard%20UI%20white.png)
+> **Reference UI Screenshot:** [AxePower mobile Dashboard UI](present%20ui%20screenshot/AxePower%20mobile%20Dashboard%20UI.png)
+>
+> **Light Mode Reference:** [AxePower mobile Dashboard UI in light mode](present%20ui%20screenshot/AxePower%20mobile%20Dashboard%20UI%20white.png)
 
 ---
 
@@ -252,7 +253,7 @@ A horizontal grid of 4 interactive circular mode items:
 
 ## 3. Light Theme Variant Specifications
 
-*(Reference: [`AxePower mobile Dashboard UI white.png`](file:///c:/Users/Abhimanyu%20Vishwakarm/GitHub/AxePower/present%20ui%20screenshot/AxePower%20mobile%20Dashboard%20UI%20white.png))*
+*See the [light mode reference](present%20ui%20screenshot/AxePower%20mobile%20Dashboard%20UI%20white.png).*
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐

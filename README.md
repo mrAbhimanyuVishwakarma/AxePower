@@ -24,15 +24,14 @@
 - 🗂️ **Table-Based Uninstaller Pro**: Full-width Win32 and Windows Apps views with file-type badges, sortable columns, ascending/descending alphabetical order, batch selection, broken-entry filtering, and a Select All action for detected leftovers.
 - 🧭 **Responsive Software Hub**: A collapsible category rail for runtimes, gaming, hardware tuning, and utilities. Install controls stay inline when space permits and move below content only in compact layouts.
 - 🎵 **Integrated Music Player & Media Hub**: Built-in high-fidelity audio engine supporting local libraries and YouTube Music streaming. Features an aesthetic Header Player matching the dashboard design and automatically follows default Windows audio output device switches.
-- 🖥️ **Share Screen & GameStream**: Low-latency desktop and game display sharing directly to friends in their web browser without requiring them to install third-party clients.
 - 🗑️ **Next-Gen Uninstaller Pro**: Deep leftover scanner with confidence scoring, registry backup manifests, broken uninstaller recovery, and PowerShell execution safety nets.
 - 🖥️ **Built-In Terminal (CMD & PowerShell)**: A persistent interactive shell inside the app, and the single place every command AxePower runs reports to — Software Hub installs and System Doctor diagnostics stream their live output here, with a **Stop** button that cancels the running task.
-- 🛡️ **Administrator Mode Without the UAC Nagging**: A **Run as administrator** setting (on by default) plus a title-bar **Relaunch with Admin** button. The app ships an `asInvoker` manifest and registers its logon task at `HighestAvailable`, so it starts elevated at boot with **no UAC prompt** — and the toggle can still be switched off.
+- 🛡️ **Optional Administrator Mode**: Fresh installs ask before enabling elevation. Use **Run as administrator** in Settings or **Relaunch with Admin** from the title bar. The Windows logon task follows that setting.
 - 🌡️ **Real CPU & GPU Temperatures (Driver-Free)**: A three-tier sensor stack — Lenovo's ACPI-WMI firmware interface, MSI Afterburner's shared memory, then LibreHardwareMonitor — so readings keep working on machines with **Memory Integrity / the vulnerable-driver blocklist enabled**, where MSR-only tools silently return nothing.
 - 💾 **One-Click System Restore Point**: Create a Windows restore point straight from the Software Hub before you change anything, with the 24-hour creation throttle lifted so the checkpoint is actually written.
 - 🪟 **Glass Theme (Mica & Acrylic)**: True Windows 11 DWM backdrops with an Acrylic blur-behind fallback for Windows 10, alongside System / Dark / Light.
 - ⚡ **Intelligent Power Modes**: Seamlessly switch between **Eco**, **Smart**, **Beast**, and **Game** modes tailored for battery savings or extreme performance.
-- 🎮 **Game Mode Overhaul & Multi-Platform Library Scanner**: Comprehensive automatic scanner for **Steam**, **Epic Games**, **Xbox / PC Game Pass**, **Ubisoft Connect**, **EA App**, and **GOG Galaxy**. Dynamic high-resolution poster art (**SteamGridDB**) with aspect-ratio adaptive cards and responsive hover zoom.
+- 🎮 **Game Mode**: Discover games from Steam, Epic, GOG, Xbox game folders, and other common install folders. The Dashboard shortcut opens the Game Mode page, where you can apply the mode and manage per-game settings. Game art comes from Steam.
 - 🕹️ **Controller Navigation (Xbox & PlayStation DualSense)**: Full gamepad-to-mouse emulation supporting Xbox (360 / One / Series X|S) and PlayStation (DualShock 4 / DualSense) controllers with in-app visual shortcut guides.
 - ⚡ **GPU Control Companion Integration**: Seamless 1-click companion launcher and auto-detection for **Lenovo Legion Toolkit**, **Lenovo Vantage**, **ASUS Armoury Crate**, and **MSI Center**.
 - 📊 **Live Hardware & Task Manager Performance Monitor**: Real-time 2x2 performance grid tracking **CPU** clock, **GPU** 3D engine utilization & temperature, **RAM** allocation, and **Internet** transfer speeds with precise zero-baseline sparkline graphs.
@@ -72,7 +71,6 @@ AxePower provides a centralized desktop hub with a dedicated sidebar:
 | **Music** | 🎵 | Integrated music playback, local library scanning, YouTube Music streaming, and a sleek header player. |
 | **CONNECTION** | | |
 | **📱 Phone Control** | 📱 | All-in-one mobile suite: SpaceDesk wireless display, LAN Drop Wi-Fi share, and Android screen mirroring *(scrcpy)*. |
-| **🖥️ Share Screen** | 🖥️ | Low-latency display and gameplay streaming to any browser with audio. |
 | **MAINTENANCE** | | |
 | **🛡️ Windows Update** | 🛡️ | Discover Windows, app, and device updates, confirm WinGet upgrades, review results, and open Update Shield for policy, repair, and restore points. |
 | **🧰 System Care** | 🧰 | Recommended optimizations, SFC/DISM health repair, junk cleanup, DNS tools, and other guarded maintenance actions. |
@@ -209,19 +207,15 @@ sequenceDiagram
 git clone https://github.com/mrAbhimanyuVishwakarma/AxePower.git
 cd AxePower
 
-# Restore and build the solution
-dotnet restore AxePower.sln
-dotnet build AxePower.sln -c Release --no-restore
-
-# Run the latest build from this checkout
-dotnet run --project AxePower.App/AxePower.App.csproj -c Release --no-build
+# Build and open the app from this checkout
+powershell -ExecutionPolicy Bypass -File scripts/run-latest.ps1
 ```
 
-Before reviewing a change, verify the current branch and the version/path of the app you launch. If an installed copy is running, exit it through the tray before starting the checkout build so the app's single-instance handling opens the intended copy. Ask which build to use when the latest published release and the latest branch build are both plausible.
+The script prints the checked-out branch, commit, and executable version. If AxePower is already running, exit it through the tray first. See [AGENTS.md](AGENTS.md) for the current development branch and [CONTRIBUTING.md](CONTRIBUTING.md) for locked restore, build, and test commands.
 
 ### Running Unit Tests
 ```bash
-dotnet test AxePower.sln -c Release --no-build
+dotnet test AxePower.sln -c Release -p:RestoreLockedMode=true
 ```
 
 ### Publishing a Release Build
@@ -231,12 +225,23 @@ dotnet publish AxePower.App/AxePower.App.csproj -c Release -r win-x64 --self-con
 
 ### Creating the Inno Setup Installer
 
-1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php).
-2. Publish first. The default installer source folder is `AxePower.App/bin/Release/net10.0-windows10.0.19041.0/win-x64/publish/`.
-3. Open `Installer/AxePower.iss`. This script checks and, when needed, acquires the .NET 10 Desktop Runtime for x64.
-4. Press `Ctrl + F9` to compile the installer into `Installer/Output/AxePower-v<version>-Setup.exe`.
+Install [Inno Setup 6](https://jrsoftware.org/isinfo.php), then run:
 
-For a repeatable build with checksums and provenance, use the [release packaging workflow](docs/engineering/RELEASE_PIPELINE.md).
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/package-release.ps1
+```
+
+The [release pipeline](docs/engineering/RELEASE_PIPELINE.md) builds Setup from a fresh x64 publish and copies it to `Installer/Output/AxePower-v<version>-Setup.exe`. Setup checks for the x64 .NET 10 Desktop Runtime and downloads the Microsoft installer when needed.
+
+### Repository guide
+
+| Path | Contents |
+|---|---|
+| `AxePower.App/`, `AxePower.Core/`, `AxePower.Tests/` | WPF app, Windows and feature services, and xUnit tests |
+| `Installer/`, `scripts/`, `tools/` | Setup, development and release commands, and update-signing tool |
+| `AppWebsite/` | Static product website. Use `localtest.bat` to preview it locally. |
+| `supabase/` | Account functions, database migrations, and policy tests |
+| `skins/`, `skillsMD/`, `docs/` | Skins, feature guides, and engineering, security, and release documentation |
 
 ---
 
